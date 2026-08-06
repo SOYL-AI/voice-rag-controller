@@ -3,6 +3,10 @@
 # --- audio/ ---
 faster-whisper
 piper-tts
+torch
+torchaudio
+sounddevice
+
 
 # --- retrieval/ ---
 sentence-transformers

@@ -119,9 +119,39 @@ llm:
   log_dir: logs
 
 # ---------------------------------------------------------------------------
+# audio/ — owner: Adithi
+# ---------------------------------------------------------------------------
+audio:
+  stt:
+    # faster-whisper model size. "small" for dev (CPU-friendly), bump to
+    # "medium" once this is confirmed working end-to-end.
+    model_size: small
+    device: cpu
+    compute_type: int8
+    # How often to re-run transcription on the growing buffer while the
+    # user is still speaking. Task spec: 300-500ms.
+    partial_interval_ms: 400
+    # Trailing silence (ms) after which VAD judges the user has stopped
+    # speaking and user_end fires.
+    silence_hang_ms: 500
+    # Microphone gain multiplier applied before VAD. 1.0 = raw mic signal.
+    # 2.0 is safe for MacBook Air built-in mic. Raise only if VAD never
+    # triggers; lowering it reduces hallucination risk.
+    mic_gain: 2.0
+    # Force Whisper to transcribe in this language. Prevents it from switching
+    # to Vietnamese / Japanese on unclear short utterances.
+    language: en
+  tts:
+    engine: piper
+    voice_model_path: ./audio/models/en_US-lessac-medium.onnx
+    # Playback block size for stop()-ability during barge-in.
+    playback_block_ms: 50
+  vad:
+    frame_ms: 30
+
+# ---------------------------------------------------------------------------
 # Other components: add your section here.
 # ---------------------------------------------------------------------------
 # retrieval:   # owner: Lakshya — embedding model, k, index path, corpus path
-# audio:       # owner: Adithi  — whisper model size, TTS voice, partial interval
 # controller:  # owner: Renya   — thresholds
 # harness:     # owner: Shubhankit — log dir, percentiles
