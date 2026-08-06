@@ -2,7 +2,7 @@ import json
 import sys
 from collections import defaultdict
 
-from stats import percentile, bootstrap_confidence_interval
+from harness.stats import percentile, bootstrap_confidence_interval
 
 
 def main():
