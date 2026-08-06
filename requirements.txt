@@ -9,7 +9,7 @@ sentence-transformers
 faiss-cpu
 
 # --- llm/ (GPU/cloud only — do not install on a laptop without a GPU) ---
-vllm
+# vllm
 
 # --- pipeline/ (transport) ---
 fastapi
