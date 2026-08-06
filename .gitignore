@@ -3,6 +3,11 @@
 logs/
 *.jsonl
 
+# Downloaded model weights (Piper ONNX models)
+audio/models/
+*.onnx
+
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[codz]
