@@ -83,3 +83,41 @@ logged in the frozen schema. Ready to replace the pipeline's audio stubs.
 ## Coordinate with
 
 The integration lead, who will plug this into the spine once your standalone version works.
+
+---
+
+## Phase 2 — Audio Integration and Polish
+
+In Phase 1 the audio worked standalone (a script where you speak and it responds). In Phase 
+2 it goes into the real pipeline, and the two known rough edges get fixed.
+
+### Goal
+
+Get the real audio running inside the integrated pipeline (not just standalone), and fix 
+the transcription cutoff and the text-to-speech quality, plus finish barge-in.
+
+### How to do it
+
+- Work with Renya to plug stt.py and tts.py into the spine, so audio flows through the full 
+  pipeline (speech in, all the way through retrieval and the model, then speech out). The 
+  standalone loop stays for testing.
+- Fix the transcription cutoff: in Phase 1 it sometimes ended the turn too early (for 
+  example "I am in room 427..." became "I am in room"). This is the endpointing deciding the 
+  user stopped too soon. Give it a longer silence window before it decides the turn is over, 
+  so full sentences get captured in the final transcript.
+- Fix the text-to-speech audio quality: the Phase 1 output sounded rough ("bad network"). 
+  This is usually a sample-rate mismatch between what Piper outputs and what is played back. 
+  Make sure the playback sample rate matches the TTS output rate.
+- Finish the barge-in path: when the user speaks while the system is talking, stop the 
+  speech output within about 100 ms and start listening. The event is already logged 
+  (barge_in), so this is about making the stop reliable and fast.
+
+### Definition of done
+
+Real audio runs inside the integrated pipeline, transcription captures full sentences, 
+playback sounds clean, and barge-in stops speech quickly when the user interrupts.
+
+### Coordinate with
+
+Renya (plugging audio into the spine), and keep logging every event through the shared 
+eventlog log_writer as before.

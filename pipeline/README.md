@@ -64,3 +64,40 @@ and the log replays correctly on the harness timeline viewer.
 
 Everyone — this is where all components come together. Audio, retrieval, and model each get 
 swapped into the spine here as they become ready.
+
+---
+
+## Phase 2 — Integration
+
+Phase 1 built every component in isolation. Phase 2 connects them into one running 
+pipeline. This is the critical path: every experiment waits on the pipeline being 
+integrated, so this comes first.
+
+### Goal
+
+Swap the spine's stub stages for the real components teammates built, so one real 
+conversation runs end to end and produces a correct log. Then begin the controller's first 
+real decision logic.
+
+### How to do it
+
+- Replace the retrieval stub with Lakshya's search function (retrieval/search.py), the 
+  model stub with Ryan's client (llm/client.py), and the audio stubs with Adithi's stt and 
+  tts (audio/stt.py, audio/tts.py). Swap them in one at a time, confirming the log still 
+  reads correctly on the harness timeline after each swap.
+- Handle the path and import details so the pieces run together. Each was built standalone, 
+  so small wiring fixes are expected (for example, making sure retrieval finds its index 
+  from wherever the spine runs).
+- Once integrated, give the controller its first simple rule (see controller/README.md 
+  Phase 2), replacing the no-op stub, keeping the same decide(belief) interface.
+
+### Definition of done
+
+One real conversation runs through the fully integrated pipeline (real audio, real 
+retrieval, real model, real speech) and produces a correct log. This unblocks all 
+experiments.
+
+### Coordinate with
+
+Everyone. This is where all components come together. Work closely with Adithi on the audio 
+swap, Ryan on the model swap, and Lakshya on the retrieval swap.

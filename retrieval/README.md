@@ -93,3 +93,50 @@ function ready to plug in, and a recall report showing sensible passages come ba
 
 Whoever builds the scenarios (currently also Lakshya, as a Week-2 task) — the scenario 
 answer keys must match what these documents actually say.
+
+---
+
+## Phase 2 — Retrieval Extensions and the Simulator
+
+In Phase 1 you built the corpus, index, and search. In Phase 2 you extend retrieval with 
+two things it was missing, and build the simulator that the experiments depend on.
+
+### Goal
+
+Add query rewriting and integrate the public benchmark datasets, then build the simulator 
+(the fake user) that Experiments 2 and 3 need to run many test conversations automatically.
+
+### How to do it
+
+**1. Query rewriting**
+- Some questions only make sense in context. "What about for kids?" is meaningless alone, 
+  but after "what time does the pool open?" it means "children's pool timings."
+- Add a step that takes a context-dependent question plus the conversation so far, and 
+  rewrites it into a standalone search query. This usually is one small language-model call. 
+  It sits just before search().
+
+**2. Public benchmark datasets (for validity)**
+- Confirm access and licensing for the public spoken datasets we will use so our results are 
+  comparable to prior work: SpokenWOZ (real human spoken dialogues), and Spoken-SQuAD or 
+  HeySQuAD (spoken question answering). Note licenses.
+- Prepare them so Ryan can use them for the Experiment 1 labelled question set. Do not 
+  replace the hotel corpus, it stays as our custom dataset for the timing experiments.
+
+**3. The simulator (the fake user)**
+- Build software that generates guest conversations: a goal, the questions the guest would 
+  ask, and a known correct answer for each. This lets us run hundreds of test conversations 
+  without live people.
+- The answer keys must match what the hotel corpus actually says, so keep the corpus and 
+  scenarios in sync (you own both).
+- The simulator produces the conversations that Shubhankit's batch runner plays through the 
+  pipeline for Experiments 2 and 3.
+
+### Definition of done
+
+Query rewriting works before search, public datasets are accessible and prepared, and the 
+simulator generates scored test conversations grounded in the corpus.
+
+### Coordinate with
+
+Ryan (public datasets feed his Experiment 1 question set), and Shubhankit (his batch runner 
+plays your simulator's conversations through the pipeline).
