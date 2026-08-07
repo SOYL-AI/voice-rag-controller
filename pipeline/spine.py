@@ -35,6 +35,8 @@ if str(_REPO_ROOT) not in sys.path:
 
 from controller.decide import decide
 from eventlog.log_writer import LogWriter
+from llm.client import generate_answer as llm_generate_answer
+from retrieval.search import search as retrieval_search
 
 
 def _sleep_ms(ms: float) -> None:
@@ -110,19 +112,20 @@ def controller_decide(transcript: str, log_writer: LogWriter, turn_id: int) -> d
 # ---------------------------------------------------------------------------
 def retrieve(query: str, log_writer: LogWriter, turn_id: int) -> list:
     """
-    Real version: embed the query and search the FAISS index built from
-    retrieval/corpus/, returning the top-k passages (see
-    retrieval/README.md). The stub logs a search launching, waits like a
-    real index lookup would take, then "returns" two hardcoded passages.
+    Embeds the query and searches the FAISS index built from
+    retrieval/corpus/ (retrieval/search.py), returning the top-k passages.
+
+    Note on "scores": retrieval/search.py returns FAISS L2 distances, not a
+    similarity score — lower is a better match, the opposite of the Week 1
+    stub's hardcoded 0.91/0.78. Logged as-is; anything reading this field
+    downstream needs to know it's a distance now.
     """
     log_writer.log_event("system", "retrieval_launched", {"query": query}, turn_id)
-    _sleep_ms(120)  # simulate embedding the query + a FAISS lookup
 
-    passages = [
-        "Pool hours: the pool is open daily from 6:00 AM to 10:00 PM.",
-        "The pool deck closes 30 minutes before the pool itself for cleaning.",
-    ]
-    scores = [0.91, 0.78]
+    results = retrieval_search(query, k=3)
+    passages = [r["text"] for r in results]
+    scores = [r["distance"] for r in results]
+
     log_writer.log_event(
         "system",
         "retrieval_result",
@@ -135,21 +138,18 @@ def retrieve(query: str, log_writer: LogWriter, turn_id: int) -> list:
 # ---------------------------------------------------------------------------
 # Stage 5 — model
 # ---------------------------------------------------------------------------
-def generate_answer(passages: list, log_writer: LogWriter, turn_id: int) -> str:
+def generate_answer(
+    passages: list, log_writer: LogWriter, turn_id: int, question: str
+) -> str:
     """
-    Real version: an ~8B instruct model served via vLLM, with per-token
-    logprobs exposed alongside the answer (see llm/README.md). The stub
-    skips straight to a hardcoded answer, but still logs the two timing
-    events the schema expects: the first token appearing, then the full
-    answer.
+    Calls the real llm/client.py generate_answer(): builds the RAG prompt
+    from the question + retrieved passages, and runs it through whichever
+    backend configs/config.yaml's llm.backend selects (mock or vllm). That
+    function logs llm_first_token and llm_final itself, in the exact
+    schema shape the Week 1 stub used to log manually, so no logging call
+    is needed here.
     """
-    _sleep_ms(110)  # simulate time-to-first-token
-    log_writer.log_event("system", "llm_first_token", {"token": "The"}, turn_id)
-
-    answer = "The pool is open until 10 PM."
-    _sleep_ms(160)  # simulate the rest of the answer generating
-    log_writer.log_event("system", "llm_final", {"text": answer}, turn_id)
-    return answer
+    return llm_generate_answer(passages, log_writer, turn_id, question=question)
 
 
 # ---------------------------------------------------------------------------
@@ -192,7 +192,7 @@ def run_conversation(conversation_id: str) -> Path:
         passages = retrieve(transcript, log_writer, turn_id)
         print(f"  retrieved:      {len(passages)} passage(s)")
 
-        answer = generate_answer(passages, log_writer, turn_id)
+        answer = generate_answer(passages, log_writer, turn_id, transcript)
         speak(answer, log_writer, turn_id)
     finally:
         # Always close, even if a stage above raises — otherwise whatever

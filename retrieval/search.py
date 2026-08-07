@@ -40,16 +40,22 @@
 #     print("=" * 50)
 
 import json
+from pathlib import Path
+
 import faiss
 from sentence_transformers import SentenceTransformer
 
-
+# Resolve the index and chunk map relative to this file, not the process's
+# current working directory, so `search()` works the same whether it's run
+# as `python retrieval/search.py`, imported from pipeline/spine.py, or
+# imported from anywhere else.
+_HERE = Path(__file__).resolve().parent
 
 print("Loading FAISS index...")
-index = faiss.read_index("index.faiss")
+index = faiss.read_index(str(_HERE / "index.faiss"))
 
 print("Loading chunk mapping...")
-with open("chunks.json", "r", encoding="utf-8") as file:
+with open(_HERE / "chunks.json", "r", encoding="utf-8") as file:
     documents = json.load(file)
 
 print("Loading embedding model...")
