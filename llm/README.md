@@ -125,6 +125,24 @@ single experiment.
 Full signals logged every turn, and Experiment 1 executed with the AUC results and the 
 pass/fail verdict recorded in the lab log (paper/lab_log.md).
 
+### Ryan branch implementation status
+
+- `client.py` now preserves vLLM's top-k alternatives and logs chosen-token
+  confidence plus per-token entropy and summary uncertainty signals.
+- `tracker.py::uncertainty()` exposes the fixed-schema unknown-slot fraction.
+- `signals.py` combines model, raw retrieval-score, and tracker signals into a
+  versioned per-turn snapshot for the integration owner to attach to the
+  approved shared event/belief location.
+- `experiment1/` contains the balanced answer-bearing label set, frozen
+  thresholds, a dependency-light ROC AUC runner, and explicit mock-vs-vLLM
+  result validity rules. See `experiment1/README.md` for commands.
+
+Ryan's branch does not edit the frozen event schema or another owner's
+pipeline. The existing shared log already records retrieval scores and the
+expanded `llm_final` payload records the model signals. Logging the tracker
+snapshot into the shared timeline still requires Renya to approve an event
+schema home and wire the side-effect-free payload returned by `signals.py`.
+
 ### Coordinate with
 
 Lakshya (public datasets for the labelled question set), Renya (the controller reads these 

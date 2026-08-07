@@ -245,6 +245,38 @@ def track_detailed(turns, client=None, cfg=None):
     return _coerce_to_schema(parsed, defaults, numeric_slots), gen.text, True
 
 
+def uncertainty(slots: dict, cfg=None, parsed_ok: bool = True) -> dict:
+    """Return the tracker's Phase 2 uncertainty signal.
+
+    The tracker does not produce calibrated probabilities. Its honest signal
+    is the fraction of configured slots that remain ``"unknown"``. Boolean
+    slots such as ``confirmed`` are excluded because ``False`` is a real
+    state, not missing information. Higher values mean more uncertainty.
+
+    This function is side-effect free so the integration owner can add the
+    returned payload to the shared belief/event once the event schema has an
+    approved home for it.
+    """
+    cfg = cfg or load_config()
+    defaults = _slot_defaults(cfg)
+    measured_slots = [
+        key for key, default in defaults.items() if not isinstance(default, bool)
+    ]
+    values = slots or {}
+    unknown_slots = [
+        key for key in measured_slots if values.get(key, "unknown") == "unknown"
+    ]
+    fraction = len(unknown_slots) / len(measured_slots) if measured_slots else 0.0
+    return {
+        "unknown_slots": unknown_slots,
+        "unknown_count": len(unknown_slots),
+        "measured_slot_count": len(measured_slots),
+        "unknown_fraction": fraction,
+        "intent_unknown": values.get("intent", "unknown") == "unknown",
+        "parsed_ok": bool(parsed_ok),
+    }
+
+
 def _mock_json(turns, defaults: dict) -> str:
     """
     What MockClient should 'say' when the tracker calls it.

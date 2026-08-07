@@ -1,0 +1,23 @@
+{
+  "experiment_id": "signal-validity-v1",
+  "success_auc": 0.7,
+  "kill_auc": 0.6,
+  "seeds": [11, 23, 37, 53, 71],
+  "generation": {
+    "temperature": 0.2,
+    "top_p": 0.9,
+    "max_tokens": 80
+  },
+  "low_confidence_threshold": 0.5,
+  "candidate_signals": [
+    "negative_mean_logprob",
+    "negative_min_logprob",
+    "perplexity",
+    "one_minus_mean_confidence",
+    "one_minus_min_confidence",
+    "low_confidence_fraction",
+    "mean_entropy_nats",
+    "max_entropy_nats",
+    "tracker_unknown_fraction"
+  ]
+}

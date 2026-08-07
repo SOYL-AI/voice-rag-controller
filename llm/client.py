@@ -31,6 +31,7 @@ Run it:
     VOICE_RAG_LLM_BACKEND=vllm python llm/client.py
 """
 
+import hashlib
 import json
 import math
 import random
@@ -54,6 +55,14 @@ from llm.config import api_key, load_config
 # What a generation gives you back
 # ---------------------------------------------------------------------------
 @dataclass
+class AlternativeLogprob:
+    """One token candidate from the model's top-k distribution."""
+
+    token: str
+    logprob: float
+
+
+@dataclass
 class TokenLogprob:
     """One output token and how confident the model was in it.
 
@@ -63,6 +72,61 @@ class TokenLogprob:
 
     token: str
     logprob: float
+    top_logprobs: list = field(default_factory=list)  # list[AlternativeLogprob]
+
+    @property
+    def confidence(self):
+        """Probability assigned to the token the model actually emitted."""
+        return min(1.0, max(0.0, math.exp(self.logprob)))
+
+    @property
+    def entropy_nats(self):
+        """Entropy of the returned top-k distribution, in nats.
+
+        vLLM returns only the requested top-k candidates. We preserve their
+        probability mass and put any unreturned mass into one ``<other>``
+        bucket. The result is therefore a reproducible lower bound on the
+        full-vocabulary entropy rather than a claim that omitted tokens have
+        zero probability.
+        """
+        if not self.top_logprobs:
+            return None
+
+        # top_logprobs normally contains the chosen token too. Deduplicate by
+        # token because counting it twice would inflate the mass and entropy.
+        candidates = {self.token: self.logprob}
+        for candidate in self.top_logprobs:
+            candidates[candidate.token] = max(
+                candidate.logprob, candidates.get(candidate.token, -math.inf)
+            )
+
+        probabilities = [math.exp(lp) for lp in candidates.values()]
+        returned_mass = sum(probabilities)
+        if returned_mass > 1.0:
+            # Floating-point rounding (or a server returning inconsistent
+            # values) can put the top-k sum microscopically above one.
+            probabilities = [p / returned_mass for p in probabilities]
+        else:
+            residual = 1.0 - returned_mass
+            if residual > 0.0:
+                probabilities.append(residual)
+
+        return -sum(p * math.log(p) for p in probabilities if p > 0.0)
+
+    def as_dict(self):
+        result = {
+            "token": self.token,
+            "logprob": round(self.logprob, 6),
+            "confidence": round(self.confidence, 6),
+        }
+        if self.entropy_nats is not None:
+            result["entropy_nats"] = round(self.entropy_nats, 6)
+        if self.top_logprobs:
+            result["top_logprobs"] = [
+                {"token": item.token, "logprob": round(item.logprob, 6)}
+                for item in self.top_logprobs
+            ]
+        return result
 
 
 @dataclass
@@ -103,9 +167,55 @@ class Generation:
         m = self.mean_logprob
         return math.exp(-m) if m is not None else None
 
+    @property
+    def mean_confidence(self):
+        if not self.tokens:
+            return None
+        return sum(t.confidence for t in self.tokens) / len(self.tokens)
+
+    @property
+    def min_confidence(self):
+        if not self.tokens:
+            return None
+        return min(t.confidence for t in self.tokens)
+
+    @property
+    def mean_entropy_nats(self):
+        values = [t.entropy_nats for t in self.tokens if t.entropy_nats is not None]
+        return (sum(values) / len(values)) if values else None
+
+    @property
+    def max_entropy_nats(self):
+        values = [t.entropy_nats for t in self.tokens if t.entropy_nats is not None]
+        return max(values) if values else None
+
+    def low_confidence_fraction(self, threshold: float = 0.5):
+        if not self.tokens:
+            return None
+        return sum(t.confidence < threshold for t in self.tokens) / len(self.tokens)
+
+    def uncertainty_signals(self, low_confidence_threshold: float = 0.5):
+        """Candidate Experiment 1 signals, all oriented higher = less certain."""
+        if not self.tokens:
+            return {}
+        signals = {
+            "negative_mean_logprob": -self.mean_logprob,
+            "negative_min_logprob": -self.min_logprob,
+            "perplexity": self.perplexity,
+            "one_minus_mean_confidence": 1.0 - self.mean_confidence,
+            "one_minus_min_confidence": 1.0 - self.min_confidence,
+            "low_confidence_fraction": self.low_confidence_fraction(
+                low_confidence_threshold
+            ),
+        }
+        if self.mean_entropy_nats is not None:
+            signals["mean_entropy_nats"] = self.mean_entropy_nats
+            signals["max_entropy_nats"] = self.max_entropy_nats
+        return signals
+
     def logprob_dicts(self):
         """The per-token list, JSON-ready for the event payload."""
-        return [{"token": t.token, "logprob": round(t.logprob, 6)} for t in self.tokens]
+        return [t.as_dict() for t in self.tokens]
 
 
 # ---------------------------------------------------------------------------
@@ -123,9 +233,9 @@ class Generation:
 # Renya owns the schema: confirm this reading before it goes in a PR.
 
 
-def _log_first_token(log_writer, turn_id, token: str, logprob):
-    payload = {"token": token}
-    if logprob is not None:
+def _log_first_token(log_writer, turn_id, token: str, logprob, token_info=None):
+    payload = token_info.as_dict() if token_info is not None else {"token": token}
+    if logprob is not None and "logprob" not in payload:
         payload["logprob"] = round(logprob, 6)
     log_writer.log_event("system", "llm_first_token", payload, turn_id)
 
@@ -140,6 +250,14 @@ def _log_final(log_writer, turn_id, gen: Generation, log_full: bool):
         payload["mean_logprob"] = round(gen.mean_logprob, 6)
         payload["min_logprob"] = round(gen.min_logprob, 6)
         payload["perplexity"] = round(gen.perplexity, 4)
+        payload["mean_confidence"] = round(gen.mean_confidence, 6)
+        payload["min_confidence"] = round(gen.min_confidence, 6)
+        payload["low_confidence_fraction"] = round(
+            gen.low_confidence_fraction(), 6
+        )
+        if gen.mean_entropy_nats is not None:
+            payload["mean_entropy_nats"] = round(gen.mean_entropy_nats, 6)
+            payload["max_entropy_nats"] = round(gen.max_entropy_nats, 6)
         if log_full:
             # Verbose on purpose. These logs are the paper's raw data; a
             # summary statistic we can always recompute, a discarded
@@ -220,6 +338,8 @@ class VLLMClient:
             # The whole reason we self-host. A closed API will not give us these.
             request["logprobs"] = True
             request["top_logprobs"] = lp_cfg.get("top_k", 1)
+        if gen_cfg.get("seed") is not None:
+            request["seed"] = int(gen_cfg["seed"])
         if self.extra_body:
             request["extra_body"] = self.extra_body
 
@@ -241,8 +361,17 @@ class VLLMClient:
             if lp is not None and getattr(lp, "content", None):
                 entries = lp.content
 
+            new_tokens = []
             for entry in entries:
-                gen.tokens.append(TokenLogprob(entry.token, entry.logprob))
+                alternatives = [
+                    AlternativeLogprob(item.token, item.logprob)
+                    for item in (getattr(entry, "top_logprobs", None) or [])
+                ]
+                token_info = TokenLogprob(
+                    entry.token, entry.logprob, top_logprobs=alternatives
+                )
+                gen.tokens.append(token_info)
+                new_tokens.append(token_info)
 
             if gen.first_token_ms is None and (delta or entries):
                 # Stamp it here, at the moment the first content actually
@@ -251,7 +380,10 @@ class VLLMClient:
                 if log_writer is not None:
                     first_tok = entries[0].token if entries else delta
                     first_lp = entries[0].logprob if entries else None
-                    _log_first_token(log_writer, turn_id, first_tok, first_lp)
+                    first_info = new_tokens[0] if new_tokens else None
+                    _log_first_token(
+                        log_writer, turn_id, first_tok, first_lp, first_info
+                    )
 
             if delta:
                 pieces.append(delta)
@@ -299,7 +431,11 @@ class MockClient:
         lp_cfg = self.cfg.get("logprobs") or {}
 
         answer = overrides.pop("mock_answer", None) or self.CANNED_ANSWER
-        seed = hash(json.dumps(messages, sort_keys=True, default=str)) & 0xFFFFFFFF
+        seed_material = json.dumps(messages, sort_keys=True, default=str)
+        seed_material += f"|seed={gen_cfg.get('seed', 0)}"
+        seed = int.from_bytes(
+            hashlib.sha256(seed_material.encode("utf-8")).digest()[:8], "big"
+        )
         rng = random.Random(seed)
 
         gen = Generation(text="", model=self.model, start_ms=now_ms())
@@ -318,12 +454,34 @@ class MockClient:
             # Mostly confident, one in six noticeably unsure.
             logprob = -rng.uniform(2.0, 3.5) if rng.random() < 0.17 else -rng.uniform(0.005, 0.45)
 
+            top_k = max(1, int(lp_cfg.get("top_k", 1)))
+            chosen_probability = math.exp(logprob)
+            alternatives = [AlternativeLogprob(tok, logprob)]
+            if top_k > 1:
+                # Synthetic alternatives exist only to exercise the same
+                # entropy/instrumentation path as vLLM. They are never valid
+                # evidence for the Experiment 1 gate.
+                remainder = max(1e-12, 1.0 - chosen_probability) * 0.9
+                weights = [rng.random() + 0.05 for _ in range(top_k - 1)]
+                weight_sum = sum(weights)
+                for j, weight in enumerate(weights):
+                    probability = remainder * weight / weight_sum
+                    alternatives.append(
+                        AlternativeLogprob(
+                            token=f"<mock_alt_{j + 1}>",
+                            logprob=math.log(max(probability, 1e-12)),
+                        )
+                    )
+            token_info = TokenLogprob(tok, logprob, top_logprobs=alternatives)
+
             if gen.first_token_ms is None:
                 gen.first_token_ms = now_ms()
                 if log_writer is not None:
-                    _log_first_token(log_writer, turn_id, tok, logprob)
+                    _log_first_token(
+                        log_writer, turn_id, tok, logprob, token_info
+                    )
 
-            gen.tokens.append(TokenLogprob(tok, logprob))
+            gen.tokens.append(token_info)
             pieces.append(tok)
             time.sleep(0.012)  # per-token decode time
 
