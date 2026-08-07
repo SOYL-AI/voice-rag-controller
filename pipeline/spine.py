@@ -23,6 +23,7 @@ without touching this file's overall shape.
 import sys
 import time
 from pathlib import Path
+from retrieval.rewrite import rewrite_query
 
 # controller/ and eventlog/ are sibling top-level folders, not subpackages
 # of pipeline/. Running this file directly (`python3 pipeline/spine.py`)
@@ -199,7 +200,23 @@ def run_conversation(conversation_id: str) -> Path:
         # fetch passages when decide() says "retrieve". Any other action
         # (e.g. skip_retrieval) means the model answers with no passages.
         if action.get("action") == "retrieve":
-            passages = retrieve(transcript, log_writer, turn_id)
+            history = [
+                transcript
+            ]   
+
+            rewritten_query = rewrite_query(
+                history,
+                transcript,
+            )
+
+            print(f"  rewritten query: {rewritten_query}")
+
+            passages = retrieve(
+                rewritten_query,
+                log_writer,
+                turn_id,
+            )   
+            
             print(f"  retrieved:      {len(passages)} passage(s)")
         else:
             passages = []
