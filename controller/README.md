@@ -74,3 +74,27 @@ keeping the rule simple and interpretable first.
 
 Ryan (whose signal instrumentation provides the confidence numbers the rule reads) and the 
 pipeline integration (this rule plugs into the integrated spine).
+
+### What actually shipped
+
+The model's answer-confidence logprobs aren't available at decide()-time: they're only
+produced by generate_answer(), which runs *after* retrieval in pipeline/spine.py. So the
+first real rule reads the one uncertainty signal that *is* available before retrieval: the
+state tracker's slot-fill state (llm/tracker.py). The tracker doesn't expose a numeric
+confidence — its signal is which slots are still `"unknown"`, a documented correct value for
+"not stated yet."
+
+The rule, in controller/decide.py:
+- If the `intent` slot is unknown, always retrieve — we don't yet know what the user wants,
+  so there's no safe way to skip.
+- Otherwise, if at least `unknown_fraction_threshold` of the configured `key_slots` are
+  unknown, retrieve.
+- Otherwise, `skip_retrieval`.
+
+`key_slots` and `unknown_fraction_threshold` live in configs/config.yaml under
+`controller.decision`, not hardcoded. pipeline/spine.py now runs the tracker each turn and
+puts its output at `belief["tracker_slots"]` before calling decide(), and gates the retrieve
+stage on the returned action — the decision is no longer just logged, it actually changes
+what the pipeline does. Ryan's confidence logprobs and retrieval scores are the natural next
+signals to fold into this same rule once they're available at decide()-time (e.g. by moving
+the decision point, or adding a second, post-generation check).

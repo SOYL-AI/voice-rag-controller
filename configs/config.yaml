@@ -150,8 +150,24 @@ audio:
     frame_ms: 30
 
 # ---------------------------------------------------------------------------
+# ---------------------------------------------------------------------------
+# controller/ — owner: Renya
+# ---------------------------------------------------------------------------
+controller:
+  # Phase 2's first real rule: retrieve-or-not, based on the state tracker's
+  # uncertainty. See controller/decide.py and controller/README.md.
+  decision:
+    # Slots the rule inspects. "confirmed" is excluded — its default
+    # (false) doesn't indicate the tracker is uncertain about what the user
+    # wants; it just means nothing has been confirmed yet.
+    key_slots: [intent, room, time, people]
+    # If at least this fraction of key_slots is still "unknown", the
+    # tracker is too uncertain to trust and the rule retrieves. Separately,
+    # "intent" unknown always forces a retrieve — see decide.py.
+    unknown_fraction_threshold: 0.5
+
+# ---------------------------------------------------------------------------
 # Other components: add your section here.
 # ---------------------------------------------------------------------------
 # retrieval:   # owner: Lakshya — embedding model, k, index path, corpus path
-# controller:  # owner: Renya   — thresholds
 # harness:     # owner: Shubhankit — log dir, percentiles

@@ -8,9 +8,10 @@ Runs one conversation through every stage in order:
 Every stage except the controller is a stub for Week 1: it logs the
 event(s) the frozen schema (eventlog/schema.md) says it should, and hands a
 hardcoded value to the next stage. The controller is not a stub — it calls
-the real decide() from controller/decide.py, which currently always answers
-"noop" (see that module's docstring for why that's the right answer this
-week).
+the real decide() from controller/decide.py. As of Phase 2, decide() makes
+a real retrieve-or-not call based on the state tracker's uncertainty (see
+controller/decide.py and controller/README.md's Phase 2 section), and that
+decision actually gates whether the retrieve stage below runs.
 
 The point, per pipeline/README.md, isn't intelligence. It's that a
 conversation flows all the way through, every step gets logged in the
@@ -36,6 +37,7 @@ if str(_REPO_ROOT) not in sys.path:
 from controller.decide import decide
 from eventlog.log_writer import LogWriter
 from llm.client import generate_answer as llm_generate_answer
+from llm.tracker import track as tracker_track
 from retrieval.search import search as retrieval_search
 
 
@@ -93,16 +95,20 @@ def transcribe(utterance: str, log_writer: LogWriter, turn_id: int) -> str:
 # ---------------------------------------------------------------------------
 def controller_decide(transcript: str, log_writer: LogWriter, turn_id: int) -> dict:
     """
-    Not a stub. Calls the real decide() from controller/decide.py, which
-    logs its own controller_action event internally. The pipeline calls it
-    exactly the way it always will, so swapping in the real value-vs-delay
-    decision logic later requires no change here — only decide()'s body
-    changes.
+    Not a stub. Runs the state tracker to get the current slot-fill state,
+    then calls the real decide() from controller/decide.py, which reads
+    that state to make a real retrieve-or-not call and logs its own
+    controller_action event internally.
+
+    No log_writer is passed to the tracker call — see llm/tracker.py's
+    module docstring on why tracker output isn't logged yet (no
+    state_update event type in the frozen schema).
     """
-    # "belief" is whatever situation snapshot the real controller will
-    # eventually reason over. decide() ignores it in Week 1; it's passed
-    # here so the call shape already matches what it will be later.
-    belief = {"transcript": transcript}
+    # "belief" is the situation snapshot decide() reasons over. Phase 2's
+    # rule reads tracker_slots; other keys are along for the ride for
+    # later phases (timing, model confidence, ...).
+    tracker_slots = tracker_track([transcript])
+    belief = {"transcript": transcript, "tracker_slots": tracker_slots}
     _sleep_ms(15)  # simulate the moment it takes to assemble a belief and decide
     return decide(belief, log_writer=log_writer, turn_id=turn_id)
 
@@ -189,8 +195,15 @@ def run_conversation(conversation_id: str) -> Path:
         action = controller_decide(transcript, log_writer, turn_id)
         print(f"  controller:     {action}")
 
-        passages = retrieve(transcript, log_writer, turn_id)
-        print(f"  retrieved:      {len(passages)} passage(s)")
+        # The decision now actually gates retrieval, not just logs it: only
+        # fetch passages when decide() says "retrieve". Any other action
+        # (e.g. skip_retrieval) means the model answers with no passages.
+        if action.get("action") == "retrieve":
+            passages = retrieve(transcript, log_writer, turn_id)
+            print(f"  retrieved:      {len(passages)} passage(s)")
+        else:
+            passages = []
+            print("  retrieved:      skipped (controller decided not to retrieve)")
 
         answer = generate_answer(passages, log_writer, turn_id, transcript)
         speak(answer, log_writer, turn_id)
