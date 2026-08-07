@@ -31,10 +31,11 @@ def main():
         return
 
     ttfa_list = []
+    dead_air_list = []
 
-    print("=" * 45)
-    print("VOICE RAG TTFA REPORT")
-    print("=" * 45)
+    print("=" * 50)
+    print("VOICE RAG METRICS REPORT")
+    print("=" * 50)
 
     for turn_id in sorted(turns):
 
@@ -51,25 +52,53 @@ def main():
 
         if user_end is not None and first_audio is not None:
 
+            # Time To First Audio
             ttfa = first_audio - user_end
             ttfa_list.append(ttfa)
 
-            print(f"Turn {turn_id}: TTFA = {ttfa} ms")
+            # Dead Air
+            dead_air = first_audio - user_end
+            dead_air_list.append(dead_air)
+
+            print(
+                f"Turn {turn_id}: "
+                f"TTFA = {ttfa} ms | "
+                f"Dead Air = {dead_air} ms"
+            )
 
     if not ttfa_list:
         print("No TTFA values found.")
         return
 
-    average = sum(ttfa_list) / len(ttfa_list)
-    p95 = percentile(ttfa_list, 95)
-    ci = bootstrap_confidence_interval(ttfa_list)
+    # ---------------- TTFA ----------------
 
-    print("\n" + "-" * 45)
-    print(f"Average TTFA : {average:.2f} ms")
-    print(f"P95 TTFA     : {p95:.2f} ms")
+    avg_ttfa = sum(ttfa_list) / len(ttfa_list)
+    p95_ttfa = percentile(ttfa_list, 95)
+    ci_ttfa = bootstrap_confidence_interval(ttfa_list)
 
-    if ci:
-        print(f"95% CI       : ({ci[0]:.2f}, {ci[1]:.2f}) ms")
+    print("\n" + "-" * 50)
+    print("TTFA SUMMARY")
+    print("-" * 50)
+    print(f"Average TTFA : {avg_ttfa:.2f} ms")
+    print(f"P95 TTFA     : {p95_ttfa:.2f} ms")
+
+    if ci_ttfa:
+        print(f"95% CI       : ({ci_ttfa[0]:.2f}, {ci_ttfa[1]:.2f}) ms")
+
+    # ---------------- DEAD AIR ----------------
+
+    avg_dead_air = sum(dead_air_list) / len(dead_air_list)
+    p95_dead_air = percentile(dead_air_list, 95)
+    ci_dead_air = bootstrap_confidence_interval(dead_air_list)
+
+    print("\n" + "-" * 50)
+    print("DEAD AIR SUMMARY")
+    print("-" * 50)
+    print(f"Average Dead Air : {avg_dead_air:.2f} ms")
+    print(f"P95 Dead Air     : {p95_dead_air:.2f} ms")
+
+    if ci_dead_air:
+        print(f"95% CI           : ({ci_dead_air[0]:.2f}, {ci_dead_air[1]:.2f}) ms")
 
 
 if __name__ == "__main__":
