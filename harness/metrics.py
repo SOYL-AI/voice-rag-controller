@@ -52,11 +52,11 @@ def main():
 
         if user_end is not None and first_audio is not None:
 
-            # Time To First Audio
+            
             ttfa = first_audio - user_end
             ttfa_list.append(ttfa)
 
-            # Dead Air
+            
             dead_air = first_audio - user_end
             dead_air_list.append(dead_air)
 
@@ -70,7 +70,6 @@ def main():
         print("No TTFA values found.")
         return
 
-    # ---------------- TTFA ----------------
 
     avg_ttfa = sum(ttfa_list) / len(ttfa_list)
     p95_ttfa = percentile(ttfa_list, 95)
@@ -84,8 +83,6 @@ def main():
 
     if ci_ttfa:
         print(f"95% CI       : ({ci_ttfa[0]:.2f}, {ci_ttfa[1]:.2f}) ms")
-
-    # ---------------- DEAD AIR ----------------
 
     avg_dead_air = sum(dead_air_list) / len(dead_air_list)
     p95_dead_air = percentile(dead_air_list, 95)
