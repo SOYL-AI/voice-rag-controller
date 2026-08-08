@@ -1,44 +1,3 @@
-# import json
-# import faiss
-
-# from sentence_transformers import SentenceTransformer
-
-# print("Loading FAISS index...")
-# index = faiss.read_index("index.faiss")
-# print("Index loaded!")
-
-# with open("chunks.json", "r", encoding="utf-8") as file:
-#     documents = json.load(file)
-# print(f"Loaded {len(documents)} chunks.")
-
-# print("Loading embedding model...")
-# model = SentenceTransformer("BAAI/bge-small-en-v1.5")
-# print("Model ready!")
-
-# query = "is breakfast included"
-
-# query_embedding = model.encode(
-#     [query],
-#     convert_to_numpy=True
-# )
-
-# k = 3
-# distances, indices = index.search(query_embedding, k)
-
-# print()
-# print("Top Results")
-# print("------------------")
-
-# for i in indices[0]:
-
-#     print(documents[i]["filename"])
-
-#     print()
-
-#     print(documents[i]["text"][:300])
-
-#     print("=" * 50)
-
 import json
 from pathlib import Path
 
@@ -50,12 +9,24 @@ from sentence_transformers import SentenceTransformer
 # as `python retrieval/search.py`, imported from pipeline/spine.py, or
 # imported from anywhere else.
 _HERE = Path(__file__).resolve().parent
+INDEX_PATH = _HERE / "index.faiss"
+CHUNKS_PATH = _HERE / "chunks.json"
+
+if not INDEX_PATH.exists() or not CHUNKS_PATH.exists():
+    raise FileNotFoundError(
+        "Retrieval artifacts are missing.\n\n"
+        "Expected:\n"
+        f"  - {INDEX_PATH}\n"
+        f"  - {CHUNKS_PATH}\n\n"
+        "Build them by running:\n"
+        "python retrieval/build_index.py"
+    )
 
 print("Loading FAISS index...")
-index = faiss.read_index(str(_HERE / "index.faiss"))
+index = faiss.read_index(str(INDEX_PATH))
 
 print("Loading chunk mapping...")
-with open(_HERE / "chunks.json", "r", encoding="utf-8") as file:
+with open(CHUNKS_PATH, "r", encoding="utf-8") as file:
     documents = json.load(file)
 
 print("Loading embedding model...")

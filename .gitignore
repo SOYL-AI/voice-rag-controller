@@ -230,3 +230,8 @@ __marimo__/
 retrieval/index.faiss
 retrieval/chunks.json
 index.faiss
+
+datasets/spokenwoz/
+datasets/spoken_squad/
+datasets/processed/
+simulator/scenarios.json
