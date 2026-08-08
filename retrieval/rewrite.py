@@ -2,12 +2,14 @@ import sys
 from pathlib import Path
 from typing import List
 
+
 _REPO_ROOT = Path(__file__).resolve().parent.parent
 
 if str(_REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(_REPO_ROOT))
 
 from llm.client import make_client
+from llm.config import load_config
 
 
 SYSTEM_PROMPT = """
@@ -28,6 +30,7 @@ Rules:
 
 
 _client = None
+_cfg = load_config()
 
 
 def get_client():
@@ -71,8 +74,15 @@ def rewrite_query(history: List[str], current_query: str):
 
     client = get_client()
 
+    kwargs = {}
+
+    if _cfg["backend"] == "mock":
+        # Deterministic response for local development.
+        kwargs["mock_answer"] = current_query
+
     generation = client.generate(
-        build_messages(history, current_query)
+        build_messages(history, current_query),
+        **kwargs,
     )
 
     return generation.text.strip()

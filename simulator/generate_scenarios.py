@@ -5,6 +5,22 @@ from pathlib import Path
 CORPUS_DIR = Path(__file__).parent.parent / "retrieval" / "corpus"
 OUTPUT_FILE = Path(__file__).parent / "scenarios.json"
 
+IGNORED_DOCUMENTS = {
+    "03_early_checkin_free.txt",
+    "52_early_checkin_paid.txt",
+
+    "21_breakfast_v1.txt",
+    "58_breakfast_v2.txt",
+
+    "31_pool_v1.txt",
+    "59_pool_v2.txt",
+
+    "47_parking_v1.txt",
+    "60_parking_v2.txt",
+
+    "53_pet_policy_allowed.txt",
+    "54_pet_policy_not_allowed.txt",
+}
 
 def extract_goal(filename: str) -> str:
     """
@@ -20,15 +36,28 @@ def extract_goal(filename: str) -> str:
 
 def extract_answer(text: str) -> str:
     """
-    Use the first meaningful paragraph as the expected answer.
+    Extract the actual policy paragraph.
+
+    Document format:
+
+    Title
+
+    Hotel Name
+
+    Policy text
     """
 
     paragraphs = [p.strip() for p in text.split("\n\n") if p.strip()]
 
-    if len(paragraphs) >= 2:
-        return paragraphs[1]
+    # Most corpus files follow:
+    #   0 -> Title
+    #   1 -> Hotel name
+    #   2 -> Actual policy
+    if len(paragraphs) >= 3:
+        return paragraphs[2]
 
-    return paragraphs[0]
+    # Fallback for shorter documents.
+    return paragraphs[-1]
 
 
 def generate_question(goal: str) -> str:
@@ -69,6 +98,8 @@ def main():
     txt_files = sorted(CORPUS_DIR.glob("*.txt"))
 
     for idx, file in enumerate(txt_files, start=1):
+        if file.name in IGNORED_DOCUMENTS:
+            continue
 
         text = file.read_text(encoding="utf-8")
 
@@ -84,13 +115,19 @@ def main():
 
             "document": file.name,
 
+            "source": file.name,
+
             "goal": goal,
 
             "question": question,
 
             "expected_answer": answer,
 
-            "requires_lookup": True
+            "requires_lookup": True,
+
+            "retrieval_needed": True,
+
+            "history": []
 
         })
 

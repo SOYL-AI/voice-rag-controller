@@ -23,7 +23,13 @@ class DatasetLoader:
 
         if not data_file.exists():
             raise FileNotFoundError(
-                f"SpokenWOZ data.json not found at {data_file}"
+                 "SpokenWOZ dataset not found.\n\n"
+                f"Expected file:\n{data_file}\n\n"
+                "Expected directory structure:\n"
+                "datasets/\n"
+                "└── spokenwoz/\n"
+                "    └── data.json\n\n"
+                "Please download/setup the SpokenWOZ dataset before running the benchmark."
             )
 
         with open(data_file, "r", encoding="utf-8") as f:
@@ -41,7 +47,13 @@ class DatasetLoader:
 
         if not data_folder.exists():
             raise FileNotFoundError(
-                f"Spoken-SQuAD data folder not found at {data_folder}"
+                 "Spoken-SQuAD dataset not found.\n\n"
+                f"Expected directory:\n{data_folder}\n\n"
+                "Expected directory structure:\n"
+                "datasets/\n"
+                "└── spoken_squad/\n"
+                "    └── data/\n\n"
+                "Please download/setup the Spoken-SQuAD dataset before running the benchmark."
             )
 
         return data_folder

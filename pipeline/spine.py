@@ -23,7 +23,7 @@ without touching this file's overall shape.
 import sys
 import time
 from pathlib import Path
-from retrieval.rewrite import rewrite_query
+
 
 # controller/ and eventlog/ are sibling top-level folders, not subpackages
 # of pipeline/. Running this file directly (`python3 pipeline/spine.py`)
@@ -35,6 +35,7 @@ _REPO_ROOT = Path(__file__).resolve().parent.parent
 if str(_REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(_REPO_ROOT))
 
+from retrieval.rewrite import rewrite_query
 from controller.decide import decide
 from eventlog.log_writer import LogWriter
 from llm.client import generate_answer as llm_generate_answer
@@ -200,9 +201,7 @@ def run_conversation(conversation_id: str) -> Path:
         # fetch passages when decide() says "retrieve". Any other action
         # (e.g. skip_retrieval) means the model answers with no passages.
         if action.get("action") == "retrieve":
-            history = [
-                transcript
-            ]   
+            history = []
 
             rewritten_query = rewrite_query(
                 history,
