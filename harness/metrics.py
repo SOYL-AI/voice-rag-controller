@@ -42,7 +42,14 @@ def main():
         user_end = None
         first_audio = None
 
-        for event in turns[turn_id]:
+        # Sort events by timestamp
+        events = sorted(
+            turns[turn_id],
+            key=lambda event: event["t_ms"]
+        )
+
+        
+        for event in events:
 
             if event["event_type"] == "user_end":
                 user_end = event["t_ms"]
@@ -50,52 +57,80 @@ def main():
             elif event["event_type"] == "tts_first_audio":
                 first_audio = event["t_ms"]
 
+  
+
         if user_end is not None and first_audio is not None:
 
-            
             ttfa = first_audio - user_end
             ttfa_list.append(ttfa)
 
-            
-            dead_air = first_audio - user_end
+            print(f"Turn {turn_id}: TTFA = {ttfa} ms")
+
+
+        dead_air = 0
+
+        for i in range(1, len(events)):
+
+            previous_time = events[i - 1]["t_ms"]
+            current_time = events[i]["t_ms"]
+
+            gap = current_time - previous_time
+
+            if gap > 0:
+                dead_air += gap
+
+        if len(events) >= 2:
+
             dead_air_list.append(dead_air)
 
-            print(
-                f"Turn {turn_id}: "
-                f"TTFA = {ttfa} ms | "
-                f"Dead Air = {dead_air} ms"
-            )
+            print(f"Turn {turn_id}: Dead Air = {dead_air} ms")
 
-    if not ttfa_list:
-        print("No TTFA values found.")
-        return
-
-
-    avg_ttfa = sum(ttfa_list) / len(ttfa_list)
-    p95_ttfa = percentile(ttfa_list, 95)
-    ci_ttfa = bootstrap_confidence_interval(ttfa_list)
 
     print("\n" + "-" * 50)
     print("TTFA SUMMARY")
     print("-" * 50)
-    print(f"Average TTFA : {avg_ttfa:.2f} ms")
-    print(f"P95 TTFA     : {p95_ttfa:.2f} ms")
 
-    if ci_ttfa:
-        print(f"95% CI       : ({ci_ttfa[0]:.2f}, {ci_ttfa[1]:.2f}) ms")
+    if ttfa_list:
 
-    avg_dead_air = sum(dead_air_list) / len(dead_air_list)
-    p95_dead_air = percentile(dead_air_list, 95)
-    ci_dead_air = bootstrap_confidence_interval(dead_air_list)
+        average_ttfa = sum(ttfa_list) / len(ttfa_list)
+        p95_ttfa = percentile(ttfa_list, 95)
+        ci_ttfa = bootstrap_confidence_interval(ttfa_list)
+
+        print(f"Average TTFA : {average_ttfa:.2f} ms")
+        print(f"P95 TTFA     : {p95_ttfa:.2f} ms")
+
+        if ci_ttfa:
+            print(
+                f"95% CI       : "
+                f"({ci_ttfa[0]:.2f}, {ci_ttfa[1]:.2f}) ms"
+            )
+
+    else:
+        print("No TTFA values found.")
+
+
 
     print("\n" + "-" * 50)
     print("DEAD AIR SUMMARY")
     print("-" * 50)
-    print(f"Average Dead Air : {avg_dead_air:.2f} ms")
-    print(f"P95 Dead Air     : {p95_dead_air:.2f} ms")
 
-    if ci_dead_air:
-        print(f"95% CI           : ({ci_dead_air[0]:.2f}, {ci_dead_air[1]:.2f}) ms")
+    if dead_air_list:
+
+        average_dead_air = sum(dead_air_list) / len(dead_air_list)
+        p95_dead_air = percentile(dead_air_list, 95)
+        ci_dead_air = bootstrap_confidence_interval(dead_air_list)
+
+        print(f"Average Dead Air : {average_dead_air:.2f} ms")
+        print(f"P95 Dead Air     : {p95_dead_air:.2f} ms")
+
+        if ci_dead_air:
+            print(
+                f"95% CI           : "
+                f"({ci_dead_air[0]:.2f}, {ci_dead_air[1]:.2f}) ms"
+            )
+
+    else:
+        print("No Dead Air values found.")
 
 
 if __name__ == "__main__":
