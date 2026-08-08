@@ -1,0 +1,36 @@
+{"id":"hotel_checkout_time","question":"What is Grand Horizon Hotel's standard check-out time?","expected_answer":"11:00 AM","retrieval_needed":true,"source":"retrieval/corpus/02_checkout_policy.txt"}
+{"id":"hotel_front_desk_hours","question":"At what hours is the Grand Horizon Front Desk staffed?","expected_answer":"24 hours a day","retrieval_needed":true,"source":"retrieval/corpus/05_reception_services.txt"}
+{"id":"hotel_luggage_cost","question":"Does Grand Horizon charge for same-day luggage storage?","expected_answer":"No, same-day luggage storage is free","retrieval_needed":true,"source":"retrieval/corpus/06_luggage_storage.txt"}
+{"id":"hotel_airport_notice","question":"How far in advance should a Grand Horizon guest provide flight details for airport pickup?","expected_answer":"At least 24 hours before arrival","retrieval_needed":true,"source":"retrieval/corpus/07_airport_transfer.txt"}
+{"id":"hotel_lost_retention","question":"How long does Grand Horizon generally keep unclaimed lost property?","expected_answer":"90 days","retrieval_needed":true,"source":"retrieval/corpus/09_lost_and_found.txt"}
+{"id":"hotel_room_service","question":"What hours is room service available at Grand Horizon?","expected_answer":"24 hours a day","retrieval_needed":true,"source":"retrieval/corpus/23_room_service.txt"}
+{"id":"hotel_coffee_shop","question":"When does Grand Horizon's Brew Lounge close?","expected_answer":"11:00 PM","retrieval_needed":true,"source":"retrieval/corpus/24_coffee_shop.txt"}
+{"id":"hotel_rooftop_open","question":"What time does the Skyline Rooftop Restaurant open?","expected_answer":"6:30 PM","retrieval_needed":true,"source":"retrieval/corpus/25_rooftop_restaurant.txt"}
+{"id":"hotel_bar_age","question":"What is the minimum age to buy alcohol at the Horizon Lounge Bar?","expected_answer":"21 years old","retrieval_needed":true,"source":"retrieval/corpus/26_bar_policy.txt"}
+{"id":"hotel_spa_hours","question":"What are the Serenity Spa's daily operating hours?","expected_answer":"10:00 AM to 9:00 PM","retrieval_needed":true,"source":"retrieval/corpus/33_spa.txt"}
+{"id":"hotel_play_zone_ages","question":"Which ages is the Grand Horizon Kids Play Zone designed for?","expected_answer":"Children aged 3 to 12","retrieval_needed":true,"source":"retrieval/corpus/36_kids_play_area.txt"}
+{"id":"hotel_laundry_hours","question":"At what time does Grand Horizon's laundry service close?","expected_answer":"8:00 PM","retrieval_needed":true,"source":"retrieval/corpus/41_laundry.txt"}
+{"id":"hotel_wifi_ssid","question":"What Wi-Fi network name should Grand Horizon guests select?","expected_answer":"GrandHorizon_Guest","retrieval_needed":true,"source":"retrieval/corpus/43_wifi.txt"}
+{"id":"hotel_business_center","question":"What are the Grand Horizon Business Centre's hours?","expected_answer":"8:00 AM to 8:00 PM","retrieval_needed":true,"source":"retrieval/corpus/44_business_center.txt"}
+{"id":"hotel_cancellation_window","question":"How early must a Grand Horizon guest cancel to avoid cancellation charges?","expected_answer":"At least 48 hours before scheduled check-in","retrieval_needed":true,"source":"retrieval/corpus/51_cancellation.txt"}
+{"id":"hotel_quiet_hours","question":"When are quiet hours at Grand Horizon?","expected_answer":"10:00 PM to 7:00 AM","retrieval_needed":true,"source":"retrieval/corpus/55_noise_policy.txt"}
+{"id":"hotel_visitor_hours","question":"During which hours may visitors enter Grand Horizon?","expected_answer":"8:00 AM to 10:00 PM","retrieval_needed":true,"source":"retrieval/corpus/56_visitor_policy.txt"}
+{"id":"hotel_steam_room","question":"When is Grand Horizon's steam room available?","expected_answer":"7:00 AM to 9:00 PM","retrieval_needed":true,"source":"retrieval/corpus/34_steam_room.txt"}
+{"id":"general_arithmetic","question":"What is two plus two?","expected_answer":"4","retrieval_needed":false,"source":"stable_general_knowledge"}
+{"id":"general_week_days","question":"How many days are in a week?","expected_answer":"7","retrieval_needed":false,"source":"stable_general_knowledge"}
+{"id":"general_hour_minutes","question":"How many minutes are in one hour?","expected_answer":"60","retrieval_needed":false,"source":"stable_general_knowledge"}
+{"id":"general_france_capital","question":"What is the capital of France?","expected_answer":"Paris","retrieval_needed":false,"source":"stable_general_knowledge"}
+{"id":"general_water_freezing","question":"At what Celsius temperature does pure water freeze at standard pressure?","expected_answer":"0 degrees Celsius","retrieval_needed":false,"source":"stable_general_knowledge"}
+{"id":"general_opposite_early","question":"What is the opposite of early?","expected_answer":"Late","retrieval_needed":false,"source":"stable_general_knowledge"}
+{"id":"general_spell_hotel","question":"How do you spell the word hotel?","expected_answer":"H-O-T-E-L","retrieval_needed":false,"source":"stable_general_knowledge"}
+{"id":"general_spanish_thanks","question":"How do you say thank you in Spanish?","expected_answer":"Gracias","retrieval_needed":false,"source":"stable_general_knowledge"}
+{"id":"general_color_mix","question":"What color do red and blue make when mixed as paint?","expected_answer":"Purple","retrieval_needed":false,"source":"stable_general_knowledge"}
+{"id":"general_dozen","question":"How many items are in a dozen?","expected_answer":"12","retrieval_needed":false,"source":"stable_general_knowledge"}
+{"id":"general_triangle_sides","question":"How many sides does a triangle have?","expected_answer":"3","retrieval_needed":false,"source":"stable_general_knowledge"}
+{"id":"general_year_months","question":"How many months are in a year?","expected_answer":"12","retrieval_needed":false,"source":"stable_general_knowledge"}
+{"id":"general_sun_direction","question":"In which direction does the sun appear to rise?","expected_answer":"East","retrieval_needed":false,"source":"stable_general_knowledge"}
+{"id":"general_boiling_water","question":"At what Celsius temperature does water boil at standard pressure?","expected_answer":"100 degrees Celsius","retrieval_needed":false,"source":"stable_general_knowledge"}
+{"id":"general_planet","question":"Which planet is known as the Red Planet?","expected_answer":"Mars","retrieval_needed":false,"source":"stable_general_knowledge"}
+{"id":"general_square_sides","question":"How many equal sides does a square have?","expected_answer":"4","retrieval_needed":false,"source":"stable_general_knowledge"}
+{"id":"general_first_month","question":"What is the first month of the year?","expected_answer":"January","retrieval_needed":false,"source":"stable_general_knowledge"}
+{"id":"general_half_ten","question":"What is half of ten?","expected_answer":"5","retrieval_needed":false,"source":"stable_general_knowledge"}
