@@ -111,6 +111,7 @@ the transcription cutoff and the text-to-speech quality, plus finish barge-in.
 - Finish the barge-in path: when the user speaks while the system is talking, stop the 
   speech output within about 100 ms and start listening. The event is already logged 
   (barge_in), so this is about making the stop reliable and fast.
+  *Note:* Requires headphones or AEC hardware; an open mic+speaker setup causes self-triggered barge-in from acoustic echo.
 
 ### Definition of done
 

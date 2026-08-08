@@ -230,3 +230,7 @@ __marimo__/
 retrieval/index.faiss
 retrieval/chunks.json
 index.faiss
+
+# Debug audio outputs
+debug_audio/
+

@@ -132,8 +132,8 @@ audio:
     # user is still speaking. Task spec: 300-500ms.
     partial_interval_ms: 400
     # Trailing silence (ms) after which VAD judges the user has stopped
-    # speaking and user_end fires.
-    silence_hang_ms: 500
+    # speaking and user_end fires. Temporarily 3000ms for diagnostic experiment.
+    silence_hang_ms: 800
     # Microphone gain multiplier applied before VAD. 1.0 = raw mic signal.
     # 2.0 is safe for MacBook Air built-in mic. Raise only if VAD never
     # triggers; lowering it reduces hallucination risk.
@@ -141,13 +141,21 @@ audio:
     # Force Whisper to transcribe in this language. Prevents it from switching
     # to Vietnamese / Japanese on unclear short utterances.
     language: en
+    # Minimum RMS energy gate before VAD evaluation (0.003 for Phase 1A).
+    rms_gate: 0.003
   tts:
     engine: piper
     voice_model_path: ./audio/models/en_US-lessac-medium.onnx
     # Playback block size for stop()-ability during barge-in.
-    playback_block_ms: 50
+    playback_block_ms: 20
+    # TTS audio sample rate (Hz). Auto-detected from model .onnx.json if present.
+    sample_rate: 22050
+    # Barge-in VAD configuration
+    barge_in:
+      consecutive_frames: 2
+      vad_threshold: 0.5
   vad:
-    frame_ms: 30
+    frame_ms: 32
 
 # ---------------------------------------------------------------------------
 # ---------------------------------------------------------------------------

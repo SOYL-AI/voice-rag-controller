@@ -50,10 +50,7 @@ def placeholder_llm_stage(user_transcript: str) -> str:
     """
     if not user_transcript.strip():
         return "I am sorry, I did not catch that. Could you please repeat?"
-    return (
-        f"You asked: '{user_transcript}'. "
-        "The pool is open daily from 6:00 AM to 10:00 PM."
-    )
+    return "The pool is open daily from 6:00 AM to 10:00 PM."
 
 
 # ---------------------------------------------------------------------------
@@ -129,10 +126,10 @@ async def generate_mic_stream(mic_gain: float = 2.0) -> AsyncGenerator[np.ndarra
 # ---------------------------------------------------------------------------
 # Speaker playback (live mode)
 # ---------------------------------------------------------------------------
-def play_pcm_audio(pcm_bytes: bytes, sample_rate: int = 22050, block_ms: int = 50):
+def play_pcm_audio(pcm_bytes: bytes, sample_rate: int, block_ms: int = 50):
     """
     Plays raw 16-bit signed mono PCM through the default speaker using sounddevice.
-    Plays in block_ms-sized chunks so an external stop() can interrupt quickly.
+    Uses a single persistent OutputStream opened once per utterance to eliminate block clicking.
     """
     import sounddevice as sd
 
@@ -140,71 +137,236 @@ def play_pcm_audio(pcm_bytes: bytes, sample_rate: int = 22050, block_ms: int = 5
         return
     audio = np.frombuffer(pcm_bytes, dtype=np.int16).astype(np.float32) / 32768.0
     block_samples = int(sample_rate * block_ms / 1000)
-    for start in range(0, len(audio), block_samples):
-        chunk = audio[start : start + block_samples]
-        sd.play(chunk, samplerate=sample_rate)
-        sd.wait()
+    with sd.OutputStream(samplerate=sample_rate, channels=1, dtype="float32") as stream:
+        for start in range(0, len(audio), block_samples):
+            chunk = audio[start : start + block_samples]
+            stream.write(chunk)
+
+
+# ---------------------------------------------------------------------------
+# Concurrent VAD Barge-in Listener
+# ---------------------------------------------------------------------------
+async def run_barge_in_listener(
+    stt: StreamingSTT,
+    tts: StreamingTTS,
+    log_writer: LogWriter,
+    turn_id: int,
+    vad_threshold: float = 0.5,
+    consecutive_frames: int = 4,
+    mic_gain: float = 2.0,
+):
+    """
+    Lightweight VAD-only mic listener running concurrently with TTS playback.
+    Opens a short-lived sounddevice InputStream while TTS is active.
+    Triggers tts.stop(log_writer, turn_id) upon detecting `consecutive_frames` speech-positive frames.
+    """
+    import sounddevice as sd
+
+    print(f"\nBARGE-IN:\n  listener_active=true")
+
+    MIC_BLOCK = 512  # Silero VAD minimum (32ms @ 16kHz)
+    q: asyncio.Queue = asyncio.Queue()
+    loop = asyncio.get_running_loop()
+
+    def _callback(indata, frames, time_info, status):
+        frame = indata[:, 0].copy() * mic_gain
+        loop.call_soon_threadsafe(q.put_nowait, frame)
+
+    playback_started = False
+    consecutive_count = 0
+    frames_processed = 0
+    RMS_GATE = 0.012
+
+    try:
+        with sd.InputStream(
+            samplerate=stt.sample_rate,
+            channels=1,
+            dtype="float32",
+            blocksize=MIC_BLOCK,
+            callback=_callback,
+        ):
+            while not tts._stop_requested.is_set():
+                # Active only while actual TTS PCM audio playback is occurring
+                if not tts.playback_active:
+                    await asyncio.sleep(0.01)
+                    if tts._is_playing and not tts.playback_active:
+                        # Piper is synthesizing, wait until PCM playback starts
+                        continue
+                    if not tts._is_playing and not tts.playback_active:
+                        print(f"\nBARGE-IN:\n  listener_stopping=tts_finished")
+                        break
+
+                if not playback_started:
+                    drained_count = 0
+                    while not q.empty():
+                        try:
+                            q.get_nowait()
+                            drained_count += 1
+                        except asyncio.QueueEmpty:
+                            break
+                    print(f"\nBARGE-IN:\n  drained_stale_frames={drained_count}")
+                    playback_started = True
+
+                frame = await q.get()
+                frames_processed += 1
+                rms = float(np.sqrt(np.mean(frame ** 2)))
+                if rms < RMS_GATE:
+                    speech_prob = 0.0
+                else:
+                    speech_prob = stt.process_vad_frame(frame)
+
+                if frames_processed % 8 == 0:
+                    print(
+                        f"\nBARGE-IN HEARTBEAT:\n"
+                        f"  timestamp={time.time():.3f}\n"
+                        f"  frames_processed={frames_processed}\n"
+                        f"  latest_rms={rms:.4f}\n"
+                        f"  latest_speech_prob={speech_prob:.4f}"
+                    )
+
+                if speech_prob >= vad_threshold:
+                    consecutive_count += 1
+                    if consecutive_count >= consecutive_frames:
+                        print(
+                            f"\nBARGE-IN:\n"
+                            f"  user_speech_detected=true\n"
+                            f"  consecutive={consecutive_count}\n"
+                            f"  calling=tts.stop()"
+                        )
+                        tts.stop(log_writer, turn_id)
+                        break
+                else:
+                    consecutive_count = 0
+    except asyncio.CancelledError:
+        pass
+    except Exception as e:
+        pass
 
 
 # ---------------------------------------------------------------------------
 # Main loop
 # ---------------------------------------------------------------------------
-async def run_audio_loop(live: bool = False, conversation_id: str = None) -> Path:
+async def run_audio_loop(
+    live: bool = False,
+    conversation_id: str = None,
+    test_barge_in: bool = False,
+) -> Path:
     """
-    One full conversation turn: listen -> transcribe -> placeholder LLM -> speak.
-    live=False  uses the synthetic stream (headless / CI).
-    live=True   uses the real microphone and plays audio through the speaker.
+    Continuous multi-turn conversation loop:
+    while not quit: listen -> transcribe -> LLM -> speak -> listen again.
+
+    live=False  uses the synthetic stream (headless / CI). Runs 2 turns for verification.
+    live=True   uses the real microphone and speaker in a continuous loop until Ctrl+C or 'quit'.
     """
     if conversation_id is None:
         conversation_id = f"conv_audio_{'live' if live else 'synth'}_{int(time.time())}"
 
     cfg        = load_config()
     log_writer = LogWriter(conversation_id=conversation_id)
-    turn_id    = 1
 
+    # Initialize models ONCE for the entire session
     stt = StreamingSTT(cfg)
     tts = StreamingTTS(cfg)
 
     mode = "LIVE mic" if live else "synthetic stream"
     print(f"\n--- Audio Loop ({conversation_id}) | mode: {mode} ---")
+    print(
+        f"  ⚙️  Config loaded: silence_hang_ms={stt.silence_hang_ms}ms, "
+        f"TTS sample_rate={tts.sample_rate}Hz, playback_block_ms={tts.playback_block_ms}ms"
+    )
+
+    turn_id = 1
+    mic_gain = cfg["stt"].get("mic_gain", 2.0)
+    barge_in_cfg = cfg.get("tts", {}).get("barge_in", {})
+    vad_thresh = barge_in_cfg.get("vad_threshold", 0.5)
+    consec_frames = barge_in_cfg.get("consecutive_frames", 4)
 
     try:
-        # ---- Stage 1+2: listen & transcribe --------------------------------
-        mic_gain = cfg["stt"].get("mic_gain", 2.0)
-        audio_stream = generate_mic_stream(mic_gain=mic_gain) if live else generate_synthetic_speech_stream()
-        user_transcript = await stt.transcribe_stream(
-            audio_stream, log_writer, turn_id=turn_id, vad_threshold=0.3
-        )
+        while True:
+            if live:
+                print(f"\n🎙  [Turn {turn_id}] Listening... (speak now, Ctrl+C to stop)")
+            else:
+                print(f"\n--- Turn {turn_id} (synthetic mode) ---")
 
-        if not user_transcript.strip():
-            user_transcript = "what time does the pool close"
-            print(f"  [fallback] no speech detected, using: '{user_transcript}'")
-        else:
+            # ---- Stage 1+2: listen & transcribe ----------------------------
+            audio_stream = (
+                generate_mic_stream(mic_gain=mic_gain)
+                if live
+                else generate_synthetic_speech_stream()
+            )
+            user_transcript = await stt.transcribe_stream(
+                audio_stream, log_writer, turn_id=turn_id, vad_threshold=0.3
+            )
+
+            if not user_transcript.strip():
+                if not live:
+                    user_transcript = "what time does the pool close"
+                    print(f"  [fallback] no speech detected, using: '{user_transcript}'")
+                else:
+                    print("  (no speech detected, listening again...)")
+                    turn_id += 1
+                    continue
+
+            # Safe exit command check
+            if user_transcript.strip().lower() in ("quit", "quit.", "exit", "exit."):
+                print("\n  👋 'quit' command detected. Exiting audio loop...")
+                break
+
             print(f"  📝 Transcript : '{user_transcript}'")
 
-        # ---- Stage 3-5 placeholder -----------------------------------------
-        system_response = placeholder_llm_stage(user_transcript)
-        print(f"  💬 Response   : '{system_response}'")
+            # ---- Stage 3-5 placeholder -------------------------------------
+            system_response = placeholder_llm_stage(user_transcript)
+            print(f"  💬 Response   : '{system_response}'")
 
-        # ---- Stage 6: speak ------------------------------------------------
-        if live:
-            # Synthesise each clause and play it immediately
-            from audio.tts import split_into_clauses
-            clauses = split_into_clauses(system_response)
-            first_audio_logged = False
-            for clause in clauses:
-                pcm = await asyncio.to_thread(
-                    tts.synthesize_clause_to_raw_pcm, clause
+            # ---- Stage 6: speak --------------------------------------------
+            barge_in_task = None
+            if live:
+                barge_in_task = asyncio.create_task(
+                    run_barge_in_listener(
+                        stt=stt,
+                        tts=tts,
+                        log_writer=log_writer,
+                        turn_id=turn_id,
+                        vad_threshold=vad_thresh,
+                        consecutive_frames=consec_frames,
+                        mic_gain=mic_gain,
+                    )
                 )
-                if not first_audio_logged:
-                    log_writer.log_event("system", "tts_first_audio", {}, turn_id)
-                    first_audio_logged = True
-                    print("  🔊 Speaking...")
-                play_pcm_audio(pcm, sample_rate=22050, block_ms=cfg["tts"]["playback_block_ms"])
-        else:
-            # Headless: just log the event and simulate the timing
-            await tts.speak(system_response, log_writer, turn_id=turn_id)
 
+            test_task = None
+            if test_barge_in:
+                async def _test_trigger():
+                    await asyncio.sleep(0.15)
+                    print("\n  🛑 [Test Barge-In] Triggering tts.stop() via manual test path...")
+                    tts.stop(log_writer, turn_id)
+
+                test_task = asyncio.create_task(_test_trigger())
+
+            try:
+                print("  🔊 Speaking...")
+                await tts.speak(system_response, log_writer, turn_id=turn_id, live=live)
+            finally:
+                if barge_in_task is not None:
+                    barge_in_task.cancel()
+                    try:
+                        await barge_in_task
+                    except asyncio.CancelledError:
+                        pass
+                if test_task is not None:
+                    test_task.cancel()
+                    try:
+                        await test_task
+                    except asyncio.CancelledError:
+                        pass
+
+            turn_id += 1
+
+            # In synthetic mode, run 2 turns to verify multi-turn capability before completing
+            if not live and turn_id > 2:
+                break
+
+    except (KeyboardInterrupt, asyncio.CancelledError):
+        print("\n  👋 Audio loop interrupted by user.")
     finally:
         log_writer.close()
 
@@ -224,12 +386,20 @@ if __name__ == "__main__":
         action="store_true",
         help="Use real microphone input and speaker output (default: synthetic test mode).",
     )
+    parser.add_argument(
+        "--test-barge-in",
+        action="store_true",
+        help="Simulate a manual barge-in trigger after 150ms to verify stop latency and logging.",
+    )
     args = parser.parse_args()
 
     try:
-        log_path = asyncio.run(run_audio_loop(live=args.live))
+        log_path = asyncio.run(
+            run_audio_loop(live=args.live, test_barge_in=args.test_barge_in)
+        )
         print("\nLog contents:")
         print(log_path.read_text())
     except KeyboardInterrupt:
         print("\nStopped by user.")
+
 
