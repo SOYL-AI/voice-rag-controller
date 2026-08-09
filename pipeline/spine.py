@@ -8,9 +8,10 @@ Runs one conversation through every stage in order:
 Every stage except the controller is a stub for Week 1: it logs the
 event(s) the frozen schema (eventlog/schema.md) says it should, and hands a
 hardcoded value to the next stage. The controller is not a stub — it calls
-the real decide() from controller/decide.py, which currently always answers
-"noop" (see that module's docstring for why that's the right answer this
-week).
+the real decide() from controller/decide.py. As of Phase 2, decide() makes
+a real retrieve-or-not call based on the state tracker's uncertainty (see
+controller/decide.py and controller/README.md's Phase 2 section), and that
+decision actually gates whether the retrieve stage below runs.
 
 The point, per pipeline/README.md, isn't intelligence. It's that a
 conversation flows all the way through, every step gets logged in the
@@ -23,6 +24,7 @@ import sys
 import time
 from pathlib import Path
 
+
 # controller/ and eventlog/ are sibling top-level folders, not subpackages
 # of pipeline/. Running this file directly (`python3 pipeline/spine.py`)
 # only puts pipeline/'s own directory on sys.path, so without this, the
@@ -33,8 +35,12 @@ _REPO_ROOT = Path(__file__).resolve().parent.parent
 if str(_REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(_REPO_ROOT))
 
+from retrieval.rewrite import rewrite_query
 from controller.decide import decide
 from eventlog.log_writer import LogWriter
+from llm.client import generate_answer as llm_generate_answer
+from llm.tracker import track as tracker_track
+from retrieval.search import search as retrieval_search
 
 
 def _sleep_ms(ms: float) -> None:
@@ -91,16 +97,20 @@ def transcribe(utterance: str, log_writer: LogWriter, turn_id: int) -> str:
 # ---------------------------------------------------------------------------
 def controller_decide(transcript: str, log_writer: LogWriter, turn_id: int) -> dict:
     """
-    Not a stub. Calls the real decide() from controller/decide.py, which
-    logs its own controller_action event internally. The pipeline calls it
-    exactly the way it always will, so swapping in the real value-vs-delay
-    decision logic later requires no change here — only decide()'s body
-    changes.
+    Not a stub. Runs the state tracker to get the current slot-fill state,
+    then calls the real decide() from controller/decide.py, which reads
+    that state to make a real retrieve-or-not call and logs its own
+    controller_action event internally.
+
+    No log_writer is passed to the tracker call — see llm/tracker.py's
+    module docstring on why tracker output isn't logged yet (no
+    state_update event type in the frozen schema).
     """
-    # "belief" is whatever situation snapshot the real controller will
-    # eventually reason over. decide() ignores it in Week 1; it's passed
-    # here so the call shape already matches what it will be later.
-    belief = {"transcript": transcript}
+    # "belief" is the situation snapshot decide() reasons over. Phase 2's
+    # rule reads tracker_slots; other keys are along for the ride for
+    # later phases (timing, model confidence, ...).
+    tracker_slots = tracker_track([transcript])
+    belief = {"transcript": transcript, "tracker_slots": tracker_slots}
     _sleep_ms(15)  # simulate the moment it takes to assemble a belief and decide
     return decide(belief, log_writer=log_writer, turn_id=turn_id)
 
@@ -110,19 +120,20 @@ def controller_decide(transcript: str, log_writer: LogWriter, turn_id: int) -> d
 # ---------------------------------------------------------------------------
 def retrieve(query: str, log_writer: LogWriter, turn_id: int) -> list:
     """
-    Real version: embed the query and search the FAISS index built from
-    retrieval/corpus/, returning the top-k passages (see
-    retrieval/README.md). The stub logs a search launching, waits like a
-    real index lookup would take, then "returns" two hardcoded passages.
+    Embeds the query and searches the FAISS index built from
+    retrieval/corpus/ (retrieval/search.py), returning the top-k passages.
+
+    Note on "scores": retrieval/search.py returns FAISS L2 distances, not a
+    similarity score — lower is a better match, the opposite of the Week 1
+    stub's hardcoded 0.91/0.78. Logged as-is; anything reading this field
+    downstream needs to know it's a distance now.
     """
     log_writer.log_event("system", "retrieval_launched", {"query": query}, turn_id)
-    _sleep_ms(120)  # simulate embedding the query + a FAISS lookup
 
-    passages = [
-        "Pool hours: the pool is open daily from 6:00 AM to 10:00 PM.",
-        "The pool deck closes 30 minutes before the pool itself for cleaning.",
-    ]
-    scores = [0.91, 0.78]
+    results = retrieval_search(query, k=3)
+    passages = [r["text"] for r in results]
+    scores = [r["distance"] for r in results]
+
     log_writer.log_event(
         "system",
         "retrieval_result",
@@ -135,21 +146,18 @@ def retrieve(query: str, log_writer: LogWriter, turn_id: int) -> list:
 # ---------------------------------------------------------------------------
 # Stage 5 — model
 # ---------------------------------------------------------------------------
-def generate_answer(passages: list, log_writer: LogWriter, turn_id: int) -> str:
+def generate_answer(
+    passages: list, log_writer: LogWriter, turn_id: int, question: str
+) -> str:
     """
-    Real version: an ~8B instruct model served via vLLM, with per-token
-    logprobs exposed alongside the answer (see llm/README.md). The stub
-    skips straight to a hardcoded answer, but still logs the two timing
-    events the schema expects: the first token appearing, then the full
-    answer.
+    Calls the real llm/client.py generate_answer(): builds the RAG prompt
+    from the question + retrieved passages, and runs it through whichever
+    backend configs/config.yaml's llm.backend selects (mock or vllm). That
+    function logs llm_first_token and llm_final itself, in the exact
+    schema shape the Week 1 stub used to log manually, so no logging call
+    is needed here.
     """
-    _sleep_ms(110)  # simulate time-to-first-token
-    log_writer.log_event("system", "llm_first_token", {"token": "The"}, turn_id)
-
-    answer = "The pool is open until 10 PM."
-    _sleep_ms(160)  # simulate the rest of the answer generating
-    log_writer.log_event("system", "llm_final", {"text": answer}, turn_id)
-    return answer
+    return llm_generate_answer(passages, log_writer, turn_id, question=question)
 
 
 # ---------------------------------------------------------------------------
@@ -189,10 +197,31 @@ def run_conversation(conversation_id: str) -> Path:
         action = controller_decide(transcript, log_writer, turn_id)
         print(f"  controller:     {action}")
 
-        passages = retrieve(transcript, log_writer, turn_id)
-        print(f"  retrieved:      {len(passages)} passage(s)")
+        # The decision now actually gates retrieval, not just logs it: only
+        # fetch passages when decide() says "retrieve". Any other action
+        # (e.g. skip_retrieval) means the model answers with no passages.
+        if action.get("action") == "retrieve":
+            history = []
 
-        answer = generate_answer(passages, log_writer, turn_id)
+            rewritten_query = rewrite_query(
+                history,
+                transcript,
+            )
+
+            print(f"  rewritten query: {rewritten_query}")
+
+            passages = retrieve(
+                rewritten_query,
+                log_writer,
+                turn_id,
+            )   
+            
+            print(f"  retrieved:      {len(passages)} passage(s)")
+        else:
+            passages = []
+            print("  retrieved:      skipped (controller decided not to retrieve)")
+
+        answer = generate_answer(passages, log_writer, turn_id, transcript)
         speak(answer, log_writer, turn_id)
     finally:
         # Always close, even if a stage above raises — otherwise whatever

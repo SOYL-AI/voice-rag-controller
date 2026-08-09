@@ -1,7 +1,12 @@
 # Voice-RAG Controller — conversation logs produced by running the pipeline
 # (e.g. python pipeline/spine.py). These are runtime output, not source.
 logs/
-*.jsonl
+logs/*.jsonl
+
+# Downloaded model weights (Piper ONNX models)
+audio/models/
+*.onnx
+
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
@@ -225,3 +230,11 @@ __marimo__/
 retrieval/index.faiss
 retrieval/chunks.json
 index.faiss
+
+# Debug audio outputs
+debug_audio/
+
+datasets/spokenwoz/
+datasets/spoken_squad/
+datasets/processed/
+simulator/scenarios.json

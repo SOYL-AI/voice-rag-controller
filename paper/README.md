@@ -86,3 +86,47 @@ the paper skeleton created with section headings.
 
 The integration lead (scaffolds the pre-registration doc and provides paper links) and the 
 model/signals owner (signs off on the pre-registration once experiments are defined).
+
+---
+
+## Phase 2 — Documentation and Results Compilation
+
+In Phase 1 you set up the records (lab log, paper skeleton, pre-registration doc). In Phase 
+2 this role ramps up: keep the records complete and compile the experiment results into 
+clean, organized form so they are ready to use.
+
+### Important: who writes the paper
+
+Ryan writes the paper itself. This role does not draft the prose. Instead, it keeps the 
+records and compiles and organizes the material so that when Ryan writes, everything he 
+needs (results, references, figures, decisions) is ready in one place.
+
+### Goal
+
+Keep the pre-registration doc and lab log current, and compile experiment results into 
+organized tables and summaries as they land.
+
+### How to do it
+
+- Keep the pre-registration document current: as each experiment's success criteria get 
+  finalized, record them, and get Ryan to sign off before results exist. This matters because 
+  pre-committing criteria is what makes the results credible.
+- Compile results as Experiment 1 and 2 produce numbers: organize them into clean tables and 
+  summaries, ready for Ryan to use. This is the main ramp-up of the role.
+- Keep the lab log updated with every decision and experiment verdict (for example, the 
+  Experiment 1 AUC result and whether it passed), so nothing is lost when it is time to write.
+- Gather and organize supporting material Ryan will need: references (start with the two 
+  closest papers, Stream RAG and SpokenWOZ), figures from the harness, and the key numbers, 
+  all in one place.
+
+### Definition of done
+
+Pre-registration current and signed, lab log up to date, and results compiled into organized 
+tables and summaries ready for the paper. Ryan writes the paper; this role supplies the 
+organized material.
+
+### Coordinate with
+
+Ryan (he writes the paper and signs off the pre-registration), Shubhankit and Ryan (their 
+experiment results are what you compile), and the whole team (record their decisions in the 
+lab log).

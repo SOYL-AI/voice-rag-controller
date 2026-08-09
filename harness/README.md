@@ -85,3 +85,46 @@ readable timeline. The statistics helpers exist and are tested on toy inputs.
 
 Nobody directly for Week 1 — you build against the schema, which is frozen. Just make sure 
 you are reading the latest `eventlog/schema.md` if it ever updates.
+
+---
+
+## Phase 2 — Full Metrics, Batch Runner, and Experiment 2
+
+In Phase 1 the harness read a log and computed the key metric (time to first audio). In 
+Phase 2 it grows into the full experiment scoreboard, and you run Experiment 2.
+
+### Goal
+
+Extend the harness from a single metric into the full measurement system, build the batch 
+runner that runs many conversations unattended, and run Experiment 2 (timing value) with 
+Renya.
+
+### How to do it
+
+**1. Full metrics**
+- Add the remaining metrics beyond time to first audio: answer accuracy (did it get the 
+  right answer, graded against the simulator's answer key), dead-air (silence gaps), and 
+  interruptions.
+- Add the reporting we need across many conversations: p95 (the slowest 5 percent) and 
+  confidence intervals using the bootstrap helper you already built.
+
+**2. Batch runner**
+- Build a runner that takes the simulator's conversations (from Lakshya), plays them through 
+  the integrated pipeline one after another unattended, and collects all the logs. This is 
+  what lets us run 50 or more conversations overnight without sitting there.
+
+**3. Experiment 2 (timing value), with Renya**
+- Compare retrieval timing policies: retrieve immediately when a need is detected, versus at 
+  sentence boundaries, versus during predicted user pauses (while the user is still talking).
+- Keep everything else fixed and change only the timing. Measure which policy gives lower 
+  p95 time-to-first-audio at equal answer accuracy.
+
+### Definition of done
+
+The full metrics scoreboard works over real logs, the batch runner can run many 
+conversations unattended, and Experiment 2 produces results with confidence intervals.
+
+### Coordinate with
+
+Lakshya (his simulator feeds your batch runner), Renya (co-runs Experiment 2 and owns the 
+timing policies in the controller), and Yashmitha (compiles your results into tables).
