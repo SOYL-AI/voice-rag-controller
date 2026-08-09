@@ -226,7 +226,9 @@ async def speak(
 # ---------------------------------------------------------------------------
 # The spine itself
 # ---------------------------------------------------------------------------
-async def run_conversation(conversation_id: str, live: bool = False) -> Path:
+async def run_conversation(
+    conversation_id: str, live: bool = False, question: str = None
+) -> Path:
     """
     Runs one full conversation through every stage above, in order,
     logging every event to logs/<conversation_id>.jsonl per
@@ -237,6 +239,18 @@ async def run_conversation(conversation_id: str, live: bool = False) -> Path:
     needed, so this stays the deterministic, hardware-free path `python3
     pipeline/spine.py` has always run. live=True uses the real microphone
     and speaker, per audio/audio_loop.py's --live mode.
+
+    question, when given, bypasses audio-in/transcribe entirely and feeds
+    that string straight in as the user's transcript instead — for the
+    batch runner and experiments, which need to drive the pipeline with
+    real scenario questions rather than always replaying whatever the
+    synthetic/live audio stage happens to produce. Since transcribe()
+    normally logs asr_partial/user_end/asr_final itself (see audio/stt.py),
+    this path logs the user_end/asr_final pair itself so the log stays
+    schema-correct — asr_partial is skipped since there's no partial guess
+    to report when the text is already final. speak() still runs, but
+    always with simulated (non-live) playback, since there's no captured
+    audio turn to match hardware timing against.
     """
     cfg = load_config()
     log_writer = LogWriter(conversation_id=conversation_id)
@@ -246,19 +260,29 @@ async def run_conversation(conversation_id: str, live: bool = False) -> Path:
     # faster-whisper, Silero VAD, and piper on first use, which is too
     # slow to redo for every turn.
     try:
-        stt = StreamingSTT(cfg)
         tts = StreamingTTS(cfg)
 
-        audio_stream = audio_in(cfg, live)
+        if question is None:
+            stt = StreamingSTT(cfg)
+            audio_stream = audio_in(cfg, live)
 
-        transcript = await transcribe(audio_stream, stt, log_writer, turn_id)
+            transcript = await transcribe(audio_stream, stt, log_writer, turn_id)
 
-        if not transcript.strip():
-            # Same fallback audio/audio_loop.py uses: the synthetic stream
-            # (or a quiet mic) can yield no speech at all.
-            transcript = "what time does the pool close"
-            print(f'  [fallback] no speech detected, using: "{transcript}"')
+            if not transcript.strip():
+                # Same fallback audio/audio_loop.py uses: the synthetic
+                # stream (or a quiet mic) can yield no speech at all.
+                transcript = "what time does the pool close"
+                print(f'  [fallback] no speech detected, using: "{transcript}"')
+            else:
+                print(f'  user says:      "{transcript}"')
         else:
+            # Text path: no audio, no STT — the given question *is* the
+            # transcript. Log the events transcribe_stream() would have
+            # logged, in the same order/actor audio/stt.py uses, so a
+            # reader of the log can't tell the two paths apart.
+            transcript = question
+            log_writer.log_event("user", "user_end", {}, turn_id)
+            log_writer.log_event("user", "asr_final", {"text": transcript}, turn_id)
             print(f'  user says:      "{transcript}"')
 
         action = controller_decide(transcript, log_writer, turn_id)
@@ -289,8 +313,18 @@ async def run_conversation(conversation_id: str, live: bool = False) -> Path:
             print("  retrieved:      skipped (controller decided not to retrieve)")
 
         answer = generate_answer(passages, log_writer, turn_id, transcript)
+        # Text mode always speaks non-live (simulated playback, no
+        # hardware) regardless of `live`, matching the headless default —
+        # there's no captured audio turn here for live playback to pair
+        # against.
+        speak_live = live if question is None else False
         await speak(
-            answer, tts, log_writer, turn_id, live, cfg["tts"]["playback_block_ms"]
+            answer,
+            tts,
+            log_writer,
+            turn_id,
+            speak_live,
+            cfg["tts"]["playback_block_ms"],
         )
     finally:
         # Always close, even if a stage above raises — otherwise whatever
