@@ -43,7 +43,15 @@ if str(_REPO_ROOT) not in sys.path:
 
 from retrieval.rewrite import rewrite_query
 from controller.decide import decide
-from eventlog.log_writer import LogWriter
+from controller.timing import (
+    MechanismContext,
+    PartialSignalWatcher,
+    mechanism_launch_fields,
+    mechanism_result_fields,
+    plan_simulated_speech,
+    resolve_policy,
+)
+from eventlog.log_writer import LogWriter, now_ms
 from llm.client import generate_answer as llm_generate_answer
 from llm.tracker import track as tracker_track
 from retrieval.search import search as retrieval_search
@@ -142,7 +150,12 @@ def controller_decide(transcript: str, log_writer: LogWriter, turn_id: int) -> d
 # ---------------------------------------------------------------------------
 # Stage 4 — retrieve
 # ---------------------------------------------------------------------------
-def retrieve(query: str, log_writer: LogWriter, turn_id: int) -> list:
+def retrieve(
+    query: str,
+    log_writer: LogWriter,
+    turn_id: int,
+    mechanism: MechanismContext = None,
+) -> list:
     """
     Embeds the query and searches the FAISS index built from
     retrieval/corpus/ (retrieval/search.py), returning the top-k passages.
@@ -151,20 +164,142 @@ def retrieve(query: str, log_writer: LogWriter, turn_id: int) -> list:
     similarity score — lower is a better match, the opposite of the Week 1
     stub's hardcoded 0.91/0.78. Logged as-is; anything reading this field
     downstream needs to know it's a distance now.
+
+    `mechanism` (controller/timing.py's MechanismContext), when given, adds
+    Experiment 2's hidden-latency mechanism-check fields to the
+    retrieval_launched/retrieval_result payloads — which timing policy and
+    trigger were active, and (computed from real captured timestamps, never
+    guessed) how this retrieval's real launch/finish times related to the
+    real or modeled speech window. See controller/timing.py's docstring for
+    why this makes the timing-policy effect measurable rather than asserted.
     """
-    log_writer.log_event("system", "retrieval_launched", {"query": query}, turn_id)
+    launch_ms = now_ms()
+    launched_payload = {"query": query}
+    if mechanism is not None:
+        launched_payload.update(mechanism_launch_fields(mechanism, launch_ms))
+    log_writer.log_event("system", "retrieval_launched", launched_payload, turn_id)
 
     results = retrieval_search(query, k=3)
+    finish_ms = now_ms()
     passages = [r["text"] for r in results]
     scores = [r["distance"] for r in results]
 
-    log_writer.log_event(
-        "system",
-        "retrieval_result",
-        {"passages": passages, "scores": scores},
-        turn_id,
-    )
+    result_payload = {"passages": passages, "scores": scores}
+    if mechanism is not None:
+        result_payload.update(mechanism_result_fields(mechanism, launch_ms, finish_ms))
+    log_writer.log_event("system", "retrieval_result", result_payload, turn_id)
     return passages
+
+
+def run_retrieval_pipeline(
+    transcript_snapshot: str,
+    log_writer: LogWriter,
+    turn_id: int,
+    mechanism: MechanismContext,
+) -> tuple:
+    """
+    The controller-decide + query-rewrite + retrieve sequence — unchanged
+    from Phase 2's logic (controller/decide.py's retrieve-or-not rule never
+    varies with the timing policy). Only *when* run_conversation() calls
+    this changes per policy: at user_end for sentence_end, or earlier (on a
+    partial transcript, real or modeled) for immediate/predicted_pause. See
+    run_conversation()'s timing-policy branches below.
+    """
+    action = controller_decide(transcript_snapshot, log_writer, turn_id)
+    print(f"  controller:     {action}  (timing_trigger={mechanism.trigger})")
+    if action.get("action") != "retrieve":
+        print("  retrieved:      skipped (controller decided not to retrieve)")
+        return action, []
+
+    rewritten_query = rewrite_query([], transcript_snapshot)
+    print(f"  rewritten query: {rewritten_query}")
+
+    passages = retrieve(rewritten_query, log_writer, turn_id, mechanism=mechanism)
+    print(f"  retrieved:      {len(passages)} passage(s)  (timing_trigger={mechanism.trigger})")
+    return action, passages
+
+
+async def _trigger_live_early_retrieval(
+    policy: str,
+    watcher: PartialSignalWatcher,
+    turn_start_ms: int,
+    log_writer: LogWriter,
+    turn_id: int,
+) -> tuple:
+    """
+    Live/synthetic-audio path only. Waits for the real signal `policy`
+    needs from the real STT (first asr_partial for immediate; a stable
+    repeated partial as predicted_pause's pause proxy — see
+    controller/timing.py's PartialSignalWatcher), then launches
+    run_retrieval_pipeline() as a background task that races the rest of
+    transcribe_stream() for real.
+
+    Never returns on its own if the signal it's waiting for doesn't arrive
+    before the turn ends (e.g. a very short utterance with no partial
+    before user_end) — run_conversation() races this coroutine against the
+    transcribe task itself and cancels this one if transcribe wins.
+
+    Returns (task, mechanism). `task` is None only when predicted_pause's
+    forecast gets invalidated (the user kept talking past the point a
+    pause was predicted) before the early retrieval finished — the task is
+    cancelled and run_conversation() falls back to a normal post-user_end
+    retrieval on the real final transcript instead. See this function's
+    predicted_pause branch for the caveat on what "cancelled" actually
+    stops.
+    """
+    if policy == "immediate":
+        partial_text = await watcher.first_partial
+        trigger = "immediate"
+    else:
+        partial_text = await watcher.repeated_partial
+        trigger = "predicted_pause"
+
+    mechanism = MechanismContext(
+        policy=policy,
+        trigger=trigger,
+        user_end_ms_getter=lambda: watcher.user_end_ms,
+        speech_window_ms_getter=lambda: (
+            (turn_start_ms, watcher.user_end_ms) if watcher.user_end_ms is not None else None
+        ),
+    )
+    task = asyncio.create_task(
+        asyncio.to_thread(run_retrieval_pipeline, partial_text, log_writer, turn_id, mechanism)
+    )
+
+    if policy == "predicted_pause":
+        # Structural cancel-on-invalidation: if a later partial shows the
+        # user kept talking past the point we forecast a pause at, the
+        # early retrieval was launched on a stale/incomplete query — cancel
+        # it rather than use its result. Where the real forecast signal
+        # belongs long-term: a genuine mid-utterance silence gap from
+        # audio/stt.py's VAD state, distinct from its final user_end
+        # endpoint — that needs a small addition to Adithi's file, out of
+        # scope here, so wait_for_growth()'s repeated-partial-outgrown
+        # proxy stands in for it.
+        growth_future = watcher.wait_for_growth(partial_text)
+        done, _pending = await asyncio.wait(
+            {task, growth_future}, return_when=asyncio.FIRST_COMPLETED
+        )
+        if growth_future in done and task not in done:
+            # Caveat: retrieve() runs inside asyncio.to_thread. If the
+            # worker thread has already started, cancelling the wrapping
+            # Task stops us from waiting on/using its result — it does not
+            # guarantee the underlying thread stops immediately. Either
+            # way, retrieval_launched/retrieval_result already logged (or
+            # about to be) for this attempt stay in the record with
+            # forecast_invalidated=True; they just aren't this turn's
+            # passages.
+            task.cancel()
+            mechanism.forecast_invalidated = True
+            print(
+                "  [predicted_pause] forecast invalidated — speech continued "
+                "past the predicted pause; discarding the early retrieval."
+            )
+            return None, mechanism
+        if not growth_future.done():
+            growth_future.cancel()
+
+    return task, mechanism
 
 
 # ---------------------------------------------------------------------------
@@ -246,15 +381,27 @@ async def run_conversation(
     real scenario questions rather than always replaying whatever the
     synthetic/live audio stage happens to produce. Since transcribe()
     normally logs asr_partial/user_end/asr_final itself (see audio/stt.py),
-    this path logs the user_end/asr_final pair itself so the log stays
-    schema-correct — asr_partial is skipped since there's no partial guess
-    to report when the text is already final. speak() still runs, but
-    always with simulated (non-live) playback, since there's no captured
-    audio turn to match hardware timing against.
+    this path logs that same trio itself so the log stays schema-correct
+    and a reader can't tell the two paths apart.
+
+    Experiment 2 (retrieval timing): WHEN the retrieve-or-not decision and
+    the retrieval it can trigger actually run is controlled by
+    controller.timing.policy (see controller/timing.py), not hardcoded
+    here. sentence_end (baseline) runs it after the transcript is final,
+    same as always. immediate/predicted_pause run it earlier — on a real
+    partial transcript from the live STT in the live/synthetic-audio path,
+    or, in the text path (no real audio to derive one from), on a modeled
+    partial produced partway through a real asyncio.sleep() sized to how
+    long saying `question` would actually take. Either way the earlier
+    launch is a real background task racing real remaining work, not a
+    number subtracted from a metric afterward — see controller/timing.py's
+    module docstring.
     """
     cfg = load_config()
     log_writer = LogWriter(conversation_id=conversation_id)
     turn_id = 1  # Week 1's canned conversation is a single turn.
+    policy = resolve_policy()
+    turn_start_ms = now_ms()
 
     # Built once, not per turn: StreamingSTT/StreamingTTS lazily load
     # faster-whisper, Silero VAD, and piper on first use, which is too
@@ -265,8 +412,39 @@ async def run_conversation(
         if question is None:
             stt = StreamingSTT(cfg)
             audio_stream = audio_in(cfg, live)
+            # Forwards every log_event() call unchanged to log_writer; only
+            # additionally observes asr_partial/user_end as they really
+            # happen, so the timing policies below have real signals to
+            # trigger on without editing audio/stt.py. See
+            # controller/timing.py's PartialSignalWatcher.
+            watcher = PartialSignalWatcher(log_writer, turn_id)
 
-            transcript = await transcribe(audio_stream, stt, log_writer, turn_id)
+            early_task = None
+            mechanism = None
+            if policy in ("immediate", "predicted_pause"):
+                transcribe_task = asyncio.create_task(
+                    transcribe(audio_stream, stt, watcher, turn_id)
+                )
+                trigger_task = asyncio.create_task(
+                    _trigger_live_early_retrieval(
+                        policy, watcher, turn_start_ms, log_writer, turn_id
+                    )
+                )
+                done, _pending = await asyncio.wait(
+                    {transcribe_task, trigger_task}, return_when=asyncio.FIRST_COMPLETED
+                )
+                if trigger_task in done:
+                    early_task, mechanism = trigger_task.result()
+                else:
+                    # transcribe finished (silence hit user_end) before the
+                    # signal this policy needs ever arrived -- e.g. a very
+                    # short utterance with no partial before user_end. No
+                    # early retrieval this turn; fall through to the
+                    # post-user_end path below like sentence_end would.
+                    trigger_task.cancel()
+                transcript = await transcribe_task
+            else:
+                transcript = await transcribe(audio_stream, stt, watcher, turn_id)
 
             if not transcript.strip():
                 # Same fallback audio/audio_loop.py uses: the synthetic
@@ -275,42 +453,91 @@ async def run_conversation(
                 print(f'  [fallback] no speech detected, using: "{transcript}"')
             else:
                 print(f'  user says:      "{transcript}"')
+
+            if early_task is not None:
+                action, passages = await early_task
+            else:
+                if policy == "sentence_end":
+                    trigger = "sentence_end"
+                elif mechanism is not None and mechanism.forecast_invalidated:
+                    trigger = f"{policy}_forecast_invalidated_fallback"
+                else:
+                    trigger = f"{policy}_no_signal_fallback"
+
+                late_mechanism = MechanismContext(
+                    policy=policy,
+                    trigger=trigger,
+                    user_end_ms_getter=lambda: watcher.user_end_ms,
+                    speech_window_ms_getter=lambda: (
+                        (turn_start_ms, watcher.user_end_ms)
+                        if watcher.user_end_ms is not None
+                        else None
+                    ),
+                )
+                action, passages = run_retrieval_pipeline(
+                    transcript, log_writer, turn_id, late_mechanism
+                )
         else:
             # Text path: no audio, no STT — the given question *is* the
-            # transcript. Log the events transcribe_stream() would have
-            # logged, in the same order/actor audio/stt.py uses, so a
-            # reader of the log can't tell the two paths apart.
+            # transcript. immediate/predicted_pause need a real
+            # elapsed-time window to launch retrieval inside, which the
+            # text path doesn't otherwise have — plan_simulated_speech()
+            # models how long saying `question` would take from its actual
+            # word count, and the sleeps below really happen (real wall
+            # clock), so the eventual race against retrieval's real
+            # latency is real too. sentence_end sleeps through the exact
+            # same modeled duration with no early trigger, so the *only*
+            # thing that differs between policies here is when retrieval
+            # launches, matching the pre-registration's "vary only WHEN
+            # retrieval fires."
             transcript = question
+            plan = plan_simulated_speech(transcript)
+
+            def _planned_user_end_ms():
+                return turn_start_ms + int(plan.total_speech_s * 1000)
+
+            def _planned_window():
+                return (turn_start_ms, _planned_user_end_ms())
+
+            early_task = None
+            if policy in ("immediate", "predicted_pause"):
+                trigger_s = plan.partial_at_s if policy == "immediate" else plan.pause_at_s
+                partial_text = plan.text_at(trigger_s)
+
+                await asyncio.sleep(trigger_s)
+                log_writer.log_event("user", "asr_partial", {"text": partial_text}, turn_id)
+
+                mechanism = MechanismContext(
+                    policy=policy,
+                    trigger=policy,
+                    user_end_ms_getter=_planned_user_end_ms,
+                    speech_window_ms_getter=_planned_window,
+                )
+                early_task = asyncio.create_task(
+                    asyncio.to_thread(
+                        run_retrieval_pipeline, partial_text, log_writer, turn_id, mechanism
+                    )
+                )
+                await asyncio.sleep(plan.total_speech_s - trigger_s)
+            else:
+                await asyncio.sleep(plan.total_speech_s)
+
             log_writer.log_event("user", "user_end", {}, turn_id)
             log_writer.log_event("user", "asr_final", {"text": transcript}, turn_id)
             print(f'  user says:      "{transcript}"')
 
-        action = controller_decide(transcript, log_writer, turn_id)
-        print(f"  controller:     {action}")
-
-        # The decision now actually gates retrieval, not just logs it: only
-        # fetch passages when decide() says "retrieve". Any other action
-        # (e.g. skip_retrieval) means the model answers with no passages.
-        if action.get("action") == "retrieve":
-            history = []
-
-            rewritten_query = rewrite_query(
-                history,
-                transcript,
-            )
-
-            print(f"  rewritten query: {rewritten_query}")
-
-            passages = retrieve(
-                rewritten_query,
-                log_writer,
-                turn_id,
-            )
-
-            print(f"  retrieved:      {len(passages)} passage(s)")
-        else:
-            passages = []
-            print("  retrieved:      skipped (controller decided not to retrieve)")
+            if early_task is not None:
+                action, passages = await early_task
+            else:
+                mechanism = MechanismContext(
+                    policy=policy,
+                    trigger="sentence_end",
+                    user_end_ms_getter=_planned_user_end_ms,
+                    speech_window_ms_getter=_planned_window,
+                )
+                action, passages = run_retrieval_pipeline(
+                    transcript, log_writer, turn_id, mechanism
+                )
 
         answer = generate_answer(passages, log_writer, turn_id, transcript)
         # Text mode always speaks non-live (simulated playback, no
