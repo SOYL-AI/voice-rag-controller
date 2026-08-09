@@ -1,3 +1,4 @@
+import asyncio
 import json
 import sys
 from pathlib import Path
@@ -19,7 +20,6 @@ def load_scenarios():
     with open(SCENARIOS_FILE, "r", encoding="utf-8") as file:
         return json.load(file)
 
-
 def run_scenario(scenario):
     """
     Run one simulator scenario through the pipeline.
@@ -39,7 +39,12 @@ def run_scenario(scenario):
     print("=" * 60)
 
     try:
-        log_path = run_conversation(conversation_id)
+        log_path = asyncio.run(
+            run_conversation(
+                conversation_id,
+                question=scenario["question"]
+        )
+            )
 
         return {
             "scenario_id": scenario_id,
