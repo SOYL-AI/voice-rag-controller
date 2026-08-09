@@ -110,7 +110,11 @@ def _tracker_cache(dataset, client, llm_cfg):
 
 
 def run(dataset_path=DEFAULT_DATASET, config_path=DEFAULT_EXPERIMENT_CONFIG):
-    dataset_path = Path(dataset_path)
+    # Resolved, because the provenance block below records the path relative to
+    # the repo root. A relative --dataset (the normal way to type it) is not a
+    # subpath of an absolute root, and that raised only after every generation
+    # had already been paid for.
+    dataset_path = Path(dataset_path).resolve()
     config_path = Path(config_path)
     dataset = load_dataset(dataset_path)
     experiment_cfg = json.loads(config_path.read_text(encoding="utf-8"))
@@ -204,6 +208,12 @@ def run(dataset_path=DEFAULT_DATASET, config_path=DEFAULT_EXPERIMENT_CONFIG):
         verdict = "INCONCLUSIVE"
 
     raw_dataset = dataset_path.read_bytes()
+    try:
+        dataset_display = str(dataset_path.relative_to(_REPO_ROOT))
+    except ValueError:
+        # A dataset kept outside the repo is unusual but must not be a reason
+        # to discard a completed run.
+        dataset_display = str(dataset_path)
     return {
         "experiment_id": experiment_cfg["experiment_id"],
         "created_at_utc": datetime.now(timezone.utc).isoformat(),
@@ -222,7 +232,7 @@ def run(dataset_path=DEFAULT_DATASET, config_path=DEFAULT_EXPERIMENT_CONFIG):
             "kill_auc": experiment_cfg["kill_auc"],
         },
         "dataset": {
-            "path": str(dataset_path.relative_to(_REPO_ROOT)),
+            "path": dataset_display,
             "sha256": hashlib.sha256(raw_dataset).hexdigest(),
             "examples": len(dataset),
             "retrieval_needed": sum(row["retrieval_needed"] for row in dataset),
