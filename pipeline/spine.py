@@ -1,17 +1,21 @@
 """
-spine.py — the end-to-end pipeline skeleton (Week 1).
+spine.py — the end-to-end pipeline skeleton (Week 1 -> Phase 2).
 
 Runs one conversation through every stage in order:
 
     audio-in -> transcribe -> controller -> retrieve -> model -> speak
 
-Every stage except the controller is a stub for Week 1: it logs the
-event(s) the frozen schema (eventlog/schema.md) says it should, and hands a
-hardcoded value to the next stage. The controller is not a stub — it calls
-the real decide() from controller/decide.py. As of Phase 2, decide() makes
-a real retrieve-or-not call based on the state tracker's uncertainty (see
-controller/decide.py and controller/README.md's Phase 2 section), and that
-decision actually gates whether the retrieve stage below runs.
+As of Phase 2, every stage is real. Audio-in/transcribe use Adithi's
+StreamingSTT (audio/stt.py: Silero VAD + faster-whisper) over either the
+live microphone or a synthetic speech-shaped stream. The controller calls
+the real decide() from controller/decide.py, which reads the state
+tracker's uncertainty to make a real retrieve-or-not call and actually
+gates whether the retrieve stage runs. Retrieve embeds the query and
+searches the FAISS index (retrieval/search.py). Model calls the real LLM
+client (llm/client.py). Speak uses Adithi's StreamingTTS (audio/tts.py:
+piper), either playing audio through the speaker (--live) or synthesizing
+with simulated playback timing so the pipeline still runs with no
+microphone or speaker attached (the default).
 
 The point, per pipeline/README.md, isn't intelligence. It's that a
 conversation flows all the way through, every step gets logged in the
@@ -20,6 +24,8 @@ teammate's real component can drop in and replace one stub at a time
 without touching this file's overall shape.
 """
 
+import argparse
+import asyncio
 import sys
 import time
 from pathlib import Path
@@ -42,16 +48,25 @@ from llm.client import generate_answer as llm_generate_answer
 from llm.tracker import track as tracker_track
 from retrieval.search import search as retrieval_search
 
+from audio.config import load_config
+from audio.stt import StreamingSTT
+from audio.tts import StreamingTTS, split_into_clauses
+from audio.audio_loop import (
+    generate_mic_stream,
+    generate_synthetic_speech_stream,
+    play_pcm_audio,
+)
+
 
 def _sleep_ms(ms: float) -> None:
     """
     Sleep for roughly `ms` milliseconds.
 
-    Purely cosmetic: with every stage a stub, all six events would
-    otherwise land at nearly the same t_ms and the log would read like
-    everything happened at once. A small pause between stages spreads the
-    timestamps out so a replay through the harness's timeline viewer
-    looks like a real conversation's pacing, not an instant burst.
+    Only the controller stage still uses this (see controller_decide()) —
+    it simulates the moment it takes to assemble a belief and decide,
+    since that stage has no real I/O of its own to time it against. Every
+    other stage now waits on real work (STT, retrieval, the LLM, TTS)
+    instead of a cosmetic sleep.
     """
     time.sleep(ms / 1000)
 
@@ -59,37 +74,46 @@ def _sleep_ms(ms: float) -> None:
 # ---------------------------------------------------------------------------
 # Stage 1 — audio-in
 # ---------------------------------------------------------------------------
-def audio_in() -> str:
+def audio_in(cfg: dict, live: bool):
     """
-    Real version: a live microphone stream. For Week 1, a hardcoded
-    utterance stands in for "the user just said this."
+    Builds the async audio-frame stream that stage 2 consumes: the live
+    microphone (audio/audio_loop.py's generate_mic_stream) when --live is
+    passed, otherwise a synthetic speech-shaped stream so a plain
+    `python3 pipeline/spine.py` still runs with no microphone attached and
+    no person talking — the same synthetic/live split audio/audio_loop.py
+    uses for its own headless vs. live modes.
+
+    Unlike the Week 1 stub, this stage hands back a stream, not a finished
+    utterance: the real STT component does its own listening *and*
+    transcribing in one pass (see transcribe() below), so there's no
+    intermediate "the user said this" string to produce here.
     """
-    return "what time does the pool close"
+    if live:
+        mic_gain = cfg["stt"].get("mic_gain", 2.0)
+        return generate_mic_stream(mic_gain=mic_gain)
+    return generate_synthetic_speech_stream()
 
 
 # ---------------------------------------------------------------------------
 # Stage 2 — transcribe
 # ---------------------------------------------------------------------------
-def transcribe(utterance: str, log_writer: LogWriter, turn_id: int) -> str:
+async def transcribe(
+    audio_stream, stt: StreamingSTT, log_writer: LogWriter, turn_id: int
+) -> str:
     """
-    Real version: faster-whisper streaming speech-to-text, emitting a
-    partial guess every 300-500ms as audio arrives, then a final
-    transcription once the user stops (see audio/README.md).
+    Real version: audio/stt.py's StreamingSTT, running Silero VAD frame by
+    frame over the stream from audio_in() and faster-whisper on top of it.
 
-    The stub fakes that shape with a single partial (a leading fragment of
-    the sentence, as if the tail end hasn't been heard yet), then the full
-    text as the final, then user_end once the user is judged to have
-    stopped talking.
+    This fuses what used to be two separate stub stages (listen, then
+    transcribe) into one call: transcribe_stream() logs asr_partial as
+    guesses arrive, user_end once trailing silence crosses the configured
+    threshold, and asr_final with the finished transcript itself, then
+    returns that transcript. No manual logging needed here, unlike the
+    Week 1 stub.
     """
-    partial_text = utterance.rsplit(" ", 2)[0]  # e.g. "what time does the"
-    log_writer.log_event("user", "asr_partial", {"text": partial_text}, turn_id)
-    _sleep_ms(280)  # simulate the rest of the utterance streaming in
-
-    log_writer.log_event("user", "asr_final", {"text": utterance}, turn_id)
-    _sleep_ms(10)  # simulate the brief silence needed to confirm the user stopped
-
-    log_writer.log_event("user", "user_end", {}, turn_id)
-    return utterance
+    return await stt.transcribe_stream(
+        audio_stream, log_writer, turn_id=turn_id, vad_threshold=0.3
+    )
 
 
 # ---------------------------------------------------------------------------
@@ -163,36 +187,103 @@ def generate_answer(
 # ---------------------------------------------------------------------------
 # Stage 6 — speak
 # ---------------------------------------------------------------------------
-def speak(answer: str, log_writer: LogWriter, turn_id: int) -> None:
+async def speak(
+    answer: str,
+    tts: StreamingTTS,
+    log_writer: LogWriter,
+    turn_id: int,
+    live: bool,
+    playback_block_ms: int,
+) -> None:
     """
-    Real version: local TTS (e.g. piper) synthesizing and streaming audio
-    out (see audio/README.md). The stub prints the answer as a stand-in
-    for "audio played," and logs tts_first_audio — the TTFA anchor the
-    harness uses: Time To First Audio is this event's t_ms minus
-    user_end's t_ms.
+    Real version: audio/tts.py's StreamingTTS, synthesizing with piper.
+
+    Two paths, mirroring audio/audio_loop.py's own live/synthetic split:
+      live=True  synthesizes each clause and actually plays it through the
+                 speaker (sounddevice), logging tts_first_audio — the TTFA
+                 anchor the harness uses — the moment the first clause is
+                 ready to play.
+      live=False awaits StreamingTTS.speak(), which does real synthesis
+                 and logs tts_first_audio itself but only simulates
+                 playback timing — no speaker needed, so plain `python3
+                 pipeline/spine.py` runs without hardware.
     """
-    _sleep_ms(80)  # simulate synthesis time before the first sample plays
-    log_writer.log_event("system", "tts_first_audio", {}, turn_id)
+    if live:
+        clauses = split_into_clauses(answer)
+        first_audio_logged = False
+        for clause in clauses:
+            pcm = await asyncio.to_thread(tts.synthesize_clause_to_raw_pcm, clause)
+            if not first_audio_logged:
+                log_writer.log_event("system", "tts_first_audio", {}, turn_id)
+                first_audio_logged = True
+            play_pcm_audio(pcm, sample_rate=22050, block_ms=playback_block_ms)
+    else:
+        await tts.speak(answer, log_writer, turn_id)
+
     print(f'  system speaks: "{answer}"')
 
 
 # ---------------------------------------------------------------------------
 # The spine itself
 # ---------------------------------------------------------------------------
-def run_conversation(conversation_id: str) -> Path:
+async def run_conversation(
+    conversation_id: str, live: bool = False, question: str = None
+) -> Path:
     """
-    Runs one full, hardcoded conversation through every stage above, in
-    order, logging every event to logs/<conversation_id>.jsonl per
+    Runs one full conversation through every stage above, in order,
+    logging every event to logs/<conversation_id>.jsonl per
     eventlog/schema.md. Returns the path to that log file.
+
+    live=False (default) listens on a synthetic speech-shaped stream and
+    speaks with simulated playback timing — no microphone or speaker
+    needed, so this stays the deterministic, hardware-free path `python3
+    pipeline/spine.py` has always run. live=True uses the real microphone
+    and speaker, per audio/audio_loop.py's --live mode.
+
+    question, when given, bypasses audio-in/transcribe entirely and feeds
+    that string straight in as the user's transcript instead — for the
+    batch runner and experiments, which need to drive the pipeline with
+    real scenario questions rather than always replaying whatever the
+    synthetic/live audio stage happens to produce. Since transcribe()
+    normally logs asr_partial/user_end/asr_final itself (see audio/stt.py),
+    this path logs the user_end/asr_final pair itself so the log stays
+    schema-correct — asr_partial is skipped since there's no partial guess
+    to report when the text is already final. speak() still runs, but
+    always with simulated (non-live) playback, since there's no captured
+    audio turn to match hardware timing against.
     """
+    cfg = load_config()
     log_writer = LogWriter(conversation_id=conversation_id)
     turn_id = 1  # Week 1's canned conversation is a single turn.
 
+    # Built once, not per turn: StreamingSTT/StreamingTTS lazily load
+    # faster-whisper, Silero VAD, and piper on first use, which is too
+    # slow to redo for every turn.
     try:
-        utterance = audio_in()
-        print(f'  user says:      "{utterance}"')
+        tts = StreamingTTS(cfg)
 
-        transcript = transcribe(utterance, log_writer, turn_id)
+        if question is None:
+            stt = StreamingSTT(cfg)
+            audio_stream = audio_in(cfg, live)
+
+            transcript = await transcribe(audio_stream, stt, log_writer, turn_id)
+
+            if not transcript.strip():
+                # Same fallback audio/audio_loop.py uses: the synthetic
+                # stream (or a quiet mic) can yield no speech at all.
+                transcript = "what time does the pool close"
+                print(f'  [fallback] no speech detected, using: "{transcript}"')
+            else:
+                print(f'  user says:      "{transcript}"')
+        else:
+            # Text path: no audio, no STT — the given question *is* the
+            # transcript. Log the events transcribe_stream() would have
+            # logged, in the same order/actor audio/stt.py uses, so a
+            # reader of the log can't tell the two paths apart.
+            transcript = question
+            log_writer.log_event("user", "user_end", {}, turn_id)
+            log_writer.log_event("user", "asr_final", {"text": transcript}, turn_id)
+            print(f'  user says:      "{transcript}"')
 
         action = controller_decide(transcript, log_writer, turn_id)
         print(f"  controller:     {action}")
@@ -214,15 +305,27 @@ def run_conversation(conversation_id: str) -> Path:
                 rewritten_query,
                 log_writer,
                 turn_id,
-            )   
-            
+            )
+
             print(f"  retrieved:      {len(passages)} passage(s)")
         else:
             passages = []
             print("  retrieved:      skipped (controller decided not to retrieve)")
 
         answer = generate_answer(passages, log_writer, turn_id, transcript)
-        speak(answer, log_writer, turn_id)
+        # Text mode always speaks non-live (simulated playback, no
+        # hardware) regardless of `live`, matching the headless default —
+        # there's no captured audio turn here for live playback to pair
+        # against.
+        speak_live = live if question is None else False
+        await speak(
+            answer,
+            tts,
+            log_writer,
+            turn_id,
+            speak_live,
+            cfg["tts"]["playback_block_ms"],
+        )
     finally:
         # Always close, even if a stage above raises — otherwise whatever
         # is still sitting in the writer thread's queue never reaches
@@ -233,6 +336,16 @@ def run_conversation(conversation_id: str) -> Path:
 
 
 if __name__ == "__main__":
-    print("Running one canned conversation through the spine...\n")
-    log_path = run_conversation("conv_001")
+    parser = argparse.ArgumentParser(
+        description="Run one conversation through the full pipeline spine."
+    )
+    parser.add_argument(
+        "--live",
+        action="store_true",
+        help="Use the real microphone and speaker (default: synthetic/headless).",
+    )
+    args = parser.parse_args()
+
+    print("Running one conversation through the spine...\n")
+    log_path = asyncio.run(run_conversation("conv_001", live=args.live))
     print(f"\nWrote log to: {log_path}")
