@@ -92,38 +92,91 @@ def _answer_text(value) -> str:
     return str(value).strip()
 
 
-def load_squad_positives(squad_dir: Path, wanted: int, sample_seed: int) -> list:
+def _rows_from_json(path: Path) -> list:
+    """Read one Spoken-SQuAD file: JSON Lines, a JSON list, or SQuAD-nested.
+
+    The canonical alinet/spoken_squad release ships JSON Lines with one
+    {id, title, context, question, answers} object per line. Older SQuAD-style
+    mirrors nest the same fields under data[].paragraphs[].qas[].
+    """
+    text = path.read_text(encoding="utf-8")
+
+    rows = []
     try:
-        import pandas as pd
-    except ImportError:
-        raise SystemExit(
-            "pandas is required to read the Spoken-SQuAD parquet files and is "
-            "not in requirements.txt:\n    pip install pandas pyarrow"
+        parsed = json.loads(text)
+    except json.JSONDecodeError:
+        # JSON Lines: the common case.
+        return [json.loads(line) for line in text.splitlines() if line.strip()]
+
+    if isinstance(parsed, list):
+        return parsed
+    if isinstance(parsed, dict) and "data" in parsed:
+        for article in parsed["data"]:
+            for paragraph in article.get("paragraphs", []):
+                for qa in paragraph.get("qas", []):
+                    rows.append(dict(qa))
+        return rows
+    raise SystemExit(f"Unrecognised Spoken-SQuAD JSON layout in {path}")
+
+
+def _load_squad_rows(squad_dir: Path) -> list:
+    """Every usable row, from whichever distribution format is on disk."""
+    if not squad_dir.exists():
+        return []
+
+    json_files = sorted(
+        path
+        for path in squad_dir.rglob("*.json*")
+        if path.suffix in {".json", ".jsonl"}
+    )
+    parquet_files = sorted(squad_dir.rglob("*.parquet"))
+
+    rows = []
+    for path in json_files:
+        rows.extend(_rows_from_json(path))
+    if json_files:
+        print(f"[build] read {len(rows)} rows from {len(json_files)} JSON file(s)")
+
+    if parquet_files:
+        try:
+            import pandas as pd
+        except ImportError:
+            raise SystemExit(
+                "pandas is required to read .parquet Spoken-SQuAD files and is "
+                "not in requirements.txt:\n    pip install pandas pyarrow"
+            )
+        frames = [pd.read_parquet(path) for path in parquet_files]
+        table = frames[0] if len(frames) == 1 else pd.concat(frames, ignore_index=True)
+        before = len(rows)
+        rows.extend(table.to_dict("records"))
+        print(
+            f"[build] read {len(rows) - before} rows from "
+            f"{len(parquet_files)} parquet file(s)"
         )
 
-    files = sorted(squad_dir.rglob("*.parquet")) if squad_dir.exists() else []
-    if not files:
+    return rows
+
+
+def load_squad_positives(squad_dir: Path, wanted: int, sample_seed: int) -> list:
+    table = _load_squad_rows(squad_dir)
+    if not table:
         raise SystemExit(
-            f"No Spoken-SQuAD .parquet files found under {squad_dir}\n\n"
-            "Download the text-only release (13.9 MB):\n"
-            "    hf download alinet/spoken_squad --repo-type dataset \\\n"
-            "        --include 'default/*.parquet' \\\n"
-            "        --local-dir datasets/spoken_squad\n\n"
+            f"No Spoken-SQuAD files found under {squad_dir}\n\n"
+            "Download the canonical text-only release (~5 MB):\n"
+            "    curl -L -o datasets/spoken_squad/data/test.json \\\n"
+            "      https://huggingface.co/datasets/alinet/spoken_squad/resolve/main/test.json\n\n"
             "See datasets/README.md."
         )
-    print(f"[build] reading {len(files)} parquet file(s) from {squad_dir}")
 
-    frames = [pd.read_parquet(path) for path in files]
-    table = frames[0] if len(frames) == 1 else pd.concat(frames, ignore_index=True)
-
-    q_col = _pick_column(table.columns, _QUESTION_COLUMNS, "question")
-    a_col = _pick_column(table.columns, _ANSWER_COLUMNS, "answer")
+    columns = set(table[0])
+    q_col = _pick_column(columns, _QUESTION_COLUMNS, "question")
+    a_col = _pick_column(columns, _ANSWER_COLUMNS, "answer")
 
     candidates = []
     seen_questions = set()
     dropped_for_context = 0
 
-    for _, row in table.iterrows():
+    for row in table:
         question = str(row[q_col]).strip()
         answer = _answer_text(row[a_col])
         if not question or not answer:

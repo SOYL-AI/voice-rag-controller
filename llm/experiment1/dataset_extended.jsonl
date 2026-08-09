@@ -1,0 +1,120 @@
+{"id": "hotel_checkout_time", "question": "What is Grand Horizon Hotel's standard check-out time?", "expected_answer": "11:00 AM", "retrieval_needed": true, "source": "retrieval/corpus/02_checkout_policy.txt"}
+{"id": "hotel_front_desk_hours", "question": "At what hours is the Grand Horizon Front Desk staffed?", "expected_answer": "24 hours a day", "retrieval_needed": true, "source": "retrieval/corpus/05_reception_services.txt"}
+{"id": "hotel_luggage_cost", "question": "Does Grand Horizon charge for same-day luggage storage?", "expected_answer": "No, same-day luggage storage is free", "retrieval_needed": true, "source": "retrieval/corpus/06_luggage_storage.txt"}
+{"id": "hotel_airport_notice", "question": "How far in advance should a Grand Horizon guest provide flight details for airport pickup?", "expected_answer": "At least 24 hours before arrival", "retrieval_needed": true, "source": "retrieval/corpus/07_airport_transfer.txt"}
+{"id": "hotel_lost_retention", "question": "How long does Grand Horizon generally keep unclaimed lost property?", "expected_answer": "90 days", "retrieval_needed": true, "source": "retrieval/corpus/09_lost_and_found.txt"}
+{"id": "hotel_room_service", "question": "What hours is room service available at Grand Horizon?", "expected_answer": "24 hours a day", "retrieval_needed": true, "source": "retrieval/corpus/23_room_service.txt"}
+{"id": "hotel_coffee_shop", "question": "When does Grand Horizon's Brew Lounge close?", "expected_answer": "11:00 PM", "retrieval_needed": true, "source": "retrieval/corpus/24_coffee_shop.txt"}
+{"id": "hotel_rooftop_open", "question": "What time does the Skyline Rooftop Restaurant open?", "expected_answer": "6:30 PM", "retrieval_needed": true, "source": "retrieval/corpus/25_rooftop_restaurant.txt"}
+{"id": "hotel_bar_age", "question": "What is the minimum age to buy alcohol at the Horizon Lounge Bar?", "expected_answer": "21 years old", "retrieval_needed": true, "source": "retrieval/corpus/26_bar_policy.txt"}
+{"id": "hotel_spa_hours", "question": "What are the Serenity Spa's daily operating hours?", "expected_answer": "10:00 AM to 9:00 PM", "retrieval_needed": true, "source": "retrieval/corpus/33_spa.txt"}
+{"id": "hotel_play_zone_ages", "question": "Which ages is the Grand Horizon Kids Play Zone designed for?", "expected_answer": "Children aged 3 to 12", "retrieval_needed": true, "source": "retrieval/corpus/36_kids_play_area.txt"}
+{"id": "hotel_laundry_hours", "question": "At what time does Grand Horizon's laundry service close?", "expected_answer": "8:00 PM", "retrieval_needed": true, "source": "retrieval/corpus/41_laundry.txt"}
+{"id": "hotel_wifi_ssid", "question": "What Wi-Fi network name should Grand Horizon guests select?", "expected_answer": "GrandHorizon_Guest", "retrieval_needed": true, "source": "retrieval/corpus/43_wifi.txt"}
+{"id": "hotel_business_center", "question": "What are the Grand Horizon Business Centre's hours?", "expected_answer": "8:00 AM to 8:00 PM", "retrieval_needed": true, "source": "retrieval/corpus/44_business_center.txt"}
+{"id": "hotel_cancellation_window", "question": "How early must a Grand Horizon guest cancel to avoid cancellation charges?", "expected_answer": "At least 48 hours before scheduled check-in", "retrieval_needed": true, "source": "retrieval/corpus/51_cancellation.txt"}
+{"id": "hotel_quiet_hours", "question": "When are quiet hours at Grand Horizon?", "expected_answer": "10:00 PM to 7:00 AM", "retrieval_needed": true, "source": "retrieval/corpus/55_noise_policy.txt"}
+{"id": "hotel_visitor_hours", "question": "During which hours may visitors enter Grand Horizon?", "expected_answer": "8:00 AM to 10:00 PM", "retrieval_needed": true, "source": "retrieval/corpus/56_visitor_policy.txt"}
+{"id": "hotel_steam_room", "question": "When is Grand Horizon's steam room available?", "expected_answer": "7:00 AM to 9:00 PM", "retrieval_needed": true, "source": "retrieval/corpus/34_steam_room.txt"}
+{"id": "squad_0cf98e97c6", "question": "What position does Danny Trevathan play?", "expected_answer": "linebacker", "retrieval_needed": true, "source": "spoken_squad"}
+{"id": "squad_73f4e8284a", "question": "If law breaking is not done in a public manor it is not considered what term?", "expected_answer": "civil disobedience", "retrieval_needed": true, "source": "spoken_squad"}
+{"id": "squad_335537b626", "question": "What Nobel Memorial Prize in Economic Sciences winner is also a university alumni member?", "expected_answer": "milton friedman", "retrieval_needed": true, "source": "spoken_squad"}
+{"id": "squad_793d45f43c", "question": "What impacts gender inequality in wages?", "expected_answer": "gender inequality in education", "retrieval_needed": true, "source": "spoken_squad"}
+{"id": "squad_bbcc728539", "question": "Other scholars contend that Luther's words lent what element to Christian suspicion of Jews?", "expected_answer": "violence", "retrieval_needed": true, "source": "spoken_squad"}
+{"id": "squad_d6815240c2", "question": "What is the edge of the moraine plateau called?", "expected_answer": "warsaw escarpment", "retrieval_needed": true, "source": "spoken_squad"}
+{"id": "squad_54e22b07e8", "question": "What is the population of the second largest city in California?", "expected_answer": "san diego", "retrieval_needed": true, "source": "spoken_squad"}
+{"id": "squad_40350f3df9", "question": "What tribe uses GPS devices to map lands?", "expected_answer": "trio", "retrieval_needed": true, "source": "spoken_squad"}
+{"id": "squad_3b7ed7df7c", "question": "Has the tourism sector had growth or reduction?", "expected_answer": "steady growth", "retrieval_needed": true, "source": "spoken_squad"}
+{"id": "squad_84cb517d28", "question": "What football program was debuted by ABC in 1970?", "expected_answer": "monday night football", "retrieval_needed": true, "source": "spoken_squad"}
+{"id": "squad_5ac40861ae", "question": "Where did it join in the direction of its flow?", "expected_answer": "joining the easterly flow toward the atlantic", "retrieval_needed": true, "source": "spoken_squad"}
+{"id": "squad_7ec260b682", "question": "Which army attacked and destroyed this colony?", "expected_answer": "spanish", "retrieval_needed": true, "source": "spoken_squad"}
+{"id": "squad_28375a82dc", "question": "What began in 1527 when Luther introdued the new order of worship?", "expected_answer": "visitation of the electorate", "retrieval_needed": true, "source": "spoken_squad"}
+{"id": "squad_17e06b1e3f", "question": "What are the points of algebro-geometric objects?", "expected_answer": "prime ideals", "retrieval_needed": true, "source": "spoken_squad"}
+{"id": "squad_d97f25b577", "question": "Who was the founder of the Oracle Corporation?", "expected_answer": "larry ellison", "retrieval_needed": true, "source": "spoken_squad"}
+{"id": "squad_ad3e0f087c", "question": "How many forced fumbles did Von Miller have during the Super Bowl 50 game?", "expected_answer": "two", "retrieval_needed": true, "source": "spoken_squad"}
+{"id": "squad_556b95fd9a", "question": "What is the taskforce that was organized to identify with the pro-life position?", "expected_answer": "members of the united methodist church", "retrieval_needed": true, "source": "spoken_squad"}
+{"id": "squad_ca3c60a420", "question": "What does lack of education lead directly to?", "expected_answer": "lower incomes", "retrieval_needed": true, "source": "spoken_squad"}
+{"id": "squad_161f4f2047", "question": "ABC had secondary status on the existing stations in what Ohio town?", "expected_answer": "youngstown", "retrieval_needed": true, "source": "spoken_squad"}
+{"id": "squad_3ae62b8868", "question": "What compounds in the stomach protect against ingested pathogens?", "expected_answer": "gastric acid", "retrieval_needed": true, "source": "spoken_squad"}
+{"id": "squad_63182d455a", "question": "In what borough of New York City is ABC headquartered?", "expected_answer": "manhattan", "retrieval_needed": true, "source": "spoken_squad"}
+{"id": "squad_ee4548baa1", "question": "What do some theories claim about civil disobedience?", "expected_answer": "only justified against governmental entities", "retrieval_needed": true, "source": "spoken_squad"}
+{"id": "squad_5577d710f5", "question": "How often must local lay servant reapply?", "expected_answer": "annually", "retrieval_needed": true, "source": "spoken_squad"}
+{"id": "squad_fa15e07510", "question": "What was the goal of John Sheepshanks considerable bequest to the museum?", "expected_answer": "forming a a national gallery of british art", "retrieval_needed": true, "source": "spoken_squad"}
+{"id": "squad_9afb0cfcf8", "question": "What does factorization of prime ideals approximate?", "expected_answer": "ramification in geometry", "retrieval_needed": true, "source": "spoken_squad"}
+{"id": "squad_acc32305c0", "question": "What are stators attached to?", "expected_answer": "turbine casing", "retrieval_needed": true, "source": "spoken_squad"}
+{"id": "squad_57f9c93289", "question": "What are the proteins that organisms use to identify molecules associated with pathogens?", "expected_answer": "pattern recognition receptors", "retrieval_needed": true, "source": "spoken_squad"}
+{"id": "squad_9955f7e939", "question": "What did Warsz own?", "expected_answer": "village", "retrieval_needed": true, "source": "spoken_squad"}
+{"id": "squad_4f2807c8f1", "question": "What type of amendments might members opposed to a bill put on the table?", "expected_answer": "wrecking", "retrieval_needed": true, "source": "spoken_squad"}
+{"id": "squad_a52a0b73e1", "question": "What type of venue is the Teatr Wielki?", "expected_answer": "musical", "retrieval_needed": true, "source": "spoken_squad"}
+{"id": "squad_d9e171464a", "question": "What was the name of the first German settlement?", "expected_answer": "new guinea", "retrieval_needed": true, "source": "spoken_squad"}
+{"id": "squad_47191f80f5", "question": "What other visual phenomena accompanied Tesla's visions?", "expected_answer": "blinding flashes of light", "retrieval_needed": true, "source": "spoken_squad"}
+{"id": "squad_33728ec16c", "question": "When does photorespiration happen?", "expected_answer": "when the oxygen concentration is too high", "retrieval_needed": true, "source": "spoken_squad"}
+{"id": "squad_bd3918b431", "question": "What did the Shah do when faced with defeat by Genghis Khan's forces?", "expected_answer": "fled", "retrieval_needed": true, "source": "spoken_squad"}
+{"id": "squad_4f3852cfbc", "question": "In which continent besides Asia were major gains made by the British Empire in the late 19th century?", "expected_answer": "middle east", "retrieval_needed": true, "source": "spoken_squad"}
+{"id": "squad_63e4c7a11c", "question": "How long does it take to know the outcome of a division?", "expected_answer": "seconds", "retrieval_needed": true, "source": "spoken_squad"}
+{"id": "squad_534ed45196", "question": "Is fertilization  internal or exeternal in most species?", "expected_answer": "external", "retrieval_needed": true, "source": "spoken_squad"}
+{"id": "squad_85087b8110", "question": "The Talbot Hughes collection was a gift from which company?", "expected_answer": "harrods", "retrieval_needed": true, "source": "spoken_squad"}
+{"id": "squad_7e5a6fe2d6", "question": "How many times was Cam Newton sacked?", "expected_answer": "seven", "retrieval_needed": true, "source": "spoken_squad"}
+{"id": "squad_9cc2ad705a", "question": "What can the non-elected members from the Scottish Government not do?", "expected_answer": "vote", "retrieval_needed": true, "source": "spoken_squad"}
+{"id": "squad_e764dc6dec", "question": "What portion of bird species make up the world's total live in the rainforest?", "expected_answer": "one in five", "retrieval_needed": true, "source": "spoken_squad"}
+{"id": "squad_303498ee17", "question": "An MSP may introduce a bill as what?", "expected_answer": "a private member", "retrieval_needed": true, "source": "spoken_squad"}
+{"id": "hard_neg_pride_prejudice", "question": "Who wrote the novel Pride and Prejudice?", "expected_answer": "Jane Austen", "retrieval_needed": false, "source": "stable_general_knowledge_hard"}
+{"id": "hard_neg_berlin_wall", "question": "In what year did the Berlin Wall fall?", "expected_answer": "1989", "retrieval_needed": false, "source": "stable_general_knowledge_hard"}
+{"id": "hard_neg_general_relativity", "question": "Who developed the theory of general relativity?", "expected_answer": "Albert Einstein", "retrieval_needed": false, "source": "stable_general_knowledge_hard"}
+{"id": "hard_neg_gold_symbol", "question": "What is the chemical symbol for gold?", "expected_answer": "Au", "retrieval_needed": false, "source": "stable_general_knowledge_hard"}
+{"id": "hard_neg_largest_ocean", "question": "Which ocean is the largest by surface area?", "expected_answer": "The Pacific Ocean", "retrieval_needed": false, "source": "stable_general_knowledge_hard"}
+{"id": "hard_neg_sistine_chapel", "question": "Who painted the ceiling of the Sistine Chapel?", "expected_answer": "Michelangelo", "retrieval_needed": false, "source": "stable_general_knowledge_hard"}
+{"id": "hard_neg_longest_river_africa", "question": "What is the longest river in Africa?", "expected_answer": "The Nile", "retrieval_needed": false, "source": "stable_general_knowledge_hard"}
+{"id": "hard_neg_ww1_start", "question": "In which year did the First World War begin?", "expected_answer": "1914", "retrieval_needed": false, "source": "stable_general_knowledge_hard"}
+{"id": "hard_neg_moon_walk", "question": "Who was the first person to walk on the Moon?", "expected_answer": "Neil Armstrong", "retrieval_needed": false, "source": "stable_general_knowledge_hard"}
+{"id": "hard_neg_australia_capital", "question": "What is the capital city of Australia?", "expected_answer": "Canberra", "retrieval_needed": false, "source": "stable_general_knowledge_hard"}
+{"id": "hard_neg_atomic_number_six", "question": "Which element has the atomic number 6?", "expected_answer": "Carbon", "retrieval_needed": false, "source": "stable_general_knowledge_hard"}
+{"id": "hard_neg_ode_to_joy", "question": "Who composed the symphony that contains the Ode to Joy?", "expected_answer": "Ludwig van Beethoven", "retrieval_needed": false, "source": "stable_general_knowledge_hard"}
+{"id": "hard_neg_largest_planet", "question": "What is the largest planet in the Solar System?", "expected_answer": "Jupiter", "retrieval_needed": false, "source": "stable_general_knowledge_hard"}
+{"id": "hard_neg_statue_liberty", "question": "Which country gifted the Statue of Liberty to the United States?", "expected_answer": "France", "retrieval_needed": false, "source": "stable_general_knowledge_hard"}
+{"id": "hard_neg_cell_powerhouse", "question": "Which organelle is commonly called the powerhouse of the cell?", "expected_answer": "The mitochondrion", "retrieval_needed": false, "source": "stable_general_knowledge_hard"}
+{"id": "hard_neg_hamlet_author", "question": "Who wrote the play Hamlet?", "expected_answer": "William Shakespeare", "retrieval_needed": false, "source": "stable_general_knowledge_hard"}
+{"id": "hard_neg_freezing_fahrenheit", "question": "What is the freezing point of water in degrees Fahrenheit?", "expected_answer": "32 degrees Fahrenheit", "retrieval_needed": false, "source": "stable_general_knowledge_hard"}
+{"id": "hard_neg_highest_mountain", "question": "Which mountain is the highest above sea level?", "expected_answer": "Mount Everest", "retrieval_needed": false, "source": "stable_general_knowledge_hard"}
+{"id": "hard_neg_colosseum_city", "question": "In which city is the Colosseum located?", "expected_answer": "Rome", "retrieval_needed": false, "source": "stable_general_knowledge_hard"}
+{"id": "hard_neg_laws_of_motion", "question": "Who formulated the three laws of motion?", "expected_answer": "Isaac Newton", "retrieval_needed": false, "source": "stable_general_knowledge_hard"}
+{"id": "hard_neg_photosynthesis_gas", "question": "Which gas do plants primarily absorb during photosynthesis?", "expected_answer": "Carbon dioxide", "retrieval_needed": false, "source": "stable_general_knowledge_hard"}
+{"id": "hard_neg_japan_currency", "question": "What is the currency of Japan?", "expected_answer": "The yen", "retrieval_needed": false, "source": "stable_general_knowledge_hard"}
+{"id": "hard_neg_first_us_president", "question": "Who was the first President of the United States?", "expected_answer": "George Washington", "retrieval_needed": false, "source": "stable_general_knowledge_hard"}
+{"id": "hard_neg_closest_planet_sun", "question": "Which planet is closest to the Sun?", "expected_answer": "Mercury", "retrieval_needed": false, "source": "stable_general_knowledge_hard"}
+{"id": "hard_neg_largest_mammal", "question": "What is the largest mammal on Earth?", "expected_answer": "The blue whale", "retrieval_needed": false, "source": "stable_general_knowledge_hard"}
+{"id": "hard_neg_ww2_end", "question": "In which year did the Second World War end?", "expected_answer": "1945", "retrieval_needed": false, "source": "stable_general_knowledge_hard"}
+{"id": "hard_neg_penicillin", "question": "Who discovered penicillin?", "expected_answer": "Alexander Fleming", "retrieval_needed": false, "source": "stable_general_knowledge_hard"}
+{"id": "hard_neg_table_salt_formula", "question": "What is the chemical formula for table salt?", "expected_answer": "NaCl", "retrieval_needed": false, "source": "stable_general_knowledge_hard"}
+{"id": "hard_neg_most_native_speakers", "question": "Which language has the most native speakers worldwide?", "expected_answer": "Mandarin Chinese", "retrieval_needed": false, "source": "stable_general_knowledge_hard"}
+{"id": "hard_neg_hardest_mineral", "question": "What is the hardest naturally occurring mineral?", "expected_answer": "Diamond", "retrieval_needed": false, "source": "stable_general_knowledge_hard"}
+{"id": "hard_neg_communist_manifesto", "question": "Who wrote the Communist Manifesto together with Friedrich Engels?", "expected_answer": "Karl Marx", "retrieval_needed": false, "source": "stable_general_knowledge_hard"}
+{"id": "hard_neg_sea_europe_africa", "question": "Which sea separates Europe from Africa?", "expected_answer": "The Mediterranean Sea", "retrieval_needed": false, "source": "stable_general_knowledge_hard"}
+{"id": "hard_neg_earthquake_study", "question": "What is the scientific study of earthquakes called?", "expected_answer": "Seismology", "retrieval_needed": false, "source": "stable_general_knowledge_hard"}
+{"id": "hard_neg_jurassic_park", "question": "Who directed the film Jurassic Park?", "expected_answer": "Steven Spielberg", "retrieval_needed": false, "source": "stable_general_knowledge_hard"}
+{"id": "hard_neg_smallest_prime", "question": "What is the smallest prime number?", "expected_answer": "2", "retrieval_needed": false, "source": "stable_general_knowledge_hard"}
+{"id": "hard_neg_insulin_organ", "question": "Which organ produces insulin in the human body?", "expected_answer": "The pancreas", "retrieval_needed": false, "source": "stable_general_knowledge_hard"}
+{"id": "hard_neg_giza_country", "question": "In which country are the pyramids of Giza?", "expected_answer": "Egypt", "retrieval_needed": false, "source": "stable_general_knowledge_hard"}
+{"id": "hard_neg_speed_of_light", "question": "What is the approximate speed of light in a vacuum?", "expected_answer": "About 300,000 kilometres per second", "retrieval_needed": false, "source": "stable_general_knowledge_hard"}
+{"id": "hard_neg_hundred_years_solitude", "question": "Who wrote One Hundred Years of Solitude?", "expected_answer": "Gabriel Garcia Marquez", "retrieval_needed": false, "source": "stable_general_knowledge_hard"}
+{"id": "hard_neg_liquid_metal", "question": "Which metal is liquid at room temperature?", "expected_answer": "Mercury", "retrieval_needed": false, "source": "stable_general_knowledge_hard"}
+{"id": "hard_neg_canada_capital", "question": "What is the capital of Canada?", "expected_answer": "Ottawa", "retrieval_needed": false, "source": "stable_general_knowledge_hard"}
+{"id": "hard_neg_telephone_inventor", "question": "Who is credited with inventing the telephone?", "expected_answer": "Alexander Graham Bell", "retrieval_needed": false, "source": "stable_general_knowledge_hard"}
+{"id": "hard_neg_largest_hot_desert", "question": "Which desert is the largest hot desert in the world?", "expected_answer": "The Sahara", "retrieval_needed": false, "source": "stable_general_knowledge_hard"}
+{"id": "hard_neg_titanic_year", "question": "In which year did the Titanic sink?", "expected_answer": "1912", "retrieval_needed": false, "source": "stable_general_knowledge_hard"}
+{"id": "hard_neg_plant_eaters", "question": "What is the term for animals that eat only plants?", "expected_answer": "Herbivores", "retrieval_needed": false, "source": "stable_general_knowledge_hard"}
+{"id": "hard_neg_odyssey_author", "question": "Who is traditionally credited with writing the Odyssey?", "expected_answer": "Homer", "retrieval_needed": false, "source": "stable_general_knowledge_hard"}
+{"id": "hard_neg_sunlight_vitamin", "question": "Which vitamin does the skin produce when exposed to sunlight?", "expected_answer": "Vitamin D", "retrieval_needed": false, "source": "stable_general_knowledge_hard"}
+{"id": "hard_neg_largest_internal_organ", "question": "What is the largest internal organ in the human body?", "expected_answer": "The liver", "retrieval_needed": false, "source": "stable_general_knowledge_hard"}
+{"id": "hard_neg_brazil_continent", "question": "On which continent is Brazil located?", "expected_answer": "South America", "retrieval_needed": false, "source": "stable_general_knowledge_hard"}
+{"id": "hard_neg_water_to_vapour", "question": "What is the process by which liquid water turns into vapour called?", "expected_answer": "Evaporation", "retrieval_needed": false, "source": "stable_general_knowledge_hard"}
+{"id": "hard_neg_greek_sea_god", "question": "Who was the ancient Greek god of the sea?", "expected_answer": "Poseidon", "retrieval_needed": false, "source": "stable_general_knowledge_hard"}
+{"id": "hard_neg_iron_symbol", "question": "What is the chemical symbol for iron?", "expected_answer": "Fe", "retrieval_needed": false, "source": "stable_general_knowledge_hard"}
+{"id": "hard_neg_pressure_instrument", "question": "Which instrument measures atmospheric pressure?", "expected_answer": "A barometer", "retrieval_needed": false, "source": "stable_general_knowledge_hard"}
+{"id": "hard_neg_french_revolution", "question": "In which year did the French Revolution begin?", "expected_answer": "1789", "retrieval_needed": false, "source": "stable_general_knowledge_hard"}
+{"id": "hard_neg_natural_selection", "question": "Who proposed the theory of evolution by natural selection?", "expected_answer": "Charles Darwin", "retrieval_needed": false, "source": "stable_general_knowledge_hard"}
+{"id": "hard_neg_tallest_animal", "question": "What is the tallest living land animal species?", "expected_answer": "The giraffe", "retrieval_needed": false, "source": "stable_general_knowledge_hard"}
+{"id": "hard_neg_kangaroo_country", "question": "Which country is the natural home of the kangaroo?", "expected_answer": "Australia", "retrieval_needed": false, "source": "stable_general_knowledge_hard"}
+{"id": "hard_neg_resistance_unit", "question": "What is the SI unit of electrical resistance?", "expected_answer": "The ohm", "retrieval_needed": false, "source": "stable_general_knowledge_hard"}
+{"id": "hard_neg_mahatma", "question": "Which leader of the Indian independence movement was known as Mahatma?", "expected_answer": "Mohandas K. Gandhi", "retrieval_needed": false, "source": "stable_general_knowledge_hard"}
+{"id": "hard_neg_largest_bone", "question": "What is the largest bone in the human body?", "expected_answer": "The femur", "retrieval_needed": false, "source": "stable_general_knowledge_hard"}
