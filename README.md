@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 # Voice-RAG Controller
 
 A research project by the SOYL-AI team. Target: IEEE conference paper.
@@ -102,3 +103,6 @@ Each folder has its own README with that component's Week 1 goal and how to star
 3. Everyone installs the same Python packages from the shared `requirements.txt` so our 
    environments match. (We will move to Docker in Week 2 once the cloud GPU setup defines 
    the full environment.)
+=======
+# Testing
+>>>>>>> 9ae2c0846a54e9ac48402c86abe8ce43bb83f257

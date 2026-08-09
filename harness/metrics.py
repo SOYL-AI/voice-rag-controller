@@ -164,3 +164,313 @@ def main():
 
 if __name__ == "__main__":
     main()
+
+
+# ============================================================
+# ADDITIONAL METRICS
+# IMPORTANT:
+# Everything above this section is the existing code.
+# ============================================================
+
+def additional_metrics(log_file):
+
+    turns = defaultdict(list)
+
+    try:
+        with open(log_file, "r") as file:
+            for line in file:
+                line = line.strip()
+
+                if not line:
+                    continue
+
+                event = json.loads(line)
+                turns[event["turn_id"]].append(event)
+
+    except FileNotFoundError:
+        print(f"Error: {log_file} not found.")
+        return
+
+    retrieval_latency_list = []
+    llm_ttft_list = []
+    llm_generation_list = []
+    total_response_list = []
+
+    retrieval_count = 0
+    total_turns = 0
+
+    for turn_id in sorted(turns):
+
+        events = sorted(
+            turns[turn_id],
+            key=lambda event: event["t_ms"]
+        )
+
+        user_end = None
+        retrieval_start = None
+        retrieval_end = None
+        llm_first_token = None
+        llm_final = None
+        tts_first_audio = None
+
+        for event in events:
+
+            event_type = event["event_type"]
+            timestamp = event["t_ms"]
+
+            if event_type == "user_end":
+                user_end = timestamp
+                total_turns += 1
+
+            elif event_type == "retrieval_launched":
+                retrieval_start = timestamp
+                retrieval_count += 1
+
+            elif event_type == "retrieval_result":
+                retrieval_end = timestamp
+
+            elif event_type == "llm_first_token":
+                llm_first_token = timestamp
+
+            elif event_type == "llm_final":
+                llm_final = timestamp
+
+            elif event_type == "tts_first_audio":
+                tts_first_audio = timestamp
+
+        # --------------------------------------------------------
+        # Retrieval latency
+        # --------------------------------------------------------
+
+        if retrieval_start is not None and retrieval_end is not None:
+
+            retrieval_latency = retrieval_end - retrieval_start
+
+            retrieval_latency_list.append(
+                retrieval_latency
+            )
+
+        # --------------------------------------------------------
+        # LLM Time To First Token
+        # --------------------------------------------------------
+
+        if llm_first_token is not None and user_end is not None:
+
+            llm_ttft = llm_first_token - user_end
+
+            llm_ttft_list.append(
+                llm_ttft
+            )
+
+        # --------------------------------------------------------
+        # LLM generation time
+        # --------------------------------------------------------
+
+        if llm_first_token is not None and llm_final is not None:
+
+            llm_generation = llm_final - llm_first_token
+
+            llm_generation_list.append(
+                llm_generation
+            )
+
+        # --------------------------------------------------------
+        # Total response latency
+        # --------------------------------------------------------
+
+        if user_end is not None and tts_first_audio is not None:
+
+            total_response = tts_first_audio - user_end
+
+            total_response_list.append(
+                total_response
+            )
+
+    # ============================================================
+    # ADDITIONAL METRICS REPORT
+    # ============================================================
+
+    print("\n" + "=" * 50)
+    print("ADDITIONAL VOICE RAG METRICS")
+    print("=" * 50)
+
+    # ------------------------------------------------------------
+    # Retrieval
+    # ------------------------------------------------------------
+
+    print("\n" + "-" * 50)
+    print("RETRIEVAL METRICS")
+    print("-" * 50)
+
+    if retrieval_latency_list:
+
+        average_retrieval = (
+            sum(retrieval_latency_list)
+            / len(retrieval_latency_list)
+        )
+
+        p95_retrieval = percentile(
+            retrieval_latency_list,
+            95
+        )
+
+        print(
+            f"Retrieval Count : "
+            f"{len(retrieval_latency_list)}"
+        )
+
+        print(
+            f"Average Retrieval Latency : "
+            f"{average_retrieval:.2f} ms"
+        )
+
+        print(
+            f"P95 Retrieval Latency     : "
+            f"{p95_retrieval:.2f} ms"
+        )
+
+    else:
+
+        print("No retrieval latency values found.")
+
+    # ------------------------------------------------------------
+    # LLM Time To First Token
+    # ------------------------------------------------------------
+
+    print("\n" + "-" * 50)
+    print("LLM TTFT SUMMARY")
+    print("-" * 50)
+
+    if llm_ttft_list:
+
+        average_llm_ttft = (
+            sum(llm_ttft_list)
+            / len(llm_ttft_list)
+        )
+
+        p95_llm_ttft = percentile(
+            llm_ttft_list,
+            95
+        )
+
+        print(
+            f"Average LLM TTFT : "
+            f"{average_llm_ttft:.2f} ms"
+        )
+
+        print(
+            f"P95 LLM TTFT     : "
+            f"{p95_llm_ttft:.2f} ms"
+        )
+
+    else:
+
+        print("No LLM TTFT values found.")
+
+    # ------------------------------------------------------------
+    # LLM generation
+    # ------------------------------------------------------------
+
+    print("\n" + "-" * 50)
+    print("LLM GENERATION SUMMARY")
+    print("-" * 50)
+
+    if llm_generation_list:
+
+        average_llm_generation = (
+            sum(llm_generation_list)
+            / len(llm_generation_list)
+        )
+
+        p95_llm_generation = percentile(
+            llm_generation_list,
+            95
+        )
+
+        print(
+            f"Average LLM Generation : "
+            f"{average_llm_generation:.2f} ms"
+        )
+
+        print(
+            f"P95 LLM Generation     : "
+            f"{p95_llm_generation:.2f} ms"
+        )
+
+    else:
+
+        print("No LLM generation values found.")
+
+    # ------------------------------------------------------------
+    # Total response latency
+    # ------------------------------------------------------------
+
+    print("\n" + "-" * 50)
+    print("TOTAL RESPONSE LATENCY")
+    print("-" * 50)
+
+    if total_response_list:
+
+        average_total_response = (
+            sum(total_response_list)
+            / len(total_response_list)
+        )
+
+        p95_total_response = percentile(
+            total_response_list,
+            95
+        )
+
+        print(
+            f"Average Response Latency : "
+            f"{average_total_response:.2f} ms"
+        )
+
+        print(
+            f"P95 Response Latency     : "
+            f"{p95_total_response:.2f} ms"
+        )
+
+    else:
+
+        print("No total response latency values found.")
+
+    # ------------------------------------------------------------
+    # Retrieval rate
+    # ------------------------------------------------------------
+
+    print("\n" + "-" * 50)
+    print("RETRIEVAL RATE")
+    print("-" * 50)
+
+    if total_turns > 0:
+
+        retrieval_rate = (
+            retrieval_count / total_turns
+        ) * 100
+
+        print(
+            f"Total Turns      : {total_turns}"
+        )
+
+        print(
+            f"Retrieval Calls  : {retrieval_count}"
+        )
+
+        print(
+            f"Retrieval Rate   : {retrieval_rate:.2f}%"
+        )
+
+    else:
+
+        print("No turns found.")
+
+
+# ============================================================
+# RUN ADDITIONAL METRICS
+# ============================================================
+
+if __name__ == "__main__":
+
+    if len(sys.argv) == 2:
+        additional_metrics(sys.argv[1])
