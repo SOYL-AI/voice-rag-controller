@@ -35,6 +35,7 @@ REQUIRED_TTS_KEYS = {
     "engine",
     "voice_model_path",
     "playback_block_ms",
+    "sample_rate",
 }
 
 REQUIRED_VAD_KEYS = {

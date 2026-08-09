@@ -11,6 +11,7 @@ Emits schema-compliant events: asr_partial, asr_final, user_end.
 import asyncio
 import sys
 import time
+import wave
 from pathlib import Path
 from typing import AsyncGenerator, Optional, Tuple
 
@@ -26,6 +27,23 @@ from eventlog.log_writer import LogWriter
 # Lazy imports for heavy libraries to ensure quick import times if required
 _WHISPER_MODEL = None
 _VAD_MODEL = None
+
+
+def _save_debug_wav(audio_data: np.ndarray, sample_rate: int, turn_id: int) -> Path:
+    """Saves float32 numpy audio array as a 16-bit mono WAV file to debug_audio/turn_XXX.wav."""
+    out_dir = _REPO_ROOT / "debug_audio"
+    out_dir.mkdir(parents=True, exist_ok=True)
+    out_path = out_dir / f"turn_{turn_id:03d}.wav"
+
+    pcm16 = (np.clip(audio_data, -1.0, 1.0) * 32767).astype(np.int16)
+    with wave.open(str(out_path), "wb") as wf:
+        wf.setnchannels(1)
+        wf.setsampwidth(2)
+        wf.setframerate(sample_rate)
+        wf.writeframes(pcm16.tobytes())
+
+    print(f"\n  💾 Audio saved : {out_path.relative_to(_REPO_ROOT)}")
+    return out_path
 
 
 def get_whisper_model(cfg: Optional[dict] = None):
@@ -82,7 +100,7 @@ class StreamingSTT:
         self.frame_ms = self.vad_cfg["frame_ms"]
         self.language = self.stt_cfg.get("language", "en")
 
-        # Number of samples per VAD frame (e.g., 30ms at 16kHz = 480 samples)
+        # Number of samples per VAD frame (e.g., 32ms at 16kHz = 512 samples)
         self.frame_samples = int(self.sample_rate * (self.frame_ms / 1000.0))
 
         self.model = get_whisper_model(self.cfg)
@@ -123,6 +141,13 @@ class StreamingSTT:
         Performs VAD speech detection, logs asr_partial at partial_interval_ms intervals,
         logs user_end on VAD-confirmed trailing silence, and returns final asr_final transcript.
         """
+        # Reset Silero VAD states for clean turn evaluation
+        if hasattr(self.vad_model, "reset_states"):
+            try:
+                self.vad_model.reset_states()
+            except Exception:
+                pass
+
         buffer = []          # rolling window for VAD (all audio, for frame evaluation)
         speech_buffer = []   # ONLY audio collected after speech onset — fed to Whisper
         speech_started = False
@@ -131,9 +156,8 @@ class StreamingSTT:
         accumulated_samples = 0
         _frame_count = 0
         # RMS gate: skip VAD on frames below the noise floor.
-        # MacBook Air mic @ 2x gain ≈ 0.002–0.008 at idle. Threshold of 0.012
-        # means only real sound (voice, clap, etc.) gets scored by VAD.
-        RMS_GATE = 0.012
+        # Config-driven (0.003 default for Phase 1A) to prevent suppressing quiet speech.
+        RMS_GATE = float(self.stt_cfg.get("rms_gate", 0.003))
 
         async for chunk in audio_chunk_generator:
             if chunk.ndim > 1:
@@ -182,7 +206,12 @@ class StreamingSTT:
                 speech_buffer.append(chunk)
                 if silence_start_time is None:
                     silence_start_time = now
-
+                    print(
+                        f"\nSPEECH -> POSSIBLE SILENCE\n"
+                        f"  rms={rms:.4f}\n"
+                        f"  vad_prob={speech_prob:.4f}\n"
+                        f"  timestamp={now:.3f}"
+                    )
 
             # If speech is ongoing, periodically re-run transcription for partial guesses
             if speech_started and speech_buffer:
@@ -214,6 +243,16 @@ class StreamingSTT:
             if speech_started and silence_start_time is not None:
                 silence_duration_ms = (now - silence_start_time) * 1000.0
                 if silence_duration_ms >= self.silence_hang_ms:
+                    speech_duration_ms = (sum(len(c) for c in speech_buffer) / self.sample_rate) * 1000.0
+                    print(
+                        f"\nENDPOINT:\n"
+                        f"  silence_duration_ms={silence_duration_ms:.0f}\n"
+                        f"  silence_hang_ms={self.silence_hang_ms}\n"
+                        f"  last_vad_probability={speech_prob:.4f}\n"
+                        f"  last_rms={rms:.4f}\n"
+                        f"  speech_duration_ms={speech_duration_ms:.0f}"
+                    )
+
                     # User is judged to have stopped speaking
                     log_writer.log_event(
                         actor="user",
@@ -224,6 +263,7 @@ class StreamingSTT:
 
                     # Final pass with word timestamps — use full clean speech audio, async to thread
                     speech_audio = np.concatenate(speech_buffer)
+                    _save_debug_wav(speech_audio, self.sample_rate, turn_id)
                     segments, _ = await asyncio.to_thread(
                         self.model.transcribe,
                         speech_audio,
@@ -244,6 +284,16 @@ class StreamingSTT:
         # If audio stream ended before VAD silence trigger, process final transcript if audio was gathered
         if speech_buffer:
             full_audio = np.concatenate(speech_buffer)
+            speech_duration_ms = (len(full_audio) / self.sample_rate) * 1000.0
+            print(
+                f"\nENDPOINT (stream end):\n"
+                f"  silence_duration_ms=0\n"
+                f"  silence_hang_ms={self.silence_hang_ms}\n"
+                f"  last_vad_probability=0.0000\n"
+                f"  last_rms=0.0000\n"
+                f"  speech_duration_ms={speech_duration_ms:.0f}"
+            )
+            _save_debug_wav(full_audio, self.sample_rate, turn_id)
             log_writer.log_event(
                 actor="user",
                 event_type="user_end",

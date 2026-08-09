@@ -231,6 +231,9 @@ retrieval/index.faiss
 retrieval/chunks.json
 index.faiss
 
+# Debug audio outputs
+debug_audio/
+
 datasets/spokenwoz/
 datasets/spoken_squad/
 datasets/processed/

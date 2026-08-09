@@ -9,6 +9,7 @@ Emits schema-compliant events: tts_first_audio (TTFA anchor) and barge_in.
 """
 
 import asyncio
+import json
 import os
 import re
 import subprocess
@@ -35,6 +36,24 @@ def split_into_clauses(text: str) -> List[str]:
     return [c.strip() for c in chunks if c.strip()]
 
 
+def get_voice_sample_rate(voice_model_path: str, default_rate: int = 22050) -> int:
+    """Reads sample_rate from voice model companion .onnx.json file if available."""
+    p = Path(voice_model_path)
+    companion_json = p.with_suffix(".onnx.json")
+    if not companion_json.exists():
+        companion_json = Path(str(p) + ".json")
+    if companion_json.exists():
+        try:
+            with open(companion_json, "r", encoding="utf-8") as fh:
+                data = json.load(fh)
+            sr = data.get("audio", {}).get("sample_rate")
+            if sr and isinstance(sr, int):
+                return sr
+        except Exception:
+            pass
+    return default_rate
+
+
 class StreamingTTS:
     """
     Synthesizes and streams text-to-speech using piper-tts.
@@ -51,8 +70,12 @@ class StreamingTTS:
         self.voice_model_path = self.tts_cfg["voice_model_path"]
         self.playback_block_ms = self.tts_cfg["playback_block_ms"]
 
+        config_sample_rate = self.tts_cfg.get("sample_rate", 22050)
+        self.sample_rate = get_voice_sample_rate(self.voice_model_path, config_sample_rate)
+
         self._stop_requested = threading.Event()
         self._is_playing = False
+        self.playback_active = False
 
         model_path = Path(self.voice_model_path)
         if not model_path.exists():
@@ -75,21 +98,21 @@ class StreamingTTS:
                 turn_id=turn_id,
             )
 
-    # TODO: Week 2 auto-trigger hookup
-    # Connect VAD speech-start event from stt.py to call self.stop(log_writer, turn_id) automatically.
-
-    def synthesize_clause_to_raw_pcm(self, clause: str, sample_rate: int = 22050) -> bytes:
+    def synthesize_clause_to_raw_pcm(self, clause: str, sample_rate: Optional[int] = None) -> bytes:
         """
         Synthesizes a clause using piper subprocess.
         Returns raw 16-bit mono PCM audio bytes.
         """
+        if sample_rate is None:
+            sample_rate = self.sample_rate
+
         model_path = Path(self.voice_model_path)
 
         # If piper binary or model path is missing in local environment, generate synthetic PCM tone/audio bytes for testing
         if not model_path.exists():
             # Generate synthetic PCM audio data corresponding to clause length (approx 100ms per word)
             duration_s = max(0.5, len(clause.split()) * 0.25)
-            t = np_time = (
+            t = (
                 __import__("numpy").linspace(0, duration_s, int(sample_rate * duration_s))
             )
             tone = (0.3 * __import__("numpy").sin(2 * 3.14159 * 440 * t)).astype(
@@ -112,43 +135,70 @@ class StreamingTTS:
         stdout, _ = proc.communicate(input=clause.encode("utf-8"))
         return stdout
 
-    async def speak(self, text: str, log_writer: LogWriter, turn_id: int):
+    def speak_sync(self, text: str, log_writer: LogWriter, turn_id: int, live: bool = False):
         """
-        Synthesizes text, streams playback in playback_block_ms blocks,
-        and logs tts_first_audio upon initial sound playback.
+        Synchronous synthesis and playback function intended to be run in a worker thread via asyncio.to_thread().
+        Does NOT block the asyncio event loop thread.
         """
+        print(f"\nTTS:\n  worker_started\n  timestamp={time.time():.3f}")
         self._stop_requested.clear()
         self._is_playing = True
+        self.playback_active = False
 
         clauses = split_into_clauses(text)
+        print(f"\nTTS TOTAL CLAUSES: {len(clauses)}")
         first_audio_logged = False
-        sample_rate = 22050  # Default Piper sample rate
-        bytes_per_sample = 2  # 16-bit PCM
+        sample_rate = self.sample_rate
 
-        # Calculate bytes per playback block
         block_samples = int(sample_rate * (self.playback_block_ms / 1000.0))
-        block_bytes = block_samples * bytes_per_sample
+
+        stream = None
+        if live:
+            import sounddevice as sd
+            stream = sd.OutputStream(
+                samplerate=sample_rate,
+                channels=1,
+                dtype="float32",
+            )
+            stream.start()
 
         try:
-            for clause in clauses:
+            for idx, clause in enumerate(clauses, start=1):
                 if self._stop_requested.is_set():
+                    print(f"\nTTS STOP REQUESTED BEFORE CLAUSE {idx}")
                     break
 
-                pcm_bytes = await asyncio.to_thread(
-                    self.synthesize_clause_to_raw_pcm, clause, sample_rate
-                )
+                print(f"\nTTS CLAUSE:\n  index={idx}\n  text=\"{clause}\"")
+
+                print(f"\nSYNTHESIS START:\n  index={idx}")
+                start_synth = time.monotonic()
+                pcm_bytes = self.synthesize_clause_to_raw_pcm(clause, sample_rate)
+                synth_dur = (time.monotonic() - start_synth) * 1000.0
 
                 if not pcm_bytes:
+                    print(f"\nSYNTHESIS COMPLETE:\n  index={idx}\n  pcm_samples=0\n  duration_ms={synth_dur:.1f}\n  sample_rate={sample_rate}")
                     continue
+
+                pcm_samples = len(pcm_bytes) // 2
+                audio_dur_ms = (pcm_samples / sample_rate) * 1000.0
+                print(f"\nSYNTHESIS COMPLETE:\n  index={idx}\n  pcm_samples={pcm_samples}\n  duration_ms={audio_dur_ms:.1f}\n  sample_rate={sample_rate}")
+
+                import numpy as np
+                audio_float32 = np.frombuffer(pcm_bytes, dtype=np.int16).astype(np.float32) / 32768.0
+
+                print(f"\nPLAYBACK START:\n  index={idx}")
+                self.playback_active = True
+                print(f"\nTTS:\n  playback_active=true")
 
                 # Stream out PCM in small blocks
                 offset = 0
-                while offset < len(pcm_bytes):
+                while offset < len(audio_float32):
                     if self._stop_requested.is_set():
+                        print(f"\nTTS STOP REQUESTED DURING PLAYBACK OF CLAUSE {idx}")
                         break
 
-                    chunk = pcm_bytes[offset : offset + block_bytes]
-                    offset += block_bytes
+                    chunk = audio_float32[offset : offset + block_samples]
+                    offset += block_samples
 
                     if not first_audio_logged:
                         # Log the critical TTFA anchor event
@@ -160,12 +210,33 @@ class StreamingTTS:
                         )
                         first_audio_logged = True
 
-                    # Simulate/perform chunk playback sleep according to block duration
-                    sleep_time = self.playback_block_ms / 1000.0
-                    await asyncio.sleep(sleep_time)
+                    if live and stream is not None:
+                        stream.write(chunk)
+                    else:
+                        # Simulate chunk playback sleep according to block duration
+                        sleep_time = self.playback_block_ms / 1000.0
+                        time.sleep(sleep_time)
+
+                print(f"\nPLAYBACK COMPLETE:\n  index={idx}")
 
         finally:
+            if stream is not None:
+                try:
+                    stream.stop()
+                    stream.close()
+                except Exception:
+                    pass
+            self.playback_active = False
             self._is_playing = False
+            print(f"\nTTS:\n  playback_active=false")
+            print(f"\nTTS:\n  worker_finished\n  timestamp={time.time():.3f}")
+
+    async def speak(self, text: str, log_writer: LogWriter, turn_id: int, live: bool = False):
+        """
+        Asynchronously delegates synchronous TTS synthesis & playback to a worker thread via asyncio.to_thread.
+        Keeps the asyncio event loop 100% unblocked and responsive for concurrent barge-in VAD processing.
+        """
+        await asyncio.to_thread(self.speak_sync, text, log_writer, turn_id, live)
 
 
 # ---------------------------------------------------------------------------
