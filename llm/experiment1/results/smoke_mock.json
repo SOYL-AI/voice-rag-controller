@@ -1,0 +1,5771 @@
+{
+  "experiment_id": "signal-validity-v1",
+  "created_at_utc": "2026-08-07T21:30:25.837049+00:00",
+  "backend": "mock",
+  "model": "mock:meta-llama/Llama-3.1-8B-Instruct",
+  "valid_gate_run": false,
+  "verdict": "NOT_EVALUATED_SMOKE",
+  "smoke_warning": "Mock logprobs are synthetic. This run validates plumbing only and must not be cited as Experiment 1 evidence.",
+  "thresholds": {
+    "success_auc": 0.7,
+    "kill_auc": 0.6
+  },
+  "dataset": {
+    "path": "llm\\experiment1\\dataset.jsonl",
+    "sha256": "38e28e34c2059c8a5ee05cdc9b1f5f7233bd68d70b6bc47ad8ed01c91d5fb11b",
+    "examples": 36,
+    "retrieval_needed": 18,
+    "retrieval_not_needed": 18
+  },
+  "best_signal": "negative_min_logprob",
+  "best_mean_auc": 0.5351851851851852,
+  "aggregate_auc": {
+    "negative_mean_logprob": {
+      "mean_auc": 0.48703703703703705,
+      "min_auc": 0.35802469135802467,
+      "max_auc": 0.6080246913580247,
+      "seed_aucs": [
+        0.5246913580246914,
+        0.404320987654321,
+        0.5401234567901234,
+        0.35802469135802467,
+        0.6080246913580247
+      ]
+    },
+    "negative_min_logprob": {
+      "mean_auc": 0.5351851851851852,
+      "min_auc": 0.2839506172839506,
+      "max_auc": 0.7098765432098766,
+      "seed_aucs": [
+        0.7098765432098766,
+        0.5030864197530864,
+        0.5802469135802469,
+        0.2839506172839506,
+        0.5987654320987654
+      ]
+    },
+    "perplexity": {
+      "mean_auc": 0.48703703703703705,
+      "min_auc": 0.35802469135802467,
+      "max_auc": 0.6080246913580247,
+      "seed_aucs": [
+        0.5246913580246914,
+        0.404320987654321,
+        0.5401234567901234,
+        0.35802469135802467,
+        0.6080246913580247
+      ]
+    },
+    "one_minus_mean_confidence": {
+      "mean_auc": 0.4919753086419753,
+      "min_auc": 0.38271604938271603,
+      "max_auc": 0.6080246913580247,
+      "seed_aucs": [
+        0.47530864197530864,
+        0.39814814814814814,
+        0.595679012345679,
+        0.38271604938271603,
+        0.6080246913580247
+      ]
+    },
+    "one_minus_min_confidence": {
+      "mean_auc": 0.5351851851851852,
+      "min_auc": 0.2839506172839506,
+      "max_auc": 0.7098765432098766,
+      "seed_aucs": [
+        0.7098765432098766,
+        0.5030864197530864,
+        0.5802469135802469,
+        0.2839506172839506,
+        0.5987654320987654
+      ]
+    },
+    "low_confidence_fraction": {
+      "mean_auc": 0.48117283950617284,
+      "min_auc": 0.38580246913580246,
+      "max_auc": 0.6049382716049383,
+      "seed_aucs": [
+        0.4876543209876543,
+        0.4089506172839506,
+        0.5185185185185185,
+        0.38580246913580246,
+        0.6049382716049383
+      ]
+    },
+    "mean_entropy_nats": {
+      "mean_auc": 0.5185185185185185,
+      "min_auc": 0.404320987654321,
+      "max_auc": 0.6419753086419753,
+      "seed_aucs": [
+        0.49691358024691357,
+        0.4537037037037037,
+        0.6419753086419753,
+        0.404320987654321,
+        0.595679012345679
+      ]
+    },
+    "max_entropy_nats": {
+      "mean_auc": 0.4333333333333333,
+      "min_auc": 0.3395061728395062,
+      "max_auc": 0.5987654320987654,
+      "seed_aucs": [
+        0.3395061728395062,
+        0.345679012345679,
+        0.5061728395061729,
+        0.3765432098765432,
+        0.5987654320987654
+      ]
+    },
+    "tracker_unknown_fraction": {
+      "mean_auc": 0.4722222222222222,
+      "min_auc": 0.4722222222222222,
+      "max_auc": 0.4722222222222222,
+      "seed_aucs": [
+        0.4722222222222222,
+        0.4722222222222222,
+        0.4722222222222222,
+        0.4722222222222222,
+        0.4722222222222222
+      ]
+    }
+  },
+  "seed_results": [
+    {
+      "seed": 11,
+      "auc_by_signal": {
+        "negative_mean_logprob": 0.5246913580246914,
+        "negative_min_logprob": 0.7098765432098766,
+        "perplexity": 0.5246913580246914,
+        "one_minus_mean_confidence": 0.47530864197530864,
+        "one_minus_min_confidence": 0.7098765432098766,
+        "low_confidence_fraction": 0.4876543209876543,
+        "mean_entropy_nats": 0.49691358024691357,
+        "max_entropy_nats": 0.3395061728395062,
+        "tracker_unknown_fraction": 0.4722222222222222
+      }
+    },
+    {
+      "seed": 23,
+      "auc_by_signal": {
+        "negative_mean_logprob": 0.404320987654321,
+        "negative_min_logprob": 0.5030864197530864,
+        "perplexity": 0.404320987654321,
+        "one_minus_mean_confidence": 0.39814814814814814,
+        "one_minus_min_confidence": 0.5030864197530864,
+        "low_confidence_fraction": 0.4089506172839506,
+        "mean_entropy_nats": 0.4537037037037037,
+        "max_entropy_nats": 0.345679012345679,
+        "tracker_unknown_fraction": 0.4722222222222222
+      }
+    },
+    {
+      "seed": 37,
+      "auc_by_signal": {
+        "negative_mean_logprob": 0.5401234567901234,
+        "negative_min_logprob": 0.5802469135802469,
+        "perplexity": 0.5401234567901234,
+        "one_minus_mean_confidence": 0.595679012345679,
+        "one_minus_min_confidence": 0.5802469135802469,
+        "low_confidence_fraction": 0.5185185185185185,
+        "mean_entropy_nats": 0.6419753086419753,
+        "max_entropy_nats": 0.5061728395061729,
+        "tracker_unknown_fraction": 0.4722222222222222
+      }
+    },
+    {
+      "seed": 53,
+      "auc_by_signal": {
+        "negative_mean_logprob": 0.35802469135802467,
+        "negative_min_logprob": 0.2839506172839506,
+        "perplexity": 0.35802469135802467,
+        "one_minus_mean_confidence": 0.38271604938271603,
+        "one_minus_min_confidence": 0.2839506172839506,
+        "low_confidence_fraction": 0.38580246913580246,
+        "mean_entropy_nats": 0.404320987654321,
+        "max_entropy_nats": 0.3765432098765432,
+        "tracker_unknown_fraction": 0.4722222222222222
+      }
+    },
+    {
+      "seed": 71,
+      "auc_by_signal": {
+        "negative_mean_logprob": 0.6080246913580247,
+        "negative_min_logprob": 0.5987654320987654,
+        "perplexity": 0.6080246913580247,
+        "one_minus_mean_confidence": 0.6080246913580247,
+        "one_minus_min_confidence": 0.5987654320987654,
+        "low_confidence_fraction": 0.6049382716049383,
+        "mean_entropy_nats": 0.595679012345679,
+        "max_entropy_nats": 0.5987654320987654,
+        "tracker_unknown_fraction": 0.4722222222222222
+      }
+    }
+  ],
+  "samples": [
+    {
+      "seed": 11,
+      "id": "hotel_checkout_time",
+      "retrieval_needed": true,
+      "expected_answer": "11:00 AM",
+      "model_answer": "The pool is open daily from 6 AM until 10 PM.",
+      "signals": {
+        "negative_mean_logprob": 0.48676947005845006,
+        "negative_min_logprob": 2.880424072924954,
+        "perplexity": 1.6270514820581494,
+        "one_minus_mean_confidence": 0.28009017328123076,
+        "one_minus_min_confidence": 0.943889037352069,
+        "low_confidence_fraction": 0.09090909090909091,
+        "mean_entropy_nats": 0.8715662214969396,
+        "max_entropy_nats": 1.677183797356803,
+        "tracker_unknown_fraction": 0.75
+      },
+      "tracker": {
+        "unknown_slots": [
+          "room",
+          "time",
+          "people"
+        ],
+        "unknown_count": 3,
+        "measured_slot_count": 4,
+        "unknown_fraction": 0.75,
+        "intent_unknown": false,
+        "parsed_ok": true
+      }
+    },
+    {
+      "seed": 11,
+      "id": "hotel_front_desk_hours",
+      "retrieval_needed": true,
+      "expected_answer": "24 hours a day",
+      "model_answer": "The pool is open daily from 6 AM until 10 PM.",
+      "signals": {
+        "negative_mean_logprob": 0.7744521828803822,
+        "negative_min_logprob": 3.3806272940506235,
+        "perplexity": 2.169403365298249,
+        "one_minus_mean_confidence": 0.33691579573684083,
+        "one_minus_min_confidence": 0.9659738963337954,
+        "low_confidence_fraction": 0.18181818181818182,
+        "mean_entropy_nats": 0.9117923974275693,
+        "max_entropy_nats": 1.6198405136303606,
+        "tracker_unknown_fraction": 1.0
+      },
+      "tracker": {
+        "unknown_slots": [
+          "intent",
+          "room",
+          "time",
+          "people"
+        ],
+        "unknown_count": 4,
+        "measured_slot_count": 4,
+        "unknown_fraction": 1.0,
+        "intent_unknown": true,
+        "parsed_ok": true
+      }
+    },
+    {
+      "seed": 11,
+      "id": "hotel_luggage_cost",
+      "retrieval_needed": true,
+      "expected_answer": "No, same-day luggage storage is free",
+      "model_answer": "The pool is open daily from 6 AM until 10 PM.",
+      "signals": {
+        "negative_mean_logprob": 0.5580005294162557,
+        "negative_min_logprob": 3.374361396303648,
+        "perplexity": 1.7471755792903545,
+        "one_minus_mean_confidence": 0.3052442443851817,
+        "one_minus_min_confidence": 0.9657600228926869,
+        "low_confidence_fraction": 0.09090909090909091,
+        "mean_entropy_nats": 0.9466007775447308,
+        "max_entropy_nats": 1.4853222007256113,
+        "tracker_unknown_fraction": 1.0
+      },
+      "tracker": {
+        "unknown_slots": [
+          "intent",
+          "room",
+          "time",
+          "people"
+        ],
+        "unknown_count": 4,
+        "measured_slot_count": 4,
+        "unknown_fraction": 1.0,
+        "intent_unknown": true,
+        "parsed_ok": true
+      }
+    },
+    {
+      "seed": 11,
+      "id": "hotel_airport_notice",
+      "retrieval_needed": true,
+      "expected_answer": "At least 24 hours before arrival",
+      "model_answer": "The pool is open daily from 6 AM until 10 PM.",
+      "signals": {
+        "negative_mean_logprob": 1.0084565383155668,
+        "negative_min_logprob": 3.3575056278920563,
+        "perplexity": 2.7413665537544905,
+        "one_minus_mean_confidence": 0.3772483386568436,
+        "one_minus_min_confidence": 0.9651779902447659,
+        "low_confidence_fraction": 0.2727272727272727,
+        "mean_entropy_nats": 0.8532833662947222,
+        "max_entropy_nats": 1.5099794545666048,
+        "tracker_unknown_fraction": 1.0
+      },
+      "tracker": {
+        "unknown_slots": [
+          "intent",
+          "room",
+          "time",
+          "people"
+        ],
+        "unknown_count": 4,
+        "measured_slot_count": 4,
+        "unknown_fraction": 1.0,
+        "intent_unknown": true,
+        "parsed_ok": true
+      }
+    },
+    {
+      "seed": 11,
+      "id": "hotel_lost_retention",
+      "retrieval_needed": true,
+      "expected_answer": "90 days",
+      "model_answer": "The pool is open daily from 6 AM until 10 PM.",
+      "signals": {
+        "negative_mean_logprob": 0.4717129726942106,
+        "negative_min_logprob": 2.673747800931608,
+        "perplexity": 1.6027372883340036,
+        "one_minus_mean_confidence": 0.2845025801275928,
+        "one_minus_min_confidence": 0.9310068324934196,
+        "low_confidence_fraction": 0.09090909090909091,
+        "mean_entropy_nats": 0.9179468552733454,
+        "max_entropy_nats": 1.7022252060251126,
+        "tracker_unknown_fraction": 1.0
+      },
+      "tracker": {
+        "unknown_slots": [
+          "intent",
+          "room",
+          "time",
+          "people"
+        ],
+        "unknown_count": 4,
+        "measured_slot_count": 4,
+        "unknown_fraction": 1.0,
+        "intent_unknown": true,
+        "parsed_ok": true
+      }
+    },
+    {
+      "seed": 11,
+      "id": "hotel_room_service",
+      "retrieval_needed": true,
+      "expected_answer": "24 hours a day",
+      "model_answer": "The pool is open daily from 6 AM until 10 PM.",
+      "signals": {
+        "negative_mean_logprob": 0.28558112813460373,
+        "negative_min_logprob": 0.41659942466473754,
+        "perplexity": 1.3305350148287507,
+        "one_minus_mean_confidence": 0.24527187686518515,
+        "one_minus_min_confidence": 0.3407150396494213,
+        "low_confidence_fraction": 0.0,
+        "mean_entropy_nats": 0.8795362863085591,
+        "max_entropy_nats": 1.0600572116545985,
+        "tracker_unknown_fraction": 1.0
+      },
+      "tracker": {
+        "unknown_slots": [
+          "intent",
+          "room",
+          "time",
+          "people"
+        ],
+        "unknown_count": 4,
+        "measured_slot_count": 4,
+        "unknown_fraction": 1.0,
+        "intent_unknown": true,
+        "parsed_ok": true
+      }
+    },
+    {
+      "seed": 11,
+      "id": "hotel_coffee_shop",
+      "retrieval_needed": true,
+      "expected_answer": "11:00 PM",
+      "model_answer": "The pool is open daily from 6 AM until 10 PM.",
+      "signals": {
+        "negative_mean_logprob": 0.5646408467475454,
+        "negative_min_logprob": 2.4990300548203455,
+        "perplexity": 1.7588159847910587,
+        "one_minus_mean_confidence": 0.2773077991336551,
+        "one_minus_min_confidence": 0.9178353448023542,
+        "low_confidence_fraction": 0.18181818181818182,
+        "mean_entropy_nats": 0.7232833873976611,
+        "max_entropy_nats": 1.5842727566330002,
+        "tracker_unknown_fraction": 1.0
+      },
+      "tracker": {
+        "unknown_slots": [
+          "intent",
+          "room",
+          "time",
+          "people"
+        ],
+        "unknown_count": 4,
+        "measured_slot_count": 4,
+        "unknown_fraction": 1.0,
+        "intent_unknown": true,
+        "parsed_ok": true
+      }
+    },
+    {
+      "seed": 11,
+      "id": "hotel_rooftop_open",
+      "retrieval_needed": true,
+      "expected_answer": "6:30 PM",
+      "model_answer": "The pool is open daily from 6 AM until 10 PM.",
+      "signals": {
+        "negative_mean_logprob": 1.068412576948199,
+        "negative_min_logprob": 3.2078902654391563,
+        "perplexity": 2.9107552306609024,
+        "one_minus_mean_confidence": 0.44265496284126116,
+        "one_minus_min_confidence": 0.9595581551097586,
+        "low_confidence_fraction": 0.2727272727272727,
+        "mean_entropy_nats": 1.0689669557310615,
+        "max_entropy_nats": 1.6272445850576678,
+        "tracker_unknown_fraction": 1.0
+      },
+      "tracker": {
+        "unknown_slots": [
+          "intent",
+          "room",
+          "time",
+          "people"
+        ],
+        "unknown_count": 4,
+        "measured_slot_count": 4,
+        "unknown_fraction": 1.0,
+        "intent_unknown": true,
+        "parsed_ok": true
+      }
+    },
+    {
+      "seed": 11,
+      "id": "hotel_bar_age",
+      "retrieval_needed": true,
+      "expected_answer": "21 years old",
+      "model_answer": "The pool is open daily from 6 AM until 10 PM.",
+      "signals": {
+        "negative_mean_logprob": 0.5539621922939421,
+        "negative_min_logprob": 3.4447494909117786,
+        "perplexity": 1.7401341227464193,
+        "one_minus_mean_confidence": 0.2925525152287235,
+        "one_minus_min_confidence": 0.9680872445233707,
+        "low_confidence_fraction": 0.09090909090909091,
+        "mean_entropy_nats": 0.870789140832704,
+        "max_entropy_nats": 1.4631491292168324,
+        "tracker_unknown_fraction": 1.0
+      },
+      "tracker": {
+        "unknown_slots": [
+          "intent",
+          "room",
+          "time",
+          "people"
+        ],
+        "unknown_count": 4,
+        "measured_slot_count": 4,
+        "unknown_fraction": 1.0,
+        "intent_unknown": true,
+        "parsed_ok": true
+      }
+    },
+    {
+      "seed": 11,
+      "id": "hotel_spa_hours",
+      "retrieval_needed": true,
+      "expected_answer": "10:00 AM to 9:00 PM",
+      "model_answer": "The pool is open daily from 6 AM until 10 PM.",
+      "signals": {
+        "negative_mean_logprob": 1.3899355371873232,
+        "negative_min_logprob": 3.364389565287536,
+        "perplexity": 4.014591252808894,
+        "one_minus_mean_confidence": 0.5066220795607927,
+        "one_minus_min_confidence": 0.9654168795868829,
+        "low_confidence_fraction": 0.45454545454545453,
+        "mean_entropy_nats": 1.0717359912304787,
+        "max_entropy_nats": 1.6616887922446997,
+        "tracker_unknown_fraction": 0.75
+      },
+      "tracker": {
+        "unknown_slots": [
+          "room",
+          "time",
+          "people"
+        ],
+        "unknown_count": 3,
+        "measured_slot_count": 4,
+        "unknown_fraction": 0.75,
+        "intent_unknown": false,
+        "parsed_ok": true
+      }
+    },
+    {
+      "seed": 11,
+      "id": "hotel_play_zone_ages",
+      "retrieval_needed": true,
+      "expected_answer": "Children aged 3 to 12",
+      "model_answer": "The pool is open daily from 6 AM until 10 PM.",
+      "signals": {
+        "negative_mean_logprob": 0.6310680431738743,
+        "negative_min_logprob": 3.3270200296485193,
+        "perplexity": 1.8796170197185045,
+        "one_minus_mean_confidence": 0.28459471303913153,
+        "one_minus_min_confidence": 0.9641000734570909,
+        "low_confidence_fraction": 0.18181818181818182,
+        "mean_entropy_nats": 0.7443793711456952,
+        "max_entropy_nats": 1.6890257807716988,
+        "tracker_unknown_fraction": 1.0
+      },
+      "tracker": {
+        "unknown_slots": [
+          "intent",
+          "room",
+          "time",
+          "people"
+        ],
+        "unknown_count": 4,
+        "measured_slot_count": 4,
+        "unknown_fraction": 1.0,
+        "intent_unknown": true,
+        "parsed_ok": true
+      }
+    },
+    {
+      "seed": 11,
+      "id": "hotel_laundry_hours",
+      "retrieval_needed": true,
+      "expected_answer": "8:00 PM",
+      "model_answer": "The pool is open daily from 6 AM until 10 PM.",
+      "signals": {
+        "negative_mean_logprob": 0.6597764004733039,
+        "negative_min_logprob": 3.28460120952174,
+        "perplexity": 1.934359764114862,
+        "one_minus_mean_confidence": 0.288880389956238,
+        "one_minus_min_confidence": 0.9625444809802011,
+        "low_confidence_fraction": 0.18181818181818182,
+        "mean_entropy_nats": 0.7807218512559738,
+        "max_entropy_nats": 1.5853025498144475,
+        "tracker_unknown_fraction": 1.0
+      },
+      "tracker": {
+        "unknown_slots": [
+          "intent",
+          "room",
+          "time",
+          "people"
+        ],
+        "unknown_count": 4,
+        "measured_slot_count": 4,
+        "unknown_fraction": 1.0,
+        "intent_unknown": true,
+        "parsed_ok": true
+      }
+    },
+    {
+      "seed": 11,
+      "id": "hotel_wifi_ssid",
+      "retrieval_needed": true,
+      "expected_answer": "GrandHorizon_Guest",
+      "model_answer": "The pool is open daily from 6 AM until 10 PM.",
+      "signals": {
+        "negative_mean_logprob": 1.0647327727461369,
+        "negative_min_logprob": 3.4372846039797946,
+        "perplexity": 2.900063904389843,
+        "one_minus_mean_confidence": 0.43126735995725063,
+        "one_minus_min_confidence": 0.9678481280336569,
+        "low_confidence_fraction": 0.2727272727272727,
+        "mean_entropy_nats": 1.0625700861027723,
+        "max_entropy_nats": 1.6473652572939492,
+        "tracker_unknown_fraction": 1.0
+      },
+      "tracker": {
+        "unknown_slots": [
+          "intent",
+          "room",
+          "time",
+          "people"
+        ],
+        "unknown_count": 4,
+        "measured_slot_count": 4,
+        "unknown_fraction": 1.0,
+        "intent_unknown": true,
+        "parsed_ok": true
+      }
+    },
+    {
+      "seed": 11,
+      "id": "hotel_business_center",
+      "retrieval_needed": true,
+      "expected_answer": "8:00 AM to 8:00 PM",
+      "model_answer": "The pool is open daily from 6 AM until 10 PM.",
+      "signals": {
+        "negative_mean_logprob": 0.9571066371330562,
+        "negative_min_logprob": 3.2929796664861333,
+        "perplexity": 2.604150809263504,
+        "one_minus_mean_confidence": 0.404622364302048,
+        "one_minus_min_confidence": 0.9628569894369252,
+        "low_confidence_fraction": 0.2727272727272727,
+        "mean_entropy_nats": 1.0262356494892844,
+        "max_entropy_nats": 1.715914777141596,
+        "tracker_unknown_fraction": 1.0
+      },
+      "tracker": {
+        "unknown_slots": [
+          "intent",
+          "room",
+          "time",
+          "people"
+        ],
+        "unknown_count": 4,
+        "measured_slot_count": 4,
+        "unknown_fraction": 1.0,
+        "intent_unknown": true,
+        "parsed_ok": true
+      }
+    },
+    {
+      "seed": 11,
+      "id": "hotel_cancellation_window",
+      "retrieval_needed": true,
+      "expected_answer": "At least 48 hours before scheduled check-in",
+      "model_answer": "The pool is open daily from 6 AM until 10 PM.",
+      "signals": {
+        "negative_mean_logprob": 0.4245158810196503,
+        "negative_min_logprob": 2.917809529321248,
+        "perplexity": 1.528850095126098,
+        "one_minus_mean_confidence": 0.2240316823467352,
+        "one_minus_min_confidence": 0.945948043053209,
+        "low_confidence_fraction": 0.09090909090909091,
+        "mean_entropy_nats": 0.6911337834482734,
+        "max_entropy_nats": 1.6845877280504535,
+        "tracker_unknown_fraction": 1.0
+      },
+      "tracker": {
+        "unknown_slots": [
+          "intent",
+          "room",
+          "time",
+          "people"
+        ],
+        "unknown_count": 4,
+        "measured_slot_count": 4,
+        "unknown_fraction": 1.0,
+        "intent_unknown": true,
+        "parsed_ok": true
+      }
+    },
+    {
+      "seed": 11,
+      "id": "hotel_quiet_hours",
+      "retrieval_needed": true,
+      "expected_answer": "10:00 PM to 7:00 AM",
+      "model_answer": "The pool is open daily from 6 AM until 10 PM.",
+      "signals": {
+        "negative_mean_logprob": 0.4360627041822129,
+        "negative_min_logprob": 2.9505119985151014,
+        "perplexity": 1.5466057703589935,
+        "one_minus_mean_confidence": 0.23411928915841207,
+        "one_minus_min_confidence": 0.9476870850442346,
+        "low_confidence_fraction": 0.09090909090909091,
+        "mean_entropy_nats": 0.7462045889531631,
+        "max_entropy_nats": 1.6804626569390428,
+        "tracker_unknown_fraction": 1.0
+      },
+      "tracker": {
+        "unknown_slots": [
+          "intent",
+          "room",
+          "time",
+          "people"
+        ],
+        "unknown_count": 4,
+        "measured_slot_count": 4,
+        "unknown_fraction": 1.0,
+        "intent_unknown": true,
+        "parsed_ok": true
+      }
+    },
+    {
+      "seed": 11,
+      "id": "hotel_visitor_hours",
+      "retrieval_needed": true,
+      "expected_answer": "8:00 AM to 10:00 PM",
+      "model_answer": "The pool is open daily from 6 AM until 10 PM.",
+      "signals": {
+        "negative_mean_logprob": 0.9949328604338404,
+        "negative_min_logprob": 3.423383942099938,
+        "perplexity": 2.7045427533565327,
+        "one_minus_mean_confidence": 0.422312443988727,
+        "one_minus_min_confidence": 0.9673980749617543,
+        "low_confidence_fraction": 0.2727272727272727,
+        "mean_entropy_nats": 1.0534745316398604,
+        "max_entropy_nats": 1.675907872850976,
+        "tracker_unknown_fraction": 1.0
+      },
+      "tracker": {
+        "unknown_slots": [
+          "intent",
+          "room",
+          "time",
+          "people"
+        ],
+        "unknown_count": 4,
+        "measured_slot_count": 4,
+        "unknown_fraction": 1.0,
+        "intent_unknown": true,
+        "parsed_ok": true
+      }
+    },
+    {
+      "seed": 11,
+      "id": "hotel_steam_room",
+      "retrieval_needed": true,
+      "expected_answer": "7:00 AM to 9:00 PM",
+      "model_answer": "The pool is open daily from 6 AM until 10 PM.",
+      "signals": {
+        "negative_mean_logprob": 0.5434502953001162,
+        "negative_min_logprob": 2.7983802718588455,
+        "perplexity": 1.721937818487978,
+        "one_minus_mean_confidence": 0.3286232135503996,
+        "one_minus_min_confidence": 0.9390913617938126,
+        "low_confidence_fraction": 0.09090909090909091,
+        "mean_entropy_nats": 1.0080981428645135,
+        "max_entropy_nats": 1.6609427771878342,
+        "tracker_unknown_fraction": 1.0
+      },
+      "tracker": {
+        "unknown_slots": [
+          "intent",
+          "room",
+          "time",
+          "people"
+        ],
+        "unknown_count": 4,
+        "measured_slot_count": 4,
+        "unknown_fraction": 1.0,
+        "intent_unknown": true,
+        "parsed_ok": true
+      }
+    },
+    {
+      "seed": 11,
+      "id": "general_arithmetic",
+      "retrieval_needed": false,
+      "expected_answer": "4",
+      "model_answer": "The pool is open daily from 6 AM until 10 PM.",
+      "signals": {
+        "negative_mean_logprob": 0.8229758139558041,
+        "negative_min_logprob": 2.599707981352125,
+        "perplexity": 2.277266485785252,
+        "one_minus_mean_confidence": 0.38315113969261894,
+        "one_minus_min_confidence": 0.9257047293486392,
+        "low_confidence_fraction": 0.2727272727272727,
+        "mean_entropy_nats": 0.9679539058501748,
+        "max_entropy_nats": 1.7332318830273148,
+        "tracker_unknown_fraction": 1.0
+      },
+      "tracker": {
+        "unknown_slots": [
+          "intent",
+          "room",
+          "time",
+          "people"
+        ],
+        "unknown_count": 4,
+        "measured_slot_count": 4,
+        "unknown_fraction": 1.0,
+        "intent_unknown": true,
+        "parsed_ok": true
+      }
+    },
+    {
+      "seed": 11,
+      "id": "general_week_days",
+      "retrieval_needed": false,
+      "expected_answer": "7",
+      "model_answer": "The pool is open daily from 6 AM until 10 PM.",
+      "signals": {
+        "negative_mean_logprob": 0.7269165747855152,
+        "negative_min_logprob": 3.428769088319104,
+        "perplexity": 2.0686921061013095,
+        "one_minus_mean_confidence": 0.33582676157768754,
+        "one_minus_min_confidence": 0.9675731692178845,
+        "low_confidence_fraction": 0.18181818181818182,
+        "mean_entropy_nats": 0.8878757518389914,
+        "max_entropy_nats": 1.6085369512681598,
+        "tracker_unknown_fraction": 1.0
+      },
+      "tracker": {
+        "unknown_slots": [
+          "intent",
+          "room",
+          "time",
+          "people"
+        ],
+        "unknown_count": 4,
+        "measured_slot_count": 4,
+        "unknown_fraction": 1.0,
+        "intent_unknown": true,
+        "parsed_ok": true
+      }
+    },
+    {
+      "seed": 11,
+      "id": "general_hour_minutes",
+      "retrieval_needed": false,
+      "expected_answer": "60",
+      "model_answer": "The pool is open daily from 6 AM until 10 PM.",
+      "signals": {
+        "negative_mean_logprob": 0.5066937500547415,
+        "negative_min_logprob": 2.9040876955729082,
+        "perplexity": 1.6597944178904136,
+        "one_minus_mean_confidence": 0.28864162020068695,
+        "one_minus_min_confidence": 0.945201239043844,
+        "low_confidence_fraction": 0.09090909090909091,
+        "mean_entropy_nats": 0.875678803259851,
+        "max_entropy_nats": 1.5542748573938636,
+        "tracker_unknown_fraction": 1.0
+      },
+      "tracker": {
+        "unknown_slots": [
+          "intent",
+          "room",
+          "time",
+          "people"
+        ],
+        "unknown_count": 4,
+        "measured_slot_count": 4,
+        "unknown_fraction": 1.0,
+        "intent_unknown": true,
+        "parsed_ok": true
+      }
+    },
+    {
+      "seed": 11,
+      "id": "general_france_capital",
+      "retrieval_needed": false,
+      "expected_answer": "Paris",
+      "model_answer": "The pool is open daily from 6 AM until 10 PM.",
+      "signals": {
+        "negative_mean_logprob": 0.48327417597147965,
+        "negative_min_logprob": 3.353470162440769,
+        "perplexity": 1.6213743859736967,
+        "one_minus_mean_confidence": 0.2473187058848374,
+        "one_minus_min_confidence": 0.9650371833077761,
+        "low_confidence_fraction": 0.09090909090909091,
+        "mean_entropy_nats": 0.7755477947016463,
+        "max_entropy_nats": 1.557372517105034,
+        "tracker_unknown_fraction": 1.0
+      },
+      "tracker": {
+        "unknown_slots": [
+          "intent",
+          "room",
+          "time",
+          "people"
+        ],
+        "unknown_count": 4,
+        "measured_slot_count": 4,
+        "unknown_fraction": 1.0,
+        "intent_unknown": true,
+        "parsed_ok": true
+      }
+    },
+    {
+      "seed": 11,
+      "id": "general_water_freezing",
+      "retrieval_needed": false,
+      "expected_answer": "0 degrees Celsius",
+      "model_answer": "The pool is open daily from 6 AM until 10 PM.",
+      "signals": {
+        "negative_mean_logprob": 0.6931774584860713,
+        "negative_min_logprob": 2.6958520100447965,
+        "perplexity": 2.000060556769014,
+        "one_minus_mean_confidence": 0.3453105149588933,
+        "one_minus_min_confidence": 0.932515140505237,
+        "low_confidence_fraction": 0.18181818181818182,
+        "mean_entropy_nats": 0.9637759830138077,
+        "max_entropy_nats": 1.7060904133901953,
+        "tracker_unknown_fraction": 1.0
+      },
+      "tracker": {
+        "unknown_slots": [
+          "intent",
+          "room",
+          "time",
+          "people"
+        ],
+        "unknown_count": 4,
+        "measured_slot_count": 4,
+        "unknown_fraction": 1.0,
+        "intent_unknown": true,
+        "parsed_ok": true
+      }
+    },
+    {
+      "seed": 11,
+      "id": "general_opposite_early",
+      "retrieval_needed": false,
+      "expected_answer": "Late",
+      "model_answer": "The pool is open daily from 6 AM until 10 PM.",
+      "signals": {
+        "negative_mean_logprob": 0.19366952375459065,
+        "negative_min_logprob": 0.3796664133849265,
+        "perplexity": 1.2136951192662624,
+        "one_minus_mean_confidence": 0.17165746869612764,
+        "one_minus_min_confidence": 0.3159104257206753,
+        "low_confidence_fraction": 0.0,
+        "mean_entropy_nats": 0.6881297753966211,
+        "max_entropy_nats": 1.0986187484167016,
+        "tracker_unknown_fraction": 1.0
+      },
+      "tracker": {
+        "unknown_slots": [
+          "intent",
+          "room",
+          "time",
+          "people"
+        ],
+        "unknown_count": 4,
+        "measured_slot_count": 4,
+        "unknown_fraction": 1.0,
+        "intent_unknown": true,
+        "parsed_ok": true
+      }
+    },
+    {
+      "seed": 11,
+      "id": "general_spell_hotel",
+      "retrieval_needed": false,
+      "expected_answer": "H-O-T-E-L",
+      "model_answer": "The pool is open daily from 6 AM until 10 PM.",
+      "signals": {
+        "negative_mean_logprob": 0.7139740288833364,
+        "negative_min_logprob": 3.1276879951849414,
+        "perplexity": 2.0420904812702,
+        "one_minus_mean_confidence": 0.33295401158873594,
+        "one_minus_min_confidence": 0.9561810100555778,
+        "low_confidence_fraction": 0.18181818181818182,
+        "mean_entropy_nats": 0.9180918897268271,
+        "max_entropy_nats": 1.6669549292052181,
+        "tracker_unknown_fraction": 1.0
+      },
+      "tracker": {
+        "unknown_slots": [
+          "intent",
+          "room",
+          "time",
+          "people"
+        ],
+        "unknown_count": 4,
+        "measured_slot_count": 4,
+        "unknown_fraction": 1.0,
+        "intent_unknown": true,
+        "parsed_ok": true
+      }
+    },
+    {
+      "seed": 11,
+      "id": "general_spanish_thanks",
+      "retrieval_needed": false,
+      "expected_answer": "Gracias",
+      "model_answer": "The pool is open daily from 6 AM until 10 PM.",
+      "signals": {
+        "negative_mean_logprob": 0.6827704344731744,
+        "negative_min_logprob": 2.8962634872422943,
+        "perplexity": 1.979353813204855,
+        "one_minus_mean_confidence": 0.33180174144276053,
+        "one_minus_min_confidence": 0.9447708003969291,
+        "low_confidence_fraction": 0.18181818181818182,
+        "mean_entropy_nats": 0.9293396064204622,
+        "max_entropy_nats": 1.6975723151503457,
+        "tracker_unknown_fraction": 0.75
+      },
+      "tracker": {
+        "unknown_slots": [
+          "room",
+          "time",
+          "people"
+        ],
+        "unknown_count": 3,
+        "measured_slot_count": 4,
+        "unknown_fraction": 0.75,
+        "intent_unknown": false,
+        "parsed_ok": true
+      }
+    },
+    {
+      "seed": 11,
+      "id": "general_color_mix",
+      "retrieval_needed": false,
+      "expected_answer": "Purple",
+      "model_answer": "The pool is open daily from 6 AM until 10 PM.",
+      "signals": {
+        "negative_mean_logprob": 0.6957560822749612,
+        "negative_min_logprob": 3.482437966856046,
+        "perplexity": 2.0052246157211013,
+        "one_minus_mean_confidence": 0.3317018597629422,
+        "one_minus_min_confidence": 0.9692676049338913,
+        "low_confidence_fraction": 0.18181818181818182,
+        "mean_entropy_nats": 0.8906524835434094,
+        "max_entropy_nats": 1.6553081581653075,
+        "tracker_unknown_fraction": 1.0
+      },
+      "tracker": {
+        "unknown_slots": [
+          "intent",
+          "room",
+          "time",
+          "people"
+        ],
+        "unknown_count": 4,
+        "measured_slot_count": 4,
+        "unknown_fraction": 1.0,
+        "intent_unknown": true,
+        "parsed_ok": true
+      }
+    },
+    {
+      "seed": 11,
+      "id": "general_dozen",
+      "retrieval_needed": false,
+      "expected_answer": "12",
+      "model_answer": "The pool is open daily from 6 AM until 10 PM.",
+      "signals": {
+        "negative_mean_logprob": 0.44820366548605084,
+        "negative_min_logprob": 2.2570859825171983,
+        "perplexity": 1.5654975009970489,
+        "one_minus_mean_confidence": 0.29169976632615147,
+        "one_minus_min_confidence": 0.8953449926316986,
+        "low_confidence_fraction": 0.09090909090909091,
+        "mean_entropy_nats": 0.9319873275981488,
+        "max_entropy_nats": 1.716109104267425,
+        "tracker_unknown_fraction": 1.0
+      },
+      "tracker": {
+        "unknown_slots": [
+          "intent",
+          "room",
+          "time",
+          "people"
+        ],
+        "unknown_count": 4,
+        "measured_slot_count": 4,
+        "unknown_fraction": 1.0,
+        "intent_unknown": true,
+        "parsed_ok": true
+      }
+    },
+    {
+      "seed": 11,
+      "id": "general_triangle_sides",
+      "retrieval_needed": false,
+      "expected_answer": "3",
+      "model_answer": "The pool is open daily from 6 AM until 10 PM.",
+      "signals": {
+        "negative_mean_logprob": 0.45395980638129085,
+        "negative_min_logprob": 2.7202763941959933,
+        "perplexity": 1.574534709955374,
+        "one_minus_mean_confidence": 0.26814523850611527,
+        "one_minus_min_confidence": 0.934143450457405,
+        "low_confidence_fraction": 0.09090909090909091,
+        "mean_entropy_nats": 0.8663712231767439,
+        "max_entropy_nats": 1.5958950223070465,
+        "tracker_unknown_fraction": 1.0
+      },
+      "tracker": {
+        "unknown_slots": [
+          "intent",
+          "room",
+          "time",
+          "people"
+        ],
+        "unknown_count": 4,
+        "measured_slot_count": 4,
+        "unknown_fraction": 1.0,
+        "intent_unknown": true,
+        "parsed_ok": true
+      }
+    },
+    {
+      "seed": 11,
+      "id": "general_year_months",
+      "retrieval_needed": false,
+      "expected_answer": "12",
+      "model_answer": "The pool is open daily from 6 AM until 10 PM.",
+      "signals": {
+        "negative_mean_logprob": 0.39217033875085705,
+        "negative_min_logprob": 2.2116524344547077,
+        "perplexity": 1.480189823615025,
+        "one_minus_mean_confidence": 0.25012065028535213,
+        "one_minus_min_confidence": 0.890480474927277,
+        "low_confidence_fraction": 0.09090909090909091,
+        "mean_entropy_nats": 0.8112002193795551,
+        "max_entropy_nats": 1.666114385812913,
+        "tracker_unknown_fraction": 1.0
+      },
+      "tracker": {
+        "unknown_slots": [
+          "intent",
+          "room",
+          "time",
+          "people"
+        ],
+        "unknown_count": 4,
+        "measured_slot_count": 4,
+        "unknown_fraction": 1.0,
+        "intent_unknown": true,
+        "parsed_ok": true
+      }
+    },
+    {
+      "seed": 11,
+      "id": "general_sun_direction",
+      "retrieval_needed": false,
+      "expected_answer": "East",
+      "model_answer": "The pool is open daily from 6 AM until 10 PM.",
+      "signals": {
+        "negative_mean_logprob": 0.5963397815021877,
+        "negative_min_logprob": 2.2809979565786196,
+        "perplexity": 1.8154616382184463,
+        "one_minus_mean_confidence": 0.3224498565596883,
+        "one_minus_min_confidence": 0.8978178175650748,
+        "low_confidence_fraction": 0.18181818181818182,
+        "mean_entropy_nats": 0.9161939059012457,
+        "max_entropy_nats": 1.7331244378743862,
+        "tracker_unknown_fraction": 1.0
+      },
+      "tracker": {
+        "unknown_slots": [
+          "intent",
+          "room",
+          "time",
+          "people"
+        ],
+        "unknown_count": 4,
+        "measured_slot_count": 4,
+        "unknown_fraction": 1.0,
+        "intent_unknown": true,
+        "parsed_ok": true
+      }
+    },
+    {
+      "seed": 11,
+      "id": "general_boiling_water",
+      "retrieval_needed": false,
+      "expected_answer": "100 degrees Celsius",
+      "model_answer": "The pool is open daily from 6 AM until 10 PM.",
+      "signals": {
+        "negative_mean_logprob": 0.6614275582102785,
+        "negative_min_logprob": 2.78315112848984,
+        "perplexity": 1.9375563355010206,
+        "one_minus_mean_confidence": 0.3072149499414514,
+        "one_minus_min_confidence": 0.9381566762448612,
+        "low_confidence_fraction": 0.18181818181818182,
+        "mean_entropy_nats": 0.8445919647938617,
+        "max_entropy_nats": 1.6840838784633319,
+        "tracker_unknown_fraction": 1.0
+      },
+      "tracker": {
+        "unknown_slots": [
+          "intent",
+          "room",
+          "time",
+          "people"
+        ],
+        "unknown_count": 4,
+        "measured_slot_count": 4,
+        "unknown_fraction": 1.0,
+        "intent_unknown": true,
+        "parsed_ok": true
+      }
+    },
+    {
+      "seed": 11,
+      "id": "general_planet",
+      "retrieval_needed": false,
+      "expected_answer": "Mars",
+      "model_answer": "The pool is open daily from 6 AM until 10 PM.",
+      "signals": {
+        "negative_mean_logprob": 0.8714217174920278,
+        "negative_min_logprob": 2.8986497213567883,
+        "perplexity": 2.39030677988859,
+        "one_minus_mean_confidence": 0.39816548601907253,
+        "one_minus_min_confidence": 0.9449024330814759,
+        "low_confidence_fraction": 0.2727272727272727,
+        "mean_entropy_nats": 1.0054518702898274,
+        "max_entropy_nats": 1.7036551045819046,
+        "tracker_unknown_fraction": 1.0
+      },
+      "tracker": {
+        "unknown_slots": [
+          "intent",
+          "room",
+          "time",
+          "people"
+        ],
+        "unknown_count": 4,
+        "measured_slot_count": 4,
+        "unknown_fraction": 1.0,
+        "intent_unknown": true,
+        "parsed_ok": true
+      }
+    },
+    {
+      "seed": 11,
+      "id": "general_square_sides",
+      "retrieval_needed": false,
+      "expected_answer": "4",
+      "model_answer": "The pool is open daily from 6 AM until 10 PM.",
+      "signals": {
+        "negative_mean_logprob": 0.9879016220358,
+        "negative_min_logprob": 2.7595030518013863,
+        "perplexity": 2.6855931661023265,
+        "one_minus_mean_confidence": 0.4599410719277506,
+        "one_minus_min_confidence": 0.9366767710936024,
+        "low_confidence_fraction": 0.36363636363636365,
+        "mean_entropy_nats": 1.0882864857186851,
+        "max_entropy_nats": 1.693312588325377,
+        "tracker_unknown_fraction": 1.0
+      },
+      "tracker": {
+        "unknown_slots": [
+          "intent",
+          "room",
+          "time",
+          "people"
+        ],
+        "unknown_count": 4,
+        "measured_slot_count": 4,
+        "unknown_fraction": 1.0,
+        "intent_unknown": true,
+        "parsed_ok": true
+      }
+    },
+    {
+      "seed": 11,
+      "id": "general_first_month",
+      "retrieval_needed": false,
+      "expected_answer": "January",
+      "model_answer": "The pool is open daily from 6 AM until 10 PM.",
+      "signals": {
+        "negative_mean_logprob": 0.6182867071041034,
+        "negative_min_logprob": 2.794720542888122,
+        "perplexity": 1.8557458804039626,
+        "one_minus_mean_confidence": 0.3117857742253073,
+        "one_minus_min_confidence": 0.9388680442944934,
+        "low_confidence_fraction": 0.18181818181818182,
+        "mean_entropy_nats": 0.8495042747562731,
+        "max_entropy_nats": 1.7099598250994859,
+        "tracker_unknown_fraction": 1.0
+      },
+      "tracker": {
+        "unknown_slots": [
+          "intent",
+          "room",
+          "time",
+          "people"
+        ],
+        "unknown_count": 4,
+        "measured_slot_count": 4,
+        "unknown_fraction": 1.0,
+        "intent_unknown": true,
+        "parsed_ok": true
+      }
+    },
+    {
+      "seed": 11,
+      "id": "general_half_ten",
+      "retrieval_needed": false,
+      "expected_answer": "5",
+      "model_answer": "The pool is open daily from 6 AM until 10 PM.",
+      "signals": {
+        "negative_mean_logprob": 1.1232239311397019,
+        "negative_min_logprob": 3.177207577147425,
+        "perplexity": 3.0747510269645777,
+        "one_minus_mean_confidence": 0.4666890747517388,
+        "one_minus_min_confidence": 0.9582980578594255,
+        "low_confidence_fraction": 0.36363636363636365,
+        "mean_entropy_nats": 1.0615813691669351,
+        "max_entropy_nats": 1.666301314499233,
+        "tracker_unknown_fraction": 1.0
+      },
+      "tracker": {
+        "unknown_slots": [
+          "intent",
+          "room",
+          "time",
+          "people"
+        ],
+        "unknown_count": 4,
+        "measured_slot_count": 4,
+        "unknown_fraction": 1.0,
+        "intent_unknown": true,
+        "parsed_ok": true
+      }
+    },
+    {
+      "seed": 23,
+      "id": "hotel_checkout_time",
+      "retrieval_needed": true,
+      "expected_answer": "11:00 AM",
+      "model_answer": "The pool is open daily from 6 AM until 10 PM.",
+      "signals": {
+        "negative_mean_logprob": 0.5422941072571846,
+        "negative_min_logprob": 3.295418195021397,
+        "perplexity": 1.7199480850462288,
+        "one_minus_mean_confidence": 0.2966119599355679,
+        "one_minus_min_confidence": 0.962947453383783,
+        "low_confidence_fraction": 0.09090909090909091,
+        "mean_entropy_nats": 0.9265638200911318,
+        "max_entropy_nats": 1.635229547878067,
+        "tracker_unknown_fraction": 0.75
+      },
+      "tracker": {
+        "unknown_slots": [
+          "room",
+          "time",
+          "people"
+        ],
+        "unknown_count": 3,
+        "measured_slot_count": 4,
+        "unknown_fraction": 0.75,
+        "intent_unknown": false,
+        "parsed_ok": true
+      }
+    },
+    {
+      "seed": 23,
+      "id": "hotel_front_desk_hours",
+      "retrieval_needed": true,
+      "expected_answer": "24 hours a day",
+      "model_answer": "The pool is open daily from 6 AM until 10 PM.",
+      "signals": {
+        "negative_mean_logprob": 0.8621868160345412,
+        "negative_min_logprob": 3.2944083419967,
+        "perplexity": 2.368334146035551,
+        "one_minus_mean_confidence": 0.3760857818741262,
+        "one_minus_min_confidence": 0.9629100168579969,
+        "low_confidence_fraction": 0.2727272727272727,
+        "mean_entropy_nats": 0.9506032186518113,
+        "max_entropy_nats": 1.741495430764162,
+        "tracker_unknown_fraction": 1.0
+      },
+      "tracker": {
+        "unknown_slots": [
+          "intent",
+          "room",
+          "time",
+          "people"
+        ],
+        "unknown_count": 4,
+        "measured_slot_count": 4,
+        "unknown_fraction": 1.0,
+        "intent_unknown": true,
+        "parsed_ok": true
+      }
+    },
+    {
+      "seed": 23,
+      "id": "hotel_luggage_cost",
+      "retrieval_needed": true,
+      "expected_answer": "No, same-day luggage storage is free",
+      "model_answer": "The pool is open daily from 6 AM until 10 PM.",
+      "signals": {
+        "negative_mean_logprob": 0.8320046543603568,
+        "negative_min_logprob": 3.342413515378975,
+        "perplexity": 2.2979206627674253,
+        "one_minus_mean_confidence": 0.3775042679061106,
+        "one_minus_min_confidence": 0.9646484667926901,
+        "low_confidence_fraction": 0.18181818181818182,
+        "mean_entropy_nats": 1.0110669073316503,
+        "max_entropy_nats": 1.5824191704747572,
+        "tracker_unknown_fraction": 1.0
+      },
+      "tracker": {
+        "unknown_slots": [
+          "intent",
+          "room",
+          "time",
+          "people"
+        ],
+        "unknown_count": 4,
+        "measured_slot_count": 4,
+        "unknown_fraction": 1.0,
+        "intent_unknown": true,
+        "parsed_ok": true
+      }
+    },
+    {
+      "seed": 23,
+      "id": "hotel_airport_notice",
+      "retrieval_needed": true,
+      "expected_answer": "At least 24 hours before arrival",
+      "model_answer": "The pool is open daily from 6 AM until 10 PM.",
+      "signals": {
+        "negative_mean_logprob": 1.4376093822949771,
+        "negative_min_logprob": 3.379410187306196,
+        "perplexity": 4.210617797993955,
+        "one_minus_mean_confidence": 0.5244641819298297,
+        "one_minus_min_confidence": 0.9659324577210445,
+        "low_confidence_fraction": 0.45454545454545453,
+        "mean_entropy_nats": 1.105707122395832,
+        "max_entropy_nats": 1.705257414634627,
+        "tracker_unknown_fraction": 1.0
+      },
+      "tracker": {
+        "unknown_slots": [
+          "intent",
+          "room",
+          "time",
+          "people"
+        ],
+        "unknown_count": 4,
+        "measured_slot_count": 4,
+        "unknown_fraction": 1.0,
+        "intent_unknown": true,
+        "parsed_ok": true
+      }
+    },
+    {
+      "seed": 23,
+      "id": "hotel_lost_retention",
+      "retrieval_needed": true,
+      "expected_answer": "90 days",
+      "model_answer": "The pool is open daily from 6 AM until 10 PM.",
+      "signals": {
+        "negative_mean_logprob": 0.5019070185146826,
+        "negative_min_logprob": 2.9620972817767743,
+        "perplexity": 1.651868412564033,
+        "one_minus_mean_confidence": 0.28520064861972405,
+        "one_minus_min_confidence": 0.9482896478124758,
+        "low_confidence_fraction": 0.09090909090909091,
+        "mean_entropy_nats": 0.8883144577374735,
+        "max_entropy_nats": 1.4972800934362251,
+        "tracker_unknown_fraction": 1.0
+      },
+      "tracker": {
+        "unknown_slots": [
+          "intent",
+          "room",
+          "time",
+          "people"
+        ],
+        "unknown_count": 4,
+        "measured_slot_count": 4,
+        "unknown_fraction": 1.0,
+        "intent_unknown": true,
+        "parsed_ok": true
+      }
+    },
+    {
+      "seed": 23,
+      "id": "hotel_room_service",
+      "retrieval_needed": true,
+      "expected_answer": "24 hours a day",
+      "model_answer": "The pool is open daily from 6 AM until 10 PM.",
+      "signals": {
+        "negative_mean_logprob": 0.802002681189697,
+        "negative_min_logprob": 3.489358019488749,
+        "perplexity": 2.230002443451742,
+        "one_minus_mean_confidence": 0.39515372700621365,
+        "one_minus_min_confidence": 0.9694795405766281,
+        "low_confidence_fraction": 0.18181818181818182,
+        "mean_entropy_nats": 1.1075874020871481,
+        "max_entropy_nats": 1.6791509688782322,
+        "tracker_unknown_fraction": 1.0
+      },
+      "tracker": {
+        "unknown_slots": [
+          "intent",
+          "room",
+          "time",
+          "people"
+        ],
+        "unknown_count": 4,
+        "measured_slot_count": 4,
+        "unknown_fraction": 1.0,
+        "intent_unknown": true,
+        "parsed_ok": true
+      }
+    },
+    {
+      "seed": 23,
+      "id": "hotel_coffee_shop",
+      "retrieval_needed": true,
+      "expected_answer": "11:00 PM",
+      "model_answer": "The pool is open daily from 6 AM until 10 PM.",
+      "signals": {
+        "negative_mean_logprob": 0.49819735126706616,
+        "negative_min_logprob": 3.455873626245025,
+        "perplexity": 1.6457518825765047,
+        "one_minus_mean_confidence": 0.2502326207846116,
+        "one_minus_min_confidence": 0.968440279091438,
+        "low_confidence_fraction": 0.09090909090909091,
+        "mean_entropy_nats": 0.7591870143938295,
+        "max_entropy_nats": 1.353433489638596,
+        "tracker_unknown_fraction": 1.0
+      },
+      "tracker": {
+        "unknown_slots": [
+          "intent",
+          "room",
+          "time",
+          "people"
+        ],
+        "unknown_count": 4,
+        "measured_slot_count": 4,
+        "unknown_fraction": 1.0,
+        "intent_unknown": true,
+        "parsed_ok": true
+      }
+    },
+    {
+      "seed": 23,
+      "id": "hotel_rooftop_open",
+      "retrieval_needed": true,
+      "expected_answer": "6:30 PM",
+      "model_answer": "The pool is open daily from 6 AM until 10 PM.",
+      "signals": {
+        "negative_mean_logprob": 0.281867562809509,
+        "negative_min_logprob": 0.4460390383019358,
+        "perplexity": 1.3256031492042113,
+        "one_minus_mean_confidence": 0.24156699688031513,
+        "one_minus_min_confidence": 0.3598412191379309,
+        "low_confidence_fraction": 0.0,
+        "mean_entropy_nats": 0.8957208294942949,
+        "max_entropy_nats": 1.2151735799019998,
+        "tracker_unknown_fraction": 1.0
+      },
+      "tracker": {
+        "unknown_slots": [
+          "intent",
+          "room",
+          "time",
+          "people"
+        ],
+        "unknown_count": 4,
+        "measured_slot_count": 4,
+        "unknown_fraction": 1.0,
+        "intent_unknown": true,
+        "parsed_ok": true
+      }
+    },
+    {
+      "seed": 23,
+      "id": "hotel_bar_age",
+      "retrieval_needed": true,
+      "expected_answer": "21 years old",
+      "model_answer": "The pool is open daily from 6 AM until 10 PM.",
+      "signals": {
+        "negative_mean_logprob": 0.2708739821317415,
+        "negative_min_logprob": 0.4125024599485668,
+        "perplexity": 1.3111098367069343,
+        "one_minus_mean_confidence": 0.2333725789583414,
+        "one_minus_min_confidence": 0.3380084317763785,
+        "low_confidence_fraction": 0.0,
+        "mean_entropy_nats": 0.8651960480920086,
+        "max_entropy_nats": 1.157582442492565,
+        "tracker_unknown_fraction": 1.0
+      },
+      "tracker": {
+        "unknown_slots": [
+          "intent",
+          "room",
+          "time",
+          "people"
+        ],
+        "unknown_count": 4,
+        "measured_slot_count": 4,
+        "unknown_fraction": 1.0,
+        "intent_unknown": true,
+        "parsed_ok": true
+      }
+    },
+    {
+      "seed": 23,
+      "id": "hotel_spa_hours",
+      "retrieval_needed": true,
+      "expected_answer": "10:00 AM to 9:00 PM",
+      "model_answer": "The pool is open daily from 6 AM until 10 PM.",
+      "signals": {
+        "negative_mean_logprob": 0.2575031289807302,
+        "negative_min_logprob": 0.43637489623815356,
+        "perplexity": 1.2936958589233962,
+        "one_minus_mean_confidence": 0.21904283753776,
+        "one_minus_min_confidence": 0.35362464318306286,
+        "low_confidence_fraction": 0.0,
+        "mean_entropy_nats": 0.8002355333160149,
+        "max_entropy_nats": 1.2036363660952618,
+        "tracker_unknown_fraction": 0.75
+      },
+      "tracker": {
+        "unknown_slots": [
+          "room",
+          "time",
+          "people"
+        ],
+        "unknown_count": 3,
+        "measured_slot_count": 4,
+        "unknown_fraction": 0.75,
+        "intent_unknown": false,
+        "parsed_ok": true
+      }
+    },
+    {
+      "seed": 23,
+      "id": "hotel_play_zone_ages",
+      "retrieval_needed": true,
+      "expected_answer": "Children aged 3 to 12",
+      "model_answer": "The pool is open daily from 6 AM until 10 PM.",
+      "signals": {
+        "negative_mean_logprob": 0.8708722861697414,
+        "negative_min_logprob": 3.0951877813279296,
+        "perplexity": 2.388993831194443,
+        "one_minus_mean_confidence": 0.3820868560395074,
+        "one_minus_min_confidence": 0.954733488543517,
+        "low_confidence_fraction": 0.2727272727272727,
+        "mean_entropy_nats": 0.9196613204032204,
+        "max_entropy_nats": 1.5978690491124543,
+        "tracker_unknown_fraction": 1.0
+      },
+      "tracker": {
+        "unknown_slots": [
+          "intent",
+          "room",
+          "time",
+          "people"
+        ],
+        "unknown_count": 4,
+        "measured_slot_count": 4,
+        "unknown_fraction": 1.0,
+        "intent_unknown": true,
+        "parsed_ok": true
+      }
+    },
+    {
+      "seed": 23,
+      "id": "hotel_laundry_hours",
+      "retrieval_needed": true,
+      "expected_answer": "8:00 PM",
+      "model_answer": "The pool is open daily from 6 AM until 10 PM.",
+      "signals": {
+        "negative_mean_logprob": 0.7236920593493088,
+        "negative_min_logprob": 3.1646996634842215,
+        "perplexity": 2.062032319535146,
+        "one_minus_mean_confidence": 0.31194102081386244,
+        "one_minus_min_confidence": 0.9577731778335334,
+        "low_confidence_fraction": 0.18181818181818182,
+        "mean_entropy_nats": 0.8186206088212711,
+        "max_entropy_nats": 1.572707866162061,
+        "tracker_unknown_fraction": 1.0
+      },
+      "tracker": {
+        "unknown_slots": [
+          "intent",
+          "room",
+          "time",
+          "people"
+        ],
+        "unknown_count": 4,
+        "measured_slot_count": 4,
+        "unknown_fraction": 1.0,
+        "intent_unknown": true,
+        "parsed_ok": true
+      }
+    },
+    {
+      "seed": 23,
+      "id": "hotel_wifi_ssid",
+      "retrieval_needed": true,
+      "expected_answer": "GrandHorizon_Guest",
+      "model_answer": "The pool is open daily from 6 AM until 10 PM.",
+      "signals": {
+        "negative_mean_logprob": 0.507342427240713,
+        "negative_min_logprob": 3.1156296373144894,
+        "perplexity": 1.6608714379441047,
+        "one_minus_mean_confidence": 0.2827109894958555,
+        "one_minus_min_confidence": 0.9556494264216412,
+        "low_confidence_fraction": 0.09090909090909091,
+        "mean_entropy_nats": 0.8728427046113921,
+        "max_entropy_nats": 1.4904633345882619,
+        "tracker_unknown_fraction": 1.0
+      },
+      "tracker": {
+        "unknown_slots": [
+          "intent",
+          "room",
+          "time",
+          "people"
+        ],
+        "unknown_count": 4,
+        "measured_slot_count": 4,
+        "unknown_fraction": 1.0,
+        "intent_unknown": true,
+        "parsed_ok": true
+      }
+    },
+    {
+      "seed": 23,
+      "id": "hotel_business_center",
+      "retrieval_needed": true,
+      "expected_answer": "8:00 AM to 8:00 PM",
+      "model_answer": "The pool is open daily from 6 AM until 10 PM.",
+      "signals": {
+        "negative_mean_logprob": 0.168866368743799,
+        "negative_min_logprob": 0.36501954788575974,
+        "perplexity": 1.1839619140344428,
+        "one_minus_mean_confidence": 0.15156281282998563,
+        "one_minus_min_confidence": 0.305816919066215,
+        "low_confidence_fraction": 0.0,
+        "mean_entropy_nats": 0.6220741351425292,
+        "max_entropy_nats": 1.0470122219286107,
+        "tracker_unknown_fraction": 1.0
+      },
+      "tracker": {
+        "unknown_slots": [
+          "intent",
+          "room",
+          "time",
+          "people"
+        ],
+        "unknown_count": 4,
+        "measured_slot_count": 4,
+        "unknown_fraction": 1.0,
+        "intent_unknown": true,
+        "parsed_ok": true
+      }
+    },
+    {
+      "seed": 23,
+      "id": "hotel_cancellation_window",
+      "retrieval_needed": true,
+      "expected_answer": "At least 48 hours before scheduled check-in",
+      "model_answer": "The pool is open daily from 6 AM until 10 PM.",
+      "signals": {
+        "negative_mean_logprob": 0.45609936896752395,
+        "negative_min_logprob": 3.442976470657107,
+        "perplexity": 1.5779071319790106,
+        "one_minus_mean_confidence": 0.21283919040560517,
+        "one_minus_min_confidence": 0.9680306123713877,
+        "low_confidence_fraction": 0.09090909090909091,
+        "mean_entropy_nats": 0.6332464967297121,
+        "max_entropy_nats": 1.4936785094944878,
+        "tracker_unknown_fraction": 1.0
+      },
+      "tracker": {
+        "unknown_slots": [
+          "intent",
+          "room",
+          "time",
+          "people"
+        ],
+        "unknown_count": 4,
+        "measured_slot_count": 4,
+        "unknown_fraction": 1.0,
+        "intent_unknown": true,
+        "parsed_ok": true
+      }
+    },
+    {
+      "seed": 23,
+      "id": "hotel_quiet_hours",
+      "retrieval_needed": true,
+      "expected_answer": "10:00 PM to 7:00 AM",
+      "model_answer": "The pool is open daily from 6 AM until 10 PM.",
+      "signals": {
+        "negative_mean_logprob": 1.133000288019925,
+        "negative_min_logprob": 3.4188831013667005,
+        "perplexity": 3.1049583083099748,
+        "one_minus_mean_confidence": 0.4729467752929172,
+        "one_minus_min_confidence": 0.9672510081757376,
+        "low_confidence_fraction": 0.36363636363636365,
+        "mean_entropy_nats": 1.1057663320772433,
+        "max_entropy_nats": 1.7446404819336594,
+        "tracker_unknown_fraction": 1.0
+      },
+      "tracker": {
+        "unknown_slots": [
+          "intent",
+          "room",
+          "time",
+          "people"
+        ],
+        "unknown_count": 4,
+        "measured_slot_count": 4,
+        "unknown_fraction": 1.0,
+        "intent_unknown": true,
+        "parsed_ok": true
+      }
+    },
+    {
+      "seed": 23,
+      "id": "hotel_visitor_hours",
+      "retrieval_needed": true,
+      "expected_answer": "8:00 AM to 10:00 PM",
+      "model_answer": "The pool is open daily from 6 AM until 10 PM.",
+      "signals": {
+        "negative_mean_logprob": 0.5099214553304382,
+        "negative_min_logprob": 3.208743646944545,
+        "perplexity": 1.6651604003359322,
+        "one_minus_mean_confidence": 0.27625897573543545,
+        "one_minus_min_confidence": 0.959592652710331,
+        "low_confidence_fraction": 0.09090909090909091,
+        "mean_entropy_nats": 0.8403944537382473,
+        "max_entropy_nats": 1.5018986077131515,
+        "tracker_unknown_fraction": 1.0
+      },
+      "tracker": {
+        "unknown_slots": [
+          "intent",
+          "room",
+          "time",
+          "people"
+        ],
+        "unknown_count": 4,
+        "measured_slot_count": 4,
+        "unknown_fraction": 1.0,
+        "intent_unknown": true,
+        "parsed_ok": true
+      }
+    },
+    {
+      "seed": 23,
+      "id": "hotel_steam_room",
+      "retrieval_needed": true,
+      "expected_answer": "7:00 AM to 9:00 PM",
+      "model_answer": "The pool is open daily from 6 AM until 10 PM.",
+      "signals": {
+        "negative_mean_logprob": 0.18674879670106173,
+        "negative_min_logprob": 0.36368831926013095,
+        "perplexity": 1.2053244655348532,
+        "one_minus_mean_confidence": 0.16448304669446223,
+        "one_minus_min_confidence": 0.30489218729931433,
+        "low_confidence_fraction": 0.0,
+        "mean_entropy_nats": 0.6478056980928303,
+        "max_entropy_nats": 1.0784713775975519,
+        "tracker_unknown_fraction": 1.0
+      },
+      "tracker": {
+        "unknown_slots": [
+          "intent",
+          "room",
+          "time",
+          "people"
+        ],
+        "unknown_count": 4,
+        "measured_slot_count": 4,
+        "unknown_fraction": 1.0,
+        "intent_unknown": true,
+        "parsed_ok": true
+      }
+    },
+    {
+      "seed": 23,
+      "id": "general_arithmetic",
+      "retrieval_needed": false,
+      "expected_answer": "4",
+      "model_answer": "The pool is open daily from 6 AM until 10 PM.",
+      "signals": {
+        "negative_mean_logprob": 0.49851924761614635,
+        "negative_min_logprob": 3.3459001655954985,
+        "perplexity": 1.6462817293722976,
+        "one_minus_mean_confidence": 0.2576021536084766,
+        "one_minus_min_confidence": 0.9647715105936034,
+        "low_confidence_fraction": 0.09090909090909091,
+        "mean_entropy_nats": 0.7904161437213724,
+        "max_entropy_nats": 1.4914420200351757,
+        "tracker_unknown_fraction": 1.0
+      },
+      "tracker": {
+        "unknown_slots": [
+          "intent",
+          "room",
+          "time",
+          "people"
+        ],
+        "unknown_count": 4,
+        "measured_slot_count": 4,
+        "unknown_fraction": 1.0,
+        "intent_unknown": true,
+        "parsed_ok": true
+      }
+    },
+    {
+      "seed": 23,
+      "id": "general_week_days",
+      "retrieval_needed": false,
+      "expected_answer": "7",
+      "model_answer": "The pool is open daily from 6 AM until 10 PM.",
+      "signals": {
+        "negative_mean_logprob": 0.4633907307133759,
+        "negative_min_logprob": 2.5517149318758925,
+        "perplexity": 1.5894542697011784,
+        "one_minus_mean_confidence": 0.2833413488837302,
+        "one_minus_min_confidence": 0.9220521239836506,
+        "low_confidence_fraction": 0.09090909090909091,
+        "mean_entropy_nats": 0.8860344946091768,
+        "max_entropy_nats": 1.577329125006484,
+        "tracker_unknown_fraction": 1.0
+      },
+      "tracker": {
+        "unknown_slots": [
+          "intent",
+          "room",
+          "time",
+          "people"
+        ],
+        "unknown_count": 4,
+        "measured_slot_count": 4,
+        "unknown_fraction": 1.0,
+        "intent_unknown": true,
+        "parsed_ok": true
+      }
+    },
+    {
+      "seed": 23,
+      "id": "general_hour_minutes",
+      "retrieval_needed": false,
+      "expected_answer": "60",
+      "model_answer": "The pool is open daily from 6 AM until 10 PM.",
+      "signals": {
+        "negative_mean_logprob": 0.7000391157333499,
+        "negative_min_logprob": 3.070243160790326,
+        "perplexity": 2.013831478424996,
+        "one_minus_mean_confidence": 0.3100304764221886,
+        "one_minus_min_confidence": 0.9535901315750072,
+        "low_confidence_fraction": 0.18181818181818182,
+        "mean_entropy_nats": 0.8105470017312797,
+        "max_entropy_nats": 1.6418307526390146,
+        "tracker_unknown_fraction": 1.0
+      },
+      "tracker": {
+        "unknown_slots": [
+          "intent",
+          "room",
+          "time",
+          "people"
+        ],
+        "unknown_count": 4,
+        "measured_slot_count": 4,
+        "unknown_fraction": 1.0,
+        "intent_unknown": true,
+        "parsed_ok": true
+      }
+    },
+    {
+      "seed": 23,
+      "id": "general_france_capital",
+      "retrieval_needed": false,
+      "expected_answer": "Paris",
+      "model_answer": "The pool is open daily from 6 AM until 10 PM.",
+      "signals": {
+        "negative_mean_logprob": 0.7309793279403956,
+        "negative_min_logprob": 3.117157313810396,
+        "perplexity": 2.0771137875041994,
+        "one_minus_mean_confidence": 0.32499342894638517,
+        "one_minus_min_confidence": 0.9557171280242365,
+        "low_confidence_fraction": 0.18181818181818182,
+        "mean_entropy_nats": 0.8695402241238939,
+        "max_entropy_nats": 1.621192237950466,
+        "tracker_unknown_fraction": 1.0
+      },
+      "tracker": {
+        "unknown_slots": [
+          "intent",
+          "room",
+          "time",
+          "people"
+        ],
+        "unknown_count": 4,
+        "measured_slot_count": 4,
+        "unknown_fraction": 1.0,
+        "intent_unknown": true,
+        "parsed_ok": true
+      }
+    },
+    {
+      "seed": 23,
+      "id": "general_water_freezing",
+      "retrieval_needed": false,
+      "expected_answer": "0 degrees Celsius",
+      "model_answer": "The pool is open daily from 6 AM until 10 PM.",
+      "signals": {
+        "negative_mean_logprob": 0.8652751755150313,
+        "negative_min_logprob": 3.2957403717483986,
+        "perplexity": 2.3756597194278593,
+        "one_minus_mean_confidence": 0.34386396099875316,
+        "one_minus_min_confidence": 0.9629593889291981,
+        "low_confidence_fraction": 0.2727272727272727,
+        "mean_entropy_nats": 0.8041826358321772,
+        "max_entropy_nats": 1.643607064790986,
+        "tracker_unknown_fraction": 1.0
+      },
+      "tracker": {
+        "unknown_slots": [
+          "intent",
+          "room",
+          "time",
+          "people"
+        ],
+        "unknown_count": 4,
+        "measured_slot_count": 4,
+        "unknown_fraction": 1.0,
+        "intent_unknown": true,
+        "parsed_ok": true
+      }
+    },
+    {
+      "seed": 23,
+      "id": "general_opposite_early",
+      "retrieval_needed": false,
+      "expected_answer": "Late",
+      "model_answer": "The pool is open daily from 6 AM until 10 PM.",
+      "signals": {
+        "negative_mean_logprob": 0.6025463209311558,
+        "negative_min_logprob": 3.476206555144658,
+        "perplexity": 1.8267644117296096,
+        "one_minus_mean_confidence": 0.33201708495361304,
+        "one_minus_min_confidence": 0.969075500809035,
+        "low_confidence_fraction": 0.09090909090909091,
+        "mean_entropy_nats": 1.0113641205261266,
+        "max_entropy_nats": 1.5660063779378635,
+        "tracker_unknown_fraction": 1.0
+      },
+      "tracker": {
+        "unknown_slots": [
+          "intent",
+          "room",
+          "time",
+          "people"
+        ],
+        "unknown_count": 4,
+        "measured_slot_count": 4,
+        "unknown_fraction": 1.0,
+        "intent_unknown": true,
+        "parsed_ok": true
+      }
+    },
+    {
+      "seed": 23,
+      "id": "general_spell_hotel",
+      "retrieval_needed": false,
+      "expected_answer": "H-O-T-E-L",
+      "model_answer": "The pool is open daily from 6 AM until 10 PM.",
+      "signals": {
+        "negative_mean_logprob": 0.9912016891358835,
+        "negative_min_logprob": 3.48696855670135,
+        "perplexity": 2.6944704435030786,
+        "one_minus_mean_confidence": 0.3847142256095455,
+        "one_minus_min_confidence": 0.969406525876367,
+        "low_confidence_fraction": 0.2727272727272727,
+        "mean_entropy_nats": 0.9247624307948183,
+        "max_entropy_nats": 1.6460064787117767,
+        "tracker_unknown_fraction": 1.0
+      },
+      "tracker": {
+        "unknown_slots": [
+          "intent",
+          "room",
+          "time",
+          "people"
+        ],
+        "unknown_count": 4,
+        "measured_slot_count": 4,
+        "unknown_fraction": 1.0,
+        "intent_unknown": true,
+        "parsed_ok": true
+      }
+    },
+    {
+      "seed": 23,
+      "id": "general_spanish_thanks",
+      "retrieval_needed": false,
+      "expected_answer": "Gracias",
+      "model_answer": "The pool is open daily from 6 AM until 10 PM.",
+      "signals": {
+        "negative_mean_logprob": 0.2189848196557576,
+        "negative_min_logprob": 0.4280410389736282,
+        "perplexity": 1.244812379863658,
+        "one_minus_mean_confidence": 0.18735330315749577,
+        "one_minus_min_confidence": 0.34821533432384855,
+        "low_confidence_fraction": 0.0,
+        "mean_entropy_nats": 0.6981439696086033,
+        "max_entropy_nats": 1.1558169488596866,
+        "tracker_unknown_fraction": 0.75
+      },
+      "tracker": {
+        "unknown_slots": [
+          "room",
+          "time",
+          "people"
+        ],
+        "unknown_count": 3,
+        "measured_slot_count": 4,
+        "unknown_fraction": 0.75,
+        "intent_unknown": false,
+        "parsed_ok": true
+      }
+    },
+    {
+      "seed": 23,
+      "id": "general_color_mix",
+      "retrieval_needed": false,
+      "expected_answer": "Purple",
+      "model_answer": "The pool is open daily from 6 AM until 10 PM.",
+      "signals": {
+        "negative_mean_logprob": 0.9739343494224575,
+        "negative_min_logprob": 3.1174179392620323,
+        "perplexity": 2.648343497926006,
+        "one_minus_mean_confidence": 0.4357287338498038,
+        "one_minus_min_confidence": 0.9557286677639046,
+        "low_confidence_fraction": 0.2727272727272727,
+        "mean_entropy_nats": 1.1126850454725388,
+        "max_entropy_nats": 1.6864464630151703,
+        "tracker_unknown_fraction": 1.0
+      },
+      "tracker": {
+        "unknown_slots": [
+          "intent",
+          "room",
+          "time",
+          "people"
+        ],
+        "unknown_count": 4,
+        "measured_slot_count": 4,
+        "unknown_fraction": 1.0,
+        "intent_unknown": true,
+        "parsed_ok": true
+      }
+    },
+    {
+      "seed": 23,
+      "id": "general_dozen",
+      "retrieval_needed": false,
+      "expected_answer": "12",
+      "model_answer": "The pool is open daily from 6 AM until 10 PM.",
+      "signals": {
+        "negative_mean_logprob": 0.43349402040668644,
+        "negative_min_logprob": 2.5052704949366533,
+        "perplexity": 1.5426381272014271,
+        "one_minus_mean_confidence": 0.2620923719693309,
+        "one_minus_min_confidence": 0.918346491862679,
+        "low_confidence_fraction": 0.09090909090909091,
+        "mean_entropy_nats": 0.8231239240417089,
+        "max_entropy_nats": 1.585038615663126,
+        "tracker_unknown_fraction": 1.0
+      },
+      "tracker": {
+        "unknown_slots": [
+          "intent",
+          "room",
+          "time",
+          "people"
+        ],
+        "unknown_count": 4,
+        "measured_slot_count": 4,
+        "unknown_fraction": 1.0,
+        "intent_unknown": true,
+        "parsed_ok": true
+      }
+    },
+    {
+      "seed": 23,
+      "id": "general_triangle_sides",
+      "retrieval_needed": false,
+      "expected_answer": "3",
+      "model_answer": "The pool is open daily from 6 AM until 10 PM.",
+      "signals": {
+        "negative_mean_logprob": 0.6496331432462861,
+        "negative_min_logprob": 2.6250952026679566,
+        "perplexity": 1.9148382288084527,
+        "one_minus_mean_confidence": 0.3329536972084721,
+        "one_minus_min_confidence": 0.9275671390956142,
+        "low_confidence_fraction": 0.18181818181818182,
+        "mean_entropy_nats": 0.907006505411175,
+        "max_entropy_nats": 1.5852895140546523,
+        "tracker_unknown_fraction": 1.0
+      },
+      "tracker": {
+        "unknown_slots": [
+          "intent",
+          "room",
+          "time",
+          "people"
+        ],
+        "unknown_count": 4,
+        "measured_slot_count": 4,
+        "unknown_fraction": 1.0,
+        "intent_unknown": true,
+        "parsed_ok": true
+      }
+    },
+    {
+      "seed": 23,
+      "id": "general_year_months",
+      "retrieval_needed": false,
+      "expected_answer": "12",
+      "model_answer": "The pool is open daily from 6 AM until 10 PM.",
+      "signals": {
+        "negative_mean_logprob": 0.5228314570890528,
+        "negative_min_logprob": 3.006959740946944,
+        "perplexity": 1.6867969877132003,
+        "one_minus_mean_confidence": 0.30185763375435115,
+        "one_minus_min_confidence": 0.9505582337300984,
+        "low_confidence_fraction": 0.09090909090909091,
+        "mean_entropy_nats": 0.952759792033423,
+        "max_entropy_nats": 1.6851832307342496,
+        "tracker_unknown_fraction": 1.0
+      },
+      "tracker": {
+        "unknown_slots": [
+          "intent",
+          "room",
+          "time",
+          "people"
+        ],
+        "unknown_count": 4,
+        "measured_slot_count": 4,
+        "unknown_fraction": 1.0,
+        "intent_unknown": true,
+        "parsed_ok": true
+      }
+    },
+    {
+      "seed": 23,
+      "id": "general_sun_direction",
+      "retrieval_needed": false,
+      "expected_answer": "East",
+      "model_answer": "The pool is open daily from 6 AM until 10 PM.",
+      "signals": {
+        "negative_mean_logprob": 1.1023150257729377,
+        "negative_min_logprob": 3.3736119674012777,
+        "perplexity": 3.011128802113847,
+        "one_minus_mean_confidence": 0.44591098982235244,
+        "one_minus_min_confidence": 0.9657343528464903,
+        "low_confidence_fraction": 0.2727272727272727,
+        "mean_entropy_nats": 1.0898100138311653,
+        "max_entropy_nats": 1.6690020067569529,
+        "tracker_unknown_fraction": 1.0
+      },
+      "tracker": {
+        "unknown_slots": [
+          "intent",
+          "room",
+          "time",
+          "people"
+        ],
+        "unknown_count": 4,
+        "measured_slot_count": 4,
+        "unknown_fraction": 1.0,
+        "intent_unknown": true,
+        "parsed_ok": true
+      }
+    },
+    {
+      "seed": 23,
+      "id": "general_boiling_water",
+      "retrieval_needed": false,
+      "expected_answer": "100 degrees Celsius",
+      "model_answer": "The pool is open daily from 6 AM until 10 PM.",
+      "signals": {
+        "negative_mean_logprob": 0.9629771696634616,
+        "negative_min_logprob": 3.0646310723255143,
+        "perplexity": 2.619483522865913,
+        "one_minus_mean_confidence": 0.4057214120114133,
+        "one_minus_min_confidence": 0.9533289430667811,
+        "low_confidence_fraction": 0.2727272727272727,
+        "mean_entropy_nats": 0.9829445942239118,
+        "max_entropy_nats": 1.6391747990402294,
+        "tracker_unknown_fraction": 1.0
+      },
+      "tracker": {
+        "unknown_slots": [
+          "intent",
+          "room",
+          "time",
+          "people"
+        ],
+        "unknown_count": 4,
+        "measured_slot_count": 4,
+        "unknown_fraction": 1.0,
+        "intent_unknown": true,
+        "parsed_ok": true
+      }
+    },
+    {
+      "seed": 23,
+      "id": "general_planet",
+      "retrieval_needed": false,
+      "expected_answer": "Mars",
+      "model_answer": "The pool is open daily from 6 AM until 10 PM.",
+      "signals": {
+        "negative_mean_logprob": 1.619785195311487,
+        "negative_min_logprob": 3.2145335685390455,
+        "perplexity": 5.0520050056415,
+        "one_minus_mean_confidence": 0.6320297974080633,
+        "one_minus_min_confidence": 0.959825932096613,
+        "low_confidence_fraction": 0.6363636363636364,
+        "mean_entropy_nats": 1.2531728181966364,
+        "max_entropy_nats": 1.7191005532841563,
+        "tracker_unknown_fraction": 1.0
+      },
+      "tracker": {
+        "unknown_slots": [
+          "intent",
+          "room",
+          "time",
+          "people"
+        ],
+        "unknown_count": 4,
+        "measured_slot_count": 4,
+        "unknown_fraction": 1.0,
+        "intent_unknown": true,
+        "parsed_ok": true
+      }
+    },
+    {
+      "seed": 23,
+      "id": "general_square_sides",
+      "retrieval_needed": false,
+      "expected_answer": "4",
+      "model_answer": "The pool is open daily from 6 AM until 10 PM.",
+      "signals": {
+        "negative_mean_logprob": 0.18610272842165146,
+        "negative_min_logprob": 0.41572848475860813,
+        "perplexity": 1.2045459951308692,
+        "one_minus_mean_confidence": 0.16452466580032588,
+        "one_minus_min_confidence": 0.3401405919495397,
+        "low_confidence_fraction": 0.0,
+        "mean_entropy_nats": 0.6493876275380582,
+        "max_entropy_nats": 1.14262272790423,
+        "tracker_unknown_fraction": 1.0
+      },
+      "tracker": {
+        "unknown_slots": [
+          "intent",
+          "room",
+          "time",
+          "people"
+        ],
+        "unknown_count": 4,
+        "measured_slot_count": 4,
+        "unknown_fraction": 1.0,
+        "intent_unknown": true,
+        "parsed_ok": true
+      }
+    },
+    {
+      "seed": 23,
+      "id": "general_first_month",
+      "retrieval_needed": false,
+      "expected_answer": "January",
+      "model_answer": "The pool is open daily from 6 AM until 10 PM.",
+      "signals": {
+        "negative_mean_logprob": 0.5132783346589762,
+        "negative_min_logprob": 3.2447014627251307,
+        "perplexity": 1.6707595354150373,
+        "one_minus_mean_confidence": 0.273984834278187,
+        "one_minus_min_confidence": 0.9610198003370061,
+        "low_confidence_fraction": 0.09090909090909091,
+        "mean_entropy_nats": 0.8454714989534969,
+        "max_entropy_nats": 1.6428854593644058,
+        "tracker_unknown_fraction": 1.0
+      },
+      "tracker": {
+        "unknown_slots": [
+          "intent",
+          "room",
+          "time",
+          "people"
+        ],
+        "unknown_count": 4,
+        "measured_slot_count": 4,
+        "unknown_fraction": 1.0,
+        "intent_unknown": true,
+        "parsed_ok": true
+      }
+    },
+    {
+      "seed": 23,
+      "id": "general_half_ten",
+      "retrieval_needed": false,
+      "expected_answer": "5",
+      "model_answer": "The pool is open daily from 6 AM until 10 PM.",
+      "signals": {
+        "negative_mean_logprob": 0.54123643371131,
+        "negative_min_logprob": 3.411531461404457,
+        "perplexity": 1.7181299031473416,
+        "one_minus_mean_confidence": 0.2862676042464064,
+        "one_minus_min_confidence": 0.9670093622200312,
+        "low_confidence_fraction": 0.09090909090909091,
+        "mean_entropy_nats": 0.8890334416382036,
+        "max_entropy_nats": 1.6330421400446526,
+        "tracker_unknown_fraction": 1.0
+      },
+      "tracker": {
+        "unknown_slots": [
+          "intent",
+          "room",
+          "time",
+          "people"
+        ],
+        "unknown_count": 4,
+        "measured_slot_count": 4,
+        "unknown_fraction": 1.0,
+        "intent_unknown": true,
+        "parsed_ok": true
+      }
+    },
+    {
+      "seed": 37,
+      "id": "hotel_checkout_time",
+      "retrieval_needed": true,
+      "expected_answer": "11:00 AM",
+      "model_answer": "The pool is open daily from 6 AM until 10 PM.",
+      "signals": {
+        "negative_mean_logprob": 0.7408988869125017,
+        "negative_min_logprob": 3.4737953552936505,
+        "perplexity": 2.097820370507079,
+        "one_minus_mean_confidence": 0.3236346430489426,
+        "one_minus_min_confidence": 0.9690008456931608,
+        "low_confidence_fraction": 0.18181818181818182,
+        "mean_entropy_nats": 0.8864280177270039,
+        "max_entropy_nats": 1.6481638293784884,
+        "tracker_unknown_fraction": 0.75
+      },
+      "tracker": {
+        "unknown_slots": [
+          "room",
+          "time",
+          "people"
+        ],
+        "unknown_count": 3,
+        "measured_slot_count": 4,
+        "unknown_fraction": 0.75,
+        "intent_unknown": false,
+        "parsed_ok": true
+      }
+    },
+    {
+      "seed": 37,
+      "id": "hotel_front_desk_hours",
+      "retrieval_needed": true,
+      "expected_answer": "24 hours a day",
+      "model_answer": "The pool is open daily from 6 AM until 10 PM.",
+      "signals": {
+        "negative_mean_logprob": 0.4822065971566806,
+        "negative_min_logprob": 3.3585259953646758,
+        "perplexity": 1.6196443646597376,
+        "one_minus_mean_confidence": 0.24543689199597274,
+        "one_minus_min_confidence": 0.9652135033695516,
+        "low_confidence_fraction": 0.09090909090909091,
+        "mean_entropy_nats": 0.7777093983009277,
+        "max_entropy_nats": 1.541425278633208,
+        "tracker_unknown_fraction": 1.0
+      },
+      "tracker": {
+        "unknown_slots": [
+          "intent",
+          "room",
+          "time",
+          "people"
+        ],
+        "unknown_count": 4,
+        "measured_slot_count": 4,
+        "unknown_fraction": 1.0,
+        "intent_unknown": true,
+        "parsed_ok": true
+      }
+    },
+    {
+      "seed": 37,
+      "id": "hotel_luggage_cost",
+      "retrieval_needed": true,
+      "expected_answer": "No, same-day luggage storage is free",
+      "model_answer": "The pool is open daily from 6 AM until 10 PM.",
+      "signals": {
+        "negative_mean_logprob": 0.7170946056193708,
+        "negative_min_logprob": 3.005298262672982,
+        "perplexity": 2.048472934607271,
+        "one_minus_mean_confidence": 0.3580066462983392,
+        "one_minus_min_confidence": 0.9504760190295581,
+        "low_confidence_fraction": 0.18181818181818182,
+        "mean_entropy_nats": 0.9973837390665302,
+        "max_entropy_nats": 1.722185397511492,
+        "tracker_unknown_fraction": 1.0
+      },
+      "tracker": {
+        "unknown_slots": [
+          "intent",
+          "room",
+          "time",
+          "people"
+        ],
+        "unknown_count": 4,
+        "measured_slot_count": 4,
+        "unknown_fraction": 1.0,
+        "intent_unknown": true,
+        "parsed_ok": true
+      }
+    },
+    {
+      "seed": 37,
+      "id": "hotel_airport_notice",
+      "retrieval_needed": true,
+      "expected_answer": "At least 24 hours before arrival",
+      "model_answer": "The pool is open daily from 6 AM until 10 PM.",
+      "signals": {
+        "negative_mean_logprob": 0.701260147727108,
+        "negative_min_logprob": 2.98729567543761,
+        "perplexity": 2.016291932931331,
+        "one_minus_mean_confidence": 0.3391661379835019,
+        "one_minus_min_confidence": 0.9495763856748737,
+        "low_confidence_fraction": 0.18181818181818182,
+        "mean_entropy_nats": 0.907380383685528,
+        "max_entropy_nats": 1.5889974513228622,
+        "tracker_unknown_fraction": 1.0
+      },
+      "tracker": {
+        "unknown_slots": [
+          "intent",
+          "room",
+          "time",
+          "people"
+        ],
+        "unknown_count": 4,
+        "measured_slot_count": 4,
+        "unknown_fraction": 1.0,
+        "intent_unknown": true,
+        "parsed_ok": true
+      }
+    },
+    {
+      "seed": 37,
+      "id": "hotel_lost_retention",
+      "retrieval_needed": true,
+      "expected_answer": "90 days",
+      "model_answer": "The pool is open daily from 6 AM until 10 PM.",
+      "signals": {
+        "negative_mean_logprob": 1.2563815570867845,
+        "negative_min_logprob": 2.747821498527127,
+        "perplexity": 3.5126880025556892,
+        "one_minus_mean_confidence": 0.5322797319448966,
+        "one_minus_min_confidence": 0.9359327200466622,
+        "low_confidence_fraction": 0.45454545454545453,
+        "mean_entropy_nats": 1.1907894145137097,
+        "max_entropy_nats": 1.7204453663907018,
+        "tracker_unknown_fraction": 1.0
+      },
+      "tracker": {
+        "unknown_slots": [
+          "intent",
+          "room",
+          "time",
+          "people"
+        ],
+        "unknown_count": 4,
+        "measured_slot_count": 4,
+        "unknown_fraction": 1.0,
+        "intent_unknown": true,
+        "parsed_ok": true
+      }
+    },
+    {
+      "seed": 37,
+      "id": "hotel_room_service",
+      "retrieval_needed": true,
+      "expected_answer": "24 hours a day",
+      "model_answer": "The pool is open daily from 6 AM until 10 PM.",
+      "signals": {
+        "negative_mean_logprob": 1.0944638636296207,
+        "negative_min_logprob": 2.941474902051956,
+        "perplexity": 2.987580503370957,
+        "one_minus_mean_confidence": 0.4498282749723971,
+        "one_minus_min_confidence": 0.9472121855613396,
+        "low_confidence_fraction": 0.36363636363636365,
+        "mean_entropy_nats": 1.0401601578767492,
+        "max_entropy_nats": 1.6280976947979728,
+        "tracker_unknown_fraction": 1.0
+      },
+      "tracker": {
+        "unknown_slots": [
+          "intent",
+          "room",
+          "time",
+          "people"
+        ],
+        "unknown_count": 4,
+        "measured_slot_count": 4,
+        "unknown_fraction": 1.0,
+        "intent_unknown": true,
+        "parsed_ok": true
+      }
+    },
+    {
+      "seed": 37,
+      "id": "hotel_coffee_shop",
+      "retrieval_needed": true,
+      "expected_answer": "11:00 PM",
+      "model_answer": "The pool is open daily from 6 AM until 10 PM.",
+      "signals": {
+        "negative_mean_logprob": 1.2534494854815619,
+        "negative_min_logprob": 3.2223229463240655,
+        "perplexity": 3.5024036344252054,
+        "one_minus_mean_confidence": 0.5282989105235985,
+        "one_minus_min_confidence": 0.9601376474781457,
+        "low_confidence_fraction": 0.45454545454545453,
+        "mean_entropy_nats": 1.1601924458858315,
+        "max_entropy_nats": 1.7058168242396259,
+        "tracker_unknown_fraction": 1.0
+      },
+      "tracker": {
+        "unknown_slots": [
+          "intent",
+          "room",
+          "time",
+          "people"
+        ],
+        "unknown_count": 4,
+        "measured_slot_count": 4,
+        "unknown_fraction": 1.0,
+        "intent_unknown": true,
+        "parsed_ok": true
+      }
+    },
+    {
+      "seed": 37,
+      "id": "hotel_rooftop_open",
+      "retrieval_needed": true,
+      "expected_answer": "6:30 PM",
+      "model_answer": "The pool is open daily from 6 AM until 10 PM.",
+      "signals": {
+        "negative_mean_logprob": 1.2523458002655188,
+        "negative_min_logprob": 3.35313253503206,
+        "perplexity": 3.4985402157045136,
+        "one_minus_mean_confidence": 0.4721297730918258,
+        "one_minus_min_confidence": 0.9650253769096054,
+        "low_confidence_fraction": 0.36363636363636365,
+        "mean_entropy_nats": 1.0446383447589767,
+        "max_entropy_nats": 1.6322131799623039,
+        "tracker_unknown_fraction": 1.0
+      },
+      "tracker": {
+        "unknown_slots": [
+          "intent",
+          "room",
+          "time",
+          "people"
+        ],
+        "unknown_count": 4,
+        "measured_slot_count": 4,
+        "unknown_fraction": 1.0,
+        "intent_unknown": true,
+        "parsed_ok": true
+      }
+    },
+    {
+      "seed": 37,
+      "id": "hotel_bar_age",
+      "retrieval_needed": true,
+      "expected_answer": "21 years old",
+      "model_answer": "The pool is open daily from 6 AM until 10 PM.",
+      "signals": {
+        "negative_mean_logprob": 1.1575846880833895,
+        "negative_min_logprob": 3.2294706265357362,
+        "perplexity": 3.182237889381898,
+        "one_minus_mean_confidence": 0.4940231888962371,
+        "one_minus_min_confidence": 0.960421554977729,
+        "low_confidence_fraction": 0.36363636363636365,
+        "mean_entropy_nats": 1.1682307999735864,
+        "max_entropy_nats": 1.6689573450537247,
+        "tracker_unknown_fraction": 1.0
+      },
+      "tracker": {
+        "unknown_slots": [
+          "intent",
+          "room",
+          "time",
+          "people"
+        ],
+        "unknown_count": 4,
+        "measured_slot_count": 4,
+        "unknown_fraction": 1.0,
+        "intent_unknown": true,
+        "parsed_ok": true
+      }
+    },
+    {
+      "seed": 37,
+      "id": "hotel_spa_hours",
+      "retrieval_needed": true,
+      "expected_answer": "10:00 AM to 9:00 PM",
+      "model_answer": "The pool is open daily from 6 AM until 10 PM.",
+      "signals": {
+        "negative_mean_logprob": 1.2209707868387005,
+        "negative_min_logprob": 3.3467418120871826,
+        "perplexity": 3.390477567498688,
+        "one_minus_mean_confidence": 0.4833274616249724,
+        "one_minus_min_confidence": 0.9648011480542378,
+        "low_confidence_fraction": 0.36363636363636365,
+        "mean_entropy_nats": 1.096466445763561,
+        "max_entropy_nats": 1.7222920086462494,
+        "tracker_unknown_fraction": 0.75
+      },
+      "tracker": {
+        "unknown_slots": [
+          "room",
+          "time",
+          "people"
+        ],
+        "unknown_count": 3,
+        "measured_slot_count": 4,
+        "unknown_fraction": 0.75,
+        "intent_unknown": false,
+        "parsed_ok": true
+      }
+    },
+    {
+      "seed": 37,
+      "id": "hotel_play_zone_ages",
+      "retrieval_needed": true,
+      "expected_answer": "Children aged 3 to 12",
+      "model_answer": "The pool is open daily from 6 AM until 10 PM.",
+      "signals": {
+        "negative_mean_logprob": 0.43401942463963467,
+        "negative_min_logprob": 2.4990852771034007,
+        "perplexity": 1.5434488487629863,
+        "one_minus_mean_confidence": 0.2625370328348814,
+        "one_minus_min_confidence": 0.9178398819969223,
+        "low_confidence_fraction": 0.09090909090909091,
+        "mean_entropy_nats": 0.8312389377059332,
+        "max_entropy_nats": 1.6768772331767794,
+        "tracker_unknown_fraction": 1.0
+      },
+      "tracker": {
+        "unknown_slots": [
+          "intent",
+          "room",
+          "time",
+          "people"
+        ],
+        "unknown_count": 4,
+        "measured_slot_count": 4,
+        "unknown_fraction": 1.0,
+        "intent_unknown": true,
+        "parsed_ok": true
+      }
+    },
+    {
+      "seed": 37,
+      "id": "hotel_laundry_hours",
+      "retrieval_needed": true,
+      "expected_answer": "8:00 PM",
+      "model_answer": "The pool is open daily from 6 AM until 10 PM.",
+      "signals": {
+        "negative_mean_logprob": 0.5007222478021985,
+        "negative_min_logprob": 2.6088775464310276,
+        "perplexity": 1.6499124861389132,
+        "one_minus_mean_confidence": 0.30585609626497823,
+        "one_minus_min_confidence": 0.9263828707853566,
+        "low_confidence_fraction": 0.09090909090909091,
+        "mean_entropy_nats": 0.9254210884762712,
+        "max_entropy_nats": 1.6265184713710141,
+        "tracker_unknown_fraction": 1.0
+      },
+      "tracker": {
+        "unknown_slots": [
+          "intent",
+          "room",
+          "time",
+          "people"
+        ],
+        "unknown_count": 4,
+        "measured_slot_count": 4,
+        "unknown_fraction": 1.0,
+        "intent_unknown": true,
+        "parsed_ok": true
+      }
+    },
+    {
+      "seed": 37,
+      "id": "hotel_wifi_ssid",
+      "retrieval_needed": true,
+      "expected_answer": "GrandHorizon_Guest",
+      "model_answer": "The pool is open daily from 6 AM until 10 PM.",
+      "signals": {
+        "negative_mean_logprob": 0.457255457120147,
+        "negative_min_logprob": 2.0733851884410464,
+        "perplexity": 1.5797323865945554,
+        "one_minus_mean_confidence": 0.3048713381249385,
+        "one_minus_min_confidence": 0.8742406587467366,
+        "low_confidence_fraction": 0.09090909090909091,
+        "mean_entropy_nats": 0.9164497180861448,
+        "max_entropy_nats": 1.4672919304151952,
+        "tracker_unknown_fraction": 1.0
+      },
+      "tracker": {
+        "unknown_slots": [
+          "intent",
+          "room",
+          "time",
+          "people"
+        ],
+        "unknown_count": 4,
+        "measured_slot_count": 4,
+        "unknown_fraction": 1.0,
+        "intent_unknown": true,
+        "parsed_ok": true
+      }
+    },
+    {
+      "seed": 37,
+      "id": "hotel_business_center",
+      "retrieval_needed": true,
+      "expected_answer": "8:00 AM to 8:00 PM",
+      "model_answer": "The pool is open daily from 6 AM until 10 PM.",
+      "signals": {
+        "negative_mean_logprob": 0.49312173982841406,
+        "negative_min_logprob": 3.3530524626695835,
+        "perplexity": 1.6374198484672962,
+        "one_minus_mean_confidence": 0.25061546496533826,
+        "one_minus_min_confidence": 0.9650225762967835,
+        "low_confidence_fraction": 0.09090909090909091,
+        "mean_entropy_nats": 0.7599967855709814,
+        "max_entropy_nats": 1.481370634721581,
+        "tracker_unknown_fraction": 1.0
+      },
+      "tracker": {
+        "unknown_slots": [
+          "intent",
+          "room",
+          "time",
+          "people"
+        ],
+        "unknown_count": 4,
+        "measured_slot_count": 4,
+        "unknown_fraction": 1.0,
+        "intent_unknown": true,
+        "parsed_ok": true
+      }
+    },
+    {
+      "seed": 37,
+      "id": "hotel_cancellation_window",
+      "retrieval_needed": true,
+      "expected_answer": "At least 48 hours before scheduled check-in",
+      "model_answer": "The pool is open daily from 6 AM until 10 PM.",
+      "signals": {
+        "negative_mean_logprob": 0.5439534360935504,
+        "negative_min_logprob": 3.4608255431206465,
+        "perplexity": 1.7228044136396206,
+        "one_minus_mean_confidence": 0.2870341599045175,
+        "one_minus_min_confidence": 0.9685961738983683,
+        "low_confidence_fraction": 0.09090909090909091,
+        "mean_entropy_nats": 0.8997192094833637,
+        "max_entropy_nats": 1.650446292453064,
+        "tracker_unknown_fraction": 1.0
+      },
+      "tracker": {
+        "unknown_slots": [
+          "intent",
+          "room",
+          "time",
+          "people"
+        ],
+        "unknown_count": 4,
+        "measured_slot_count": 4,
+        "unknown_fraction": 1.0,
+        "intent_unknown": true,
+        "parsed_ok": true
+      }
+    },
+    {
+      "seed": 37,
+      "id": "hotel_quiet_hours",
+      "retrieval_needed": true,
+      "expected_answer": "10:00 PM to 7:00 AM",
+      "model_answer": "The pool is open daily from 6 AM until 10 PM.",
+      "signals": {
+        "negative_mean_logprob": 0.6517903023840715,
+        "negative_min_logprob": 2.6759804271686343,
+        "perplexity": 1.918973297988753,
+        "one_minus_mean_confidence": 0.3464218237143406,
+        "one_minus_min_confidence": 0.9311606966249091,
+        "low_confidence_fraction": 0.18181818181818182,
+        "mean_entropy_nats": 0.9484597277920315,
+        "max_entropy_nats": 1.6168085862140038,
+        "tracker_unknown_fraction": 1.0
+      },
+      "tracker": {
+        "unknown_slots": [
+          "intent",
+          "room",
+          "time",
+          "people"
+        ],
+        "unknown_count": 4,
+        "measured_slot_count": 4,
+        "unknown_fraction": 1.0,
+        "intent_unknown": true,
+        "parsed_ok": true
+      }
+    },
+    {
+      "seed": 37,
+      "id": "hotel_visitor_hours",
+      "retrieval_needed": true,
+      "expected_answer": "8:00 AM to 10:00 PM",
+      "model_answer": "The pool is open daily from 6 AM until 10 PM.",
+      "signals": {
+        "negative_mean_logprob": 0.7416724498180762,
+        "negative_min_logprob": 3.4690227060580936,
+        "perplexity": 2.0994437943575424,
+        "one_minus_mean_confidence": 0.3232876206355946,
+        "one_minus_min_confidence": 0.9688525439885503,
+        "low_confidence_fraction": 0.18181818181818182,
+        "mean_entropy_nats": 0.8750825736288609,
+        "max_entropy_nats": 1.6311610637643807,
+        "tracker_unknown_fraction": 1.0
+      },
+      "tracker": {
+        "unknown_slots": [
+          "intent",
+          "room",
+          "time",
+          "people"
+        ],
+        "unknown_count": 4,
+        "measured_slot_count": 4,
+        "unknown_fraction": 1.0,
+        "intent_unknown": true,
+        "parsed_ok": true
+      }
+    },
+    {
+      "seed": 37,
+      "id": "hotel_steam_room",
+      "retrieval_needed": true,
+      "expected_answer": "7:00 AM to 9:00 PM",
+      "model_answer": "The pool is open daily from 6 AM until 10 PM.",
+      "signals": {
+        "negative_mean_logprob": 0.647785765972876,
+        "negative_min_logprob": 2.598812634376552,
+        "perplexity": 1.911304065653758,
+        "one_minus_mean_confidence": 0.34890651022979446,
+        "one_minus_min_confidence": 0.9256381795146116,
+        "low_confidence_fraction": 0.18181818181818182,
+        "mean_entropy_nats": 0.9780264855447666,
+        "max_entropy_nats": 1.593805536738263,
+        "tracker_unknown_fraction": 1.0
+      },
+      "tracker": {
+        "unknown_slots": [
+          "intent",
+          "room",
+          "time",
+          "people"
+        ],
+        "unknown_count": 4,
+        "measured_slot_count": 4,
+        "unknown_fraction": 1.0,
+        "intent_unknown": true,
+        "parsed_ok": true
+      }
+    },
+    {
+      "seed": 37,
+      "id": "general_arithmetic",
+      "retrieval_needed": false,
+      "expected_answer": "4",
+      "model_answer": "The pool is open daily from 6 AM until 10 PM.",
+      "signals": {
+        "negative_mean_logprob": 1.0853422629430935,
+        "negative_min_logprob": 2.870550048051538,
+        "perplexity": 2.960452898681733,
+        "one_minus_mean_confidence": 0.44939107525560484,
+        "one_minus_min_confidence": 0.9433322519786038,
+        "low_confidence_fraction": 0.36363636363636365,
+        "mean_entropy_nats": 1.013642995468082,
+        "max_entropy_nats": 1.6325470662762085,
+        "tracker_unknown_fraction": 1.0
+      },
+      "tracker": {
+        "unknown_slots": [
+          "intent",
+          "room",
+          "time",
+          "people"
+        ],
+        "unknown_count": 4,
+        "measured_slot_count": 4,
+        "unknown_fraction": 1.0,
+        "intent_unknown": true,
+        "parsed_ok": true
+      }
+    },
+    {
+      "seed": 37,
+      "id": "general_week_days",
+      "retrieval_needed": false,
+      "expected_answer": "7",
+      "model_answer": "The pool is open daily from 6 AM until 10 PM.",
+      "signals": {
+        "negative_mean_logprob": 0.6874020985802116,
+        "negative_min_logprob": 3.027498846501667,
+        "perplexity": 1.9885427788908365,
+        "one_minus_mean_confidence": 0.3348714963144569,
+        "one_minus_min_confidence": 0.9515633657948027,
+        "low_confidence_fraction": 0.18181818181818182,
+        "mean_entropy_nats": 0.9132656720965074,
+        "max_entropy_nats": 1.6383412054766868,
+        "tracker_unknown_fraction": 1.0
+      },
+      "tracker": {
+        "unknown_slots": [
+          "intent",
+          "room",
+          "time",
+          "people"
+        ],
+        "unknown_count": 4,
+        "measured_slot_count": 4,
+        "unknown_fraction": 1.0,
+        "intent_unknown": true,
+        "parsed_ok": true
+      }
+    },
+    {
+      "seed": 37,
+      "id": "general_hour_minutes",
+      "retrieval_needed": false,
+      "expected_answer": "60",
+      "model_answer": "The pool is open daily from 6 AM until 10 PM.",
+      "signals": {
+        "negative_mean_logprob": 0.6489456366390614,
+        "negative_min_logprob": 2.9373379555372607,
+        "perplexity": 1.9135222173095168,
+        "one_minus_mean_confidence": 0.290231495805533,
+        "one_minus_min_confidence": 0.9469933528588841,
+        "low_confidence_fraction": 0.18181818181818182,
+        "mean_entropy_nats": 0.7658409803682195,
+        "max_entropy_nats": 1.5882947555006541,
+        "tracker_unknown_fraction": 1.0
+      },
+      "tracker": {
+        "unknown_slots": [
+          "intent",
+          "room",
+          "time",
+          "people"
+        ],
+        "unknown_count": 4,
+        "measured_slot_count": 4,
+        "unknown_fraction": 1.0,
+        "intent_unknown": true,
+        "parsed_ok": true
+      }
+    },
+    {
+      "seed": 37,
+      "id": "general_france_capital",
+      "retrieval_needed": false,
+      "expected_answer": "Paris",
+      "model_answer": "The pool is open daily from 6 AM until 10 PM.",
+      "signals": {
+        "negative_mean_logprob": 0.7346972113147512,
+        "negative_min_logprob": 3.009921841714362,
+        "perplexity": 2.0848506277442835,
+        "one_minus_mean_confidence": 0.33549503612301557,
+        "one_minus_min_confidence": 0.9507044685358713,
+        "low_confidence_fraction": 0.18181818181818182,
+        "mean_entropy_nats": 0.8847188410617459,
+        "max_entropy_nats": 1.5326246590832509,
+        "tracker_unknown_fraction": 1.0
+      },
+      "tracker": {
+        "unknown_slots": [
+          "intent",
+          "room",
+          "time",
+          "people"
+        ],
+        "unknown_count": 4,
+        "measured_slot_count": 4,
+        "unknown_fraction": 1.0,
+        "intent_unknown": true,
+        "parsed_ok": true
+      }
+    },
+    {
+      "seed": 37,
+      "id": "general_water_freezing",
+      "retrieval_needed": false,
+      "expected_answer": "0 degrees Celsius",
+      "model_answer": "The pool is open daily from 6 AM until 10 PM.",
+      "signals": {
+        "negative_mean_logprob": 0.9104308657119201,
+        "negative_min_logprob": 3.1932160827857032,
+        "perplexity": 2.485393173416279,
+        "one_minus_mean_confidence": 0.3876532915370311,
+        "one_minus_min_confidence": 0.9589603285101811,
+        "low_confidence_fraction": 0.2727272727272727,
+        "mean_entropy_nats": 0.9425593918811661,
+        "max_entropy_nats": 1.721706974795473,
+        "tracker_unknown_fraction": 1.0
+      },
+      "tracker": {
+        "unknown_slots": [
+          "intent",
+          "room",
+          "time",
+          "people"
+        ],
+        "unknown_count": 4,
+        "measured_slot_count": 4,
+        "unknown_fraction": 1.0,
+        "intent_unknown": true,
+        "parsed_ok": true
+      }
+    },
+    {
+      "seed": 37,
+      "id": "general_opposite_early",
+      "retrieval_needed": false,
+      "expected_answer": "Late",
+      "model_answer": "The pool is open daily from 6 AM until 10 PM.",
+      "signals": {
+        "negative_mean_logprob": 0.2481859504917999,
+        "negative_min_logprob": 0.44926457651811996,
+        "perplexity": 1.2816982424549028,
+        "one_minus_mean_confidence": 0.213520205425478,
+        "one_minus_min_confidence": 0.36190274919068,
+        "low_confidence_fraction": 0.0,
+        "mean_entropy_nats": 0.805693008348138,
+        "max_entropy_nats": 1.2085039488236038,
+        "tracker_unknown_fraction": 1.0
+      },
+      "tracker": {
+        "unknown_slots": [
+          "intent",
+          "room",
+          "time",
+          "people"
+        ],
+        "unknown_count": 4,
+        "measured_slot_count": 4,
+        "unknown_fraction": 1.0,
+        "intent_unknown": true,
+        "parsed_ok": true
+      }
+    },
+    {
+      "seed": 37,
+      "id": "general_spell_hotel",
+      "retrieval_needed": false,
+      "expected_answer": "H-O-T-E-L",
+      "model_answer": "The pool is open daily from 6 AM until 10 PM.",
+      "signals": {
+        "negative_mean_logprob": 0.8595329392953807,
+        "negative_min_logprob": 2.824332972507352,
+        "perplexity": 2.3620572119236134,
+        "one_minus_mean_confidence": 0.393256157055885,
+        "one_minus_min_confidence": 0.9406517694689979,
+        "low_confidence_fraction": 0.2727272727272727,
+        "mean_entropy_nats": 0.980608087291836,
+        "max_entropy_nats": 1.722674653573025,
+        "tracker_unknown_fraction": 1.0
+      },
+      "tracker": {
+        "unknown_slots": [
+          "intent",
+          "room",
+          "time",
+          "people"
+        ],
+        "unknown_count": 4,
+        "measured_slot_count": 4,
+        "unknown_fraction": 1.0,
+        "intent_unknown": true,
+        "parsed_ok": true
+      }
+    },
+    {
+      "seed": 37,
+      "id": "general_spanish_thanks",
+      "retrieval_needed": false,
+      "expected_answer": "Gracias",
+      "model_answer": "The pool is open daily from 6 AM until 10 PM.",
+      "signals": {
+        "negative_mean_logprob": 1.2820162640966712,
+        "negative_min_logprob": 3.3204293370174955,
+        "perplexity": 3.603898816779888,
+        "one_minus_mean_confidence": 0.4895075898473019,
+        "one_minus_min_confidence": 0.963862686663359,
+        "low_confidence_fraction": 0.36363636363636365,
+        "mean_entropy_nats": 1.1212794600270588,
+        "max_entropy_nats": 1.7024955687826622,
+        "tracker_unknown_fraction": 0.75
+      },
+      "tracker": {
+        "unknown_slots": [
+          "room",
+          "time",
+          "people"
+        ],
+        "unknown_count": 3,
+        "measured_slot_count": 4,
+        "unknown_fraction": 0.75,
+        "intent_unknown": false,
+        "parsed_ok": true
+      }
+    },
+    {
+      "seed": 37,
+      "id": "general_color_mix",
+      "retrieval_needed": false,
+      "expected_answer": "Purple",
+      "model_answer": "The pool is open daily from 6 AM until 10 PM.",
+      "signals": {
+        "negative_mean_logprob": 0.7563518029773243,
+        "negative_min_logprob": 3.2953116353750644,
+        "perplexity": 2.130489579791516,
+        "one_minus_mean_confidence": 0.3307143134546714,
+        "one_minus_min_confidence": 0.9629435048671473,
+        "low_confidence_fraction": 0.18181818181818182,
+        "mean_entropy_nats": 0.8642541208492885,
+        "max_entropy_nats": 1.5611735284359507,
+        "tracker_unknown_fraction": 1.0
+      },
+      "tracker": {
+        "unknown_slots": [
+          "intent",
+          "room",
+          "time",
+          "people"
+        ],
+        "unknown_count": 4,
+        "measured_slot_count": 4,
+        "unknown_fraction": 1.0,
+        "intent_unknown": true,
+        "parsed_ok": true
+      }
+    },
+    {
+      "seed": 37,
+      "id": "general_dozen",
+      "retrieval_needed": false,
+      "expected_answer": "12",
+      "model_answer": "The pool is open daily from 6 AM until 10 PM.",
+      "signals": {
+        "negative_mean_logprob": 0.47590877353890926,
+        "negative_min_logprob": 3.190928682432256,
+        "perplexity": 1.6094761824446533,
+        "one_minus_mean_confidence": 0.24892698970775318,
+        "one_minus_min_confidence": 0.9588663469053094,
+        "low_confidence_fraction": 0.09090909090909091,
+        "mean_entropy_nats": 0.7770212182822861,
+        "max_entropy_nats": 1.5988310497115348,
+        "tracker_unknown_fraction": 1.0
+      },
+      "tracker": {
+        "unknown_slots": [
+          "intent",
+          "room",
+          "time",
+          "people"
+        ],
+        "unknown_count": 4,
+        "measured_slot_count": 4,
+        "unknown_fraction": 1.0,
+        "intent_unknown": true,
+        "parsed_ok": true
+      }
+    },
+    {
+      "seed": 37,
+      "id": "general_triangle_sides",
+      "retrieval_needed": false,
+      "expected_answer": "3",
+      "model_answer": "The pool is open daily from 6 AM until 10 PM.",
+      "signals": {
+        "negative_mean_logprob": 0.4228971112843731,
+        "negative_min_logprob": 3.182497352796739,
+        "perplexity": 1.5263772408931202,
+        "one_minus_mean_confidence": 0.20689592576768123,
+        "one_minus_min_confidence": 0.9585180693587291,
+        "low_confidence_fraction": 0.09090909090909091,
+        "mean_entropy_nats": 0.6431203763574603,
+        "max_entropy_nats": 1.6484480495684495,
+        "tracker_unknown_fraction": 1.0
+      },
+      "tracker": {
+        "unknown_slots": [
+          "intent",
+          "room",
+          "time",
+          "people"
+        ],
+        "unknown_count": 4,
+        "measured_slot_count": 4,
+        "unknown_fraction": 1.0,
+        "intent_unknown": true,
+        "parsed_ok": true
+      }
+    },
+    {
+      "seed": 37,
+      "id": "general_year_months",
+      "retrieval_needed": false,
+      "expected_answer": "12",
+      "model_answer": "The pool is open daily from 6 AM until 10 PM.",
+      "signals": {
+        "negative_mean_logprob": 0.7164979673958954,
+        "negative_min_logprob": 3.264170365194217,
+        "perplexity": 2.0472511018870265,
+        "one_minus_mean_confidence": 0.3055668487905542,
+        "one_minus_min_confidence": 0.9617713622605054,
+        "low_confidence_fraction": 0.18181818181818182,
+        "mean_entropy_nats": 0.8260357962680818,
+        "max_entropy_nats": 1.6559956495699066,
+        "tracker_unknown_fraction": 1.0
+      },
+      "tracker": {
+        "unknown_slots": [
+          "intent",
+          "room",
+          "time",
+          "people"
+        ],
+        "unknown_count": 4,
+        "measured_slot_count": 4,
+        "unknown_fraction": 1.0,
+        "intent_unknown": true,
+        "parsed_ok": true
+      }
+    },
+    {
+      "seed": 37,
+      "id": "general_sun_direction",
+      "retrieval_needed": false,
+      "expected_answer": "East",
+      "model_answer": "The pool is open daily from 6 AM until 10 PM.",
+      "signals": {
+        "negative_mean_logprob": 0.9484000644640534,
+        "negative_min_logprob": 3.0590086518835737,
+        "perplexity": 2.5815759982236806,
+        "one_minus_mean_confidence": 0.4365827786158022,
+        "one_minus_min_confidence": 0.9530657997041205,
+        "low_confidence_fraction": 0.2727272727272727,
+        "mean_entropy_nats": 1.0989506297878548,
+        "max_entropy_nats": 1.7388179291435475,
+        "tracker_unknown_fraction": 1.0
+      },
+      "tracker": {
+        "unknown_slots": [
+          "intent",
+          "room",
+          "time",
+          "people"
+        ],
+        "unknown_count": 4,
+        "measured_slot_count": 4,
+        "unknown_fraction": 1.0,
+        "intent_unknown": true,
+        "parsed_ok": true
+      }
+    },
+    {
+      "seed": 37,
+      "id": "general_boiling_water",
+      "retrieval_needed": false,
+      "expected_answer": "100 degrees Celsius",
+      "model_answer": "The pool is open daily from 6 AM until 10 PM.",
+      "signals": {
+        "negative_mean_logprob": 1.0692453295476747,
+        "negative_min_logprob": 3.333736503743845,
+        "perplexity": 2.9131801791966345,
+        "one_minus_mean_confidence": 0.43345669583627067,
+        "one_minus_min_confidence": 0.9643403864523403,
+        "low_confidence_fraction": 0.2727272727272727,
+        "mean_entropy_nats": 1.0589039570301593,
+        "max_entropy_nats": 1.6078366350059843,
+        "tracker_unknown_fraction": 1.0
+      },
+      "tracker": {
+        "unknown_slots": [
+          "intent",
+          "room",
+          "time",
+          "people"
+        ],
+        "unknown_count": 4,
+        "measured_slot_count": 4,
+        "unknown_fraction": 1.0,
+        "intent_unknown": true,
+        "parsed_ok": true
+      }
+    },
+    {
+      "seed": 37,
+      "id": "general_planet",
+      "retrieval_needed": false,
+      "expected_answer": "Mars",
+      "model_answer": "The pool is open daily from 6 AM until 10 PM.",
+      "signals": {
+        "negative_mean_logprob": 0.6515565606247397,
+        "negative_min_logprob": 3.145682690732591,
+        "perplexity": 1.9185248062116407,
+        "one_minus_mean_confidence": 0.2848637899404256,
+        "one_minus_min_confidence": 0.9569624673093523,
+        "low_confidence_fraction": 0.18181818181818182,
+        "mean_entropy_nats": 0.7478182989807967,
+        "max_entropy_nats": 1.5884504838648568,
+        "tracker_unknown_fraction": 1.0
+      },
+      "tracker": {
+        "unknown_slots": [
+          "intent",
+          "room",
+          "time",
+          "people"
+        ],
+        "unknown_count": 4,
+        "measured_slot_count": 4,
+        "unknown_fraction": 1.0,
+        "intent_unknown": true,
+        "parsed_ok": true
+      }
+    },
+    {
+      "seed": 37,
+      "id": "general_square_sides",
+      "retrieval_needed": false,
+      "expected_answer": "4",
+      "model_answer": "The pool is open daily from 6 AM until 10 PM.",
+      "signals": {
+        "negative_mean_logprob": 0.4006844804063672,
+        "negative_min_logprob": 2.335137856426414,
+        "perplexity": 1.4928461719662398,
+        "one_minus_mean_confidence": 0.2458619800210602,
+        "one_minus_min_confidence": 0.9032028625008303,
+        "low_confidence_fraction": 0.09090909090909091,
+        "mean_entropy_nats": 0.7874702263063832,
+        "max_entropy_nats": 1.679628593656009,
+        "tracker_unknown_fraction": 1.0
+      },
+      "tracker": {
+        "unknown_slots": [
+          "intent",
+          "room",
+          "time",
+          "people"
+        ],
+        "unknown_count": 4,
+        "measured_slot_count": 4,
+        "unknown_fraction": 1.0,
+        "intent_unknown": true,
+        "parsed_ok": true
+      }
+    },
+    {
+      "seed": 37,
+      "id": "general_first_month",
+      "retrieval_needed": false,
+      "expected_answer": "January",
+      "model_answer": "The pool is open daily from 6 AM until 10 PM.",
+      "signals": {
+        "negative_mean_logprob": 0.4407437911117189,
+        "negative_min_logprob": 2.456390835656901,
+        "perplexity": 1.5538625379444666,
+        "one_minus_mean_confidence": 0.2704372527247244,
+        "one_minus_min_confidence": 0.9142561431432513,
+        "low_confidence_fraction": 0.09090909090909091,
+        "mean_entropy_nats": 0.8456047616562767,
+        "max_entropy_nats": 1.6027604991666875,
+        "tracker_unknown_fraction": 1.0
+      },
+      "tracker": {
+        "unknown_slots": [
+          "intent",
+          "room",
+          "time",
+          "people"
+        ],
+        "unknown_count": 4,
+        "measured_slot_count": 4,
+        "unknown_fraction": 1.0,
+        "intent_unknown": true,
+        "parsed_ok": true
+      }
+    },
+    {
+      "seed": 37,
+      "id": "general_half_ten",
+      "retrieval_needed": false,
+      "expected_answer": "5",
+      "model_answer": "The pool is open daily from 6 AM until 10 PM.",
+      "signals": {
+        "negative_mean_logprob": 1.2267373038088853,
+        "negative_min_logprob": 3.005399313712998,
+        "perplexity": 3.410085293737599,
+        "one_minus_mean_confidence": 0.4933453640284823,
+        "one_minus_min_confidence": 0.9504810232264971,
+        "low_confidence_fraction": 0.36363636363636365,
+        "mean_entropy_nats": 1.142059468564147,
+        "max_entropy_nats": 1.6485985452457927,
+        "tracker_unknown_fraction": 1.0
+      },
+      "tracker": {
+        "unknown_slots": [
+          "intent",
+          "room",
+          "time",
+          "people"
+        ],
+        "unknown_count": 4,
+        "measured_slot_count": 4,
+        "unknown_fraction": 1.0,
+        "intent_unknown": true,
+        "parsed_ok": true
+      }
+    },
+    {
+      "seed": 53,
+      "id": "hotel_checkout_time",
+      "retrieval_needed": true,
+      "expected_answer": "11:00 AM",
+      "model_answer": "The pool is open daily from 6 AM until 10 PM.",
+      "signals": {
+        "negative_mean_logprob": 0.6847588796985428,
+        "negative_min_logprob": 3.3235152359999924,
+        "perplexity": 1.9832935655367734,
+        "one_minus_mean_confidence": 0.31646036070542116,
+        "one_minus_min_confidence": 0.9639740308749613,
+        "low_confidence_fraction": 0.18181818181818182,
+        "mean_entropy_nats": 0.8595907539989178,
+        "max_entropy_nats": 1.6251198608084114,
+        "tracker_unknown_fraction": 0.75
+      },
+      "tracker": {
+        "unknown_slots": [
+          "room",
+          "time",
+          "people"
+        ],
+        "unknown_count": 3,
+        "measured_slot_count": 4,
+        "unknown_fraction": 0.75,
+        "intent_unknown": false,
+        "parsed_ok": true
+      }
+    },
+    {
+      "seed": 53,
+      "id": "hotel_front_desk_hours",
+      "retrieval_needed": true,
+      "expected_answer": "24 hours a day",
+      "model_answer": "The pool is open daily from 6 AM until 10 PM.",
+      "signals": {
+        "negative_mean_logprob": 0.8075766628973615,
+        "negative_min_logprob": 3.40300596091289,
+        "perplexity": 2.2424671430108445,
+        "one_minus_mean_confidence": 0.39880506593683485,
+        "one_minus_min_confidence": 0.96672689815856,
+        "low_confidence_fraction": 0.18181818181818182,
+        "mean_entropy_nats": 1.1039641114241368,
+        "max_entropy_nats": 1.7138218973478476,
+        "tracker_unknown_fraction": 1.0
+      },
+      "tracker": {
+        "unknown_slots": [
+          "intent",
+          "room",
+          "time",
+          "people"
+        ],
+        "unknown_count": 4,
+        "measured_slot_count": 4,
+        "unknown_fraction": 1.0,
+        "intent_unknown": true,
+        "parsed_ok": true
+      }
+    },
+    {
+      "seed": 53,
+      "id": "hotel_luggage_cost",
+      "retrieval_needed": true,
+      "expected_answer": "No, same-day luggage storage is free",
+      "model_answer": "The pool is open daily from 6 AM until 10 PM.",
+      "signals": {
+        "negative_mean_logprob": 0.209640624635946,
+        "negative_min_logprob": 0.3866581920570354,
+        "perplexity": 1.2332347861104416,
+        "one_minus_mean_confidence": 0.18188172395432778,
+        "one_minus_min_confidence": 0.3206767466685877,
+        "low_confidence_fraction": 0.0,
+        "mean_entropy_nats": 0.7008925588409972,
+        "max_entropy_nats": 1.11040241080746,
+        "tracker_unknown_fraction": 1.0
+      },
+      "tracker": {
+        "unknown_slots": [
+          "intent",
+          "room",
+          "time",
+          "people"
+        ],
+        "unknown_count": 4,
+        "measured_slot_count": 4,
+        "unknown_fraction": 1.0,
+        "intent_unknown": true,
+        "parsed_ok": true
+      }
+    },
+    {
+      "seed": 53,
+      "id": "hotel_airport_notice",
+      "retrieval_needed": true,
+      "expected_answer": "At least 24 hours before arrival",
+      "model_answer": "The pool is open daily from 6 AM until 10 PM.",
+      "signals": {
+        "negative_mean_logprob": 0.4611368256030952,
+        "negative_min_logprob": 2.931228094144105,
+        "perplexity": 1.5858758248526081,
+        "one_minus_mean_confidence": 0.2545143858927422,
+        "one_minus_min_confidence": 0.9466684981940274,
+        "low_confidence_fraction": 0.09090909090909091,
+        "mean_entropy_nats": 0.7818533337182875,
+        "max_entropy_nats": 1.4597480396921225,
+        "tracker_unknown_fraction": 1.0
+      },
+      "tracker": {
+        "unknown_slots": [
+          "intent",
+          "room",
+          "time",
+          "people"
+        ],
+        "unknown_count": 4,
+        "measured_slot_count": 4,
+        "unknown_fraction": 1.0,
+        "intent_unknown": true,
+        "parsed_ok": true
+      }
+    },
+    {
+      "seed": 53,
+      "id": "hotel_lost_retention",
+      "retrieval_needed": true,
+      "expected_answer": "90 days",
+      "model_answer": "The pool is open daily from 6 AM until 10 PM.",
+      "signals": {
+        "negative_mean_logprob": 0.5319412239548001,
+        "negative_min_logprob": 2.1683532447958123,
+        "perplexity": 1.7022335198721308,
+        "one_minus_mean_confidence": 0.2899844382226401,
+        "one_minus_min_confidence": 0.8856342056057138,
+        "low_confidence_fraction": 0.18181818181818182,
+        "mean_entropy_nats": 0.8266343665871282,
+        "max_entropy_nats": 1.6701158232025697,
+        "tracker_unknown_fraction": 1.0
+      },
+      "tracker": {
+        "unknown_slots": [
+          "intent",
+          "room",
+          "time",
+          "people"
+        ],
+        "unknown_count": 4,
+        "measured_slot_count": 4,
+        "unknown_fraction": 1.0,
+        "intent_unknown": true,
+        "parsed_ok": true
+      }
+    },
+    {
+      "seed": 53,
+      "id": "hotel_room_service",
+      "retrieval_needed": true,
+      "expected_answer": "24 hours a day",
+      "model_answer": "The pool is open daily from 6 AM until 10 PM.",
+      "signals": {
+        "negative_mean_logprob": 0.6368214627257696,
+        "negative_min_logprob": 2.611071396712046,
+        "perplexity": 1.8904624141652004,
+        "one_minus_mean_confidence": 0.3468959362296651,
+        "one_minus_min_confidence": 0.9265441987156038,
+        "low_confidence_fraction": 0.18181818181818182,
+        "mean_entropy_nats": 0.9892234172073824,
+        "max_entropy_nats": 1.6768741819958068,
+        "tracker_unknown_fraction": 1.0
+      },
+      "tracker": {
+        "unknown_slots": [
+          "intent",
+          "room",
+          "time",
+          "people"
+        ],
+        "unknown_count": 4,
+        "measured_slot_count": 4,
+        "unknown_fraction": 1.0,
+        "intent_unknown": true,
+        "parsed_ok": true
+      }
+    },
+    {
+      "seed": 53,
+      "id": "hotel_coffee_shop",
+      "retrieval_needed": true,
+      "expected_answer": "11:00 PM",
+      "model_answer": "The pool is open daily from 6 AM until 10 PM.",
+      "signals": {
+        "negative_mean_logprob": 0.2625149908086175,
+        "negative_min_logprob": 0.42465725076229394,
+        "perplexity": 1.3001959590111858,
+        "one_minus_mean_confidence": 0.22463666170941077,
+        "one_minus_min_confidence": 0.34600609736880694,
+        "low_confidence_fraction": 0.0,
+        "mean_entropy_nats": 0.8180178272492139,
+        "max_entropy_nats": 1.1404389248180298,
+        "tracker_unknown_fraction": 1.0
+      },
+      "tracker": {
+        "unknown_slots": [
+          "intent",
+          "room",
+          "time",
+          "people"
+        ],
+        "unknown_count": 4,
+        "measured_slot_count": 4,
+        "unknown_fraction": 1.0,
+        "intent_unknown": true,
+        "parsed_ok": true
+      }
+    },
+    {
+      "seed": 53,
+      "id": "hotel_rooftop_open",
+      "retrieval_needed": true,
+      "expected_answer": "6:30 PM",
+      "model_answer": "The pool is open daily from 6 AM until 10 PM.",
+      "signals": {
+        "negative_mean_logprob": 0.2941503748293994,
+        "negative_min_logprob": 0.44658579030937184,
+        "perplexity": 1.3419856893639408,
+        "one_minus_mean_confidence": 0.24940859592924525,
+        "one_minus_min_confidence": 0.36019113157006577,
+        "low_confidence_fraction": 0.0,
+        "mean_entropy_nats": 0.8949939032095201,
+        "max_entropy_nats": 1.1623896999188776,
+        "tracker_unknown_fraction": 1.0
+      },
+      "tracker": {
+        "unknown_slots": [
+          "intent",
+          "room",
+          "time",
+          "people"
+        ],
+        "unknown_count": 4,
+        "measured_slot_count": 4,
+        "unknown_fraction": 1.0,
+        "intent_unknown": true,
+        "parsed_ok": true
+      }
+    },
+    {
+      "seed": 53,
+      "id": "hotel_bar_age",
+      "retrieval_needed": true,
+      "expected_answer": "21 years old",
+      "model_answer": "The pool is open daily from 6 AM until 10 PM.",
+      "signals": {
+        "negative_mean_logprob": 0.8733936447133744,
+        "negative_min_logprob": 2.8986175448677054,
+        "perplexity": 2.3950249413018048,
+        "one_minus_mean_confidence": 0.347443603428105,
+        "one_minus_min_confidence": 0.9449006602066932,
+        "low_confidence_fraction": 0.2727272727272727,
+        "mean_entropy_nats": 0.832035081185431,
+        "max_entropy_nats": 1.7023112514626142,
+        "tracker_unknown_fraction": 1.0
+      },
+      "tracker": {
+        "unknown_slots": [
+          "intent",
+          "room",
+          "time",
+          "people"
+        ],
+        "unknown_count": 4,
+        "measured_slot_count": 4,
+        "unknown_fraction": 1.0,
+        "intent_unknown": true,
+        "parsed_ok": true
+      }
+    },
+    {
+      "seed": 53,
+      "id": "hotel_spa_hours",
+      "retrieval_needed": true,
+      "expected_answer": "10:00 AM to 9:00 PM",
+      "model_answer": "The pool is open daily from 6 AM until 10 PM.",
+      "signals": {
+        "negative_mean_logprob": 0.7092040212771867,
+        "negative_min_logprob": 2.908617632514285,
+        "perplexity": 2.0323728890618047,
+        "one_minus_mean_confidence": 0.35600078868345786,
+        "one_minus_min_confidence": 0.9454489125791641,
+        "low_confidence_fraction": 0.18181818181818182,
+        "mean_entropy_nats": 0.983105490052766,
+        "max_entropy_nats": 1.6998329047785672,
+        "tracker_unknown_fraction": 0.75
+      },
+      "tracker": {
+        "unknown_slots": [
+          "room",
+          "time",
+          "people"
+        ],
+        "unknown_count": 3,
+        "measured_slot_count": 4,
+        "unknown_fraction": 0.75,
+        "intent_unknown": false,
+        "parsed_ok": true
+      }
+    },
+    {
+      "seed": 53,
+      "id": "hotel_play_zone_ages",
+      "retrieval_needed": true,
+      "expected_answer": "Children aged 3 to 12",
+      "model_answer": "The pool is open daily from 6 AM until 10 PM.",
+      "signals": {
+        "negative_mean_logprob": 0.9196880147570436,
+        "negative_min_logprob": 3.0850572986880076,
+        "perplexity": 2.5085076504722754,
+        "one_minus_mean_confidence": 0.3907796902310591,
+        "one_minus_min_confidence": 0.9542725862956591,
+        "low_confidence_fraction": 0.2727272727272727,
+        "mean_entropy_nats": 0.9622708361248974,
+        "max_entropy_nats": 1.6440296159707795,
+        "tracker_unknown_fraction": 1.0
+      },
+      "tracker": {
+        "unknown_slots": [
+          "intent",
+          "room",
+          "time",
+          "people"
+        ],
+        "unknown_count": 4,
+        "measured_slot_count": 4,
+        "unknown_fraction": 1.0,
+        "intent_unknown": true,
+        "parsed_ok": true
+      }
+    },
+    {
+      "seed": 53,
+      "id": "hotel_laundry_hours",
+      "retrieval_needed": true,
+      "expected_answer": "8:00 PM",
+      "model_answer": "The pool is open daily from 6 AM until 10 PM.",
+      "signals": {
+        "negative_mean_logprob": 0.4119874981025891,
+        "negative_min_logprob": 2.299916773450966,
+        "perplexity": 1.5098155606515056,
+        "one_minus_mean_confidence": 0.2580378134466197,
+        "one_minus_min_confidence": 0.8997328117323841,
+        "low_confidence_fraction": 0.09090909090909091,
+        "mean_entropy_nats": 0.8104200624912313,
+        "max_entropy_nats": 1.5667435678436223,
+        "tracker_unknown_fraction": 1.0
+      },
+      "tracker": {
+        "unknown_slots": [
+          "intent",
+          "room",
+          "time",
+          "people"
+        ],
+        "unknown_count": 4,
+        "measured_slot_count": 4,
+        "unknown_fraction": 1.0,
+        "intent_unknown": true,
+        "parsed_ok": true
+      }
+    },
+    {
+      "seed": 53,
+      "id": "hotel_wifi_ssid",
+      "retrieval_needed": true,
+      "expected_answer": "GrandHorizon_Guest",
+      "model_answer": "The pool is open daily from 6 AM until 10 PM.",
+      "signals": {
+        "negative_mean_logprob": 0.3732059222360759,
+        "negative_min_logprob": 2.0291951981107705,
+        "perplexity": 1.4523833870761862,
+        "one_minus_mean_confidence": 0.24602540009022678,
+        "one_minus_min_confidence": 0.8685587372311432,
+        "low_confidence_fraction": 0.09090909090909091,
+        "mean_entropy_nats": 0.8017750136463305,
+        "max_entropy_nats": 1.5520977972370094,
+        "tracker_unknown_fraction": 1.0
+      },
+      "tracker": {
+        "unknown_slots": [
+          "intent",
+          "room",
+          "time",
+          "people"
+        ],
+        "unknown_count": 4,
+        "measured_slot_count": 4,
+        "unknown_fraction": 1.0,
+        "intent_unknown": true,
+        "parsed_ok": true
+      }
+    },
+    {
+      "seed": 53,
+      "id": "hotel_business_center",
+      "retrieval_needed": true,
+      "expected_answer": "8:00 AM to 8:00 PM",
+      "model_answer": "The pool is open daily from 6 AM until 10 PM.",
+      "signals": {
+        "negative_mean_logprob": 0.4002734575262476,
+        "negative_min_logprob": 2.7511281530319946,
+        "perplexity": 1.4922327041163606,
+        "one_minus_mean_confidence": 0.21814531706004014,
+        "one_minus_min_confidence": 0.9361442185376059,
+        "low_confidence_fraction": 0.09090909090909091,
+        "mean_entropy_nats": 0.697502114293526,
+        "max_entropy_nats": 1.7087140212380514,
+        "tracker_unknown_fraction": 1.0
+      },
+      "tracker": {
+        "unknown_slots": [
+          "intent",
+          "room",
+          "time",
+          "people"
+        ],
+        "unknown_count": 4,
+        "measured_slot_count": 4,
+        "unknown_fraction": 1.0,
+        "intent_unknown": true,
+        "parsed_ok": true
+      }
+    },
+    {
+      "seed": 53,
+      "id": "hotel_cancellation_window",
+      "retrieval_needed": true,
+      "expected_answer": "At least 48 hours before scheduled check-in",
+      "model_answer": "The pool is open daily from 6 AM until 10 PM.",
+      "signals": {
+        "negative_mean_logprob": 0.5971456880502566,
+        "negative_min_logprob": 2.7846217432990565,
+        "perplexity": 1.8169253203567444,
+        "one_minus_mean_confidence": 0.29972539791034825,
+        "one_minus_min_confidence": 0.9382475571108739,
+        "low_confidence_fraction": 0.18181818181818182,
+        "mean_entropy_nats": 0.8340871520639404,
+        "max_entropy_nats": 1.6430775422473374,
+        "tracker_unknown_fraction": 1.0
+      },
+      "tracker": {
+        "unknown_slots": [
+          "intent",
+          "room",
+          "time",
+          "people"
+        ],
+        "unknown_count": 4,
+        "measured_slot_count": 4,
+        "unknown_fraction": 1.0,
+        "intent_unknown": true,
+        "parsed_ok": true
+      }
+    },
+    {
+      "seed": 53,
+      "id": "hotel_quiet_hours",
+      "retrieval_needed": true,
+      "expected_answer": "10:00 PM to 7:00 AM",
+      "model_answer": "The pool is open daily from 6 AM until 10 PM.",
+      "signals": {
+        "negative_mean_logprob": 0.26175623448770874,
+        "negative_min_logprob": 0.44977961235284347,
+        "perplexity": 1.2992098012828828,
+        "one_minus_mean_confidence": 0.2236238596960679,
+        "one_minus_min_confidence": 0.3622313075239648,
+        "low_confidence_fraction": 0.0,
+        "mean_entropy_nats": 0.8183705414997615,
+        "max_entropy_nats": 1.1744313221307803,
+        "tracker_unknown_fraction": 1.0
+      },
+      "tracker": {
+        "unknown_slots": [
+          "intent",
+          "room",
+          "time",
+          "people"
+        ],
+        "unknown_count": 4,
+        "measured_slot_count": 4,
+        "unknown_fraction": 1.0,
+        "intent_unknown": true,
+        "parsed_ok": true
+      }
+    },
+    {
+      "seed": 53,
+      "id": "hotel_visitor_hours",
+      "retrieval_needed": true,
+      "expected_answer": "8:00 AM to 10:00 PM",
+      "model_answer": "The pool is open daily from 6 AM until 10 PM.",
+      "signals": {
+        "negative_mean_logprob": 0.24688119611344447,
+        "negative_min_logprob": 0.43774889630979386,
+        "perplexity": 1.2800270315582836,
+        "one_minus_mean_confidence": 0.21089250658416991,
+        "one_minus_min_confidence": 0.3545121531106581,
+        "low_confidence_fraction": 0.0,
+        "mean_entropy_nats": 0.7792655887769235,
+        "max_entropy_nats": 1.1838064503839107,
+        "tracker_unknown_fraction": 1.0
+      },
+      "tracker": {
+        "unknown_slots": [
+          "intent",
+          "room",
+          "time",
+          "people"
+        ],
+        "unknown_count": 4,
+        "measured_slot_count": 4,
+        "unknown_fraction": 1.0,
+        "intent_unknown": true,
+        "parsed_ok": true
+      }
+    },
+    {
+      "seed": 53,
+      "id": "hotel_steam_room",
+      "retrieval_needed": true,
+      "expected_answer": "7:00 AM to 9:00 PM",
+      "model_answer": "The pool is open daily from 6 AM until 10 PM.",
+      "signals": {
+        "negative_mean_logprob": 1.3342824933738289,
+        "negative_min_logprob": 3.3137586913086983,
+        "perplexity": 3.7972704020632877,
+        "one_minus_mean_confidence": 0.5170432487075076,
+        "one_minus_min_confidence": 0.963620821648175,
+        "low_confidence_fraction": 0.45454545454545453,
+        "mean_entropy_nats": 1.1011204023804118,
+        "max_entropy_nats": 1.7301660865613824,
+        "tracker_unknown_fraction": 1.0
+      },
+      "tracker": {
+        "unknown_slots": [
+          "intent",
+          "room",
+          "time",
+          "people"
+        ],
+        "unknown_count": 4,
+        "measured_slot_count": 4,
+        "unknown_fraction": 1.0,
+        "intent_unknown": true,
+        "parsed_ok": true
+      }
+    },
+    {
+      "seed": 53,
+      "id": "general_arithmetic",
+      "retrieval_needed": false,
+      "expected_answer": "4",
+      "model_answer": "The pool is open daily from 6 AM until 10 PM.",
+      "signals": {
+        "negative_mean_logprob": 0.6407728157695547,
+        "negative_min_logprob": 3.1690999002608065,
+        "perplexity": 1.897947076112171,
+        "one_minus_mean_confidence": 0.3025067604752846,
+        "one_minus_min_confidence": 0.9579585776487023,
+        "low_confidence_fraction": 0.18181818181818182,
+        "mean_entropy_nats": 0.8351248300926191,
+        "max_entropy_nats": 1.7172376040385178,
+        "tracker_unknown_fraction": 1.0
+      },
+      "tracker": {
+        "unknown_slots": [
+          "intent",
+          "room",
+          "time",
+          "people"
+        ],
+        "unknown_count": 4,
+        "measured_slot_count": 4,
+        "unknown_fraction": 1.0,
+        "intent_unknown": true,
+        "parsed_ok": true
+      }
+    },
+    {
+      "seed": 53,
+      "id": "general_week_days",
+      "retrieval_needed": false,
+      "expected_answer": "7",
+      "model_answer": "The pool is open daily from 6 AM until 10 PM.",
+      "signals": {
+        "negative_mean_logprob": 0.5252089921833307,
+        "negative_min_logprob": 3.1671515267118098,
+        "perplexity": 1.6908121779849217,
+        "one_minus_mean_confidence": 0.29122425095259163,
+        "one_minus_min_confidence": 0.957876585403608,
+        "low_confidence_fraction": 0.09090909090909091,
+        "mean_entropy_nats": 0.9139673281236104,
+        "max_entropy_nats": 1.6590843872307004,
+        "tracker_unknown_fraction": 1.0
+      },
+      "tracker": {
+        "unknown_slots": [
+          "intent",
+          "room",
+          "time",
+          "people"
+        ],
+        "unknown_count": 4,
+        "measured_slot_count": 4,
+        "unknown_fraction": 1.0,
+        "intent_unknown": true,
+        "parsed_ok": true
+      }
+    },
+    {
+      "seed": 53,
+      "id": "general_hour_minutes",
+      "retrieval_needed": false,
+      "expected_answer": "60",
+      "model_answer": "The pool is open daily from 6 AM until 10 PM.",
+      "signals": {
+        "negative_mean_logprob": 0.16372377834374124,
+        "negative_min_logprob": 0.3767531985436154,
+        "perplexity": 1.1778889117269769,
+        "one_minus_mean_confidence": 0.14327957797456925,
+        "one_minus_min_confidence": 0.3139146201263632,
+        "low_confidence_fraction": 0.0,
+        "mean_entropy_nats": 0.5688926439227986,
+        "max_entropy_nats": 1.1055198894908156,
+        "tracker_unknown_fraction": 1.0
+      },
+      "tracker": {
+        "unknown_slots": [
+          "intent",
+          "room",
+          "time",
+          "people"
+        ],
+        "unknown_count": 4,
+        "measured_slot_count": 4,
+        "unknown_fraction": 1.0,
+        "intent_unknown": true,
+        "parsed_ok": true
+      }
+    },
+    {
+      "seed": 53,
+      "id": "general_france_capital",
+      "retrieval_needed": false,
+      "expected_answer": "Paris",
+      "model_answer": "The pool is open daily from 6 AM until 10 PM.",
+      "signals": {
+        "negative_mean_logprob": 0.3788279653738847,
+        "negative_min_logprob": 2.193332306377162,
+        "perplexity": 1.460571745214613,
+        "one_minus_mean_confidence": 0.23529447230531353,
+        "one_minus_min_confidence": 0.8884555715907695,
+        "low_confidence_fraction": 0.09090909090909091,
+        "mean_entropy_nats": 0.7523996222903608,
+        "max_entropy_nats": 1.6761668083601478,
+        "tracker_unknown_fraction": 1.0
+      },
+      "tracker": {
+        "unknown_slots": [
+          "intent",
+          "room",
+          "time",
+          "people"
+        ],
+        "unknown_count": 4,
+        "measured_slot_count": 4,
+        "unknown_fraction": 1.0,
+        "intent_unknown": true,
+        "parsed_ok": true
+      }
+    },
+    {
+      "seed": 53,
+      "id": "general_water_freezing",
+      "retrieval_needed": false,
+      "expected_answer": "0 degrees Celsius",
+      "model_answer": "The pool is open daily from 6 AM until 10 PM.",
+      "signals": {
+        "negative_mean_logprob": 0.7075164578254688,
+        "negative_min_logprob": 3.4794564937099515,
+        "perplexity": 2.02894602319403,
+        "one_minus_mean_confidence": 0.2865194981858009,
+        "one_minus_min_confidence": 0.9691758403945074,
+        "low_confidence_fraction": 0.18181818181818182,
+        "mean_entropy_nats": 0.7341556718685497,
+        "max_entropy_nats": 1.5335124250027101,
+        "tracker_unknown_fraction": 1.0
+      },
+      "tracker": {
+        "unknown_slots": [
+          "intent",
+          "room",
+          "time",
+          "people"
+        ],
+        "unknown_count": 4,
+        "measured_slot_count": 4,
+        "unknown_fraction": 1.0,
+        "intent_unknown": true,
+        "parsed_ok": true
+      }
+    },
+    {
+      "seed": 53,
+      "id": "general_opposite_early",
+      "retrieval_needed": false,
+      "expected_answer": "Late",
+      "model_answer": "The pool is open daily from 6 AM until 10 PM.",
+      "signals": {
+        "negative_mean_logprob": 0.45039303890501137,
+        "negative_min_logprob": 2.538283028886551,
+        "perplexity": 1.5689287143462463,
+        "one_minus_mean_confidence": 0.2708213794523654,
+        "one_minus_min_confidence": 0.920998072563831,
+        "low_confidence_fraction": 0.09090909090909091,
+        "mean_entropy_nats": 0.8443293565163327,
+        "max_entropy_nats": 1.671602663049693,
+        "tracker_unknown_fraction": 1.0
+      },
+      "tracker": {
+        "unknown_slots": [
+          "intent",
+          "room",
+          "time",
+          "people"
+        ],
+        "unknown_count": 4,
+        "measured_slot_count": 4,
+        "unknown_fraction": 1.0,
+        "intent_unknown": true,
+        "parsed_ok": true
+      }
+    },
+    {
+      "seed": 53,
+      "id": "general_spell_hotel",
+      "retrieval_needed": false,
+      "expected_answer": "H-O-T-E-L",
+      "model_answer": "The pool is open daily from 6 AM until 10 PM.",
+      "signals": {
+        "negative_mean_logprob": 0.6889904082069447,
+        "negative_min_logprob": 2.991247699011633,
+        "perplexity": 1.9917037101339667,
+        "one_minus_mean_confidence": 0.3542005157523297,
+        "one_minus_min_confidence": 0.9497752677352255,
+        "low_confidence_fraction": 0.18181818181818182,
+        "mean_entropy_nats": 0.9887774498943237,
+        "max_entropy_nats": 1.6850160388331494,
+        "tracker_unknown_fraction": 1.0
+      },
+      "tracker": {
+        "unknown_slots": [
+          "intent",
+          "room",
+          "time",
+          "people"
+        ],
+        "unknown_count": 4,
+        "measured_slot_count": 4,
+        "unknown_fraction": 1.0,
+        "intent_unknown": true,
+        "parsed_ok": true
+      }
+    },
+    {
+      "seed": 53,
+      "id": "general_spanish_thanks",
+      "retrieval_needed": false,
+      "expected_answer": "Gracias",
+      "model_answer": "The pool is open daily from 6 AM until 10 PM.",
+      "signals": {
+        "negative_mean_logprob": 0.7250322375990904,
+        "negative_min_logprob": 3.2200550865440536,
+        "perplexity": 2.0647976630128273,
+        "one_minus_mean_confidence": 0.327697887189516,
+        "one_minus_min_confidence": 0.9600471426648018,
+        "low_confidence_fraction": 0.18181818181818182,
+        "mean_entropy_nats": 0.8761463528184262,
+        "max_entropy_nats": 1.5808883962898783,
+        "tracker_unknown_fraction": 0.75
+      },
+      "tracker": {
+        "unknown_slots": [
+          "room",
+          "time",
+          "people"
+        ],
+        "unknown_count": 3,
+        "measured_slot_count": 4,
+        "unknown_fraction": 0.75,
+        "intent_unknown": false,
+        "parsed_ok": true
+      }
+    },
+    {
+      "seed": 53,
+      "id": "general_color_mix",
+      "retrieval_needed": false,
+      "expected_answer": "Purple",
+      "model_answer": "The pool is open daily from 6 AM until 10 PM.",
+      "signals": {
+        "negative_mean_logprob": 0.7124009006528959,
+        "negative_min_logprob": 2.8209475780782,
+        "perplexity": 2.0388805365742892,
+        "one_minus_mean_confidence": 0.3853368395212239,
+        "one_minus_min_confidence": 0.9404505118239389,
+        "low_confidence_fraction": 0.18181818181818182,
+        "mean_entropy_nats": 1.0683484797966811,
+        "max_entropy_nats": 1.7344348864430377,
+        "tracker_unknown_fraction": 1.0
+      },
+      "tracker": {
+        "unknown_slots": [
+          "intent",
+          "room",
+          "time",
+          "people"
+        ],
+        "unknown_count": 4,
+        "measured_slot_count": 4,
+        "unknown_fraction": 1.0,
+        "intent_unknown": true,
+        "parsed_ok": true
+      }
+    },
+    {
+      "seed": 53,
+      "id": "general_dozen",
+      "retrieval_needed": false,
+      "expected_answer": "12",
+      "model_answer": "The pool is open daily from 6 AM until 10 PM.",
+      "signals": {
+        "negative_mean_logprob": 1.0858638056041734,
+        "negative_min_logprob": 3.4817825173810215,
+        "perplexity": 2.9619973038661005,
+        "one_minus_mean_confidence": 0.4093922419864712,
+        "one_minus_min_confidence": 0.9692474547987026,
+        "low_confidence_fraction": 0.2727272727272727,
+        "mean_entropy_nats": 0.986208535539231,
+        "max_entropy_nats": 1.6745894965242183,
+        "tracker_unknown_fraction": 1.0
+      },
+      "tracker": {
+        "unknown_slots": [
+          "intent",
+          "room",
+          "time",
+          "people"
+        ],
+        "unknown_count": 4,
+        "measured_slot_count": 4,
+        "unknown_fraction": 1.0,
+        "intent_unknown": true,
+        "parsed_ok": true
+      }
+    },
+    {
+      "seed": 53,
+      "id": "general_triangle_sides",
+      "retrieval_needed": false,
+      "expected_answer": "3",
+      "model_answer": "The pool is open daily from 6 AM until 10 PM.",
+      "signals": {
+        "negative_mean_logprob": 1.3004411957147488,
+        "negative_min_logprob": 3.4376233410731354,
+        "perplexity": 3.6709159027586766,
+        "one_minus_mean_confidence": 0.5080909594653977,
+        "one_minus_min_confidence": 0.9678590172209223,
+        "low_confidence_fraction": 0.36363636363636365,
+        "mean_entropy_nats": 1.163630063115519,
+        "max_entropy_nats": 1.6730252502438125,
+        "tracker_unknown_fraction": 1.0
+      },
+      "tracker": {
+        "unknown_slots": [
+          "intent",
+          "room",
+          "time",
+          "people"
+        ],
+        "unknown_count": 4,
+        "measured_slot_count": 4,
+        "unknown_fraction": 1.0,
+        "intent_unknown": true,
+        "parsed_ok": true
+      }
+    },
+    {
+      "seed": 53,
+      "id": "general_year_months",
+      "retrieval_needed": false,
+      "expected_answer": "12",
+      "model_answer": "The pool is open daily from 6 AM until 10 PM.",
+      "signals": {
+        "negative_mean_logprob": 0.8081051109606182,
+        "negative_min_logprob": 2.7554697125430367,
+        "perplexity": 2.2436524835973692,
+        "one_minus_mean_confidence": 0.3516749637558457,
+        "one_minus_min_confidence": 0.9364208512696904,
+        "low_confidence_fraction": 0.2727272727272727,
+        "mean_entropy_nats": 0.8648012922652918,
+        "max_entropy_nats": 1.6692747587839754,
+        "tracker_unknown_fraction": 1.0
+      },
+      "tracker": {
+        "unknown_slots": [
+          "intent",
+          "room",
+          "time",
+          "people"
+        ],
+        "unknown_count": 4,
+        "measured_slot_count": 4,
+        "unknown_fraction": 1.0,
+        "intent_unknown": true,
+        "parsed_ok": true
+      }
+    },
+    {
+      "seed": 53,
+      "id": "general_sun_direction",
+      "retrieval_needed": false,
+      "expected_answer": "East",
+      "model_answer": "The pool is open daily from 6 AM until 10 PM.",
+      "signals": {
+        "negative_mean_logprob": 0.6367947472707359,
+        "negative_min_logprob": 2.644788477667222,
+        "perplexity": 1.8904119102762023,
+        "one_minus_mean_confidence": 0.3438223787849122,
+        "one_minus_min_confidence": 0.9289796254537382,
+        "low_confidence_fraction": 0.18181818181818182,
+        "mean_entropy_nats": 0.9553813405779422,
+        "max_entropy_nats": 1.7410453689598373,
+        "tracker_unknown_fraction": 1.0
+      },
+      "tracker": {
+        "unknown_slots": [
+          "intent",
+          "room",
+          "time",
+          "people"
+        ],
+        "unknown_count": 4,
+        "measured_slot_count": 4,
+        "unknown_fraction": 1.0,
+        "intent_unknown": true,
+        "parsed_ok": true
+      }
+    },
+    {
+      "seed": 53,
+      "id": "general_boiling_water",
+      "retrieval_needed": false,
+      "expected_answer": "100 degrees Celsius",
+      "model_answer": "The pool is open daily from 6 AM until 10 PM.",
+      "signals": {
+        "negative_mean_logprob": 0.8914497645004481,
+        "negative_min_logprob": 3.237898253638312,
+        "perplexity": 2.4386625761480274,
+        "one_minus_mean_confidence": 0.376296436881557,
+        "one_minus_min_confidence": 0.9607537057662704,
+        "low_confidence_fraction": 0.2727272727272727,
+        "mean_entropy_nats": 0.9218804383963025,
+        "max_entropy_nats": 1.5813093150777209,
+        "tracker_unknown_fraction": 1.0
+      },
+      "tracker": {
+        "unknown_slots": [
+          "intent",
+          "room",
+          "time",
+          "people"
+        ],
+        "unknown_count": 4,
+        "measured_slot_count": 4,
+        "unknown_fraction": 1.0,
+        "intent_unknown": true,
+        "parsed_ok": true
+      }
+    },
+    {
+      "seed": 53,
+      "id": "general_planet",
+      "retrieval_needed": false,
+      "expected_answer": "Mars",
+      "model_answer": "The pool is open daily from 6 AM until 10 PM.",
+      "signals": {
+        "negative_mean_logprob": 1.537684809059754,
+        "negative_min_logprob": 3.420185460251545,
+        "perplexity": 4.653803345567036,
+        "one_minus_mean_confidence": 0.5558655666524563,
+        "one_minus_min_confidence": 0.967293631354847,
+        "low_confidence_fraction": 0.45454545454545453,
+        "mean_entropy_nats": 1.1650165795656655,
+        "max_entropy_nats": 1.7240766440236994,
+        "tracker_unknown_fraction": 1.0
+      },
+      "tracker": {
+        "unknown_slots": [
+          "intent",
+          "room",
+          "time",
+          "people"
+        ],
+        "unknown_count": 4,
+        "measured_slot_count": 4,
+        "unknown_fraction": 1.0,
+        "intent_unknown": true,
+        "parsed_ok": true
+      }
+    },
+    {
+      "seed": 53,
+      "id": "general_square_sides",
+      "retrieval_needed": false,
+      "expected_answer": "4",
+      "model_answer": "The pool is open daily from 6 AM until 10 PM.",
+      "signals": {
+        "negative_mean_logprob": 0.6134830362473286,
+        "negative_min_logprob": 3.4709636656549385,
+        "perplexity": 1.8468528646616709,
+        "one_minus_mean_confidence": 0.33998880974715096,
+        "one_minus_min_confidence": 0.9689129413088724,
+        "low_confidence_fraction": 0.09090909090909091,
+        "mean_entropy_nats": 1.0339197520483363,
+        "max_entropy_nats": 1.5244873662628176,
+        "tracker_unknown_fraction": 1.0
+      },
+      "tracker": {
+        "unknown_slots": [
+          "intent",
+          "room",
+          "time",
+          "people"
+        ],
+        "unknown_count": 4,
+        "measured_slot_count": 4,
+        "unknown_fraction": 1.0,
+        "intent_unknown": true,
+        "parsed_ok": true
+      }
+    },
+    {
+      "seed": 53,
+      "id": "general_first_month",
+      "retrieval_needed": false,
+      "expected_answer": "January",
+      "model_answer": "The pool is open daily from 6 AM until 10 PM.",
+      "signals": {
+        "negative_mean_logprob": 0.4894951537107685,
+        "negative_min_logprob": 3.46157964047379,
+        "perplexity": 1.631492359147916,
+        "one_minus_mean_confidence": 0.24008641370635686,
+        "one_minus_min_confidence": 0.9686198465136601,
+        "low_confidence_fraction": 0.09090909090909091,
+        "mean_entropy_nats": 0.7326281655164014,
+        "max_entropy_nats": 1.5943524429142624,
+        "tracker_unknown_fraction": 1.0
+      },
+      "tracker": {
+        "unknown_slots": [
+          "intent",
+          "room",
+          "time",
+          "people"
+        ],
+        "unknown_count": 4,
+        "measured_slot_count": 4,
+        "unknown_fraction": 1.0,
+        "intent_unknown": true,
+        "parsed_ok": true
+      }
+    },
+    {
+      "seed": 53,
+      "id": "general_half_ten",
+      "retrieval_needed": false,
+      "expected_answer": "5",
+      "model_answer": "The pool is open daily from 6 AM until 10 PM.",
+      "signals": {
+        "negative_mean_logprob": 0.3691874729484448,
+        "negative_min_logprob": 2.0078836758564864,
+        "perplexity": 1.446558768893377,
+        "one_minus_mean_confidence": 0.24188610768076235,
+        "one_minus_min_confidence": 0.8657274615961461,
+        "low_confidence_fraction": 0.09090909090909091,
+        "mean_entropy_nats": 0.7928437751602061,
+        "max_entropy_nats": 1.6809110818193451,
+        "tracker_unknown_fraction": 1.0
+      },
+      "tracker": {
+        "unknown_slots": [
+          "intent",
+          "room",
+          "time",
+          "people"
+        ],
+        "unknown_count": 4,
+        "measured_slot_count": 4,
+        "unknown_fraction": 1.0,
+        "intent_unknown": true,
+        "parsed_ok": true
+      }
+    },
+    {
+      "seed": 71,
+      "id": "hotel_checkout_time",
+      "retrieval_needed": true,
+      "expected_answer": "11:00 AM",
+      "model_answer": "The pool is open daily from 6 AM until 10 PM.",
+      "signals": {
+        "negative_mean_logprob": 0.22977422107312978,
+        "negative_min_logprob": 0.44373137593025275,
+        "perplexity": 1.258315876646738,
+        "one_minus_mean_confidence": 0.19646412122630563,
+        "one_minus_min_confidence": 0.35836224297494623,
+        "low_confidence_fraction": 0.0,
+        "mean_entropy_nats": 0.7332555136585589,
+        "max_entropy_nats": 1.2140970216596279,
+        "tracker_unknown_fraction": 0.75
+      },
+      "tracker": {
+        "unknown_slots": [
+          "room",
+          "time",
+          "people"
+        ],
+        "unknown_count": 3,
+        "measured_slot_count": 4,
+        "unknown_fraction": 0.75,
+        "intent_unknown": false,
+        "parsed_ok": true
+      }
+    },
+    {
+      "seed": 71,
+      "id": "hotel_front_desk_hours",
+      "retrieval_needed": true,
+      "expected_answer": "24 hours a day",
+      "model_answer": "The pool is open daily from 6 AM until 10 PM.",
+      "signals": {
+        "negative_mean_logprob": 0.7735274464000169,
+        "negative_min_logprob": 3.271359875536171,
+        "perplexity": 2.1673981661490256,
+        "one_minus_mean_confidence": 0.35050069408917905,
+        "one_minus_min_confidence": 0.9620452218092359,
+        "low_confidence_fraction": 0.18181818181818182,
+        "mean_entropy_nats": 0.9362635290802008,
+        "max_entropy_nats": 1.6127383513601756,
+        "tracker_unknown_fraction": 1.0
+      },
+      "tracker": {
+        "unknown_slots": [
+          "intent",
+          "room",
+          "time",
+          "people"
+        ],
+        "unknown_count": 4,
+        "measured_slot_count": 4,
+        "unknown_fraction": 1.0,
+        "intent_unknown": true,
+        "parsed_ok": true
+      }
+    },
+    {
+      "seed": 71,
+      "id": "hotel_luggage_cost",
+      "retrieval_needed": true,
+      "expected_answer": "No, same-day luggage storage is free",
+      "model_answer": "The pool is open daily from 6 AM until 10 PM.",
+      "signals": {
+        "negative_mean_logprob": 0.7842636227226664,
+        "negative_min_logprob": 3.143077072071073,
+        "perplexity": 2.190793096351483,
+        "one_minus_mean_confidence": 0.35955919171211137,
+        "one_minus_min_confidence": 0.9568501816878003,
+        "low_confidence_fraction": 0.18181818181818182,
+        "mean_entropy_nats": 0.962587623741332,
+        "max_entropy_nats": 1.5984155165163736,
+        "tracker_unknown_fraction": 1.0
+      },
+      "tracker": {
+        "unknown_slots": [
+          "intent",
+          "room",
+          "time",
+          "people"
+        ],
+        "unknown_count": 4,
+        "measured_slot_count": 4,
+        "unknown_fraction": 1.0,
+        "intent_unknown": true,
+        "parsed_ok": true
+      }
+    },
+    {
+      "seed": 71,
+      "id": "hotel_airport_notice",
+      "retrieval_needed": true,
+      "expected_answer": "At least 24 hours before arrival",
+      "model_answer": "The pool is open daily from 6 AM until 10 PM.",
+      "signals": {
+        "negative_mean_logprob": 0.911982488198179,
+        "negative_min_logprob": 2.8774533947547556,
+        "perplexity": 2.4892525587315655,
+        "one_minus_mean_confidence": 0.41179051731400407,
+        "one_minus_min_confidence": 0.9437221019072471,
+        "low_confidence_fraction": 0.2727272727272727,
+        "mean_entropy_nats": 0.9985178191985491,
+        "max_entropy_nats": 1.5748800190068073,
+        "tracker_unknown_fraction": 1.0
+      },
+      "tracker": {
+        "unknown_slots": [
+          "intent",
+          "room",
+          "time",
+          "people"
+        ],
+        "unknown_count": 4,
+        "measured_slot_count": 4,
+        "unknown_fraction": 1.0,
+        "intent_unknown": true,
+        "parsed_ok": true
+      }
+    },
+    {
+      "seed": 71,
+      "id": "hotel_lost_retention",
+      "retrieval_needed": true,
+      "expected_answer": "90 days",
+      "model_answer": "The pool is open daily from 6 AM until 10 PM.",
+      "signals": {
+        "negative_mean_logprob": 0.41911743598685997,
+        "negative_min_logprob": 2.450630374185323,
+        "perplexity": 1.5206189196884898,
+        "one_minus_mean_confidence": 0.25516488419420336,
+        "one_minus_min_confidence": 0.9137607936082088,
+        "low_confidence_fraction": 0.09090909090909091,
+        "mean_entropy_nats": 0.8048797416106788,
+        "max_entropy_nats": 1.6340641142298393,
+        "tracker_unknown_fraction": 1.0
+      },
+      "tracker": {
+        "unknown_slots": [
+          "intent",
+          "room",
+          "time",
+          "people"
+        ],
+        "unknown_count": 4,
+        "measured_slot_count": 4,
+        "unknown_fraction": 1.0,
+        "intent_unknown": true,
+        "parsed_ok": true
+      }
+    },
+    {
+      "seed": 71,
+      "id": "hotel_room_service",
+      "retrieval_needed": true,
+      "expected_answer": "24 hours a day",
+      "model_answer": "The pool is open daily from 6 AM until 10 PM.",
+      "signals": {
+        "negative_mean_logprob": 0.20889962677467827,
+        "negative_min_logprob": 0.40803449023383076,
+        "perplexity": 1.2323213002588218,
+        "one_minus_mean_confidence": 0.18247249589046033,
+        "one_minus_min_confidence": 0.33504405605910426,
+        "low_confidence_fraction": 0.0,
+        "mean_entropy_nats": 0.7016725102713267,
+        "max_entropy_nats": 1.1136082683907833,
+        "tracker_unknown_fraction": 1.0
+      },
+      "tracker": {
+        "unknown_slots": [
+          "intent",
+          "room",
+          "time",
+          "people"
+        ],
+        "unknown_count": 4,
+        "measured_slot_count": 4,
+        "unknown_fraction": 1.0,
+        "intent_unknown": true,
+        "parsed_ok": true
+      }
+    },
+    {
+      "seed": 71,
+      "id": "hotel_coffee_shop",
+      "retrieval_needed": true,
+      "expected_answer": "11:00 PM",
+      "model_answer": "The pool is open daily from 6 AM until 10 PM.",
+      "signals": {
+        "negative_mean_logprob": 0.7248475247558109,
+        "negative_min_logprob": 3.3851334261565182,
+        "perplexity": 2.0644163035877714,
+        "one_minus_mean_confidence": 0.3137558062097582,
+        "one_minus_min_confidence": 0.9661268775163951,
+        "low_confidence_fraction": 0.18181818181818182,
+        "mean_entropy_nats": 0.8303038253282753,
+        "max_entropy_nats": 1.6817528853272472,
+        "tracker_unknown_fraction": 1.0
+      },
+      "tracker": {
+        "unknown_slots": [
+          "intent",
+          "room",
+          "time",
+          "people"
+        ],
+        "unknown_count": 4,
+        "measured_slot_count": 4,
+        "unknown_fraction": 1.0,
+        "intent_unknown": true,
+        "parsed_ok": true
+      }
+    },
+    {
+      "seed": 71,
+      "id": "hotel_rooftop_open",
+      "retrieval_needed": true,
+      "expected_answer": "6:30 PM",
+      "model_answer": "The pool is open daily from 6 AM until 10 PM.",
+      "signals": {
+        "negative_mean_logprob": 1.2723417311764473,
+        "negative_min_logprob": 3.239322567897535,
+        "perplexity": 3.569200892773345,
+        "one_minus_mean_confidence": 0.5248431715899964,
+        "one_minus_min_confidence": 0.9608095650327508,
+        "low_confidence_fraction": 0.45454545454545453,
+        "mean_entropy_nats": 1.1645435504336825,
+        "max_entropy_nats": 1.7073084040123223,
+        "tracker_unknown_fraction": 1.0
+      },
+      "tracker": {
+        "unknown_slots": [
+          "intent",
+          "room",
+          "time",
+          "people"
+        ],
+        "unknown_count": 4,
+        "measured_slot_count": 4,
+        "unknown_fraction": 1.0,
+        "intent_unknown": true,
+        "parsed_ok": true
+      }
+    },
+    {
+      "seed": 71,
+      "id": "hotel_bar_age",
+      "retrieval_needed": true,
+      "expected_answer": "21 years old",
+      "model_answer": "The pool is open daily from 6 AM until 10 PM.",
+      "signals": {
+        "negative_mean_logprob": 0.5166897717061226,
+        "negative_min_logprob": 3.463810779049866,
+        "perplexity": 1.676468959524345,
+        "one_minus_mean_confidence": 0.2631842765040884,
+        "one_minus_min_confidence": 0.9686897819378039,
+        "low_confidence_fraction": 0.09090909090909091,
+        "mean_entropy_nats": 0.8065520303924032,
+        "max_entropy_nats": 1.6129616392431394,
+        "tracker_unknown_fraction": 1.0
+      },
+      "tracker": {
+        "unknown_slots": [
+          "intent",
+          "room",
+          "time",
+          "people"
+        ],
+        "unknown_count": 4,
+        "measured_slot_count": 4,
+        "unknown_fraction": 1.0,
+        "intent_unknown": true,
+        "parsed_ok": true
+      }
+    },
+    {
+      "seed": 71,
+      "id": "hotel_spa_hours",
+      "retrieval_needed": true,
+      "expected_answer": "10:00 AM to 9:00 PM",
+      "model_answer": "The pool is open daily from 6 AM until 10 PM.",
+      "signals": {
+        "negative_mean_logprob": 1.1669471625188603,
+        "negative_min_logprob": 3.2432960172262266,
+        "perplexity": 3.2121714175610476,
+        "one_minus_mean_confidence": 0.45746168719143254,
+        "one_minus_min_confidence": 0.9609649772744544,
+        "low_confidence_fraction": 0.36363636363636365,
+        "mean_entropy_nats": 0.9865150249153423,
+        "max_entropy_nats": 1.592821174762996,
+        "tracker_unknown_fraction": 0.75
+      },
+      "tracker": {
+        "unknown_slots": [
+          "room",
+          "time",
+          "people"
+        ],
+        "unknown_count": 3,
+        "measured_slot_count": 4,
+        "unknown_fraction": 0.75,
+        "intent_unknown": false,
+        "parsed_ok": true
+      }
+    },
+    {
+      "seed": 71,
+      "id": "hotel_play_zone_ages",
+      "retrieval_needed": true,
+      "expected_answer": "Children aged 3 to 12",
+      "model_answer": "The pool is open daily from 6 AM until 10 PM.",
+      "signals": {
+        "negative_mean_logprob": 0.8728791363260817,
+        "negative_min_logprob": 2.9717653933458896,
+        "perplexity": 2.3937929978315307,
+        "one_minus_mean_confidence": 0.4136597830422013,
+        "one_minus_min_confidence": 0.9487871802914887,
+        "low_confidence_fraction": 0.2727272727272727,
+        "mean_entropy_nats": 1.0546539611712176,
+        "max_entropy_nats": 1.7306608627304416,
+        "tracker_unknown_fraction": 1.0
+      },
+      "tracker": {
+        "unknown_slots": [
+          "intent",
+          "room",
+          "time",
+          "people"
+        ],
+        "unknown_count": 4,
+        "measured_slot_count": 4,
+        "unknown_fraction": 1.0,
+        "intent_unknown": true,
+        "parsed_ok": true
+      }
+    },
+    {
+      "seed": 71,
+      "id": "hotel_laundry_hours",
+      "retrieval_needed": true,
+      "expected_answer": "8:00 PM",
+      "model_answer": "The pool is open daily from 6 AM until 10 PM.",
+      "signals": {
+        "negative_mean_logprob": 0.8552668963996198,
+        "negative_min_logprob": 3.217850180355695,
+        "perplexity": 2.3520020376872215,
+        "one_minus_mean_confidence": 0.3497922403011624,
+        "one_minus_min_confidence": 0.9599589531733718,
+        "low_confidence_fraction": 0.2727272727272727,
+        "mean_entropy_nats": 0.8107505718030219,
+        "max_entropy_nats": 1.6962684206652217,
+        "tracker_unknown_fraction": 1.0
+      },
+      "tracker": {
+        "unknown_slots": [
+          "intent",
+          "room",
+          "time",
+          "people"
+        ],
+        "unknown_count": 4,
+        "measured_slot_count": 4,
+        "unknown_fraction": 1.0,
+        "intent_unknown": true,
+        "parsed_ok": true
+      }
+    },
+    {
+      "seed": 71,
+      "id": "hotel_wifi_ssid",
+      "retrieval_needed": true,
+      "expected_answer": "GrandHorizon_Guest",
+      "model_answer": "The pool is open daily from 6 AM until 10 PM.",
+      "signals": {
+        "negative_mean_logprob": 0.9890955948976878,
+        "negative_min_logprob": 2.7307533163035362,
+        "perplexity": 2.6888016064749363,
+        "one_minus_mean_confidence": 0.4466969605967136,
+        "one_minus_min_confidence": 0.9348298225852314,
+        "low_confidence_fraction": 0.36363636363636365,
+        "mean_entropy_nats": 1.0359381395938392,
+        "max_entropy_nats": 1.6683362195488811,
+        "tracker_unknown_fraction": 1.0
+      },
+      "tracker": {
+        "unknown_slots": [
+          "intent",
+          "room",
+          "time",
+          "people"
+        ],
+        "unknown_count": 4,
+        "measured_slot_count": 4,
+        "unknown_fraction": 1.0,
+        "intent_unknown": true,
+        "parsed_ok": true
+      }
+    },
+    {
+      "seed": 71,
+      "id": "hotel_business_center",
+      "retrieval_needed": true,
+      "expected_answer": "8:00 AM to 8:00 PM",
+      "model_answer": "The pool is open daily from 6 AM until 10 PM.",
+      "signals": {
+        "negative_mean_logprob": 0.6614302090864694,
+        "negative_min_logprob": 2.9545681703278204,
+        "perplexity": 1.9375614717297867,
+        "one_minus_mean_confidence": 0.3425533800934969,
+        "one_minus_min_confidence": 0.9478988454566785,
+        "low_confidence_fraction": 0.18181818181818182,
+        "mean_entropy_nats": 0.9430163820892133,
+        "max_entropy_nats": 1.5457102623732875,
+        "tracker_unknown_fraction": 1.0
+      },
+      "tracker": {
+        "unknown_slots": [
+          "intent",
+          "room",
+          "time",
+          "people"
+        ],
+        "unknown_count": 4,
+        "measured_slot_count": 4,
+        "unknown_fraction": 1.0,
+        "intent_unknown": true,
+        "parsed_ok": true
+      }
+    },
+    {
+      "seed": 71,
+      "id": "hotel_cancellation_window",
+      "retrieval_needed": true,
+      "expected_answer": "At least 48 hours before scheduled check-in",
+      "model_answer": "The pool is open daily from 6 AM until 10 PM.",
+      "signals": {
+        "negative_mean_logprob": 0.6312083044508362,
+        "negative_min_logprob": 2.9415523925419027,
+        "perplexity": 1.879880675691819,
+        "one_minus_mean_confidence": 0.28185866013476746,
+        "one_minus_min_confidence": 0.9472162759564582,
+        "low_confidence_fraction": 0.18181818181818182,
+        "mean_entropy_nats": 0.7482665779379303,
+        "max_entropy_nats": 1.7001892326941237,
+        "tracker_unknown_fraction": 1.0
+      },
+      "tracker": {
+        "unknown_slots": [
+          "intent",
+          "room",
+          "time",
+          "people"
+        ],
+        "unknown_count": 4,
+        "measured_slot_count": 4,
+        "unknown_fraction": 1.0,
+        "intent_unknown": true,
+        "parsed_ok": true
+      }
+    },
+    {
+      "seed": 71,
+      "id": "hotel_quiet_hours",
+      "retrieval_needed": true,
+      "expected_answer": "10:00 PM to 7:00 AM",
+      "model_answer": "The pool is open daily from 6 AM until 10 PM.",
+      "signals": {
+        "negative_mean_logprob": 1.4495184698482444,
+        "negative_min_logprob": 3.36091316009287,
+        "perplexity": 4.261062191156979,
+        "one_minus_mean_confidence": 0.5512798922840222,
+        "one_minus_min_confidence": 0.9652964454297575,
+        "low_confidence_fraction": 0.45454545454545453,
+        "mean_entropy_nats": 1.1952681461972205,
+        "max_entropy_nats": 1.69561001157253,
+        "tracker_unknown_fraction": 1.0
+      },
+      "tracker": {
+        "unknown_slots": [
+          "intent",
+          "room",
+          "time",
+          "people"
+        ],
+        "unknown_count": 4,
+        "measured_slot_count": 4,
+        "unknown_fraction": 1.0,
+        "intent_unknown": true,
+        "parsed_ok": true
+      }
+    },
+    {
+      "seed": 71,
+      "id": "hotel_visitor_hours",
+      "retrieval_needed": true,
+      "expected_answer": "8:00 AM to 10:00 PM",
+      "model_answer": "The pool is open daily from 6 AM until 10 PM.",
+      "signals": {
+        "negative_mean_logprob": 0.6949096240319096,
+        "negative_min_logprob": 3.2291772614615706,
+        "perplexity": 2.003527994976563,
+        "one_minus_mean_confidence": 0.3425994982642675,
+        "one_minus_min_confidence": 0.960409942340982,
+        "low_confidence_fraction": 0.18181818181818182,
+        "mean_entropy_nats": 0.9557199634288172,
+        "max_entropy_nats": 1.739450106075796,
+        "tracker_unknown_fraction": 1.0
+      },
+      "tracker": {
+        "unknown_slots": [
+          "intent",
+          "room",
+          "time",
+          "people"
+        ],
+        "unknown_count": 4,
+        "measured_slot_count": 4,
+        "unknown_fraction": 1.0,
+        "intent_unknown": true,
+        "parsed_ok": true
+      }
+    },
+    {
+      "seed": 71,
+      "id": "hotel_steam_room",
+      "retrieval_needed": true,
+      "expected_answer": "7:00 AM to 9:00 PM",
+      "model_answer": "The pool is open daily from 6 AM until 10 PM.",
+      "signals": {
+        "negative_mean_logprob": 0.8000261668002377,
+        "negative_min_logprob": 3.2932182387469897,
+        "perplexity": 2.2255991645392865,
+        "one_minus_mean_confidence": 0.41792993277823587,
+        "one_minus_min_confidence": 0.9628658496719851,
+        "low_confidence_fraction": 0.18181818181818182,
+        "mean_entropy_nats": 1.1573832557210162,
+        "max_entropy_nats": 1.6627657528161326,
+        "tracker_unknown_fraction": 1.0
+      },
+      "tracker": {
+        "unknown_slots": [
+          "intent",
+          "room",
+          "time",
+          "people"
+        ],
+        "unknown_count": 4,
+        "measured_slot_count": 4,
+        "unknown_fraction": 1.0,
+        "intent_unknown": true,
+        "parsed_ok": true
+      }
+    },
+    {
+      "seed": 71,
+      "id": "general_arithmetic",
+      "retrieval_needed": false,
+      "expected_answer": "4",
+      "model_answer": "The pool is open daily from 6 AM until 10 PM.",
+      "signals": {
+        "negative_mean_logprob": 1.2739508686511174,
+        "negative_min_logprob": 3.32979956689413,
+        "perplexity": 3.574948851071806,
+        "one_minus_mean_confidence": 0.48877721595888335,
+        "one_minus_min_confidence": 0.9641997200901133,
+        "low_confidence_fraction": 0.36363636363636365,
+        "mean_entropy_nats": 1.0752340304970749,
+        "max_entropy_nats": 1.56845711160497,
+        "tracker_unknown_fraction": 1.0
+      },
+      "tracker": {
+        "unknown_slots": [
+          "intent",
+          "room",
+          "time",
+          "people"
+        ],
+        "unknown_count": 4,
+        "measured_slot_count": 4,
+        "unknown_fraction": 1.0,
+        "intent_unknown": true,
+        "parsed_ok": true
+      }
+    },
+    {
+      "seed": 71,
+      "id": "general_week_days",
+      "retrieval_needed": false,
+      "expected_answer": "7",
+      "model_answer": "The pool is open daily from 6 AM until 10 PM.",
+      "signals": {
+        "negative_mean_logprob": 0.6246278422137377,
+        "negative_min_logprob": 2.871124309602096,
+        "perplexity": 1.8675508045138198,
+        "one_minus_mean_confidence": 0.29115948574128026,
+        "one_minus_min_confidence": 0.9433647847453966,
+        "low_confidence_fraction": 0.18181818181818182,
+        "mean_entropy_nats": 0.7707192168348652,
+        "max_entropy_nats": 1.613389818488851,
+        "tracker_unknown_fraction": 1.0
+      },
+      "tracker": {
+        "unknown_slots": [
+          "intent",
+          "room",
+          "time",
+          "people"
+        ],
+        "unknown_count": 4,
+        "measured_slot_count": 4,
+        "unknown_fraction": 1.0,
+        "intent_unknown": true,
+        "parsed_ok": true
+      }
+    },
+    {
+      "seed": 71,
+      "id": "general_hour_minutes",
+      "retrieval_needed": false,
+      "expected_answer": "60",
+      "model_answer": "The pool is open daily from 6 AM until 10 PM.",
+      "signals": {
+        "negative_mean_logprob": 0.421132321453322,
+        "negative_min_logprob": 2.1986691664642457,
+        "perplexity": 1.5236858814004925,
+        "one_minus_mean_confidence": 0.26923190006583164,
+        "one_minus_min_confidence": 0.8890492829123786,
+        "low_confidence_fraction": 0.09090909090909091,
+        "mean_entropy_nats": 0.8308327860887534,
+        "max_entropy_nats": 1.5990473105701613,
+        "tracker_unknown_fraction": 1.0
+      },
+      "tracker": {
+        "unknown_slots": [
+          "intent",
+          "room",
+          "time",
+          "people"
+        ],
+        "unknown_count": 4,
+        "measured_slot_count": 4,
+        "unknown_fraction": 1.0,
+        "intent_unknown": true,
+        "parsed_ok": true
+      }
+    },
+    {
+      "seed": 71,
+      "id": "general_france_capital",
+      "retrieval_needed": false,
+      "expected_answer": "Paris",
+      "model_answer": "The pool is open daily from 6 AM until 10 PM.",
+      "signals": {
+        "negative_mean_logprob": 0.3998348459565214,
+        "negative_min_logprob": 2.25825105851261,
+        "perplexity": 1.491578337104573,
+        "one_minus_mean_confidence": 0.2507566090796979,
+        "one_minus_min_confidence": 0.8954668526666978,
+        "low_confidence_fraction": 0.09090909090909091,
+        "mean_entropy_nats": 0.7796961028724204,
+        "max_entropy_nats": 1.5878813327153825,
+        "tracker_unknown_fraction": 1.0
+      },
+      "tracker": {
+        "unknown_slots": [
+          "intent",
+          "room",
+          "time",
+          "people"
+        ],
+        "unknown_count": 4,
+        "measured_slot_count": 4,
+        "unknown_fraction": 1.0,
+        "intent_unknown": true,
+        "parsed_ok": true
+      }
+    },
+    {
+      "seed": 71,
+      "id": "general_water_freezing",
+      "retrieval_needed": false,
+      "expected_answer": "0 degrees Celsius",
+      "model_answer": "The pool is open daily from 6 AM until 10 PM.",
+      "signals": {
+        "negative_mean_logprob": 0.2112553355185257,
+        "negative_min_logprob": 0.4331587288570174,
+        "perplexity": 1.2352277123071473,
+        "one_minus_mean_confidence": 0.18063192263527483,
+        "one_minus_min_confidence": 0.3515424452908349,
+        "low_confidence_fraction": 0.0,
+        "mean_entropy_nats": 0.6553309668296671,
+        "max_entropy_nats": 1.1170604296481839,
+        "tracker_unknown_fraction": 1.0
+      },
+      "tracker": {
+        "unknown_slots": [
+          "intent",
+          "room",
+          "time",
+          "people"
+        ],
+        "unknown_count": 4,
+        "measured_slot_count": 4,
+        "unknown_fraction": 1.0,
+        "intent_unknown": true,
+        "parsed_ok": true
+      }
+    },
+    {
+      "seed": 71,
+      "id": "general_opposite_early",
+      "retrieval_needed": false,
+      "expected_answer": "Late",
+      "model_answer": "The pool is open daily from 6 AM until 10 PM.",
+      "signals": {
+        "negative_mean_logprob": 1.2132518644981005,
+        "negative_min_logprob": 3.4499487570887,
+        "perplexity": 3.3644074803882105,
+        "one_minus_mean_confidence": 0.4838122457918602,
+        "one_minus_min_confidence": 0.9682527368414229,
+        "low_confidence_fraction": 0.36363636363636365,
+        "mean_entropy_nats": 1.1109428953959557,
+        "max_entropy_nats": 1.6524108102888146,
+        "tracker_unknown_fraction": 1.0
+      },
+      "tracker": {
+        "unknown_slots": [
+          "intent",
+          "room",
+          "time",
+          "people"
+        ],
+        "unknown_count": 4,
+        "measured_slot_count": 4,
+        "unknown_fraction": 1.0,
+        "intent_unknown": true,
+        "parsed_ok": true
+      }
+    },
+    {
+      "seed": 71,
+      "id": "general_spell_hotel",
+      "retrieval_needed": false,
+      "expected_answer": "H-O-T-E-L",
+      "model_answer": "The pool is open daily from 6 AM until 10 PM.",
+      "signals": {
+        "negative_mean_logprob": 0.4254350328148588,
+        "negative_min_logprob": 2.113518340629323,
+        "perplexity": 1.5302559864504255,
+        "one_minus_mean_confidence": 0.2794905996068988,
+        "one_minus_min_confidence": 0.8791878405235336,
+        "low_confidence_fraction": 0.09090909090909091,
+        "mean_entropy_nats": 0.8883328287300271,
+        "max_entropy_nats": 1.7064973524333544,
+        "tracker_unknown_fraction": 1.0
+      },
+      "tracker": {
+        "unknown_slots": [
+          "intent",
+          "room",
+          "time",
+          "people"
+        ],
+        "unknown_count": 4,
+        "measured_slot_count": 4,
+        "unknown_fraction": 1.0,
+        "intent_unknown": true,
+        "parsed_ok": true
+      }
+    },
+    {
+      "seed": 71,
+      "id": "general_spanish_thanks",
+      "retrieval_needed": false,
+      "expected_answer": "Gracias",
+      "model_answer": "The pool is open daily from 6 AM until 10 PM.",
+      "signals": {
+        "negative_mean_logprob": 0.2062716089659213,
+        "negative_min_logprob": 0.37998628024074393,
+        "perplexity": 1.229086989709966,
+        "one_minus_mean_confidence": 0.17963863582735629,
+        "one_minus_min_confidence": 0.31612920830938274,
+        "low_confidence_fraction": 0.0,
+        "mean_entropy_nats": 0.6755599421041019,
+        "max_entropy_nats": 1.0273659089555036,
+        "tracker_unknown_fraction": 0.75
+      },
+      "tracker": {
+        "unknown_slots": [
+          "room",
+          "time",
+          "people"
+        ],
+        "unknown_count": 3,
+        "measured_slot_count": 4,
+        "unknown_fraction": 0.75,
+        "intent_unknown": false,
+        "parsed_ok": true
+      }
+    },
+    {
+      "seed": 71,
+      "id": "general_color_mix",
+      "retrieval_needed": false,
+      "expected_answer": "Purple",
+      "model_answer": "The pool is open daily from 6 AM until 10 PM.",
+      "signals": {
+        "negative_mean_logprob": 0.429851237522876,
+        "negative_min_logprob": 2.692970350340077,
+        "perplexity": 1.537028854320223,
+        "one_minus_mean_confidence": 0.24914532500816844,
+        "one_minus_min_confidence": 0.9323203916397387,
+        "low_confidence_fraction": 0.09090909090909091,
+        "mean_entropy_nats": 0.8053834008264439,
+        "max_entropy_nats": 1.6977052153142993,
+        "tracker_unknown_fraction": 1.0
+      },
+      "tracker": {
+        "unknown_slots": [
+          "intent",
+          "room",
+          "time",
+          "people"
+        ],
+        "unknown_count": 4,
+        "measured_slot_count": 4,
+        "unknown_fraction": 1.0,
+        "intent_unknown": true,
+        "parsed_ok": true
+      }
+    },
+    {
+      "seed": 71,
+      "id": "general_dozen",
+      "retrieval_needed": false,
+      "expected_answer": "12",
+      "model_answer": "The pool is open daily from 6 AM until 10 PM.",
+      "signals": {
+        "negative_mean_logprob": 0.8224521033887918,
+        "negative_min_logprob": 2.7667341502960294,
+        "perplexity": 2.2760741695043127,
+        "one_minus_mean_confidence": 0.38413521486217117,
+        "one_minus_min_confidence": 0.9371330160347304,
+        "low_confidence_fraction": 0.2727272727272727,
+        "mean_entropy_nats": 0.9381039091643362,
+        "max_entropy_nats": 1.5831655832818965,
+        "tracker_unknown_fraction": 1.0
+      },
+      "tracker": {
+        "unknown_slots": [
+          "intent",
+          "room",
+          "time",
+          "people"
+        ],
+        "unknown_count": 4,
+        "measured_slot_count": 4,
+        "unknown_fraction": 1.0,
+        "intent_unknown": true,
+        "parsed_ok": true
+      }
+    },
+    {
+      "seed": 71,
+      "id": "general_triangle_sides",
+      "retrieval_needed": false,
+      "expected_answer": "3",
+      "model_answer": "The pool is open daily from 6 AM until 10 PM.",
+      "signals": {
+        "negative_mean_logprob": 0.6231594683446439,
+        "negative_min_logprob": 2.765361403927047,
+        "perplexity": 1.8648105540617055,
+        "one_minus_mean_confidence": 0.3247925139359531,
+        "one_minus_min_confidence": 0.9370466563493525,
+        "low_confidence_fraction": 0.18181818181818182,
+        "mean_entropy_nats": 0.8812718489715544,
+        "max_entropy_nats": 1.67054247768789,
+        "tracker_unknown_fraction": 1.0
+      },
+      "tracker": {
+        "unknown_slots": [
+          "intent",
+          "room",
+          "time",
+          "people"
+        ],
+        "unknown_count": 4,
+        "measured_slot_count": 4,
+        "unknown_fraction": 1.0,
+        "intent_unknown": true,
+        "parsed_ok": true
+      }
+    },
+    {
+      "seed": 71,
+      "id": "general_year_months",
+      "retrieval_needed": false,
+      "expected_answer": "12",
+      "model_answer": "The pool is open daily from 6 AM until 10 PM.",
+      "signals": {
+        "negative_mean_logprob": 1.0754767804698155,
+        "negative_min_logprob": 3.4418080923474794,
+        "perplexity": 2.931390197000738,
+        "one_minus_mean_confidence": 0.4239767511472785,
+        "one_minus_min_confidence": 0.9679932382029781,
+        "low_confidence_fraction": 0.2727272727272727,
+        "mean_entropy_nats": 1.0449829544898708,
+        "max_entropy_nats": 1.6476454757128236,
+        "tracker_unknown_fraction": 1.0
+      },
+      "tracker": {
+        "unknown_slots": [
+          "intent",
+          "room",
+          "time",
+          "people"
+        ],
+        "unknown_count": 4,
+        "measured_slot_count": 4,
+        "unknown_fraction": 1.0,
+        "intent_unknown": true,
+        "parsed_ok": true
+      }
+    },
+    {
+      "seed": 71,
+      "id": "general_sun_direction",
+      "retrieval_needed": false,
+      "expected_answer": "East",
+      "model_answer": "The pool is open daily from 6 AM until 10 PM.",
+      "signals": {
+        "negative_mean_logprob": 0.5005689913756126,
+        "negative_min_logprob": 2.9226236327750703,
+        "perplexity": 1.6496596458223047,
+        "one_minus_mean_confidence": 0.2889681711215335,
+        "one_minus_min_confidence": 0.946207629426665,
+        "low_confidence_fraction": 0.09090909090909091,
+        "mean_entropy_nats": 0.8904718333745407,
+        "max_entropy_nats": 1.4567753704077149,
+        "tracker_unknown_fraction": 1.0
+      },
+      "tracker": {
+        "unknown_slots": [
+          "intent",
+          "room",
+          "time",
+          "people"
+        ],
+        "unknown_count": 4,
+        "measured_slot_count": 4,
+        "unknown_fraction": 1.0,
+        "intent_unknown": true,
+        "parsed_ok": true
+      }
+    },
+    {
+      "seed": 71,
+      "id": "general_boiling_water",
+      "retrieval_needed": false,
+      "expected_answer": "100 degrees Celsius",
+      "model_answer": "The pool is open daily from 6 AM until 10 PM.",
+      "signals": {
+        "negative_mean_logprob": 0.977194848462847,
+        "negative_min_logprob": 3.4504522849453503,
+        "perplexity": 2.6569925117480504,
+        "one_minus_mean_confidence": 0.3899475585429366,
+        "one_minus_min_confidence": 0.9682687184488656,
+        "low_confidence_fraction": 0.2727272727272727,
+        "mean_entropy_nats": 0.9411552994390064,
+        "max_entropy_nats": 1.6660269152556793,
+        "tracker_unknown_fraction": 1.0
+      },
+      "tracker": {
+        "unknown_slots": [
+          "intent",
+          "room",
+          "time",
+          "people"
+        ],
+        "unknown_count": 4,
+        "measured_slot_count": 4,
+        "unknown_fraction": 1.0,
+        "intent_unknown": true,
+        "parsed_ok": true
+      }
+    },
+    {
+      "seed": 71,
+      "id": "general_planet",
+      "retrieval_needed": false,
+      "expected_answer": "Mars",
+      "model_answer": "The pool is open daily from 6 AM until 10 PM.",
+      "signals": {
+        "negative_mean_logprob": 1.1113938777361225,
+        "negative_min_logprob": 3.1085278685135225,
+        "perplexity": 3.038590868135254,
+        "one_minus_mean_confidence": 0.4434526184997315,
+        "one_minus_min_confidence": 0.9553333378363668,
+        "low_confidence_fraction": 0.36363636363636365,
+        "mean_entropy_nats": 1.009000634370481,
+        "max_entropy_nats": 1.6946854534884803,
+        "tracker_unknown_fraction": 1.0
+      },
+      "tracker": {
+        "unknown_slots": [
+          "intent",
+          "room",
+          "time",
+          "people"
+        ],
+        "unknown_count": 4,
+        "measured_slot_count": 4,
+        "unknown_fraction": 1.0,
+        "intent_unknown": true,
+        "parsed_ok": true
+      }
+    },
+    {
+      "seed": 71,
+      "id": "general_square_sides",
+      "retrieval_needed": false,
+      "expected_answer": "4",
+      "model_answer": "The pool is open daily from 6 AM until 10 PM.",
+      "signals": {
+        "negative_mean_logprob": 0.7882344258623302,
+        "negative_min_logprob": 3.4929943964075623,
+        "perplexity": 2.199509598761441,
+        "one_minus_mean_confidence": 0.34777567983690216,
+        "one_minus_min_confidence": 0.9695903229255634,
+        "low_confidence_fraction": 0.18181818181818182,
+        "mean_entropy_nats": 0.9138431311214749,
+        "max_entropy_nats": 1.6202211593866482,
+        "tracker_unknown_fraction": 1.0
+      },
+      "tracker": {
+        "unknown_slots": [
+          "intent",
+          "room",
+          "time",
+          "people"
+        ],
+        "unknown_count": 4,
+        "measured_slot_count": 4,
+        "unknown_fraction": 1.0,
+        "intent_unknown": true,
+        "parsed_ok": true
+      }
+    },
+    {
+      "seed": 71,
+      "id": "general_first_month",
+      "retrieval_needed": false,
+      "expected_answer": "January",
+      "model_answer": "The pool is open daily from 6 AM until 10 PM.",
+      "signals": {
+        "negative_mean_logprob": 0.4824854522906193,
+        "negative_min_logprob": 3.0637445230287645,
+        "perplexity": 1.6200960737837549,
+        "one_minus_mean_confidence": 0.2639898111075155,
+        "one_minus_min_confidence": 0.9532875485276399,
+        "low_confidence_fraction": 0.09090909090909091,
+        "mean_entropy_nats": 0.8233906619908116,
+        "max_entropy_nats": 1.68585561043535,
+        "tracker_unknown_fraction": 1.0
+      },
+      "tracker": {
+        "unknown_slots": [
+          "intent",
+          "room",
+          "time",
+          "people"
+        ],
+        "unknown_count": 4,
+        "measured_slot_count": 4,
+        "unknown_fraction": 1.0,
+        "intent_unknown": true,
+        "parsed_ok": true
+      }
+    },
+    {
+      "seed": 71,
+      "id": "general_half_ten",
+      "retrieval_needed": false,
+      "expected_answer": "5",
+      "model_answer": "The pool is open daily from 6 AM until 10 PM.",
+      "signals": {
+        "negative_mean_logprob": 0.47146337015939904,
+        "negative_min_logprob": 2.6551175206578765,
+        "perplexity": 1.6023372909664535,
+        "one_minus_mean_confidence": 0.28188530901118714,
+        "one_minus_min_confidence": 0.9297094224151061,
+        "low_confidence_fraction": 0.09090909090909091,
+        "mean_entropy_nats": 0.8667169997937214,
+        "max_entropy_nats": 1.5446226627104351,
+        "tracker_unknown_fraction": 1.0
+      },
+      "tracker": {
+        "unknown_slots": [
+          "intent",
+          "room",
+          "time",
+          "people"
+        ],
+        "unknown_count": 4,
+        "measured_slot_count": 4,
+        "unknown_fraction": 1.0,
+        "intent_unknown": true,
+        "parsed_ok": true
+      }
+    }
+  ]
+}

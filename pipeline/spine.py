@@ -24,6 +24,7 @@ import sys
 import time
 from pathlib import Path
 
+
 # controller/ and eventlog/ are sibling top-level folders, not subpackages
 # of pipeline/. Running this file directly (`python3 pipeline/spine.py`)
 # only puts pipeline/'s own directory on sys.path, so without this, the
@@ -34,6 +35,7 @@ _REPO_ROOT = Path(__file__).resolve().parent.parent
 if str(_REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(_REPO_ROOT))
 
+from retrieval.rewrite import rewrite_query
 from controller.decide import decide
 from eventlog.log_writer import LogWriter
 from llm.client import generate_answer as llm_generate_answer
@@ -199,7 +201,21 @@ def run_conversation(conversation_id: str) -> Path:
         # fetch passages when decide() says "retrieve". Any other action
         # (e.g. skip_retrieval) means the model answers with no passages.
         if action.get("action") == "retrieve":
-            passages = retrieve(transcript, log_writer, turn_id)
+            history = []
+
+            rewritten_query = rewrite_query(
+                history,
+                transcript,
+            )
+
+            print(f"  rewritten query: {rewritten_query}")
+
+            passages = retrieve(
+                rewritten_query,
+                log_writer,
+                turn_id,
+            )   
+            
             print(f"  retrieved:      {len(passages)} passage(s)")
         else:
             passages = []
