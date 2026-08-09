@@ -44,7 +44,41 @@ The runner refuses a vLLM run if the configured server/model health check
 fails. Review the sample answers and labels before Yashmitha copies the real
 PASS/PIVOT/INCONCLUSIVE verdict into the shared lab log.
 
-Lakshya's unmerged `phase2-retrieval` branch adds public SpokenWOZ and
-Spoken-SQuAD loaders. After that branch is reviewed, extend this seed dataset
-with its answer-bearing public examples; do not silently change the frozen
-thresholds.
+## The extended dataset (secondary analysis)
+
+`dataset.jsonl` has a known weakness: every positive names a fictional hotel
+and every negative is arithmetic or primary-school trivia, so the two classes
+are separable by surface form alone. A high AUC on it partly measures "the
+model is less sure about invented proper nouns than about 2+2", which is a
+weaker claim than the one Experiment 1 makes.
+
+`build_extended_dataset.py` builds a 120-example set that removes that
+confound, in the same schema `run.py` validates:
+
+- 18 hotel positives (kept — they are the deployment domain);
+- 42 Spoken-SQuAD positives, passage-dependent by construction;
+- 60 negatives from `negatives_hard.jsonl`, authored to match Spoken-SQuAD's
+  question form and difficulty.
+
+```powershell
+pip install pandas pyarrow          # not in requirements.txt
+python -m llm.experiment1.build_extended_dataset
+python -m llm.experiment1.run --dataset llm/experiment1/dataset_extended.jsonl `
+  --output llm/experiment1/results/gate_vllm_extended.json
+```
+
+The builder drops any Spoken-SQuAD row whose question field embeds its source
+passage — that would hand the model the answer and silently break the
+closed-book design. Read the sample questions it prints before spending GPU
+time.
+
+**The frozen thresholds belong to `dataset.jsonl`.** The 36-item run is the
+pre-registered gate; the extended run is a labelled secondary analysis
+reported alongside it. Applying `success_auc` to a different dataset without
+re-freezing in `paper/preregistration.md` first is exactly the substitution
+pre-registration exists to prevent. Each result records the dataset sha256, so
+which set produced which number stays checkable.
+
+SpokenWOZ is deliberately not used here: its rows are dialogue turns with
+neither a `retrieval_needed` label nor an answer key, so there is nothing for
+an AUC to score. It is the conversation source for E2/E3.
