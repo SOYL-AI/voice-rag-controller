@@ -59,7 +59,9 @@ llm:
     # vLLM accepts any key unless the server was started with --api-key.
     # If you do set one, put it in this env var — never in this file.
     api_key_env: VLLM_API_KEY
-    request_timeout_s: 120
+    # RunPod Serverless may need several minutes to provision a worker and
+    # load model weights after scaling to zero.
+    request_timeout_s: 600
 
   # Answer generation.
   generation:
