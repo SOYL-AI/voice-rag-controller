@@ -29,6 +29,7 @@ import asyncio
 import sys
 import time
 from pathlib import Path
+from typing import Optional
 
 
 # controller/ and eventlog/ are sibling top-level folders, not subpackages
@@ -147,6 +148,37 @@ def controller_decide(transcript: str, log_writer: LogWriter, turn_id: int) -> d
     return decide(belief, log_writer=log_writer, turn_id=turn_id)
 
 
+def controller_decide_forced(force_retrieve: bool, log_writer: LogWriter, turn_id: int) -> dict:
+    """
+    Experiment 2's fixed retrieve/skip mask: bypasses controller_decide()
+    (and therefore decide()'s tracker-uncertainty rule) entirely and returns
+    a decision sourced from the caller instead — the scenario's gold
+    retrieval_needed label, per run_conversation()'s force_retrieve
+    parameter. The point is to hold the retrieve/skip decision fixed across
+    all three timing policies so Experiment 2 isolates WHEN retrieval
+    happens from WHETHER it happens; letting decide()'s live rule keep
+    picking would let retrieve/skip vary turn to turn for reasons unrelated
+    to timing, confounding that comparison.
+
+    Still logs a controller_action event, in the exact shape decide() would
+    (same log_writer.log_event() call, same payload keys) — a log reader
+    can't tell a forced decision from a live one except by the "e2_mask: "
+    prefix on `reason`.
+    """
+    action = (
+        {"action": "retrieve", "reason": "e2_mask: forced retrieve"}
+        if force_retrieve
+        else {"action": "skip_retrieval", "reason": "e2_mask: forced skip"}
+    )
+    log_writer.log_event(
+        actor="system",
+        event_type="controller_action",
+        payload=action,
+        turn_id=turn_id,
+    )
+    return action
+
+
 # ---------------------------------------------------------------------------
 # Stage 4 — retrieve
 # ---------------------------------------------------------------------------
@@ -196,6 +228,7 @@ def run_retrieval_pipeline(
     log_writer: LogWriter,
     turn_id: int,
     mechanism: MechanismContext,
+    force_retrieve: Optional[bool] = None,
 ) -> tuple:
     """
     The controller-decide + query-rewrite + retrieve sequence — unchanged
@@ -204,8 +237,17 @@ def run_retrieval_pipeline(
     this changes per policy: at user_end for sentence_end, or earlier (on a
     partial transcript, real or modeled) for immediate/predicted_pause. See
     run_conversation()'s timing-policy branches below.
+
+    force_retrieve (Experiment 2's mask, threaded down from
+    run_conversation()): None runs the live decide() rule exactly as
+    before. True/False bypasses it via controller_decide_forced() instead,
+    fixing WHETHER retrieval happens so only WHEN it happens (this
+    function's caller, per timing policy) varies.
     """
-    action = controller_decide(transcript_snapshot, log_writer, turn_id)
+    if force_retrieve is None:
+        action = controller_decide(transcript_snapshot, log_writer, turn_id)
+    else:
+        action = controller_decide_forced(force_retrieve, log_writer, turn_id)
     print(f"  controller:     {action}  (timing_trigger={mechanism.trigger})")
     if action.get("action") != "retrieve":
         print("  retrieved:      skipped (controller decided not to retrieve)")
@@ -225,6 +267,7 @@ async def _trigger_live_early_retrieval(
     turn_start_ms: int,
     log_writer: LogWriter,
     turn_id: int,
+    force_retrieve: Optional[bool] = None,
 ) -> tuple:
     """
     Live/synthetic-audio path only. Waits for the real signal `policy`
@@ -238,6 +281,10 @@ async def _trigger_live_early_retrieval(
     before the turn ends (e.g. a very short utterance with no partial
     before user_end) — run_conversation() races this coroutine against the
     transcribe task itself and cancels this one if transcribe wins.
+
+    force_retrieve: forwarded to run_retrieval_pipeline() unchanged — see
+    that function's docstring. This function only decides WHEN the pipeline
+    launches; it never inspects force_retrieve itself.
 
     Returns (task, mechanism). `task` is None only when predicted_pause's
     forecast gets invalidated (the user kept talking past the point a
@@ -263,7 +310,14 @@ async def _trigger_live_early_retrieval(
         ),
     )
     task = asyncio.create_task(
-        asyncio.to_thread(run_retrieval_pipeline, partial_text, log_writer, turn_id, mechanism)
+        asyncio.to_thread(
+            run_retrieval_pipeline,
+            partial_text,
+            log_writer,
+            turn_id,
+            mechanism,
+            force_retrieve,
+        )
     )
 
     if policy == "predicted_pause":
@@ -362,7 +416,10 @@ async def speak(
 # The spine itself
 # ---------------------------------------------------------------------------
 async def run_conversation(
-    conversation_id: str, live: bool = False, question: str = None
+    conversation_id: str,
+    live: bool = False,
+    question: str = None,
+    force_retrieve: Optional[bool] = None,
 ) -> Path:
     """
     Runs one full conversation through every stage above, in order,
@@ -396,6 +453,18 @@ async def run_conversation(
     launch is a real background task racing real remaining work, not a
     number subtracted from a metric afterward — see controller/timing.py's
     module docstring.
+
+    Experiment 2 (retrieval masking): force_retrieve, when not None,
+    overrides WHETHER retrieval happens — True forces a retrieve, False
+    forces a skip, bypassing controller/decide.py's live retrieve-or-not
+    rule for this turn (see controller_decide_forced() above). It composes
+    with every timing policy above unchanged: the mask only ever swaps out
+    which decision run_retrieval_pipeline() logs and acts on, never when
+    run_retrieval_pipeline() gets called, so a forced-retrieve turn still
+    launches early under immediate/predicted_pause and at user_end under
+    sentence_end, exactly as an unmasked turn would. Default None leaves
+    every other call to run_conversation() (including the batch runner's)
+    on the live decision, unchanged.
     """
     cfg = load_config()
     log_writer = LogWriter(conversation_id=conversation_id)
@@ -427,7 +496,7 @@ async def run_conversation(
                 )
                 trigger_task = asyncio.create_task(
                     _trigger_live_early_retrieval(
-                        policy, watcher, turn_start_ms, log_writer, turn_id
+                        policy, watcher, turn_start_ms, log_writer, turn_id, force_retrieve
                     )
                 )
                 done, _pending = await asyncio.wait(
@@ -475,7 +544,7 @@ async def run_conversation(
                     ),
                 )
                 action, passages = run_retrieval_pipeline(
-                    transcript, log_writer, turn_id, late_mechanism
+                    transcript, log_writer, turn_id, late_mechanism, force_retrieve
                 )
         else:
             # Text path: no audio, no STT — the given question *is* the
@@ -515,7 +584,12 @@ async def run_conversation(
                 )
                 early_task = asyncio.create_task(
                     asyncio.to_thread(
-                        run_retrieval_pipeline, partial_text, log_writer, turn_id, mechanism
+                        run_retrieval_pipeline,
+                        partial_text,
+                        log_writer,
+                        turn_id,
+                        mechanism,
+                        force_retrieve,
                     )
                 )
                 await asyncio.sleep(plan.total_speech_s - trigger_s)
@@ -536,7 +610,7 @@ async def run_conversation(
                     speech_window_ms_getter=_planned_window,
                 )
                 action, passages = run_retrieval_pipeline(
-                    transcript, log_writer, turn_id, mechanism
+                    transcript, log_writer, turn_id, mechanism, force_retrieve
                 )
 
         answer = generate_answer(passages, log_writer, turn_id, transcript)
