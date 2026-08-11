@@ -1,7 +1,5 @@
-# Voice-RAG Controller — conversation logs produced by running the pipeline
-# (e.g. python pipeline/spine.py). These are runtime output, not source.
-logs/
-logs/*.jsonl
+# Experiment logs are versioned with their result manifests so reported
+# figures can be regenerated from the raw event stream.
 
 # Downloaded model weights (Piper ONNX models)
 audio/models/
@@ -67,6 +65,7 @@ cover/
 
 # Django stuff:
 *.log
+!logs/e2_modal_full_20260811.console.log
 local_settings.py
 db.sqlite3
 db.sqlite3-journal
