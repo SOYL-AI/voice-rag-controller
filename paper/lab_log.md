@@ -14,3 +14,18 @@ experiment decisions, and blockers.
 **Decided by:** Project team
 
 **Recorded by:** Yashmita Sudhir
+
+### 2026-08-11 — Experiment 1 finalized and first run started
+
+**Decision:** Experiment 1 remains final/frozen before results are observed.
+
+**Confirmed by:** Ryan
+
+**Run status:** Ryan began the first Experiment 1 run.
+
+**Blocker:** GPU issues delayed experiment execution.
+
+**Impact:** No changes will be made to the frozen Experiment 1 criteria as a result of
+execution issues.
+
+**Recorded by:** Yashmitha
