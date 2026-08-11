@@ -550,8 +550,18 @@ def generate_answer(
     turn_id: int,
     question: str = "",
     client=None,
+    seed: int = None,
 ) -> str:
-    """Generate the spoken answer, logging llm_first_token and llm_final."""
+    """
+    Generate the spoken answer, logging llm_first_token and llm_final.
+
+    seed, when not None, is forwarded to client.generate() as a generation
+    override (see VLLMClient.generate / MockClient.generate — both already
+    read `seed` out of **overrides, the same convention llm/experiment1/
+    run.py uses via client.generate(..., seed=seed)). Default None leaves
+    generation on whatever configs/config.yaml's llm.generation.seed says,
+    unchanged from before this parameter existed.
+    """
     global _DEFAULT_CLIENT
     if client is None:
         # Built once and reused: constructing a client opens an HTTP session,
@@ -560,8 +570,12 @@ def generate_answer(
             _DEFAULT_CLIENT = make_client()
         client = _DEFAULT_CLIENT
 
+    overrides = {} if seed is None else {"seed": seed}
     gen = client.generate(
-        build_messages(question, passages), log_writer=log_writer, turn_id=turn_id
+        build_messages(question, passages),
+        log_writer=log_writer,
+        turn_id=turn_id,
+        **overrides,
     )
     return gen.text
 

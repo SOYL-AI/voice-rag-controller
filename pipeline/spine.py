@@ -360,7 +360,11 @@ async def _trigger_live_early_retrieval(
 # Stage 5 — model
 # ---------------------------------------------------------------------------
 def generate_answer(
-    passages: list, log_writer: LogWriter, turn_id: int, question: str
+    passages: list,
+    log_writer: LogWriter,
+    turn_id: int,
+    question: str,
+    seed: Optional[int] = None,
 ) -> str:
     """
     Calls the real llm/client.py generate_answer(): builds the RAG prompt
@@ -369,8 +373,14 @@ def generate_answer(
     function logs llm_first_token and llm_final itself, in the exact
     schema shape the Week 1 stub used to log manually, so no logging call
     is needed here.
+
+    seed, when not None, is forwarded straight through to llm/client.py's
+    generate_answer() (Experiment 2's seed sweep — see run_conversation's
+    docstring). Default None: unchanged generation behavior.
     """
-    return llm_generate_answer(passages, log_writer, turn_id, question=question)
+    return llm_generate_answer(
+        passages, log_writer, turn_id, question=question, seed=seed
+    )
 
 
 # ---------------------------------------------------------------------------
@@ -420,6 +430,7 @@ async def run_conversation(
     live: bool = False,
     question: str = None,
     force_retrieve: Optional[bool] = None,
+    seed: Optional[int] = None,
 ) -> Path:
     """
     Runs one full conversation through every stage above, in order,
@@ -465,6 +476,14 @@ async def run_conversation(
     sentence_end, exactly as an unmasked turn would. Default None leaves
     every other call to run_conversation() (including the batch runner's)
     on the live decision, unchanged.
+
+    Experiment 2 (seed sweep): seed, when not None, is forwarded to the
+    model stage's generate_answer() -> llm/client.py's generate_answer() ->
+    client.generate(seed=seed) — the same seed override
+    llm/experiment1/run.py already uses. It only affects model generation
+    (retrieval/timing/masking above are all deterministic given the same
+    mask and policy); default None leaves generation on whatever
+    configs/config.yaml's llm.generation.seed says, unchanged.
     """
     cfg = load_config()
     log_writer = LogWriter(conversation_id=conversation_id)
@@ -613,7 +632,7 @@ async def run_conversation(
                     transcript, log_writer, turn_id, mechanism, force_retrieve
                 )
 
-        answer = generate_answer(passages, log_writer, turn_id, transcript)
+        answer = generate_answer(passages, log_writer, turn_id, transcript, seed=seed)
         # Text mode always speaks non-live (simulated playback, no
         # hardware) regardless of `live`, matching the headless default —
         # there's no captured audio turn here for live playback to pair
