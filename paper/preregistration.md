@@ -4,8 +4,10 @@ This document records what each experiment measures and what counts as success o
 decided BEFORE running them. We do not change success criteria after seeing results. 
 Owner: Yashmitha. Sign-off: Ryan.
 
-Status: DRAFT — remaining criteria to be confirmed with the team. The Experiment 1 
-model and dataset below are FROZEN as of 2026-08-10, before any real data collection.
+Status: DRAFT — remaining criteria for later experiments are still to be confirmed with
+the team. Experiment 1 is FINAL/FROZEN. Its model and dataset were frozen on
+2026-08-10 before any real data collection, and Ryan confirmed on 2026-08-11 that
+Experiment 1 should remain final before the first run began.
 
 ## Guiding principle
 The project claims three live decisions (when to retrieve, what to remember, when to speak) 
@@ -13,6 +15,11 @@ are better made by one unified controller than three separate rules. Each experi
 tests one assumption behind that claim. All outcomes, including failures, will be reported.
 
 ## Experiment 1 — Signal validity (the gatekeeper)
+**Status: FINAL / FROZEN**
+
+Confirmed by Ryan on 2026-08-11, before the first experimental run. The success
+criterion, kill criterion, model, datasets, and seeds below must not be changed after
+results are observed.
 - Question: When the language model is uncertain (measured from its confidence numbers / 
   logprobs), does that reliably indicate it needs to retrieve a document?
 - How: Offline, over questions with known answers and known "was retrieval needed" labels. 
