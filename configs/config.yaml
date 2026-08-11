@@ -26,7 +26,7 @@ llm:
   # gated download is still pending — not a comparison set. Whichever is
   # active when real data collection starts must be named in the
   # pre-registration doc.
-  active_model: llama31_8b
+  active_model: mistral7b_v03
 
   models:
     llama31_8b:
@@ -48,9 +48,8 @@ llm:
 
     mistral7b_v03:
       hf_id: mistralai/Mistral-7B-Instruct-v0.3
-      # Requires accepting the terms on the model page; approval is usually
-      # immediate. 7B not 8B — close enough to stand in if both others stall.
-      gated: true
+      # Public Apache-2.0 model; no Hugging Face access approval is required.
+      gated: false
 
   # Where the client sends requests. Override with VOICE_RAG_LLM_BASE_URL,
   # which you will need on RunPod (the proxy hostname is generated per pod).

@@ -148,9 +148,10 @@ returns a result, not a long-lived HTTP server. Deploying
 port 8000 open.
 
 For serverless, use RunPod's **official vLLM worker** instead of a custom
-image. Configure the endpoint with `MODEL_NAME=meta-llama/Llama-3.1-8B-Instruct`
-and your `HF_TOKEN`, and it exposes an OpenAI-compatible route. Our client
-then needs no code change at all:
+image. Configure the endpoint with
+`MODEL_NAME=mistralai/Mistral-7B-Instruct-v0.3`; it is public and does not
+require `HF_TOKEN`. The worker exposes an OpenAI-compatible route, so our
+client needs no API code change:
 
 ```bash
 VOICE_RAG_LLM_BACKEND=vllm
@@ -193,6 +194,38 @@ report timing numbers collected from a cold-starting endpoint.
 - The pod hostname is regenerated each time, which is why the base URL is an
   environment variable and not a committed setting.
 
+## Modal serverless specifics
+
+Modal runs the pinned Mistral model on an A10, caches both Hugging Face weights
+and vLLM compilation artifacts in persistent volumes, and scales the GPU to
+zero after five idle minutes. From the repository root:
+
+```powershell
+python -m pip install modal
+python -m modal setup
+
+# Load .env, including a strong, dedicated VLLM_API_KEY. Do not reuse a
+# RunPod, Azure, Hugging Face, or other provider credential for this value.
+Get-Content .env | ForEach-Object {
+    if ($_ -match '^\s*([^#][^=]*)=(.*)$') {
+        [Environment]::SetEnvironmentVariable(
+            $matches[1].Trim(), $matches[2].Trim(), "Process"
+        )
+    }
+}
+
+python -m modal secret create voice-rag-vllm `
+    "VLLM_API_KEY=$env:VLLM_API_KEY" --force
+$env:PYTHONUTF8 = "1"
+python -m modal deploy llm/modal_vllm.py
+```
+
+Set `VOICE_RAG_LLM_BASE_URL` to the URL printed by Modal with `/v1`
+appended, then run `python -m llm.client`. The bearer-auth middleware keeps
+the endpoint key out of vLLM's process arguments and startup logs. The
+deployment stays available after its container scales down; a later request
+cold-starts it again.
+
 ## Azure specifics
 
 - NC-series (A100) or NV-series. Check quota **before** planning around it:
@@ -211,9 +244,9 @@ All three live in `configs/config.yaml`. Switch with one environment variable:
 
 | Key | Hugging Face id | Gated | Note |
 |-----|-----------------|-------|------|
-| `llama31_8b` | `meta-llama/Llama-3.1-8B-Instruct` | yes | Default. Accept the licence early — approval isn't always instant |
+| `llama31_8b` | `meta-llama/Llama-3.1-8B-Instruct` | yes | Accept the licence early — approval isn't always instant |
 | `qwen3_8b` | `Qwen/Qwen3-8B` | no | Downloads immediately. Use if a licence is still pending |
-| `mistral7b_v03` | `mistralai/Mistral-7B-Instruct-v0.3` | yes | Accept terms; usually instant. 7B, not 8B |
+| `mistral7b_v03` | `mistralai/Mistral-7B-Instruct-v0.3` | no | Current default. Public Apache-2.0 model; 7B, not 8B |
 
 **Qwen3 gotcha:** it emits a `<think>` block by default, which breaks strict
 JSON from the tracker and fills the logprob sequence with reasoning tokens

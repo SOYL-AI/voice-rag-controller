@@ -19,7 +19,7 @@ Usage:
 
     from llm.config import load_config
     cfg = load_config()
-    cfg["model"]        # -> "meta-llama/Llama-3.1-8B-Instruct"
+    cfg["model"]        # -> "mistralai/Mistral-7B-Instruct-v0.3"
     cfg["backend"]      # -> "mock"
 """
 

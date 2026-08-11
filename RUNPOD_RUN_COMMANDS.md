@@ -43,7 +43,7 @@ python -m llm.config
 Confirm that the output reports:
 
 - backend `vllm`;
-- model `meta-llama/Llama-3.1-8B-Instruct`;
+- model `mistralai/Mistral-7B-Instruct-v0.3`;
 - the expected RunPod `/openai/v1` base URL;
 - logprobs enabled with `top_k=5`.
 

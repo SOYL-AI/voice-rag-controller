@@ -4,8 +4,10 @@ This document records what each experiment measures and what counts as success o
 decided BEFORE running them. We do not change success criteria after seeing results. 
 Owner: Yashmitha. Sign-off: Ryan.
 
-Status: DRAFT — remaining criteria to be confirmed with the team. The Experiment 1 
-model and dataset below are FROZEN as of 2026-08-10, before any real data collection.
+Status: DRAFT — remaining criteria to be confirmed with the team. The Experiment 1
+model and dataset below were re-frozen on 2026-08-10, before any successful real data
+collection. The initially selected gated Llama model was abandoned after endpoint startup
+failures; no completed Llama gate result was produced.
 
 ## Guiding principle
 The project claims three live decisions (when to retrieve, what to remember, when to speak) 
@@ -23,9 +25,9 @@ tests one assumption behind that claim. All outcomes, including failures, will b
 - Runs first; gates the rest.
 
 ### Frozen before collection (2026-08-10)
-- Model: `meta-llama/Llama-3.1-8B-Instruct`, served unquantized at `--dtype bfloat16`. 
+- Model: `mistralai/Mistral-7B-Instruct-v0.3`, served unquantized at `--dtype bfloat16`.
   Reported on this one model only — the other entries in configs/config.yaml are 
-  fallbacks for a pending gated download, not a comparison set. Quantized serving is 
+  fallbacks, not a comparison set. Quantized serving is
   excluded because the per-token logprobs are the measurement instrument and 
   compression shifts the distribution being measured.
 - Primary gate dataset: `llm/experiment1/dataset.jsonl`, 36 examples, balanced 18/18. 

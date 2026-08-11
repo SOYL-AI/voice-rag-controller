@@ -16,6 +16,8 @@ faiss-cpu
 # The client speaks vLLM's OpenAI-compatible API. Safe to install anywhere —
 # needed on every machine, including laptops running the mock backend.
 openai
+# Deploy the same vLLM API on serverless Modal GPUs.
+modal
 
 # --- pipeline/ (transport) ---
 fastapi
