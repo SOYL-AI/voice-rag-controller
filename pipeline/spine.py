@@ -215,8 +215,14 @@ def retrieve(
     finish_ms = now_ms()
     passages = [r["text"] for r in results]
     scores = [r["distance"] for r in results]
+    # filenames: the source document each passage came from
+    # (retrieval/search.py already returns this per hit — see its
+    # "filename" key). Logged alongside passages/scores so hit@k is
+    # computable from the log without re-running retrieval; harness/
+    # metrics.py's hit_at_k_per_turn() reads it back out.
+    filenames = [r["filename"] for r in results]
 
-    result_payload = {"passages": passages, "scores": scores}
+    result_payload = {"passages": passages, "scores": scores, "filenames": filenames}
     if mechanism is not None:
         result_payload.update(mechanism_result_fields(mechanism, launch_ms, finish_ms))
     log_writer.log_event("system", "retrieval_result", result_payload, turn_id)

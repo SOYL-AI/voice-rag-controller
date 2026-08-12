@@ -1,6 +1,8 @@
 import json
+import re
 import sys
 from collections import defaultdict
+from pathlib import Path
 
 from harness.stats import percentile, bootstrap_confidence_interval
 
@@ -474,3 +476,189 @@ if __name__ == "__main__":
 
     if len(sys.argv) == 2:
         additional_metrics(sys.argv[1])
+
+
+# ============================================================
+# HIT@K METRICS (Experiment 2)
+# IMPORTANT:
+# Everything above this section is the existing code.
+# ============================================================
+#
+# Retrieval hit@k: did the scenario's gold source document actually show
+# up in the top-k retrieved passages? Experiment 2 compares timing
+# policies (sentence_end/immediate/predicted_pause) on the claim that
+# retrieving earlier doesn't cost accuracy -- but pipeline/spine.py's
+# retrieval_result event only logged "passages" (raw text) and "scores"
+# (FAISS distances), neither of which says WHICH document a passage came
+# from, so hit@k wasn't computable from the log at all. spine.py's
+# retrieve() now also logs "filenames" (retrieval/search.py already
+# returns this per hit) -- this section reads that back out and joins it
+# against each scenario's gold `source` field from simulator/scenarios.json
+# to compute hit@3.
+
+# simulator/batch_runner.py's run_sweep() names each conversation
+# f"conv_{policy}_s{seed}_{scenario['id']:03d}" (its --single mode instead
+# uses plain f"conv_{scenario['id']:03d}", no policy/seed). This regex
+# parses both: policy/seed are None when the "_s<seed>_" segment isn't
+# there at all.
+_CONV_ID_RE = re.compile(r"^conv_(?:(?P<policy>.+)_s(?P<seed>\d+)_)?(?P<scenario_id>\d+)$")
+
+DEFAULT_SCENARIOS_FILE = Path(__file__).resolve().parent.parent / "simulator" / "scenarios.json"
+
+
+def parse_conversation_id(conversation_id):
+    """
+    Parses a batch-runner conversation_id into {policy, seed, scenario_id},
+    or None if it doesn't match the expected conv_... naming at all (e.g.
+    Week 1's hand-run conv_001 IS matched -- scenario_id=1, policy=None,
+    seed=None -- it's only conversation_ids with no numeric id suffix at
+    all that return None).
+    """
+    match = _CONV_ID_RE.match(conversation_id)
+    if not match:
+        return None
+
+    seed = match.group("seed")
+
+    return {
+        "policy": match.group("policy"),
+        "seed": int(seed) if seed is not None else None,
+        "scenario_id": int(match.group("scenario_id")),
+    }
+
+
+def load_gold_sources(scenarios_file=DEFAULT_SCENARIOS_FILE):
+    """
+    Returns {scenario_id: source_document} from simulator/scenarios.json --
+    the gold document hit@k checks retrieval against, e.g.
+    {1: "01_checkin_policy.txt", ...}.
+    """
+    with open(scenarios_file, "r", encoding="utf-8") as file:
+        scenarios = json.load(file)
+
+    return {scenario["id"]: scenario["source"] for scenario in scenarios}
+
+
+def hit_at_k_per_turn(log_path, gold_source, k=3):
+    """
+    Reads one conversation log and returns {turn_id: hit_bool} for every
+    turn that actually ran a retrieval. A turn with no retrieval_result
+    event at all (the controller decided to skip retrieval) is simply
+    absent from the result -- hit@k isn't defined when nothing was
+    retrieved.
+
+    A turn can have more than one retrieval_result event -- predicted_pause
+    can launch an early retrieval, discard it when the forecast it was
+    based on turns out wrong (see controller/timing.py's
+    wait_for_growth()/forecast_invalidated), and retrieve again on the
+    real transcript. Only one retrieval's passages ever actually reach
+    generate_answer() per turn (pipeline/spine.py's run_conversation()
+    awaits exactly one retrieval path per turn), and that's always the
+    one launched last: a discarded early attempt's retrieval_result, if it
+    even finishes before being cancelled, is logged before the fallback
+    retrieval it's replaced by, never after. So among a turn's
+    retrieval_result events, the one with the latest t_ms is the one hit@k
+    should score.
+    """
+    events_by_turn = defaultdict(list)
+
+    with open(log_path, "r", encoding="utf-8") as file:
+        for line in file:
+            line = line.strip()
+
+            if not line:
+                continue
+
+            event = json.loads(line)
+
+            if event["event_type"] == "retrieval_result":
+                events_by_turn[event["turn_id"]].append(event)
+
+    hits = {}
+
+    for turn_id, events in events_by_turn.items():
+        events.sort(key=lambda event: event["t_ms"])
+        used = events[-1]
+        filenames = used["payload"].get("filenames") or []
+        hits[turn_id] = gold_source in filenames[:k]
+
+    return hits
+
+
+def hit_at_k_report(log_dir, scenarios_file=DEFAULT_SCENARIOS_FILE, k=3):
+    """
+    Walks every *.jsonl log in log_dir, joins each conversation_id to its
+    scenario's gold source document (via parse_conversation_id() +
+    load_gold_sources()), and reports the hit@k rate -- overall and broken
+    out per timing policy, so Experiment 2's "equal accuracy across
+    policies" claim is something this prints instead of something asserted.
+
+    Logs that don't match the conv_... naming, or whose scenario_id has no
+    entry in scenarios_file, or that never ran a retrieval at all, are
+    counted and reported separately rather than silently dropped.
+    """
+    gold_sources = load_gold_sources(scenarios_file)
+
+    per_policy_hits = defaultdict(list)  # policy -> [bool, ...]
+    skipped_unparseable = []
+    skipped_no_gold = []
+    skipped_no_retrieval = []
+
+    for log_path in sorted(Path(log_dir).glob("*.jsonl")):
+        conversation_id = log_path.stem
+        parsed = parse_conversation_id(conversation_id)
+
+        if parsed is None:
+            skipped_unparseable.append(conversation_id)
+            continue
+
+        gold_source = gold_sources.get(parsed["scenario_id"])
+
+        if gold_source is None:
+            skipped_no_gold.append(conversation_id)
+            continue
+
+        turns = hit_at_k_per_turn(log_path, gold_source, k=k)
+
+        if not turns:
+            skipped_no_retrieval.append(conversation_id)
+            continue
+
+        policy_key = parsed["policy"] or "(no policy in conversation_id)"
+        per_policy_hits[policy_key].extend(turns.values())
+
+    print("\n" + "=" * 50)
+    print(f"HIT@{k} REPORT")
+    print("=" * 50)
+
+    if not per_policy_hits:
+        print("No scored conversations found.")
+    else:
+        all_hits = []
+
+        for policy in sorted(per_policy_hits):
+            hits = per_policy_hits[policy]
+            rate = 100 * sum(hits) / len(hits)
+            all_hits.extend(hits)
+            print(f"{policy:24s} hit@{k} = {rate:6.2f}%  ({sum(hits)}/{len(hits)})")
+
+        overall_rate = 100 * sum(all_hits) / len(all_hits)
+        print("-" * 50)
+        print(f"{'overall':24s} hit@{k} = {overall_rate:6.2f}%  ({sum(all_hits)}/{len(all_hits)})")
+
+    if skipped_unparseable:
+        print(f"\nSkipped (conversation_id didn't match conv_... naming): {len(skipped_unparseable)}")
+    if skipped_no_gold:
+        print(f"Skipped (scenario_id has no entry in {scenarios_file}): {len(skipped_no_gold)}")
+    if skipped_no_retrieval:
+        print(f"Skipped (no retrieval happened this conversation): {len(skipped_no_retrieval)}")
+
+    return per_policy_hits
+
+
+if __name__ == "__main__":
+
+    if len(sys.argv) >= 3 and sys.argv[1] == "--hit3":
+        log_dir = sys.argv[2]
+        scenarios_file = sys.argv[3] if len(sys.argv) > 3 else DEFAULT_SCENARIOS_FILE
+        hit_at_k_report(log_dir, scenarios_file=scenarios_file, k=3)
