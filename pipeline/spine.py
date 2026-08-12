@@ -294,11 +294,18 @@ async def _trigger_live_early_retrieval(
     predicted_pause branch for the caveat on what "cancelled" actually
     stops.
     """
+    # query_ready gate (Experiment 2 fix): wait for the earliest partial
+    # that actually has enough content to retrieve on, not literally the
+    # first partial (which on real STT is often one word) — see
+    # controller/timing.py's is_query_ready() and PartialSignalWatcher's
+    # first_ready_partial / repeated_ready_partial. Unlike the text path
+    # below, this partial IS the retrieval query: on real/synthetic audio
+    # there's no future knowledge of the final transcript to fall back to.
     if policy == "immediate":
-        partial_text = await watcher.first_partial
+        partial_text = await watcher.first_ready_partial
         trigger = "immediate"
     else:
-        partial_text = await watcher.repeated_partial
+        partial_text = await watcher.repeated_ready_partial
         trigger = "predicted_pause"
 
     mechanism = MechanismContext(
@@ -463,7 +470,12 @@ async def run_conversation(
     long saying `question` would actually take. Either way the earlier
     launch is a real background task racing real remaining work, not a
     number subtracted from a metric afterward — see controller/timing.py's
-    module docstring.
+    module docstring. Both early paths also apply Experiment 2's
+    query_ready gate (controller.timing.query_ready): immediate/
+    predicted_pause dispatch at the earliest point (real partial, or
+    simulated on the text path) with enough content to retrieve on
+    meaningfully, not the first word — see controller/timing.py's
+    is_query_ready() / SpeechPlan.dispatch_at_s().
 
     Experiment 2 (retrieval masking): force_retrieve, when not None,
     overrides WHETHER retrieval happens — True forces a retrieve, False
@@ -589,11 +601,24 @@ async def run_conversation(
 
             early_task = None
             if policy in ("immediate", "predicted_pause"):
-                trigger_s = plan.partial_at_s if policy == "immediate" else plan.pause_at_s
-                partial_text = plan.text_at(trigger_s)
+                # query_ready gate (Experiment 2 fix): don't dispatch at the
+                # raw reactive-signal point (partial_at_s / pause_at_s) if
+                # the transcript revealed by then is still too short / all
+                # function words to retrieve on meaningfully — dispatch_at_s
+                # also waits for ready_at_s. See controller/timing.py's
+                # SpeechPlan.dispatch_at_s() / is_query_ready().
+                trigger_s = plan.dispatch_at_s(policy)
+                # Simulated partial: the text path has no real STT, so this
+                # is the word-prefix a real partial transcript would
+                # plausibly contain by trigger_s, per plan_simulated_speech's
+                # speech timeline — logged as the honest asr_partial event,
+                # but NOT what's retrieved on below (see comment there).
+                simulated_partial = plan.text_at(trigger_s)
 
                 await asyncio.sleep(trigger_s)
-                log_writer.log_event("user", "asr_partial", {"text": partial_text}, turn_id)
+                log_writer.log_event(
+                    "user", "asr_partial", {"text": simulated_partial}, turn_id
+                )
 
                 mechanism = MechanismContext(
                     policy=policy,
@@ -604,7 +629,23 @@ async def run_conversation(
                 early_task = asyncio.create_task(
                     asyncio.to_thread(
                         run_retrieval_pipeline,
-                        partial_text,
+                        # Same final query as sentence_end's post-user_end
+                        # retrieval — only WHEN this fires differs by
+                        # policy, never WHAT it retrieves on (see this
+                        # module's Experiment 2 docstring paragraph below).
+                        # The text path already knows the full transcript
+                        # (it's modeling speech *timing* over a known
+                        # scenario string, not transcribing real audio), so
+                        # once the query_ready gate says the moment is
+                        # meaningful, there's no reason to retrieve on
+                        # `simulated_partial` instead of `transcript` —
+                        # doing so would just reintroduce the
+                        # degraded-query regression this gate exists to
+                        # fix. (The live/synthetic-audio path above can't
+                        # do this — it has no future knowledge of the
+                        # final transcript — so it retrieves on the real
+                        # partial it actually has.)
+                        transcript,
                         log_writer,
                         turn_id,
                         mechanism,
