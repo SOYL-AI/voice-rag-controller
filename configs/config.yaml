@@ -205,6 +205,23 @@ controller:
       # controller/timing.py.
       pause_at_fraction: 0.35
 
+    # Experiment 2 fix: query_ready gate. immediate/predicted_pause must
+    # not dispatch retrieval on a (partial) query this short/empty of
+    # content — e.g. a single word ("What"/"Tell"/"Can") tanks hit@3 even
+    # though it looks fast. Retrieval instead fires at the earliest
+    # partial (real, or simulated on the text path — see
+    # controller/timing.py) that satisfies BOTH conditions below, never
+    # later than sentence_end's own trigger. See
+    # controller/timing.py's is_query_ready().
+    query_ready:
+      # Minimum word count before a (partial) query counts as retrievable.
+      min_words: 4
+      # Require at least one word outside the small stopword set in
+      # controller/timing.py's _QUERY_READY_STOPWORDS (what, is, the, a,
+      # can, tell, ...) — guards against e.g. "What is the" (3+ words, all
+      # function words) passing on word count alone.
+      require_content_word: true
+
 # ---------------------------------------------------------------------------
 # Other components: add your section here.
 # ---------------------------------------------------------------------------
