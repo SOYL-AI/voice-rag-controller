@@ -486,7 +486,7 @@ if __name__ == "__main__":
 #
 # Retrieval hit@k: did the scenario's gold source document actually show
 # up in the top-k retrieved passages? Experiment 2 compares timing
-# policies (sentence_end/immediate/predicted_pause) on the claim that
+# policies (sentence_end/immediate/fixed_early_proxy) on the claim that
 # retrieving earlier doesn't cost accuracy -- but pipeline/spine.py's
 # retrieval_result event only logged "passages" (raw text) and "scores"
 # (FAISS distances), neither of which says WHICH document a passage came
@@ -547,9 +547,9 @@ def hit_at_k_per_turn(log_path, gold_source, k=3):
     absent from the result -- hit@k isn't defined when nothing was
     retrieved.
 
-    A turn can have more than one retrieval_result event -- predicted_pause
-    can launch an early retrieval, discard it when the forecast it was
-    based on turns out wrong (see controller/timing.py's
+    A turn can have more than one retrieval_result event -- fixed_early_proxy
+    can launch an early retrieval, discard it when the fixed proxy point's
+    assumption turns out wrong (see controller/timing.py's
     wait_for_growth()/forecast_invalidated), and retrieve again on the
     real transcript. Only one retrieval's passages ever actually reach
     generate_answer() per turn (pipeline/spine.py's run_conversation()

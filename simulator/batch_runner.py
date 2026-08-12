@@ -22,7 +22,7 @@ RESULTS_FILE = Path(__file__).parent / "batch_results.json"  # --single mode's o
 # pinned to each scenario's gold retrieval_needed label (force_retrieve)
 # so the only thing that varies between policies is WHEN retrieval fires,
 # never WHETHER it fires.
-TIMING_POLICIES = ["sentence_end", "immediate", "predicted_pause"]
+TIMING_POLICIES = ["sentence_end", "immediate", "fixed_early_proxy"]
 SEEDS = [0, 1, 2, 3, 4]
 E2_RESULTS_DIR = Path(__file__).parent / "e2_results"
 
