@@ -12,6 +12,7 @@ if str(REPO_ROOT) not in sys.path:
 import os
 
 from pipeline.spine import run_conversation
+from retrieval.rewrite import rewrite_query
 
 
 SCENARIOS_FILE = Path(__file__).parent / "scenarios.json"
@@ -33,13 +34,42 @@ def load_scenarios():
         return json.load(file)
 
 
-def run_scenario(scenario, conversation_id, force_retrieve=None, seed=None):
+def precompute_frozen_query(scenario):
+    """
+    Experiment 2's frozen-rewrite precompute step (this file is
+    Shubhankit's — flagging the change here). Runs rewrite_query() once for
+    a scenario, up front, outside the timed sweep below, and returns the
+    resulting string so run_scenario() can hand it to run_conversation() as
+    frozen_query.
+
+    Why this needs to happen here and not just inline in
+    run_retrieval_pipeline(): rewrite_query() takes ~1.5s on the real Modal
+    model. Left in the timed path, that latency gets paid by every timing
+    policy — including immediate/fixed_early_proxy, which exist specifically
+    to launch retrieval early, during speech — eating into (or entirely
+    consuming) the retrieval-overlap-with-speech window Experiment 2 is
+    trying to measure. That's a rewrite-latency confound, not a placement
+    effect: E2 measures WHEN retrieval launches relative to speech, not how
+    long the rewrite itself takes. Precomputing here, once per scenario,
+    isolates the two.
+
+    Uses the scenario's own conversation history (scenarios.json's
+    "history" field, [] for standalone questions) — the same history a
+    live rewrite_query() call would have used — so the frozen query matches
+    what the live path would have produced, not the queried question alone.
+    """
+    return rewrite_query(scenario.get("history", []), scenario["question"])
+
+
+def run_scenario(scenario, conversation_id, force_retrieve=None, seed=None, frozen_query=None):
     """
     Run one simulator scenario through the pipeline and return its result
-    record. force_retrieve/seed are forwarded to run_conversation()
-    unchanged (both default to None there, i.e. "use the live decision" /
-    "use the config's generation seed") — see pipeline/spine.py's
-    run_conversation docstring.
+    record. force_retrieve/seed/frozen_query are forwarded to
+    run_conversation() unchanged (all default to None there, i.e. "use the
+    live decision" / "use the config's generation seed" / "rewrite live,
+    in the timed path") — see pipeline/spine.py's run_conversation
+    docstring. frozen_query is normally produced by
+    precompute_frozen_query() above, ahead of the timed sweep.
     """
     scenario_id = scenario["id"]
 
@@ -53,6 +83,7 @@ def run_scenario(scenario, conversation_id, force_retrieve=None, seed=None):
                 question=scenario["question"],
                 force_retrieve=force_retrieve,
                 seed=seed,
+                frozen_query=frozen_query,
             )
         )
 
@@ -133,6 +164,15 @@ def run_warmup(scenarios, policies):
     )
     print("-" * 60)
 
+    # Precompute each warm-up scenario's rewrite once, up front (Experiment
+    # 2's frozen-query mechanism — see precompute_frozen_query()), so
+    # warm-up exercises the exact same frozen-rewrite code path the
+    # measured sweep below does, instead of warming up a live-rewrite path
+    # that never actually runs during measurement.
+    frozen_queries = {
+        scenario["id"]: precompute_frozen_query(scenario) for scenario in warmup_scenarios
+    }
+
     for policy in policies:
         os.environ["VOICE_RAG_TIMING_POLICY"] = policy
         for scenario in warmup_scenarios:
@@ -142,6 +182,7 @@ def run_warmup(scenarios, policies):
                 conversation_id,
                 force_retrieve=scenario["retrieval_needed"],
                 seed=0,
+                frozen_query=frozen_queries[scenario["id"]],
             )
             # Result intentionally dropped: warm-up runs are not part of
             # Experiment 2's measured data.
@@ -175,6 +216,21 @@ def run_sweep(scenarios, policies, seeds):
 
     run_warmup(scenarios, policies)
 
+    # Experiment 2's frozen-query precompute: run each scenario's rewrite
+    # exactly once, here, outside the timed sweep below, and reuse the
+    # result across every (policy, seed) run of that scenario. See
+    # precompute_frozen_query()'s docstring for why this needs to happen
+    # up front rather than inline per run — in short, isolating rewrite
+    # latency out of the retrieval-placement measurement.
+    print("-" * 60)
+    print(f"PRECOMPUTING REWRITES ({len(scenarios)} scenario(s), outside the timed sweep)")
+    print("-" * 60)
+    frozen_queries = {}
+    for scenario in scenarios:
+        frozen_queries[scenario["id"]] = precompute_frozen_query(scenario)
+        print(f"  scenario {scenario['id']}: {frozen_queries[scenario['id']]}")
+    print()
+
     print("-" * 60)
     print("MEASURED SWEEP (policy order interleaved per scenario/seed)")
     print("-" * 60)
@@ -203,6 +259,7 @@ def run_sweep(scenarios, policies, seeds):
                     conversation_id,
                     force_retrieve=scenario["retrieval_needed"],
                     seed=seed,
+                    frozen_query=frozen_queries[scenario["id"]],
                 )
                 result["policy"] = policy
                 result["seed"] = seed

@@ -187,6 +187,7 @@ def retrieve(
     log_writer: LogWriter,
     turn_id: int,
     mechanism: MechanismContext = None,
+    rewrite_precomputed: bool = False,
 ) -> list:
     """
     Embeds the query and searches the FAISS index built from
@@ -204,9 +205,15 @@ def retrieve(
     guessed) how this retrieval's real launch/finish times related to the
     real or modeled speech window. See controller/timing.py's docstring for
     why this makes the timing-policy effect measurable rather than asserted.
+
+    `rewrite_precomputed` (Experiment 2's frozen-query mechanism — see
+    run_retrieval_pipeline()'s `frozen_query`), when True, just marks the
+    retrieval_launched payload so a log reader can tell `query` came from a
+    rewrite done ahead of time, outside the timed window, rather than a live
+    rewrite_query() call that happened right before this launch.
     """
     launch_ms = now_ms()
-    launched_payload = {"query": query}
+    launched_payload = {"query": query, "rewrite_precomputed": rewrite_precomputed}
     if mechanism is not None:
         launched_payload.update(mechanism_launch_fields(mechanism, launch_ms))
     log_writer.log_event("system", "retrieval_launched", launched_payload, turn_id)
@@ -235,6 +242,7 @@ def run_retrieval_pipeline(
     turn_id: int,
     mechanism: MechanismContext,
     force_retrieve: Optional[bool] = None,
+    frozen_query: Optional[str] = None,
 ) -> tuple:
     """
     The controller-decide + query-rewrite + retrieve sequence — unchanged
@@ -249,6 +257,23 @@ def run_retrieval_pipeline(
     before. True/False bypasses it via controller_decide_forced() instead,
     fixing WHETHER retrieval happens so only WHEN it happens (this
     function's caller, per timing policy) varies.
+
+    frozen_query (Experiment 2's frozen-rewrite mechanism, threaded down
+    from run_conversation()): None runs rewrite_query() live, right here,
+    inside the timed window — unchanged behavior. On the real Modal model
+    that call takes ~1.5s, which E2's early timing policies (immediate/
+    fixed_early_proxy) would otherwise pay before retrieve() ever launches,
+    eating into (or entirely consuming) the retrieval-overlap-with-speech
+    window E2 is trying to measure — a rewrite-latency confound, not a
+    placement effect. When frozen_query is a string instead, the live
+    rewrite_query() call is skipped entirely and frozen_query is used
+    as-is as the retrieval query, so retrieval can launch immediately
+    without waiting on the rewrite. The caller (run_conversation(), and
+    ultimately simulator/batch_runner.py's precompute helper) is
+    responsible for having produced that string ahead of time, outside the
+    timed window. This composes with force_retrieve and the timing policy
+    as three independent knobs: frozen_query sets WHAT query, force_retrieve
+    sets WHETHER retrieval happens, and the policy sets WHEN.
     """
     if force_retrieve is None:
         action = controller_decide(transcript_snapshot, log_writer, turn_id)
@@ -259,10 +284,20 @@ def run_retrieval_pipeline(
         print("  retrieved:      skipped (controller decided not to retrieve)")
         return action, []
 
-    rewritten_query = rewrite_query([], transcript_snapshot)
-    print(f"  rewritten query: {rewritten_query}")
+    if frozen_query is None:
+        rewritten_query = rewrite_query([], transcript_snapshot)
+        print(f"  rewritten query: {rewritten_query}")
+    else:
+        rewritten_query = frozen_query
+        print(f"  frozen query:   {rewritten_query}  (rewrite precomputed, live rewrite skipped)")
 
-    passages = retrieve(rewritten_query, log_writer, turn_id, mechanism=mechanism)
+    passages = retrieve(
+        rewritten_query,
+        log_writer,
+        turn_id,
+        mechanism=mechanism,
+        rewrite_precomputed=frozen_query is not None,
+    )
     print(f"  retrieved:      {len(passages)} passage(s)  (timing_trigger={mechanism.trigger})")
     return action, passages
 
@@ -274,6 +309,7 @@ async def _trigger_live_early_retrieval(
     log_writer: LogWriter,
     turn_id: int,
     force_retrieve: Optional[bool] = None,
+    frozen_query: Optional[str] = None,
 ) -> tuple:
     """
     Live/synthetic-audio path only. Waits for the real signal `policy`
@@ -291,6 +327,10 @@ async def _trigger_live_early_retrieval(
     force_retrieve: forwarded to run_retrieval_pipeline() unchanged — see
     that function's docstring. This function only decides WHEN the pipeline
     launches; it never inspects force_retrieve itself.
+
+    frozen_query: forwarded to run_retrieval_pipeline() unchanged — see that
+    function's docstring. Same non-involvement as force_retrieve: this
+    function only decides WHEN, never WHAT query gets used.
 
     Returns (task, mechanism). `task` is None only when fixed_early_proxy's
     fixed-point assumption gets invalidated (the user kept talking past the
@@ -330,6 +370,7 @@ async def _trigger_live_early_retrieval(
             turn_id,
             mechanism,
             force_retrieve,
+            frozen_query,
         )
     )
 
@@ -447,6 +488,7 @@ async def run_conversation(
     question: str = None,
     force_retrieve: Optional[bool] = None,
     seed: Optional[int] = None,
+    frozen_query: Optional[str] = None,
 ) -> Path:
     """
     Runs one full conversation through every stage above, in order,
@@ -498,6 +540,22 @@ async def run_conversation(
     every other call to run_conversation() (including the batch runner's)
     on the live decision, unchanged.
 
+    Experiment 2 (frozen rewrite): frozen_query, when not None, is
+    forwarded unchanged to every run_retrieval_pipeline() call this turn
+    (and, in the live/synthetic-audio path, to _trigger_live_early_retrieval()
+    too) — see run_retrieval_pipeline()'s docstring for why: rewrite_query()
+    takes ~1.5s on the real Modal model, which would otherwise eat into (or
+    consume outright) the retrieval-overlap-with-speech window the timing
+    policies above are trying to create, confounding rewrite latency with
+    retrieval placement. frozen_query lets a caller (simulator/
+    batch_runner.py's precompute helper) run the rewrite once, up front,
+    outside the timed window, and hand back the resulting string so
+    retrieval can launch on it immediately. It composes with force_retrieve
+    and the timing policy as independent knobs: frozen_query is WHAT query,
+    force_retrieve is WHETHER retrieval happens, policy is WHEN. Default
+    None leaves every other call to run_conversation() on the live
+    rewrite_query() call, unchanged.
+
     Experiment 2 (seed sweep): seed, when not None, is forwarded to the
     model stage's generate_answer() -> llm/client.py's generate_answer() ->
     client.generate(seed=seed) — the same seed override
@@ -536,7 +594,8 @@ async def run_conversation(
                 )
                 trigger_task = asyncio.create_task(
                     _trigger_live_early_retrieval(
-                        policy, watcher, turn_start_ms, log_writer, turn_id, force_retrieve
+                        policy, watcher, turn_start_ms, log_writer, turn_id,
+                        force_retrieve, frozen_query,
                     )
                 )
                 done, _pending = await asyncio.wait(
@@ -584,7 +643,7 @@ async def run_conversation(
                     ),
                 )
                 action, passages = run_retrieval_pipeline(
-                    transcript, log_writer, turn_id, late_mechanism, force_retrieve
+                    transcript, log_writer, turn_id, late_mechanism, force_retrieve, frozen_query
                 )
         else:
             # Text path: no audio, no STT — the given question *is* the
@@ -660,6 +719,7 @@ async def run_conversation(
                         turn_id,
                         mechanism,
                         force_retrieve,
+                        frozen_query,
                     )
                 )
                 await asyncio.sleep(plan.total_speech_s - trigger_s)
@@ -680,7 +740,7 @@ async def run_conversation(
                     speech_window_ms_getter=_planned_window,
                 )
                 action, passages = run_retrieval_pipeline(
-                    transcript, log_writer, turn_id, mechanism, force_retrieve
+                    transcript, log_writer, turn_id, mechanism, force_retrieve, frozen_query
                 )
 
         answer = generate_answer(passages, log_writer, turn_id, transcript, seed=seed)
