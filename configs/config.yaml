@@ -177,21 +177,24 @@ controller:
   # Experiment 2 (timing value): WHEN retrieval launches relative to the
   # user's speech. See controller/timing.py. The retrieve-or-not rule above
   # never changes with this — only the trigger moment does.
-  #   sentence_end    — retrieve only after user_end (baseline; unchanged
-  #                      pipeline behavior).
-  #   immediate       — retrieve as soon as a partial transcript exists,
-  #                      overlapping retrieval with the tail of speech.
-  #   predicted_pause — retrieve on a forecast mid-utterance pause, earlier
-  #                      than `immediate`. Real pause detection needs a
-  #                      signal audio/stt.py doesn't expose yet (see
-  #                      controller/timing.py's docstring) — this policy
-  #                      runs on a clearly-labeled proxy until that lands.
+  #   sentence_end      — retrieve only after user_end (baseline; unchanged
+  #                        pipeline behavior).
+  #   immediate         — retrieve as soon as a partial transcript exists,
+  #                        overlapping retrieval with the tail of speech.
+  #   fixed_early_proxy — retrieve at a fixed point in the modeled speech
+  #                        timeline, earlier than `immediate`. NOT a
+  #                        forecast of a real pause — there's no
+  #                        pause-prediction signal wired in; real pause
+  #                        detection needs a signal audio/stt.py doesn't
+  #                        expose yet (see controller/timing.py's
+  #                        docstring). This policy runs on a
+  #                        clearly-labeled fixed proxy until that lands.
   # Override without editing this file: VOICE_RAG_TIMING_POLICY=immediate
   timing:
     policy: sentence_end
     # There's no real audio in the text-input batch/experiment path
     # (simulator scenarios run through pipeline/spine.py's `question=`
-    # argument), so `immediate`/`predicted_pause` have nothing real to
+    # argument), so `immediate`/`fixed_early_proxy` have nothing real to
     # trigger on there unless we model how long saying the transcript
     # would actually take and sleep through it for real. See
     # controller/timing.py's plan_simulated_speech().
@@ -200,12 +203,12 @@ controller:
       # transcript = word_count / words_per_minute * 60s, actually slept
       # through (asyncio.sleep), not just subtracted from a metric.
       words_per_minute: 150
-      # predicted_pause's proxy trigger point, as a fraction of the
-      # (modeled) speech duration. Clearly a stub for the text path — see
-      # controller/timing.py.
+      # fixed_early_proxy's fixed proxy trigger point, as a fraction of the
+      # (modeled) speech duration — not a forecast, just a fixed point.
+      # Clearly a stub for the text path — see controller/timing.py.
       pause_at_fraction: 0.35
 
-    # Experiment 2 fix: query_ready gate. immediate/predicted_pause must
+    # Experiment 2 fix: query_ready gate. immediate/fixed_early_proxy must
     # not dispatch retrieval on a (partial) query this short/empty of
     # content — e.g. a single word ("What"/"Tell"/"Can") tanks hit@3 even
     # though it looks fast. Retrieval instead fires at the earliest

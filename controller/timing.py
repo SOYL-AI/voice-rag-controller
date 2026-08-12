@@ -14,25 +14,27 @@ pipeline/spine.py's job.
 
 Three policies:
 
-  sentence_end    — retrieve only after user_end (baseline; the pipeline's
-                     behavior before this module existed).
-  immediate       — retrieve as soon as a partial transcript exists,
-                     overlapping retrieval with the tail of the user's
-                     speech instead of waiting for it to finish.
-  predicted_pause — retrieve on a *forecast* mid-utterance pause, earlier
-                     than `immediate` would react. This is Experiment 2's
-                     hard policy. A real forecast needs a signal
-                     audio/stt.py doesn't expose today: transcribe_stream()
-                     (audio/stt.py) only surfaces the *final* trailing-
-                     silence endpoint (user_end), never an intermediate
-                     silence gap. Adding that would mean editing Adithi's
-                     file, which is out of scope here — so this policy runs
-                     on a clearly-labeled proxy instead (see
-                     PartialSignalWatcher.repeated_partial and
-                     plan_simulated_speech's pause_at_s), with a structural
-                     "forecast invalidated -> cancel" path wired in now so
-                     swapping the proxy for a real signal later is a
-                     one-function change, not a redesign.
+  sentence_end      — retrieve only after user_end (baseline; the pipeline's
+                       behavior before this module existed).
+  immediate         — retrieve as soon as a partial transcript exists,
+                       overlapping retrieval with the tail of the user's
+                       speech instead of waiting for it to finish.
+  fixed_early_proxy — retrieve at a fixed point in the modeled speech
+                       timeline, earlier than `immediate` would react. This
+                       is Experiment 2's hard policy. It is NOT a forecast of
+                       a real user-hold/pause window — there's no
+                       pause-prediction signal wired in. transcribe_stream()
+                       (audio/stt.py) only surfaces the *final* trailing-
+                       silence endpoint (user_end), never an intermediate
+                       silence gap, so a genuine forecast would need editing
+                       Adithi's file, which is out of scope here — this
+                       policy instead dispatches at a clearly-labeled fixed
+                       proxy point (see PartialSignalWatcher.repeated_partial
+                       and plan_simulated_speech's pause_at_s), with a
+                       structural "proxy assumption invalidated -> cancel"
+                       path wired in now so swapping the proxy for a real
+                       forecast/VAD signal later is a one-function change,
+                       not a redesign.
 
 Why the resulting latency difference is real, not asserted:
   Retrieval (controller_decide + rewrite_query + retrieve — all real,
@@ -54,7 +56,7 @@ real sleep interacts with the real retrieval latency — the assumption is
 "how long is the window," never "how much faster immediate is."
 
 The query_ready gate (Experiment 2 fix, see is_query_ready() below):
-immediate/predicted_pause originally triggered on the first reactive signal
+immediate/fixed_early_proxy originally triggered on the first reactive signal
 available (first partial; first repeated/stable partial) with no floor on
 how much of the query that signal actually contained — on short scenario
 questions that's a single word ("What"/"Tell"/"Can"), so retrieval ran on
@@ -86,7 +88,7 @@ from eventlog.log_writer import now_ms  # noqa: E402 -- read-only import, see Pa
 
 _DEFAULT_CONFIG_PATH = _REPO_ROOT / "configs" / "config.yaml"
 
-VALID_POLICIES = {"sentence_end", "immediate", "predicted_pause"}
+VALID_POLICIES = {"sentence_end", "immediate", "fixed_early_proxy"}
 
 # Mirrors configs/config.yaml's controller.timing — kept in sync the same
 # way controller/decide.py's _DEFAULT_DECISION_CFG mirrors controller.decision.
@@ -96,7 +98,7 @@ _DEFAULT_TIMING_CFG = {
         "words_per_minute": 150,
         "pause_at_fraction": 0.35,
     },
-    # query_ready gate (Experiment 2 fix): immediate/predicted_pause must
+    # query_ready gate (Experiment 2 fix): immediate/fixed_early_proxy must
     # not dispatch retrieval on a (partial) query this short/empty of
     # content — see is_query_ready() below and SpeechPlan.dispatch_at_s().
     "query_ready": {
@@ -244,14 +246,14 @@ def _partial_interval_s(path: Optional[str] = None) -> float:
 class SpeechPlan:
     """
     How long saying `transcript` would take, and when `immediate` /
-    `predicted_pause` would trigger inside that window — all in seconds,
+    `fixed_early_proxy` would trigger inside that window — all in seconds,
     all meant to be actually asyncio.sleep()'d through by pipeline/
     spine.py, not just recorded.
     """
 
     total_speech_s: float
     partial_at_s: float  # immediate's raw reactive-signal trigger point
-    pause_at_s: float    # predicted_pause's raw reactive-signal trigger point (earlier; stub — see module docstring)
+    pause_at_s: float    # fixed_early_proxy's raw fixed-proxy trigger point (a fixed fraction of the modeled speech duration, not a reactive signal; earlier than partial_at_s — see module docstring)
     ready_at_s: float         # earliest elapsed_s at which the revealed transcript satisfies query_ready (see dispatch_at_s)
     partial_interval_s: float  # audio.stt.partial_interval_ms in seconds — see dispatch_at_s's immediate branch
     words: List[str] = field(default_factory=list)
@@ -259,7 +261,7 @@ class SpeechPlan:
     def dispatch_at_s(self, policy: str) -> float:
         """
         Experiment 2 fix: the actual time `policy` ("immediate" or
-        "predicted_pause") should dispatch retrieval at, after applying
+        "fixed_early_proxy") should dispatch retrieval at, after applying
         the query_ready gate. Both are floored at ready_at_s — the
         earliest point the revealed transcript actually has enough
         content to retrieve on meaningfully (see is_query_ready()) — and
@@ -268,16 +270,17 @@ class SpeechPlan:
 
         Below that shared floor, ready_at_s always dominates partial_at_s/
         pause_at_s for any min_words >= 2 (reaching two words alone takes
-        longer than either raw reactive-signal point), which would
-        otherwise make immediate and predicted_pause dispatch at the
-        exact same instant — collapsing the very timing difference
-        Experiment 2 measures. So the two policies apply the shared floor
-        differently, matching what each is actually modeling:
+        longer than either raw trigger point), which would otherwise make
+        immediate and fixed_early_proxy dispatch at the exact same
+        instant — collapsing the very timing difference Experiment 2
+        measures. So the two policies apply the shared floor differently,
+        matching what each is actually modeling:
 
-          predicted_pause — a forecast. It acts the moment the query_ready
-          floor is met, on the model's belief the query is ready, without
-          waiting to observe that confirmed by another signal. Dispatches
-          at exactly max(pause_at_s, ready_at_s).
+          fixed_early_proxy — a fixed proxy point in the modeled speech
+          timeline, not a forecast of anything real. It acts the moment
+          the query_ready floor is met at that fixed point, without
+          waiting to observe anything real confirm it. Dispatches at
+          exactly max(pause_at_s, ready_at_s).
 
           immediate — reactive. It only acts once it *observes* a partial
           actually carrying that much content, which (mirroring the real
@@ -286,11 +289,11 @@ class SpeechPlan:
           technically becomes ready. Dispatches at
           max(partial_at_s, ready_at_s + partial_interval_s).
 
-        This keeps predicted_pause's documented "earlier than immediate"
+        This keeps fixed_early_proxy's documented "earlier than immediate"
         property real after the accuracy gate, instead of the gate erasing
         it — while never letting either policy dispatch before ready_at_s.
         """
-        if policy == "predicted_pause":
+        if policy == "fixed_early_proxy":
             raw_trigger_s = max(self.pause_at_s, self.ready_at_s)
         else:
             raw_trigger_s = max(self.partial_at_s, self.ready_at_s + self.partial_interval_s)
@@ -321,7 +324,8 @@ def plan_simulated_speech(transcript: str, path: Optional[str] = None) -> Speech
     either. partial_at_s anchors to the real audio.stt.partial_interval_ms
     (capped so it can't exceed the speech window); pause_at_s is
     deliberately earlier still, capped below partial_at_s, since
-    predicted_pause is supposed to fire ahead of a merely-reactive partial.
+    fixed_early_proxy is supposed to fire ahead of a merely-reactive
+    partial (immediate) — it doesn't wait to observe anything real.
     """
     words = transcript.split()
     timing_cfg = load_timing_config(path)
@@ -419,10 +423,11 @@ class PartialSignalWatcher:
             if is_repeat and ready and not self.repeated_ready_partial.done():
                 self.repeated_ready_partial.set_result(text)
 
-            # Forecast-invalidation signal: a later partial that's grown
-            # past a given baseline means speech continued past the point
-            # predicted_pause forecast a pause — the caller uses this to
-            # cancel a now-stale early retrieval. See wait_for_growth().
+            # Proxy-assumption-invalidation signal: a later partial that's
+            # grown past a given baseline means speech continued past the
+            # point fixed_early_proxy assumed a pause — the caller uses
+            # this to cancel a now-stale early retrieval. See
+            # wait_for_growth().
             for baseline, fut in list(self._growth_waiters):
                 if not fut.done() and text != baseline and len(text) > len(baseline):
                     fut.set_result(text)
@@ -436,9 +441,10 @@ class PartialSignalWatcher:
     def wait_for_growth(self, baseline_text: str) -> asyncio.Future:
         """
         A future that resolves the moment a partial arrives that's grown
-        past `baseline_text` — i.e. the forecast a pause was starting at
-        baseline_text turned out to be wrong. Cancel it if you stop caring
-        (e.g. the early retrieval already finished).
+        past `baseline_text` — i.e. the fixed proxy point's assumption that
+        a pause was starting at baseline_text turned out to be wrong.
+        Cancel it if you stop caring (e.g. the early retrieval already
+        finished).
         """
         fut = self._loop.create_future()
         if baseline_text and self._last_partial_text and len(self._last_partial_text) > len(
@@ -497,7 +503,10 @@ def mechanism_result_fields(mechanism: MechanismContext, launch_ms: int, finish_
     (often known by now even if it wasn't at launch), plus
     overlap_with_speech_ms — how much of [launch_ms, finish_ms] actually
     fell inside the (real or modeled) speech window — and
-    forecast_invalidated for predicted_pause's cancel-on-invalidation path.
+    forecast_invalidated for fixed_early_proxy's cancel-on-invalidation
+    path (field name kept for log-schema stability; what it actually
+    tracks is the fixed proxy point's assumption being invalidated by
+    continued speech, not a real forecast going wrong).
     """
     user_end_ms = mechanism.user_end_ms_getter()
     window = mechanism.speech_window_ms_getter()

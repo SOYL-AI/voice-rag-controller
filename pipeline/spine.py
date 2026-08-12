@@ -241,7 +241,7 @@ def run_retrieval_pipeline(
     from Phase 2's logic (controller/decide.py's retrieve-or-not rule never
     varies with the timing policy). Only *when* run_conversation() calls
     this changes per policy: at user_end for sentence_end, or earlier (on a
-    partial transcript, real or modeled) for immediate/predicted_pause. See
+    partial transcript, real or modeled) for immediate/fixed_early_proxy. See
     run_conversation()'s timing-policy branches below.
 
     force_retrieve (Experiment 2's mask, threaded down from
@@ -278,7 +278,7 @@ async def _trigger_live_early_retrieval(
     """
     Live/synthetic-audio path only. Waits for the real signal `policy`
     needs from the real STT (first asr_partial for immediate; a stable
-    repeated partial as predicted_pause's pause proxy — see
+    repeated partial as fixed_early_proxy's proxy trigger — see
     controller/timing.py's PartialSignalWatcher), then launches
     run_retrieval_pipeline() as a background task that races the rest of
     transcribe_stream() for real.
@@ -292,13 +292,13 @@ async def _trigger_live_early_retrieval(
     that function's docstring. This function only decides WHEN the pipeline
     launches; it never inspects force_retrieve itself.
 
-    Returns (task, mechanism). `task` is None only when predicted_pause's
-    forecast gets invalidated (the user kept talking past the point a
-    pause was predicted) before the early retrieval finished — the task is
-    cancelled and run_conversation() falls back to a normal post-user_end
-    retrieval on the real final transcript instead. See this function's
-    predicted_pause branch for the caveat on what "cancelled" actually
-    stops.
+    Returns (task, mechanism). `task` is None only when fixed_early_proxy's
+    fixed-point assumption gets invalidated (the user kept talking past the
+    point a pause was assumed) before the early retrieval finished — the
+    task is cancelled and run_conversation() falls back to a normal
+    post-user_end retrieval on the real final transcript instead. See this
+    function's fixed_early_proxy branch for the caveat on what "cancelled"
+    actually stops.
     """
     # query_ready gate (Experiment 2 fix): wait for the earliest partial
     # that actually has enough content to retrieve on, not literally the
@@ -312,7 +312,7 @@ async def _trigger_live_early_retrieval(
         trigger = "immediate"
     else:
         partial_text = await watcher.repeated_ready_partial
-        trigger = "predicted_pause"
+        trigger = "fixed_early_proxy"
 
     mechanism = MechanismContext(
         policy=policy,
@@ -333,16 +333,16 @@ async def _trigger_live_early_retrieval(
         )
     )
 
-    if policy == "predicted_pause":
+    if policy == "fixed_early_proxy":
         # Structural cancel-on-invalidation: if a later partial shows the
-        # user kept talking past the point we forecast a pause at, the
-        # early retrieval was launched on a stale/incomplete query — cancel
-        # it rather than use its result. Where the real forecast signal
-        # belongs long-term: a genuine mid-utterance silence gap from
-        # audio/stt.py's VAD state, distinct from its final user_end
-        # endpoint — that needs a small addition to Adithi's file, out of
-        # scope here, so wait_for_growth()'s repeated-partial-outgrown
-        # proxy stands in for it.
+        # user kept talking past the fixed point this policy assumed a
+        # pause at, the early retrieval was launched on a stale/incomplete
+        # query — cancel it rather than use its result. Where a real
+        # forecast signal belongs long-term: a genuine mid-utterance
+        # silence gap from audio/stt.py's VAD state, distinct from its
+        # final user_end endpoint — that needs a small addition to
+        # Adithi's file, out of scope here, so wait_for_growth()'s
+        # repeated-partial-outgrown proxy stands in for it.
         growth_future = watcher.wait_for_growth(partial_text)
         done, _pending = await asyncio.wait(
             {task, growth_future}, return_when=asyncio.FIRST_COMPLETED
@@ -354,13 +354,16 @@ async def _trigger_live_early_retrieval(
             # guarantee the underlying thread stops immediately. Either
             # way, retrieval_launched/retrieval_result already logged (or
             # about to be) for this attempt stay in the record with
-            # forecast_invalidated=True; they just aren't this turn's
+            # forecast_invalidated=True (field name kept for log-schema
+            # stability — see controller/timing.py's
+            # mechanism_result_fields()); they just aren't this turn's
             # passages.
             task.cancel()
             mechanism.forecast_invalidated = True
             print(
-                "  [predicted_pause] forecast invalidated — speech continued "
-                "past the predicted pause; discarding the early retrieval."
+                "  [fixed_early_proxy] proxy assumption invalidated — speech "
+                "continued past the fixed proxy point; discarding the early "
+                "retrieval."
             )
             return None, mechanism
         if not growth_future.done():
@@ -469,7 +472,7 @@ async def run_conversation(
     the retrieval it can trigger actually run is controlled by
     controller.timing.policy (see controller/timing.py), not hardcoded
     here. sentence_end (baseline) runs it after the transcript is final,
-    same as always. immediate/predicted_pause run it earlier — on a real
+    same as always. immediate/fixed_early_proxy run it earlier — on a real
     partial transcript from the live STT in the live/synthetic-audio path,
     or, in the text path (no real audio to derive one from), on a modeled
     partial produced partway through a real asyncio.sleep() sized to how
@@ -478,7 +481,7 @@ async def run_conversation(
     number subtracted from a metric afterward — see controller/timing.py's
     module docstring. Both early paths also apply Experiment 2's
     query_ready gate (controller.timing.query_ready): immediate/
-    predicted_pause dispatch at the earliest point (real partial, or
+    fixed_early_proxy dispatch at the earliest point (real partial, or
     simulated on the text path) with enough content to retrieve on
     meaningfully, not the first word — see controller/timing.py's
     is_query_ready() / SpeechPlan.dispatch_at_s().
@@ -490,7 +493,7 @@ async def run_conversation(
     with every timing policy above unchanged: the mask only ever swaps out
     which decision run_retrieval_pipeline() logs and acts on, never when
     run_retrieval_pipeline() gets called, so a forced-retrieve turn still
-    launches early under immediate/predicted_pause and at user_end under
+    launches early under immediate/fixed_early_proxy and at user_end under
     sentence_end, exactly as an unmasked turn would. Default None leaves
     every other call to run_conversation() (including the batch runner's)
     on the live decision, unchanged.
@@ -527,7 +530,7 @@ async def run_conversation(
 
             early_task = None
             mechanism = None
-            if policy in ("immediate", "predicted_pause"):
+            if policy in ("immediate", "fixed_early_proxy"):
                 transcribe_task = asyncio.create_task(
                     transcribe(audio_stream, stt, watcher, turn_id)
                 )
@@ -585,7 +588,7 @@ async def run_conversation(
                 )
         else:
             # Text path: no audio, no STT — the given question *is* the
-            # transcript. immediate/predicted_pause need a real
+            # transcript. immediate/fixed_early_proxy need a real
             # elapsed-time window to launch retrieval inside, which the
             # text path doesn't otherwise have — plan_simulated_speech()
             # models how long saying `question` would take from its actual
@@ -606,10 +609,11 @@ async def run_conversation(
                 return (turn_start_ms, _planned_user_end_ms())
 
             early_task = None
-            if policy in ("immediate", "predicted_pause"):
+            if policy in ("immediate", "fixed_early_proxy"):
                 # query_ready gate (Experiment 2 fix): don't dispatch at the
-                # raw reactive-signal point (partial_at_s / pause_at_s) if
-                # the transcript revealed by then is still too short / all
+                # raw trigger point (partial_at_s / pause_at_s — reactive
+                # for immediate, a fixed proxy point for fixed_early_proxy)
+                # if the transcript revealed by then is still too short / all
                 # function words to retrieve on meaningfully — dispatch_at_s
                 # also waits for ready_at_s. See controller/timing.py's
                 # SpeechPlan.dispatch_at_s() / is_query_ready().
