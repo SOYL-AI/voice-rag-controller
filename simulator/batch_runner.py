@@ -114,7 +114,53 @@ def run_single_pass(scenarios):
 
 
 # ---------------------------------------------------------------------------
+# Warm-up: a few throwaway runs of every policy before the measured sweep
+# starts, so model loading / connection setup / first-call cold-start cost
+# lands here instead of contaminating the timing comparison below. Results
+# are discarded on purpose -- nothing here is written to disk or added to
+# any summary.
+# ---------------------------------------------------------------------------
+def run_warmup(scenarios, policies):
+    warmup_scenarios = scenarios[: min(2, len(scenarios))]
+    if not warmup_scenarios:
+        return
+
+    print("-" * 60)
+    print(
+        f"WARM-UP ({len(warmup_scenarios)} scenario(s) x "
+        f"{len(policies)} polic{'y' if len(policies) == 1 else 'ies'}, "
+        "results discarded, not recorded)"
+    )
+    print("-" * 60)
+
+    for policy in policies:
+        os.environ["VOICE_RAG_TIMING_POLICY"] = policy
+        for scenario in warmup_scenarios:
+            conversation_id = f"warmup_{policy}_{scenario['id']:03d}"
+            run_scenario(
+                scenario,
+                conversation_id,
+                force_retrieve=scenario["retrieval_needed"],
+                seed=0,
+            )
+            # Result intentionally dropped: warm-up runs are not part of
+            # Experiment 2's measured data.
+
+    print("Warm-up complete (not recorded).")
+    print()
+
+
+# ---------------------------------------------------------------------------
 # Default mode: Experiment 2's full sweep.
+#
+# Run order is interleaved by (scenario, seed): for every scenario/seed
+# pair we run all policies back-to-back before moving to the next scenario,
+# rather than running policy A across every scenario, then all of B, then
+# all of C. Any gradual drift over the course of the sweep (caching warming
+# further, connection pooling settling in, etc.) then lands on all three
+# policies roughly equally instead of systematically favoring whichever
+# policy's block happened to run last. Results are still bucketed and
+# written out per (policy, seed), identical to the old block-order output.
 # ---------------------------------------------------------------------------
 def run_sweep(scenarios, policies, seeds):
     print("=" * 60)
@@ -127,22 +173,28 @@ def run_sweep(scenarios, policies, seeds):
 
     E2_RESULTS_DIR.mkdir(parents=True, exist_ok=True)
 
-    summary = []
+    run_warmup(scenarios, policies)
 
-    for policy in policies:
-        # Read by controller/timing.py's resolve_policy() at the top of
-        # every run_conversation() call. Set once per policy, before that
-        # policy's runs start; asyncio.run() below is called sequentially
-        # (never concurrently), so there's no race on this env var.
-        os.environ["VOICE_RAG_TIMING_POLICY"] = policy
+    print("-" * 60)
+    print("MEASURED SWEEP (policy order interleaved per scenario/seed)")
+    print("-" * 60)
 
-        for seed in seeds:
-            print("-" * 60)
-            print(f"Policy={policy}  Seed={seed}")
-            print("-" * 60)
+    runs_by_key = {(policy, seed): [] for policy in policies for seed in seeds}
 
-            results = []
-            for scenario in scenarios:
+    for seed in seeds:
+        for scenario in scenarios:
+            print(f"  Scenario={scenario['id']}  Seed={seed}  "
+                  f"policies={policies}")
+
+            for policy in policies:
+                # Read by controller/timing.py's resolve_policy() at the
+                # top of every run_conversation() call. Set immediately
+                # before each individual run now (rather than once per
+                # policy block) since policies interleave; asyncio.run()
+                # below is called sequentially (never concurrently), so
+                # there's no race on this env var.
+                os.environ["VOICE_RAG_TIMING_POLICY"] = policy
+
                 conversation_id = (
                     f"conv_{policy}_s{seed}_{scenario['id']:03d}"
                 )
@@ -154,7 +206,19 @@ def run_sweep(scenarios, policies, seeds):
                 )
                 result["policy"] = policy
                 result["seed"] = seed
-                results.append(result)
+                runs_by_key[(policy, seed)].append(result)
+
+    print()
+
+    # Write out and summarize in the original policy-major, seed-minor
+    # order so file names/contents and the summary table are unchanged
+    # from the old block-order run -- only the execution order above
+    # changed, not this output structure.
+    summary = []
+
+    for policy in policies:
+        for seed in seeds:
+            results = runs_by_key[(policy, seed)]
 
             out_path = E2_RESULTS_DIR / f"e2_{policy}_seed{seed}.json"
             with open(out_path, "w", encoding="utf-8") as file:
