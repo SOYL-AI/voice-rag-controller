@@ -44,6 +44,8 @@ if str(_REPO_ROOT) not in sys.path:
 
 from retrieval.rewrite import rewrite_query
 from controller.decide import decide
+from controller.baseline import Ctx, get_baseline
+import controller.baselines  # noqa: F401 -- import-for-side-effect: registers every baseline (see controller/baselines/__init__.py) so get_baseline(name) below can find them
 from controller.timing import (
     MechanismContext,
     PartialSignalWatcher,
@@ -179,6 +181,64 @@ def controller_decide_forced(force_retrieve: bool, log_writer: LogWriter, turn_i
     return action
 
 
+def controller_decide_baseline(
+    baseline: str,
+    transcript_snapshot: str,
+    log_writer: LogWriter,
+    turn_id: int,
+    conversation_id: str,
+    turn_start_ms: Optional[int],
+    mechanism: MechanismContext,
+    prices: Optional[dict],
+) -> dict:
+    """
+    Experiment 3's baseline-controller entry point: parallels
+    controller_decide()/controller_decide_forced() above, but sources the
+    retrieve-or-not (and timing-label, and memory_op) decision from a
+    registered controller/baseline.py BaselineController instead of
+    controller/decide.py's live rule or Experiment 2's fixed mask. Selected
+    via run_conversation()'s baseline= parameter, resolved to a class
+    through controller/baseline.py's get_baseline(name) (controller.
+    baselines' package import above is what makes every baseline findable
+    by name in the first place — see that package's __init__.py).
+
+    Builds the Ctx snapshot every baseline sees (controller/baseline.py's
+    Ctx docstring documents each field's meaning in full):
+      - transcript/turn_id/conversation_id: as given.
+      - signals: currently just {"tracker_slots": ...} — the same
+        state-tracker slot-fill state controller_decide() reads via
+        llm.tracker.track(), so a baseline gets at least one real
+        uncertainty signal to key off of even before Experiment 1's other
+        belief signals (entropy, retrieval scores) are wired in here.
+      - elapsed_ms: time since turn_start_ms, or 0 if the caller has no
+        turn-start reference (turn_start_ms=None).
+      - user_end_known: whether `mechanism` already has a real/planned
+        user_end timestamp at this point.
+      - prices: forwarded from run_conversation()'s baseline_prices, {} by
+        default — ignored by every baseline except a price-aware one
+        (B9/Ours).
+
+    Logs via the baseline's own decide_and_log() — the E3-additive
+    superset of decide()'s payload shape (adds "baseline"/"timing"/
+    "memory_op"/"lambda_l"/"lambda_c"; "action"/"reason" stay exactly
+    where a Phase 2 log reader already expects them) — see
+    controller/baseline.py's BaselineController.log_decision().
+    """
+    controller = get_baseline(baseline)
+    tracker_slots = tracker_track([transcript_snapshot])
+    elapsed_ms = (now_ms() - turn_start_ms) if turn_start_ms is not None else 0
+    ctx = Ctx(
+        transcript=transcript_snapshot,
+        signals={"tracker_slots": tracker_slots},
+        elapsed_ms=elapsed_ms,
+        user_end_known=mechanism.user_end_ms_getter() is not None,
+        turn_id=turn_id,
+        conversation_id=conversation_id,
+        prices=prices or {},
+    )
+    return controller.decide_and_log(ctx, log_writer)
+
+
 # ---------------------------------------------------------------------------
 # Stage 4 — retrieve
 # ---------------------------------------------------------------------------
@@ -243,6 +303,9 @@ def run_retrieval_pipeline(
     mechanism: MechanismContext,
     force_retrieve: Optional[bool] = None,
     frozen_query: Optional[str] = None,
+    baseline: Optional[str] = None,
+    turn_start_ms: Optional[int] = None,
+    baseline_prices: Optional[dict] = None,
 ) -> tuple:
     """
     The controller-decide + query-rewrite + retrieve sequence — unchanged
@@ -274,8 +337,43 @@ def run_retrieval_pipeline(
     timed window. This composes with force_retrieve and the timing policy
     as three independent knobs: frozen_query sets WHAT query, force_retrieve
     sets WHETHER retrieval happens, and the policy sets WHEN.
+
+    baseline (Experiment 3's baseline-controller selector, threaded down
+    from run_conversation()): None (default) leaves the retrieve-or-not
+    decision on controller_decide()/controller_decide_forced() exactly as
+    before — E3's wiring is fully opt-in and changes nothing about E2's or
+    Phase 2's behavior. A baseline name (e.g. "b0") instead sources the
+    decision from controller_decide_baseline() above, via a registered
+    controller/baseline.py BaselineController. Mutually exclusive with
+    force_retrieve — raises ValueError if both are given, since an E3
+    baseline makes its own retrieve/skip call and mixing that with E2's
+    fixed mask would leave it ambiguous which one actually decided for a
+    given turn.
+
+    turn_start_ms / baseline_prices: only meaningful when baseline is not
+    None — forwarded to controller_decide_baseline() to build that
+    baseline's Ctx.elapsed_ms and Ctx.prices respectively. Ignored
+    otherwise.
     """
-    if force_retrieve is None:
+    if baseline is not None:
+        if force_retrieve is not None:
+            raise ValueError(
+                "run_retrieval_pipeline: baseline and force_retrieve are "
+                "mutually exclusive — an E3 baseline makes its own "
+                "retrieve/skip call, so E2's fixed mask can't also apply "
+                "to the same turn."
+            )
+        action = controller_decide_baseline(
+            baseline,
+            transcript_snapshot,
+            log_writer,
+            turn_id,
+            log_writer.conversation_id,
+            turn_start_ms,
+            mechanism,
+            baseline_prices,
+        )
+    elif force_retrieve is None:
         action = controller_decide(transcript_snapshot, log_writer, turn_id)
     else:
         action = controller_decide_forced(force_retrieve, log_writer, turn_id)
@@ -489,6 +587,8 @@ async def run_conversation(
     force_retrieve: Optional[bool] = None,
     seed: Optional[int] = None,
     frozen_query: Optional[str] = None,
+    baseline: Optional[str] = None,
+    baseline_prices: Optional[dict] = None,
 ) -> Path:
     """
     Runs one full conversation through every stage above, in order,
@@ -563,7 +663,37 @@ async def run_conversation(
     (retrieval/timing/masking above are all deterministic given the same
     mask and policy); default None leaves generation on whatever
     configs/config.yaml's llm.generation.seed says, unchanged.
+
+    Experiment 3 (baseline controllers): baseline, when not None, sources
+    the retrieve-or-not (and timing-label, memory_op) decision from a
+    registered controller/baseline.py BaselineController (e.g. "b0")
+    instead of controller/decide.py's live rule — see
+    controller_decide_baseline() above. baseline_prices, when given, is
+    forwarded to that baseline's Ctx.prices ({"lambda_l": ..., "lambda_c":
+    ...}); ignored by every baseline except a price-aware one (B9/Ours).
+    Both default to None, i.e. unchanged behavior — every existing caller
+    of run_conversation() (audio_in/live use, the batch runner, E2's
+    sweep) is unaffected. baseline is mutually exclusive with
+    force_retrieve (see run_retrieval_pipeline()'s docstring) and, in this
+    stub wiring, only supported on the text (question=) path — the
+    live/synthetic-audio path's early-retrieval trigger
+    (_trigger_live_early_retrieval()) still only knows how to run E2's
+    live decide()/forced-mask decision, so baseline is rejected up front
+    when question is None rather than silently ignored. WHEN retrieval
+    launches is still governed by controller.timing.policy exactly as
+    before — a baseline's own Decision.timing is logged (see
+    controller/baseline.py's Decision) but does not yet drive dispatch
+    timing; wiring that up is part of the full E3 sweep, not this
+    interface stub.
     """
+    if baseline is not None and question is None:
+        raise ValueError(
+            "run_conversation: baseline= is only wired into the text "
+            "(question=) path for now — pass question=... , or see this "
+            "function's docstring for why the live/synthetic-audio path "
+            "isn't supported yet."
+        )
+
     cfg = load_config()
     log_writer = LogWriter(conversation_id=conversation_id)
     turn_id = 1  # Week 1's canned conversation is a single turn.
@@ -720,6 +850,9 @@ async def run_conversation(
                         mechanism,
                         force_retrieve,
                         frozen_query,
+                        baseline,
+                        turn_start_ms,
+                        baseline_prices,
                     )
                 )
                 await asyncio.sleep(plan.total_speech_s - trigger_s)
@@ -740,7 +873,8 @@ async def run_conversation(
                     speech_window_ms_getter=_planned_window,
                 )
                 action, passages = run_retrieval_pipeline(
-                    transcript, log_writer, turn_id, mechanism, force_retrieve, frozen_query
+                    transcript, log_writer, turn_id, mechanism, force_retrieve, frozen_query,
+                    baseline, turn_start_ms, baseline_prices,
                 )
 
         answer = generate_answer(passages, log_writer, turn_id, transcript, seed=seed)
