@@ -162,12 +162,6 @@ def main():
 
     else:
         print("No Dead Air values found.")
-
-
-if __name__ == "__main__":
-    main()
-
-
 # ============================================================
 # ADDITIONAL METRICS
 # IMPORTANT:
@@ -471,11 +465,6 @@ def additional_metrics(log_file):
 # ============================================================
 # RUN ADDITIONAL METRICS
 # ============================================================
-
-if __name__ == "__main__":
-
-    if len(sys.argv) == 2:
-        additional_metrics(sys.argv[1])
 
 
 # ============================================================
@@ -1161,3 +1150,9 @@ if __name__ == "__main__":
     elif len(sys.argv) >= 3 and sys.argv[1] == "--hit3":
         log_dir = sys.argv[2]
         hit_at_k_report(log_dir, k=3)
+
+    elif len(sys.argv) == 2:
+        additional_metrics(sys.argv[1])
+
+    else:
+        main()
