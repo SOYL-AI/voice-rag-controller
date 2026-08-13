@@ -35,7 +35,10 @@ if str(_REPO_ROOT) not in sys.path:
 # below can find them by name.
 import controller.baselines  # noqa: F401
 from controller.baseline import list_baselines
+from llm.client import make_client
+from llm.config import load_config as load_llm_config
 from pipeline.spine import run_conversation
+from simulator.e3_signals import precompute_signals
 
 SCENARIOS_FILE = Path(__file__).parent / "scenarios.json"
 RESULTS_FILE = Path(__file__).parent / "e3_sweep_results.json"
@@ -49,23 +52,36 @@ def load_scenarios():
         return json.load(file)
 
 
-def run_one_scenario(scenario, baseline_name: str, conversation_id: str) -> dict:
+def run_one_scenario(
+    scenario, baseline_name: str, conversation_id: str, llm_client=None
+) -> dict:
     """
     Run one scenario's question through the real pipeline with
     baseline=baseline_name, and return a small result record — enough to
     eyeball that the baseline actually ran (action/reason logged, log file
     produced) without pulling in harness/metrics.py's full scoring, which
     is out of scope for this stub (see this module's docstring).
+
+    Precomputes this scenario's Experiment 1 belief-signal snapshot once
+    (simulator/e3_signals.py's precompute_signals()) before running the
+    baseline, and passes it through to run_conversation(signals=...) — see
+    that module's docstring for why this has to happen before, and
+    identically for, every baseline compared against this scenario, rather
+    than as a live probe inside the baseline's own decision. `llm_client`,
+    when given, is reused for the precompute call instead of opening a new
+    one per scenario (see main()).
     """
     scenario_id = scenario["id"]
     print(f"  Scenario {scenario_id}: {scenario['question']!r}")
 
     try:
+        signals = precompute_signals(scenario["question"], client=llm_client)
         log_path = asyncio.run(
             run_conversation(
                 conversation_id,
                 question=scenario["question"],
                 baseline=baseline_name,
+                signals=signals,
             )
         )
         action = _read_controller_action(log_path)
@@ -154,10 +170,18 @@ def main():
     print(f"Scenarios : {len(scenarios)}")
     print()
 
+    # Built once and reused across every scenario's precompute_signals()
+    # call — a fresh client per scenario would mean re-opening an HTTP
+    # session (vllm backend) for no reason; see llm/client.py's
+    # generate_answer() for the same reasoning.
+    llm_client = make_client(load_llm_config())
+
     results = []
     for scenario in scenarios:
         conversation_id = f"e3_{args.baseline}_{scenario['id']:03d}"
-        results.append(run_one_scenario(scenario, args.baseline, conversation_id))
+        results.append(
+            run_one_scenario(scenario, args.baseline, conversation_id, llm_client)
+        )
 
     with open(RESULTS_FILE, "w", encoding="utf-8") as file:
         json.dump(results, file, indent=2)
