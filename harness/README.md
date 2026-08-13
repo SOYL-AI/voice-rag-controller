@@ -128,3 +128,26 @@ conversations unattended, and Experiment 2 produces results with confidence inte
 
 Lakshya (his simulator feeds your batch runner), Renya (co-runs Experiment 2 and owns the 
 timing policies in the controller), and Yashmitha (compiles your results into tables).
+
+---
+
+## Experiment 3 (E3) — Shubhankit's frontier analysis, plus B7 if there's room
+
+**Owner: Shubhankit.** The E3 sweep (all baselines × price grid × scenarios × seeds) writes
+logs through the shared `controller_action` event, additively carrying `baseline` and, for
+B9/Ours, `lambda_l`/`lambda_c` — see [`../E3_BASELINE_INTERFACE.md`](../E3_BASELINE_INTERFACE.md)
+for the full contract every baseline (including yours, if you build B7) implements against
+`controller/baseline.py`'s `BaselineController`.
+
+- **Frontier analysis (main deliverable):** build the accuracy-vs-p95-TTFA and
+  accuracy-vs-compute frontiers, per `(baseline, price point)`, with bootstrap confidence
+  bands (reuse `stats.py`'s bootstrap helper). This is what turns per-run metrics into the
+  headline comparison — B0-B7 as single points, B9/Ours as swept price-point frontiers. Read
+  the dominance verdict off where Ours's frontier sits relative to B9's.
+- **B7 (MemGPT-style memory), if you have room:** a baseline whose memory_op decisions follow
+  a MemGPT-style write/summarize/evict policy, everything else held simple. Implements the
+  same `BaselineController` interface (copy
+  `controller/baselines/b0_never_retrieve.py` as the template) — build it only after the
+  frontier analysis is solid, since that's the piece every other baseline's result depends on.
+
+Same fairness rule as every baseline: same tuning budget, thresholds swept, no strawmen.

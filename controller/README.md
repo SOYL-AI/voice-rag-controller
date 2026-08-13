@@ -98,3 +98,28 @@ stage on the returned action — the decision is no longer just logged, it actua
 what the pipeline does. Ryan's confidence logprobs and retrieval scores are the natural next
 signals to fold into this same rule once they're available at decide()-time (e.g. by moving
 the decision point, or adding a second, post-generation check).
+
+---
+
+## Experiment 3 (E3) — Renya's baselines: B8, B9, Ours
+
+**Owner: Renya.** The controller variants — the three baselines built directly against the
+E3 shared contract (`controller/baseline.py`'s `Ctx` / `Decision` / `BaselineController`; copy
+`controller/baselines/b0_never_retrieve.py` as the reference template). Full contract in
+[`E3_BASELINE_INTERFACE.md`](../E3_BASELINE_INTERFACE.md) — read that first.
+
+- **B8 (independent-best):** the strongest single controller built with no shared state or
+  price signal — rival A from the pre-registration. Takes the best of Lakshya's B4-B6
+  adaptive-retrieval baselines as its trigger.
+- **B9 (decomposed-with-prices):** trigger, timing, and memory each separately optimize
+  `quality − λ_l·latency − λ_c·compute` against the shared `ctx.prices` — coordinated by
+  price, but not jointly reasoned. Rival B.
+- **Ours (unified controller):** one controller reasons about all three decisions together
+  under the same objective — the coupling hypothesis this whole project is testing.
+
+**The crux is B9 vs Ours** — decomposed vs unified, same objective and same prices, so the
+comparison isolates coupling itself rather than any other advantage. Implement that
+distinction faithfully; it's the actual research question (H3).
+
+All three get the same tuning budget as every other baseline: swept thresholds on the dev
+split, no strawmen.
