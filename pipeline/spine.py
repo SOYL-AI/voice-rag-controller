@@ -190,6 +190,7 @@ def controller_decide_baseline(
     turn_start_ms: Optional[int],
     mechanism: MechanismContext,
     prices: Optional[dict],
+    signals: Optional[dict] = None,
 ) -> dict:
     """
     Experiment 3's baseline-controller entry point: parallels
@@ -205,11 +206,11 @@ def controller_decide_baseline(
     Builds the Ctx snapshot every baseline sees (controller/baseline.py's
     Ctx docstring documents each field's meaning in full):
       - transcript/turn_id/conversation_id: as given.
-      - signals: currently just {"tracker_slots": ...} — the same
+      - signals: `signals` (see below), plus "tracker_slots" — the same
         state-tracker slot-fill state controller_decide() reads via
-        llm.tracker.track(), so a baseline gets at least one real
-        uncertainty signal to key off of even before Experiment 1's other
-        belief signals (entropy, retrieval scores) are wired in here.
+        llm.tracker.track(), so a baseline gets that real uncertainty
+        signal to key off of regardless of whether a precomputed snapshot
+        was given.
       - elapsed_ms: time since turn_start_ms, or 0 if the caller has no
         turn-start reference (turn_start_ms=None).
       - user_end_known: whether `mechanism` already has a real/planned
@@ -217,6 +218,19 @@ def controller_decide_baseline(
       - prices: forwarded from run_conversation()'s baseline_prices, {} by
         default — ignored by every baseline except a price-aware one
         (B9/Ours).
+
+    signals: Experiment 1's belief-signal snapshot for this scenario,
+    precomputed and frozen ahead of time by simulator/e3_signals.py's
+    precompute_signals() — same shape as llm/signals.py's
+    build_signal_snapshot() ("signal_schema_version", "model" incl.
+    max_entropy_nats/mean_entropy_nats/etc. under "uncertainty",
+    "retrieval", "tracker"). Merged into Ctx.signals as-is, with
+    "tracker_slots" added on top (never overwritten by a key inside
+    `signals` — build_signal_snapshot() doesn't produce a "tracker_slots"
+    key, so there's no collision today, but the merge order still makes
+    the live tracker_slots authoritative if that ever changes). None
+    (default) leaves Ctx.signals exactly as before this parameter existed:
+    just {"tracker_slots": ...}.
 
     Logs via the baseline's own decide_and_log() — the E3-additive
     superset of decide()'s payload shape (adds "baseline"/"timing"/
@@ -227,9 +241,11 @@ def controller_decide_baseline(
     controller = get_baseline(baseline)
     tracker_slots = tracker_track([transcript_snapshot])
     elapsed_ms = (now_ms() - turn_start_ms) if turn_start_ms is not None else 0
+    ctx_signals = dict(signals) if signals else {}
+    ctx_signals["tracker_slots"] = tracker_slots
     ctx = Ctx(
         transcript=transcript_snapshot,
-        signals={"tracker_slots": tracker_slots},
+        signals=ctx_signals,
         elapsed_ms=elapsed_ms,
         user_end_known=mechanism.user_end_ms_getter() is not None,
         turn_id=turn_id,
@@ -306,6 +322,7 @@ def run_retrieval_pipeline(
     baseline: Optional[str] = None,
     turn_start_ms: Optional[int] = None,
     baseline_prices: Optional[dict] = None,
+    signals: Optional[dict] = None,
 ) -> tuple:
     """
     The controller-decide + query-rewrite + retrieve sequence — unchanged
@@ -354,6 +371,14 @@ def run_retrieval_pipeline(
     None — forwarded to controller_decide_baseline() to build that
     baseline's Ctx.elapsed_ms and Ctx.prices respectively. Ignored
     otherwise.
+
+    signals: only meaningful when baseline is not None — Experiment 1's
+    precomputed belief-signal snapshot for this scenario (see
+    simulator/e3_signals.py's precompute_signals()), forwarded straight to
+    controller_decide_baseline() to build that baseline's Ctx.signals.
+    None (default) leaves Ctx.signals at just {"tracker_slots": ...},
+    unchanged from before this parameter existed. Ignored when baseline is
+    None.
     """
     if baseline is not None:
         if force_retrieve is not None:
@@ -372,6 +397,7 @@ def run_retrieval_pipeline(
             turn_start_ms,
             mechanism,
             baseline_prices,
+            signals,
         )
     elif force_retrieve is None:
         action = controller_decide(transcript_snapshot, log_writer, turn_id)
@@ -589,6 +615,7 @@ async def run_conversation(
     frozen_query: Optional[str] = None,
     baseline: Optional[str] = None,
     baseline_prices: Optional[dict] = None,
+    signals: Optional[dict] = None,
 ) -> Path:
     """
     Runs one full conversation through every stage above, in order,
@@ -685,6 +712,22 @@ async def run_conversation(
     controller/baseline.py's Decision) but does not yet drive dispatch
     timing; wiring that up is part of the full E3 sweep, not this
     interface stub.
+
+    signals: Experiment 1's belief-signal snapshot for this scenario —
+    entropy/confidence over a closed-book generation, plus tracker
+    uncertainty — precomputed and frozen once per scenario ahead of time
+    by simulator/e3_signals.py's precompute_signals(), the same pattern as
+    Experiment 2's frozen retrieve/skip mask and frozen query rewrite
+    above: every baseline compared against a given scenario sees the
+    identical snapshot, so a baseline like B4 (FLARE confidence) or B6
+    (DRAGIN entropy) triggers on real belief signals without each baseline
+    paying for its own live model probe. Forwarded unchanged to every
+    run_retrieval_pipeline() call this turn on the text path; ignored
+    (never read) when baseline is None. Only meaningful together with
+    baseline= — see run_retrieval_pipeline()'s docstring for how it
+    becomes Ctx.signals. Default None leaves every other caller of
+    run_conversation() unaffected: Ctx.signals stays exactly
+    {"tracker_slots": ...} as before this parameter existed.
     """
     if baseline is not None and question is None:
         raise ValueError(
@@ -853,6 +896,7 @@ async def run_conversation(
                         baseline,
                         turn_start_ms,
                         baseline_prices,
+                        signals,
                     )
                 )
                 await asyncio.sleep(plan.total_speech_s - trigger_s)
@@ -874,7 +918,7 @@ async def run_conversation(
                 )
                 action, passages = run_retrieval_pipeline(
                     transcript, log_writer, turn_id, mechanism, force_retrieve, frozen_query,
-                    baseline, turn_start_ms, baseline_prices,
+                    baseline, turn_start_ms, baseline_prices, signals,
                 )
 
         answer = generate_answer(passages, log_writer, turn_id, transcript, seed=seed)
