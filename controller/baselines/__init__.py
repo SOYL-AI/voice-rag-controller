@@ -19,6 +19,9 @@ from controller.baselines import b0_never_retrieve  # noqa: F401 -- import-for-s
 from controller.baselines import b8_independent  # noqa: F401 -- import-for-side-effect: runs @register("b8")
 from controller.baselines import b9_decomposed  # noqa: F401 -- import-for-side-effect: runs @register("b9")
 from controller.baselines import ours  # noqa: F401 -- import-for-side-effect: runs @register("ours")
+from controller.baselines import b4_flare          # noqa: F401
+from controller.baselines import b5_adaptive_rag   # noqa: F401
+from controller.baselines import b6_dragin         # noqa: F401
 
 # B1-B7 land here as their modules are built, e.g.:
 #   from controller.baselines import b1_threshold_tracker  # noqa: F401
