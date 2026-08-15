@@ -318,14 +318,69 @@ controller:
     # measured gap between them comes from joint-vs-decomposed reasoning
     # and not from one side having a better belief estimate.
     voi:
-      # max_entropy_nats has no natural ceiling, so it's divided by this to
-      # land on [0, 1]. Sweep it.
-      max_entropy_nats_scale: 2.5
-      # Blend weights when both the entropy and tracker signals are
-      # present. Entropy carries more because E1 was designed to validate
-      # that family.
-      entropy_weight: 0.65
-      tracker_weight: 0.35
+      # The belief -> quality mapping, read as
+      #     voi = P(retrieval is needed | this turn's uncertainty signal)
+      # which is the quantity Experiment 1 exists to establish. Shared
+      # UNCHANGED by ours and b9 (both call _objective.estimate_voi), so it
+      # can never advantage one side; only the joint-vs-decomposed USE of
+      # the number differs.
+      calibration:
+        # *** THE ONE-LINE SWAP. *** Point this at a committed Experiment 1
+        # result JSON carrying a top-level "calibration" object
+        # {signal, kind, intercept, slope, calibrated, source, auc} and its
+        # fitted coefficients override everything below. No code changes.
+        from_artifact: null
+
+        # Which key of signals["model"]["uncertainty"] to read. A config
+        # knob and not a constant because WHICH signal E1 validates is E1's
+        # result, not an assumption this repo gets to bake in.
+        signal: max_entropy_nats
+
+        # *** INTERIM — NOT A CALIBRATION. ***
+        #
+        # There is no valid E1 fit in this repo. The only E1 artifact is
+        # llm/experiment1/results/smoke_mock.json, which self-reports
+        #     verdict: NOT_EVALUATED_SMOKE, valid_gate_run: false
+        # because its logprobs come from llm/client.py's MockClient and are
+        # drawn independently of the retrieval_needed labels.
+        #
+        # Fitting P(retrieval_needed | max_entropy_nats) on that file's 180
+        # labelled samples gives
+        #     P = sigmoid(+2.3964 - 1.5144 * H),  raw AUC 0.4453
+        # i.e. a NEGATIVE slope, below chance, with mean entropy higher on
+        # the not-needed class. Every other signal in that file scores in
+        # [0.48, 0.55] too — that is what "no signal" looks like, not a
+        # calibration. Installing those coefficients would invert the
+        # uncertainty -> value direction the whole controller rests on, so
+        # _objective.load_voi_calibration() REFUSES any calibrated fit with
+        # slope <= 0 rather than let it land silently.
+        #
+        # Until real coefficients exist, the interim mapping is the
+        # structural normalizer: voi = H / ln(top_k + 1). It is monotone
+        # increasing in uncertainty (the direction E1 predicts) and has no
+        # free parameter to tune, but it claims no fit, and calibrated:
+        # false keeps it from being described as one in the paper.
+        kind: normalized          # "logistic" once real coefficients land
+        normalizer: auto          # -> ln(llm.logprobs.top_k + 1) = ln(6)
+        intercept: 0.0            # unused while kind: normalized
+        slope: 1.0                # unused while kind: normalized
+        calibrated: false
+        auc: null
+        source: >-
+          INTERIM - structural normalizer H/ln(top_k+1), NOT an Experiment 1
+          calibration. Replace with the committed E1 calibration from the
+          Modal run by setting from_artifact.
+
+        # For reference, the mock-fitted coefficients described above. They
+        # are NOT loaded (and would be rejected by the sign guard). They are
+        # recorded so the number in the paper's methods section can be
+        # checked against something, not so they can be used:
+        #   kind: logistic
+        #   intercept: 2.3964
+        #   slope: -1.5144
+        #   auc: 0.4453
+        #   calibrated: false   # mock logprobs; smoke run, not evidence
+
       # Never estimate a retrieval as worth exactly nothing — a hard zero
       # would make the retrieve branch unreachable at any nonzero price,
       # which would be an artifact of the estimator, not a decision.
