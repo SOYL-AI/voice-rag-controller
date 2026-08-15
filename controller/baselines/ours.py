@@ -32,22 +32,63 @@ ACTIONS, scores every candidate under one objective, and takes the argmax:
 
 The shared state is the candidate itself. Both terms that involve timing
 sit inside ONE expression that also involves the retrieve decision, so
-neither can be evaluated without the other. That's the coupling, and it
-runs through two independent channels:
+neither can be evaluated without the other. That's the coupling. The
+objective provides two channels for it to run through, and — this is
+measured, not assumed — only one of them is active in this setup:
 
   CHANNEL 1 (latency): exposed_latency_s(t) = retrieval_latency - overlap(t).
-    Retrieval launched during speech is partly hidden from the user, so
-    retrieval's latency COST depends on the timing chosen alongside it.
-    Measured overlap: sentence_end 0 ms, immediate 50 ms,
+    ACTIVE. Retrieval launched during speech is partly hidden from the
+    user, so retrieval's latency COST depends on the timing chosen
+    alongside it. Measured overlap: sentence_end 0 ms, immediate 50 ms,
     fixed_early_proxy 188 ms (see _objective.py).
 
   CHANNEL 2 (quality): voi * (1 - partial_query_risk(t)).
-    Retrieval launched early runs on a partial transcript, so retrieval's
-    quality VALUE also depends on the timing chosen alongside it. Without
-    this channel the controller would trivially always pick the
-    highest-overlap policy and "joint reasoning" would be a one-line
-    max(); with it, the timing choice is a real trade-off that the
-    retrieve decision has a stake in.
+    EMPIRICALLY INACTIVE. partial_query_risk is MEASURED at 0 for all
+    three policies — E2's per-policy hit@3 is identical (250/250 each),
+    and identical per-instance at k=1 too, so this is not a saturation
+    artifact. See _objective.partial_query_risk() for the fit, the
+    reproduction command, and the two properties of E2's setup responsible
+    (a frozen precomputed query, plus timing.py's query_ready gate). The
+    factor is therefore identically 1 here, and the term is retained
+    parameterized because it would be nonzero on harder retrieval or on a
+    live partial-transcript path.
+
+This is a clean isolation, not a limitation. Because the quality channel
+contributes nothing, any Ours-vs-B9 gap the sweep measures is attributable
+to the latency channel and to nothing else — there is no quality effect
+available to confound it.
+
+---------------------------------------------------------------------------
+*** THE PAPER CLAIM (H3) — the defense, written where the code is ***
+---------------------------------------------------------------------------
+Coupling matters even when the timing sub-decision is trivial, because
+knowing timing is cheap shifts the retrieve/skip threshold. Ours accepts
+borderline retrievals a decomposed controller, pricing latency in
+isolation, declines — the band
+
+    lambda_l * (retrieval_latency - overlap)  <  voi  <  lambda_l * retrieval_latency
+
+The anticipated objection, and the answer:
+
+  OBJECTION. "With risk measured at 0, picking a timing is trivial — both
+  controllers just take the highest-overlap policy. So B9 chooses the same
+  timing as Ours, and there is nothing left for joint reasoning to do."
+
+  ANSWER. The premise is right and the conclusion does not follow. B9 does
+  pick the same timing (see b9_decomposed.py: its timing optimizer is
+  GOOD, which is what makes B9 a strong rival). The effect does not live
+  in WHICH timing gets picked. It lives in WHETHER TO RETRIEVE AT ALL.
+  B9's retrieval optimizer prices retrieval at the full 0.672s because it
+  structurally cannot see the timing decision, so it declines retrievals
+  whose true exposed cost is 0.484s. Its own timing optimizer then goes on
+  to select the very policy that would have hidden that 0.188s — a saving
+  already forfeited by a decision taken separately and earlier. The two
+  sub-decisions are individually optimal and jointly incoherent, and the
+  incoherence is a skipped retrieval, not a mistimed one.
+
+  So the trivial timing sub-decision does not weaken H3; it sharpens it.
+  It removes the alternative explanation ("Ours just times better") and
+  leaves exactly one mechanism standing.
 
 ---------------------------------------------------------------------------
 THE PREDICTION THAT DISTINGUISHES OURS FROM B9
@@ -56,23 +97,31 @@ B9's retrieval optimizer prices retrieval at its FULL latency, because it
 has no access to the timing decision (that's what decomposition means).
 So the two retrieve when:
 
-    B9   retrieves iff  voi > lambda_l * 0.672 + lambda_c
-    Ours retrieves iff  voi > lambda_l * 0.484 + lambda_c    (via
-                              fixed_early_proxy: 0.672 - 0.188 overlap,
-                              ignoring the small risk/waste terms)
+    B9   retrieves iff  voi > lambda_l * 0.672 + lambda_c * 1.00
+    Ours retrieves iff  voi > lambda_l * 0.484 + lambda_c * 1.08   (via
+                              fixed_early_proxy: 0.672 - 0.188 overlap;
+                              risk is 0 so it drops out exactly, and the
+                              compute terms differ only by waste_rate)
 
 which leaves a band
 
-    lambda_l * 0.484 + lambda_c  <  voi  <  lambda_l * 0.672 + lambda_c
+    lambda_l * 0.484 + 1.08 lambda_c  <  voi  <=  lambda_l * 0.672 + lambda_c
 
 where B9 skips a retrieval that Ours correctly takes early — net-positive
-value that decomposition cannot see. The band's width is lambda_l * 0.188
+value that decomposition cannot see. As lambda_c -> 0 this is exactly the
+headline form in the PAPER CLAIM block above, of width lambda_l * 0.188
 (exactly the measured overlap), so the effect is PRICE-DEPENDENT by
-construction: wide at high lambda_l, negligible at low lambda_l. That is
+construction: wide at high lambda_l, vanishing at lambda_l = 0. That is
 why E3 sweeps a price grid rather than reporting one number, and it makes
 the claim falsifiable — if measured speech overlap collapses, so does the
-predicted advantage. Run this module directly (see __main__) to print the
-band at any price point.
+predicted advantage.
+
+_objective.divergence_band() computes this band exactly (it carries the
+risk and waste terms rather than dropping them), and decide() below tags
+every decision that lands inside it with a greppable DIVERGENCE_BAND
+marker, so the retrieve/skip divergence is READ off a sweep log rather
+than reconstructed from it. Run this module directly (see __main__) to
+print the band at a range of price points.
 
 ---------------------------------------------------------------------------
 MEMORY (Experiment 4)
@@ -100,11 +149,13 @@ from controller.baseline import BaselineController, Ctx, Decision, register
 from controller.baselines._objective import (
     Prices,
     decide_memory,
+    divergence_band,
     exposed_latency_s,
     load_e3_config,
     partial_query_risk,
     read_prices,
     retrieval_compute_units,
+    retrieval_latency_s,
     scalarized_utility,
     voi_estimate,
 )
@@ -278,6 +329,7 @@ class UnifiedController(BaselineController):
             f"comp={best.compute_units:.2f}) "
             f"beats {_describe(runner_up)} by {margin:+.3f} "
             f"@ lambda_l={prices.lambda_l:g}, lambda_c={prices.lambda_c:g}"
+            f" | {_band_note(best, voi, prices, cfg)}"
         )
 
         return Decision(
@@ -297,6 +349,74 @@ def _describe(scored: Optional[ScoredCandidate]) -> str:
     if not scored.candidate.retrieve:
         return "skip"
     return f"retrieve@{scored.candidate.timing}"
+
+
+def _band_note(
+    best: ScoredCandidate, voi: float, prices: Prices, cfg: dict
+) -> str:
+    """
+    The retrieve/skip-boundary annotation appended to every reason string.
+
+    This exists so E3's central claim is READ off a sweep log rather than
+    reverse-engineered from one. It always reports the exposed-vs-full
+    latency split and the band bounds at this price point, and when the
+    decision actually falls in the band it emits the token
+
+        DIVERGENCE_BAND[ours-takes]
+
+    which b9_decomposed.py mirrors as DIVERGENCE_BAND[b9-declines] on the
+    same voi. So `grep DIVERGENCE_BAND` over a sweep's logs returns exactly
+    the turns where joint reasoning changed the outcome, from both sides.
+
+    Purely diagnostic: computed after the argmax, and nothing here is fed
+    back into the decision (see _objective.divergence_band()).
+    """
+    band = divergence_band(prices, cfg)
+
+    if not best.candidate.retrieve:
+        if voi > band.b9_cut:
+            # REVERSE divergence: B9 retrieves where Ours skips. Only
+            # reachable when band.width <= 0, i.e. when the latency saving
+            # no longer covers the extra waste_rate Ours pays for an early
+            # launch (lambda_l at or near 0, or lambda_c large). Logged
+            # under the same greppable token, with the direction named, so
+            # a sweep that produces these does not look like a clean sweep
+            # of one-sided wins when it isn't.
+            return (
+                f"{band.describe()} | DIVERGENCE_BAND[b9-takes-ours-skips]: "
+                f"voi={voi:.3f} > B9 cut {band.b9_cut:.3f} but <= Ours cut "
+                f"{band.ours_cut:.3f} — band inverted (width {band.width:+.3f}), "
+                f"early launch's waste outprices its hidden latency"
+            )
+        # Below both cuts: neither retrieves, nothing divides the two here.
+        # Logged anyway so a skip is distinguishable from a turn the
+        # annotation simply didn't run on.
+        return (
+            f"exposed_lat=0.000s (skipped; would have been "
+            f"{band.exposed_latency_s:.3f}s @{band.timing} vs B9's full "
+            f"{band.full_latency_s:.3f}s) | {band.describe()} | "
+            f"band:below (voi={voi:.3f}, B9 skips too)"
+        )
+
+    hidden_s = retrieval_latency_s(cfg) - best.latency_s
+    split = (
+        f"exposed_lat={best.latency_s:.3f}s "
+        f"(full {retrieval_latency_s(cfg):.3f}s - hidden {hidden_s:.3f}s)"
+    )
+
+    if band.contains(voi):
+        return (
+            f"{split} | {band.describe()} | "
+            f"DIVERGENCE_BAND[ours-takes]: voi={voi:.3f} is in "
+            f"({band.ours_cut:.3f},{band.b9_cut:.3f}] -> B9 prices this "
+            f"retrieval at the full {band.full_latency_s:.3f}s in isolation "
+            f"and SKIPS it; Ours takes it @{best.candidate.timing} at an "
+            f"exposed {band.exposed_latency_s:.3f}s"
+        )
+    return (
+        f"{split} | {band.describe()} | "
+        f"band:above (voi={voi:.3f} > {band.b9_cut:.3f}, B9 retrieves too)"
+    )
 
 
 if __name__ == "__main__":
@@ -343,20 +463,64 @@ if __name__ == "__main__":
 
     print()
     print("=" * 72)
-    print("Ours-vs-B9 divergence band (see module docstring)")
+    print("Ours-vs-B9 RETRIEVE/SKIP DIVERGENCE BAND — the H3 claim")
     print("=" * 72)
+    print("Coupling matters even though the timing sub-decision is trivial")
+    print("(partial_query_risk measured = 0): knowing timing is cheap shifts")
+    print("the retrieve/skip threshold. Everything inside the band is a")
+    print("retrieval Ours takes and B9 declines.")
+    print()
+
     full_s = retrieval_latency_s(cfg)
     best_timing = max(_TIMING_CANDIDATES, key=lambda t: overlap_s(t, cfg))
-    hidden_s = overlap_s(best_timing, cfg)
-    print(f"full retrieval latency : {full_s:.3f}s")
-    print(f"best-overlap timing    : {best_timing} (hides {hidden_s:.3f}s)")
+    print(f"full retrieval latency : {full_s:.3f}s   (measured, logs/)")
+    print(
+        f"best-overlap timing    : {best_timing} "
+        f"(hides {overlap_s(best_timing, cfg):.3f}s, measured)"
+    )
+    print(
+        "quality channel        : partial_query_risk = "
+        + ", ".join(f"{t}={partial_query_risk(t, cfg):.2f}" for t in _TIMING_CANDIDATES)
+        + "  -> INACTIVE"
+    )
+    print()
+    print(
+        f"  {'lambda_l':>8} {'lambda_c':>8} | {'Ours cut':>9} {'B9 cut':>9} "
+        f"{'width':>8} | timing"
+    )
+    print("  " + "-" * 62)
     for lambda_l in (0.1, 0.5, 1.0, 2.0, 5.0):
         lambda_c = 0.05
-        b9_cut = lambda_l * full_s + lambda_c
-        ours_cut = lambda_l * (full_s - hidden_s) + lambda_c
+        band = divergence_band(Prices(lambda_l=lambda_l, lambda_c=lambda_c), cfg)
         print(
-            f"  lambda_l={lambda_l:<4g} lambda_c={lambda_c:g} -> "
-            f"B9 retrieves iff voi>{b9_cut:.3f}, "
-            f"Ours iff voi>{ours_cut:.3f}  "
-            f"[band width {b9_cut - ours_cut:.3f}]"
+            f"  {lambda_l:>8g} {lambda_c:>8g} | {band.ours_cut:>9.3f} "
+            f"{band.b9_cut:>9.3f} {band.width:>+8.3f} | {band.timing}"
         )
+    print()
+    print("  read: at this price, any turn with Ours-cut < voi <= B9-cut is one")
+    print("  Ours retrieves and B9 skips. Those turns are tagged")
+    print("  DIVERGENCE_BAND[ours-takes] in Ours's logs and")
+    print("  DIVERGENCE_BAND[b9-declines] in B9's — grep either to find them.")
+
+    # Demonstrate the tag firing on a voi placed inside the band, so the
+    # self-test shows the actual log line and not just the arithmetic.
+    print()
+    print("=" * 72)
+    print("The tag, fired on a voi placed inside the band")
+    print("=" * 72)
+    demo_prices = Prices(lambda_l=1.0, lambda_c=0.05)
+    demo_band = divergence_band(demo_prices, cfg)
+    target_voi = (demo_band.ours_cut + demo_band.b9_cut) / 2.0
+    # voi_estimate() with only a tracker signal returns unknown_fraction
+    # directly (clipped, floored), so this hits `target_voi` exactly.
+    band_ctx = Ctx(
+        transcript="what time does the pool close",
+        signals={"tracker": {"unknown_fraction": target_voi}},
+        elapsed_ms=0,
+        user_end_known=False,
+        turn_id=1,
+        conversation_id="conv_ours_band_demo",
+        prices={"lambda_l": demo_prices.lambda_l, "lambda_c": demo_prices.lambda_c},
+    )
+    print(f"voi = {voi_estimate(band_ctx, cfg):.3f} (midpoint of the band)")
+    print(baseline.decide(band_ctx).reason)

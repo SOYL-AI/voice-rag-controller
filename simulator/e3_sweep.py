@@ -138,13 +138,32 @@ def _read_controller_action(log_path: Path) -> dict:
     log, in the shape controller/baseline.py's BaselineController.
     log_decision() produces, not just that decide() returned something in
     memory.
+
+    Returns the LAST controller_action in the file, not the first. The
+    event log is opened in append mode, so re-running a scenario under the
+    same conversation_id (which this stub does by construction — its ids
+    are f"e3_{baseline}_{id:03d}", with no run counter) leaves every
+    previous run's events in place ahead of this one's. Taking the first
+    match therefore reported a STALE decision from an earlier run, silently
+    and with no error: a sweep re-run after a config or controller change
+    would write correct events and read back the old ones, and the results
+    JSON would disagree with the log it cites. This is the same hazard
+    simulator/e2_results/RUN_MANIFEST.md records for E2's logs, and the
+    same "latest event wins" convention harness/metrics.py's
+    hit_at_k_per_turn() already applies to repeated retrieval_result
+    events.
+
+    Reading the last match is the minimal correct fix here; it does not
+    make repeated runs tidy, it just makes them honest. For a clean log per
+    run, delete logs/e3_<baseline>_*.jsonl before sweeping.
     """
+    payload = {}
     with open(log_path, "r", encoding="utf-8") as file:
         for line in file:
             event = json.loads(line)
             if event.get("event_type") == "controller_action":
-                return event["payload"]
-    return {}
+                payload = event["payload"]
+    return payload
 
 
 def main():
