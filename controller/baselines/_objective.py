@@ -21,6 +21,9 @@ here, in one module, and both baselines import it:
   - what retrieval costs in latency (retrieval_latency_s)
   - what timing hides / risks       (overlap_s, partial_query_risk,
                                      waste_rate)
+  - where the two DISAGREE          (divergence_band) — diagnostic only,
+                                     see that function; it is logged by
+                                     both controllers and decides nothing
 
 controller/baselines/ours.py and b9_decomposed.py then differ ONLY in how
 they COMPOSE these — one argmax over joint (retrieve, timing) candidates
@@ -70,15 +73,46 @@ policies — not guessed:
     overlap, sentence_end         0 ms          (0 by construction)
     overlap, immediate           mean 50 ms     (median 0, max 1091)
     overlap, fixed_early_proxy   mean 188 ms    (median 156, max 1428)
+    partial_query_risk, all three policies       0.0  (measured, see below)
 
-Reproduce with a scan of logs/*.jsonl over retrieval_launched ->
-retrieval_result pairs and retrieval_result's overlap_with_speech_ms
-(controller/timing.py's mechanism_result_fields writes that field).
+Reproduce the latency constants with a scan of logs/*.jsonl over
+retrieval_launched -> retrieval_result pairs and retrieval_result's
+overlap_with_speech_ms (controller/timing.py's mechanism_result_fields
+writes that field). Reproduce the risk constant with
+harness/metrics.py's hit_at_k_report(log_dir="logs", k=3).
 
-Two constants are NOT measured and are marked as placeholders in config:
-partial_query_risk and waste_rate. See their docstrings below for exactly
-what would ground them. They are the honest weak points of this model and
-should be named as such in the paper rather than presented as measured.
+ONE constant remains unmeasured and is still marked a placeholder in
+config: waste_rate. See its docstring below for what would ground it. It
+is the one honest weak point left in this model and should be named as
+such in the paper rather than presented as measured.
+
+---------------------------------------------------------------------------
+ONLY ONE COUPLING CHANNEL IS ACTIVE — read this before interpreting E3
+---------------------------------------------------------------------------
+The objective has two places where the timing decision can change the
+value of the retrieve decision:
+
+  LATENCY channel  exposed_latency_s(t) = retrieval_latency - overlap(t)
+                   ACTIVE. Measured overlap spans 0 -> 188 ms.
+  QUALITY channel  voi * (1 - partial_query_risk(t))
+                   EMPIRICALLY INACTIVE. Measured risk is 0 for every
+                   policy, so this factor is identically 1.
+
+That is a measurement, not a modeling choice, and it is a clean result
+rather than a limitation: it means E3's Ours-vs-B9 comparison ISOLATES the
+latency channel. Whatever gap the sweep measures cannot be attributed to a
+quality effect, because there is no quality effect to attribute it to.
+
+It also makes the TIMING sub-decision nearly trivial — with risk pinned at
+0, whichever policy hides the most speech wins on latency, checked only by
+its waste_rate against lambda_c. The interesting coupling therefore does
+NOT live in "which timing" but in "whether to retrieve at all": see
+divergence_band() below and ours.py's PAPER CLAIM comment block.
+
+The quality channel is kept parameterized rather than deleted because it
+is a real effect that this configuration happens to zero out — see
+partial_query_risk()'s docstring for exactly which two properties of E2's
+setup are responsible, and what would make it nonzero again.
 
 ---------------------------------------------------------------------------
 TUNING / FAIRNESS
@@ -106,6 +140,14 @@ from controller.baseline import Ctx  # noqa: E402 -- see _REPO_ROOT sys.path fix
 
 _DEFAULT_CONFIG_PATH = _REPO_ROOT / "configs" / "config.yaml"
 
+# The timing policies E3's controllers range over — controller/timing.py's
+# VALID_POLICIES, ordered cheapest-to-earliest so that a tie in any argmax
+# or argmin over them resolves toward the more conservative (later,
+# lower-risk) policy. ours.py and b9_decomposed.py each mirror this order in
+# their own _TIMING_CANDIDATES; divergence_band() reuses it so the band's
+# tie-breaking matches the decisions it is annotating.
+TIMING_ORDER = ("sentence_end", "immediate", "fixed_early_proxy")
+
 # Mirrors configs/config.yaml's controller.e3 — kept in sync the same way
 # controller/decide.py's _DEFAULT_DECISION_CFG mirrors controller.decision,
 # so a baseline stays unit-testable without the config file present.
@@ -124,11 +166,12 @@ _DEFAULT_E3_CFG = {
         "immediate": 50,
         "fixed_early_proxy": 188,
     },
-    # PLACEHOLDER, not measured. See partial_query_risk().
+    # MEASURED as exactly 0 for every policy — E2's per-policy hit@3 is
+    # identical (250/250 each). See partial_query_risk().
     "partial_query_risk": {
         "sentence_end": 0.0,
-        "immediate": 0.02,
-        "fixed_early_proxy": 0.04,
+        "immediate": 0.0,
+        "fixed_early_proxy": 0.0,
     },
     # PLACEHOLDER, not measured. See waste_rate().
     "waste_rate": {
@@ -399,22 +442,65 @@ def partial_query_risk(timing: str, cfg: Optional[dict] = None) -> float:
     Fraction of retrieval's quality gain lost by launching early on a
     PARTIAL transcript instead of the finished one, on [0, 1].
 
-    This is coupling channel 2 (quality), and it's what stops "launch as
-    early as possible" from being trivially optimal: early timing buys
+    This is the quality coupling channel — in principle what stops "launch
+    as early as possible" from being trivially optimal: early timing buys
     hidden latency but spends some retrieval quality, because the query it
     retrieves on isn't the whole question yet.
 
-    *** PLACEHOLDER — NOT MEASURED. *** Defaults are small (2% / 4%)
-    because controller/timing.py's query_ready gate already removed the
-    large version of this effect: before that gate, early policies fired
-    on single-word partials ("What"/"Tell"/"Can") and hit@3 collapsed;
-    the gate delays dispatch to the earliest MEANINGFUL partial, leaving
-    only a modest residual. What would ground these numbers: per-policy
-    hit@3 from E2's runs (simulator/e2_results/, scored by
-    harness/metrics.py) — risk(t) = 1 - hit@3(t)/hit@3(sentence_end).
-    Until that's fit, this is the single number Ours's TIMING choice is
-    most sensitive to, and it should be named as a placeholder in the
-    paper rather than reported as measured.
+    *** MEASURED, AND THE MEASURED VALUE IS 0 FOR EVERY POLICY. ***
+
+    Fit exactly as the formula this docstring used to propose,
+    risk(t) = 1 - hit@3(t)/hit@3(sentence_end), over E2's 750 scored runs
+    in simulator/e2_results/ + logs/, scored by harness/metrics.py's
+    hit_at_k_report():
+
+        policy              hit@1    hit@2    hit@3
+        sentence_end        92.0%    96.0%    100.0%   (250/250)
+        immediate           92.0%    96.0%    100.0%   (250/250)
+        fixed_early_proxy   92.0%    96.0%    100.0%   (250/250)
+
+    -> risk = 1 - 1.00/1.00 = 0.0, for all three.
+
+    Reproduce:
+        from harness.metrics import hit_at_k_report
+        hit_at_k_report("logs", k=3)
+
+    NOT A CEILING ARTIFACT. The obvious objection to a 100%/100% ratio is
+    that hit@3 is saturated and the ratio is uninformative. It isn't: at
+    k=1, where there is ample headroom (92%), all three policies miss on
+    the IDENTICAL 20 (scenario, seed) pairs. Retrieval quality is identical
+    PER INSTANCE across timings, not merely equal in aggregate, which is a
+    much stronger statement than the hit@3 ratio alone supports.
+
+    WHY it is zero — both causes, because naming only the second (the more
+    flattering one) would overstate what E2 actually tested:
+
+      1. E2 ran with frozen_query (simulator/e2_results/RUN_MANIFEST.md,
+         commit 090ec85; pipeline/spine.py's run_retrieval_pipeline()
+         skips the live rewrite when it's set). The query rewrite was
+         precomputed ONCE from the full question and handed to every
+         policy, so all three retrieved on a byte-identical query string.
+         In this run, partial-transcript degradation was structurally
+         impossible, not merely small. This is the dominant cause.
+      2. controller/timing.py's query_ready gate delays dispatch to the
+         earliest MEANINGFUL partial rather than firing on single-word
+         prefixes ("What"/"Tell"/"Can"). This is the mechanism that would
+         hold the risk down on a LIVE partial-transcript path — but E2 did
+         not exercise it as a query-CONTENT effect, so E2 does not
+         evidence its size.
+
+    CONSEQUENCE FOR E3: the quality coupling channel is empirically
+    inactive here, and the coupling Ours exploits runs through latency
+    alone. See this module's docstring ("ONLY ONE COUPLING CHANNEL IS
+    ACTIVE") and divergence_band() below.
+
+    Kept as a parameter, and still read by both controllers, rather than
+    deleted: the term is a real effect that this configuration zeroes out,
+    and it would be nonzero on harder retrieval (a corpus where top-3 is
+    not saturated) or on a live partial-transcript run with no frozen
+    query. Everything downstream is written against the general form, so
+    grounding it at a nonzero value later is a config edit and not a code
+    change. What is reported in the paper, though, is the measured 0.
     """
     cfg = cfg if cfg is not None else load_e3_config()
     return _clip01(float(cfg["partial_query_risk"].get(timing, 0.0)))
@@ -446,6 +532,156 @@ def retrieval_compute_units(timing: str, cfg: Optional[dict] = None) -> float:
     """Total compute charged for retrieving under `timing`: one retrieval
     plus that timing's expected waste."""
     return 1.0 + waste_rate(timing, cfg)
+
+
+# ---------------------------------------------------------------------------
+# The retrieve/skip boundary — where Ours and B9 actually disagree
+# ---------------------------------------------------------------------------
+@dataclass(frozen=True)
+class DivergenceBand:
+    """
+    The interval of VoI values on which Ours retrieves and B9 does not.
+
+    This is the quantitative form of E3's hypothesis. Both controllers
+    retrieve iff VoI clears a threshold; the thresholds differ ONLY because
+    B9 prices retrieval at full latency while Ours prices it at the latency
+    a chosen timing actually exposes. Everything between the two thresholds
+    is a retrieval with positive net value that decomposition cannot see.
+
+    DIAGNOSTIC ONLY. Both ours.py and b9_decomposed.py compute this for
+    their reason strings and NEITHER lets it influence a decision — see
+    divergence_band() below on why that distinction is load-bearing for B9
+    in particular.
+    """
+
+    timing: str              # the timing that gives Ours its cheaper threshold
+    ours_cut: float          # Ours retrieves iff voi > this
+    b9_cut: float            # B9 retrieves iff voi > this
+    exposed_latency_s: float # what Ours pays under `timing`
+    full_latency_s: float    # what B9 pays, unconditionally
+
+    @property
+    def width(self) -> float:
+        """b9_cut - ours_cut. Can be <= 0 (an empty band) — see
+        divergence_band()'s note on lambda_l = 0."""
+        return self.b9_cut - self.ours_cut
+
+    def contains(self, voi: float) -> bool:
+        """True iff this VoI is one Ours retrieves on and B9 skips.
+
+        The bounds match the two controllers' comparisons EXACTLY, so a
+        True here is never a claim the logs can contradict: Ours retrieves
+        on a strict `> ours_cut` (its argmax puts skip first on ties, see
+        ours.py's _TIMING_CANDIDATES) and B9 retrieves on a strict
+        `> b9_cut` (its `utility > 0.0`). So the band is half-open:
+        (ours_cut, b9_cut].
+        """
+        return self.ours_cut < voi <= self.b9_cut
+
+    def describe(self) -> str:
+        """Compact form for a reason string / sweep log. Deliberately does
+        NOT repeat the exposed-vs-full latency split — each controller logs
+        the latency IT actually priced alongside this, and duplicating it
+        here just makes the log line harder to read."""
+        return (
+            f"band=({self.ours_cut:.3f},{self.b9_cut:.3f}]@{self.timing} "
+            f"w={self.width:+.3f}"
+        )
+
+
+def divergence_band(prices: Prices, cfg: Optional[dict] = None) -> DivergenceBand:
+    """
+    Compute the (ours_cut, b9_cut] retrieve/skip band at a price point.
+
+    WHY THIS IS THE INTERESTING QUANTITY. With partial_query_risk measured
+    at 0 (see that function), the timing sub-decision is nearly trivial —
+    both controllers pick the highest-overlap policy at any sane price, so
+    "Ours picks a better timing" is NOT where the E3 effect lives. What
+    knowing the timing is cheap actually buys is a shifted retrieve/skip
+    THRESHOLD, and that is what this function measures.
+
+    Derivation. Both controllers compare a retrieve utility against
+    U(skip) = 0. Ours, per candidate timing t:
+
+        voi * (1 - risk(t)) - lambda_l * exposed(t)
+                            - lambda_c * (1 + waste(t))  >  0
+
+    which rearranges (for risk(t) < 1) to a per-timing threshold
+
+        cut(t) = [lambda_l * exposed(t) + lambda_c * (1 + waste(t))]
+                 / (1 - risk(t))
+
+    and Ours retrieves iff voi clears the SMALLEST of those, so
+    ours_cut = min_t cut(t) and `timing` is that argmin. B9's retrieval
+    optimizer has no timing to condition on and prices the full schedule:
+
+        b9_cut = lambda_l * retrieval_latency + lambda_c * (1 + waste(
+                 sentence_end))
+
+    With the measured constants (retrieval 0.672s, overlap 0.188s, risk 0)
+    and lambda_c -> 0 this reduces to the headline form quoted in ours.py:
+
+        lambda_l * 0.484  <  voi  <  lambda_l * 0.672
+
+    i.e. a band of width lambda_l * overlap. It is PRICE-DEPENDENT by
+    construction — wide at high lambda_l, vanishing at lambda_l = 0 — which
+    is why E3 sweeps a grid instead of reporting one number, and what makes
+    the claim falsifiable: if measured overlap collapses, so does the band.
+
+    Note `timing` is the argmin-cut timing, which is the timing whose
+    utility crosses zero first and therefore the one Ours retrieves with at
+    the boundary. With risk identically 0 (the measured case) it is also
+    Ours's argmax timing at EVERY voi, so the band's `timing` and the
+    logged decision's timing always agree. Were risk nonzero and
+    policy-dependent, the two could differ away from the boundary; the band
+    is defined at the boundary, which is where it is used.
+
+    Width can be <= 0 — at lambda_l = 0 the latency channel vanishes and
+    Ours's extra waste_rate makes its cut the HIGHER one. contains() then
+    returns False for every voi, which is correct: with latency free there
+    is nothing for joint reasoning to exploit, and the honest log entry is
+    "no divergence available at this price".
+
+    *** DIAGNOSTIC ONLY — this must never feed a decision. *** For Ours
+    that is merely good hygiene. For B9 it is load-bearing: B9 is defined
+    by its retrieval optimizer having no access to timing (see
+    b9_decomposed.py), and this function reads overlap_s(), so calling it
+    anywhere in B9's decision path would silently convert B9 into a joint
+    controller and destroy the experiment. B9 calls it only after both
+    sub-optimizers have returned, purely to annotate the reason string.
+    """
+    cfg = cfg if cfg is not None else load_e3_config()
+    full_s = retrieval_latency_s(cfg)
+
+    def cut(timing: str) -> float:
+        risk = partial_query_risk(timing, cfg)
+        cost = (
+            prices.lambda_l * exposed_latency_s(timing, cfg)
+            + prices.lambda_c * retrieval_compute_units(timing, cfg)
+        )
+        # risk == 1 would mean "early retrieval is worth literally nothing",
+        # which no VoI can clear; represent that as an unreachable cut
+        # rather than dividing by zero.
+        return cost / (1.0 - risk) if risk < 1.0 else float("inf")
+
+    # Same order both controllers enumerate in (cheapest-to-earliest), so a
+    # tie in cut() resolves to the same conservative policy the controllers
+    # themselves would pick — min() returns the first minimal element. Ties
+    # are real at lambda_l = 0, where every timing's latency term is 0.
+    timings = [t for t in TIMING_ORDER if t in cfg["overlap_ms"]]
+    timings += [t for t in cfg["overlap_ms"] if t not in TIMING_ORDER]
+    best_timing = min(timings, key=cut)
+
+    return DivergenceBand(
+        timing=best_timing,
+        ours_cut=cut(best_timing),
+        b9_cut=(
+            prices.lambda_l * full_s
+            + prices.lambda_c * retrieval_compute_units("sentence_end", cfg)
+        ),
+        exposed_latency_s=exposed_latency_s(best_timing, cfg),
+        full_latency_s=full_s,
+    )
 
 
 # ---------------------------------------------------------------------------

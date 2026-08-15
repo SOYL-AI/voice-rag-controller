@@ -262,16 +262,45 @@ controller:
       immediate: 50          # median 0, mean 50, max 1091
       fixed_early_proxy: 188 # median 156, mean 188, max 1428
 
-    # PLACEHOLDER — NOT MEASURED. Fraction of retrieval's quality gain lost
-    # by launching early on a partial transcript (coupling channel 2).
-    # Small because controller/timing.py's query_ready gate already removed
-    # the large version of this effect. To ground it: fit from per-policy
-    # hit@3 over simulator/e2_results/ as 1 - hit@3(t)/hit@3(sentence_end).
-    # This is the number Ours's TIMING choice is most sensitive to.
+    # MEASURED from simulator/e2_results/ + logs/ — and the measured value is
+    # exactly ZERO for every timing policy. Fraction of retrieval's quality
+    # gain lost by launching early on a partial transcript (the quality
+    # coupling channel). Fit as 1 - hit@3(t)/hit@3(sentence_end) over E2's
+    # 750 scored runs (harness/metrics.py's hit_at_k_report over logs/):
+    #
+    #   policy              hit@1        hit@2        hit@3
+    #   sentence_end        92.0%        96.0%        100.0%  (250/250)
+    #   immediate           92.0%        96.0%        100.0%  (250/250)
+    #   fixed_early_proxy   92.0%        96.0%        100.0%  (250/250)
+    #
+    # so risk = 1 - 1.00/1.00 = 0.0 for all three.
+    #
+    # This is NOT a hit@3 ceiling artifact. At k=1, where there is ample
+    # headroom (92%), all three policies miss on the IDENTICAL 20
+    # (scenario, seed) pairs — retrieval quality is identical per instance,
+    # not merely equal in aggregate.
+    #
+    # WHY it is zero here — both causes, because only naming the first would
+    # overstate what E2 tested:
+    #   1. E2 ran with frozen_query (see simulator/e2_results/RUN_MANIFEST.md
+    #      and pipeline/spine.py:411). The rewrite was precomputed once from
+    #      the FULL question and handed to every policy, so all three
+    #      retrieved on a byte-identical query string. Partial-transcript
+    #      degradation was structurally impossible in this run, not merely
+    #      small.
+    #   2. controller/timing.py's query_ready gate delays dispatch to the
+    #      earliest MEANINGFUL partial. This is the mechanism that would keep
+    #      the risk small on a LIVE partial-transcript path (no frozen
+    #      query) — but E2 did not exercise it as a query-CONTENT effect.
+    #
+    # Kept as a swept parameter rather than deleted: it would be nonzero on
+    # harder retrieval (a corpus where top-3 isn't saturated) or on a live
+    # partial-transcript run without the frozen query. Its measured value in
+    # THIS configuration is 0, and that is what the paper should report.
     partial_query_risk:
       sentence_end: 0.0
-      immediate: 0.02
-      fixed_early_proxy: 0.04
+      immediate: 0.0
+      fixed_early_proxy: 0.0
 
     # PLACEHOLDER — NOT MEASURED. Expected extra compute per retrieval from
     # an early launch being invalidated and relaunched. All 751 retrievals
