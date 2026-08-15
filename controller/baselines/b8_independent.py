@@ -40,17 +40,22 @@ THE TWO INDEPENDENT COMPONENTS
    family, read from the frozen per-scenario snapshot
    (simulator/e3_signals.py).
 
-   HONEST STATUS OF THIS SIGNAL CHOICE: the only Experiment 1 artifact in
-   the repo is llm/experiment1/results/smoke_mock.json, which is a MOCK
-   backend smoke run — it reports best_signal="negative_min_logprob" at
-   mean AUC 0.535, and states outright that it "validates plumbing only and
-   must not be cited as Experiment 1 evidence". So max_entropy_nats is
-   chosen here as a reasonable member of the entropy family E1 was designed
-   to test, NOT because a real gate run has selected it. Do not cite an AUC
-   for this choice until llm/experiment1/run.py has been run against the
-   real model and a non-smoke result exists. Whichever signal that run
-   picks should replace this one (or, better, this whole trigger gets
-   replaced by B4-B6 per the plug point above).
+   STATUS OF THIS SIGNAL CHOICE: vindicated, as of the real E1 gate run
+   (llm/experiment1/results/experiment_1_modal_mistral7b_20260811_151212.json,
+   Mistral-7B on Modal, verdict PASS). Its best_signal is max_entropy_nats
+   at mean AUC 0.978 — the signal this trigger already read, chosen before
+   that run existed as a reasonable member of the entropy family E1 was
+   designed to test. It is now the signal a real gate selected, and an AUC
+   may be cited for it.
+
+   The THRESHOLD is a different question and is still un-swept. 1.2 nats
+   predates the run; the fitted calibration puts P(retrieval needed) = 0.5
+   at 1.360 nats (controller/baselines/e1_calibration.json), which is the
+   obvious candidate for the dev-split sweep below to start from or land
+   on. Note B8 must keep reading a raw threshold rather than importing
+   _objective's calibrated VoI: B8 is the no-price-coupling rival, and
+   borrowing the priced controllers' estimator would blur the distinction
+   it exists to draw.
 
 2. Timing policy — one fixed, separately-tuned choice.
 
