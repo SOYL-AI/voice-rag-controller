@@ -65,3 +65,44 @@ record is considered fully reconciled.
   `01050b552346c78601ba58d11584a4ebec47d42bc7e347bbb45777faf3a460fc`
 - Backend: vLLM
 - Raw result artifact: Experiment 1 JSON shared by Ryan
+
+  ## Experiment 2 — Timing Value
+
+### Status
+
+Analysis complete — verdict pending policy-name confirmation.
+
+### Pre-Registered Success Criterion
+
+Forecast-timed retrieval gives lower p95 TTFA at equal answer accuracy.
+
+### Results
+
+| Policy | Hit@3 Accuracy | p95 TTFA |
+|---|---:|---:|
+| `fixed_early_proxy` | 100% | 7090 ms |
+| `immediate` | 100% | 6915 ms |
+| `sentence_end` | 100% | 7052 ms |
+
+### Median-Latency Observation
+
+`fixed_early_proxy` has the lowest median TTFA at approximately 3.69 seconds,
+compared with approximately 4.07 seconds for `immediate` and 4.11 seconds for
+`sentence_end`.
+
+This median improvement is useful as a secondary observation, but the
+pre-registered success criterion is based on p95 TTFA.
+
+### Primary Verdict
+
+Pending confirmation that `fixed_early_proxy` corresponds to the
+forecast-timed policy.
+
+If confirmed, the pre-registered p95 success criterion is NOT MET:
+`fixed_early_proxy` p95 TTFA = 7090 ms versus 6915 ms for `immediate`.
+
+### Supporting Figures
+
+- `analysis/e2_accuracy_vs_latency.png`
+- `analysis/e2_ttfa_distribution.png`
+- Raw sweep: `logs/` — 750-run E2 Modal sweep
