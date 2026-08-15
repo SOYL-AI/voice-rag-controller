@@ -14,3 +14,43 @@ experiment decisions, and blockers.
 **Decided by:** Project team
 
 **Recorded by:** Yashmita Sudhir
+
+### 2026-08-16 — Model substitution logged against the frozen pre-registration
+
+**Decision:** Recorded in `paper/preregistration.md` that every real run
+(E1 gate, E2 750-run sweep, E3 signal precompute) was served with
+`mistralai/Mistral-7B-Instruct-v0.3`, not the frozen
+`meta-llama/Llama-3.1-8B-Instruct`. Reported results name Mistral-7B; no
+Llama-3.1-8B result exists.
+
+**Reason:** The prereg anticipated this fallback (the Llama gated download was
+still pending at collection time) but also requires the active model be named
+in that document, and it still named Llama. The substitution predates data
+collection and no threshold was altered, so this is a recording gap, not a
+changed criterion — but it has to be visible in the document a reviewer reads,
+not only in the run artifacts.
+
+**Decided by:** Project team
+
+**Recorded by:** Ryan Gomez
+
+### 2026-08-16 — E2 reported against its pre-registered p95 criterion
+
+**Decision:** `harness/e2_bootstrap.py` now evaluates E2's pre-registered
+criterion explicitly and prints MET / NOT MET. On the 750-run sweep the verdict
+is **NOT MET**: `fixed_early_proxy` p95 TTFA is 7089.90 ms against
+`sentence_end` at 7051.70 ms (+38.20 ms, i.e. higher). The paired-mean result
+(−479.36 ms, CI excluding 0) is retained and reported as a secondary finding.
+
+**Reason:** The script previously described p95 as reported "for
+completeness/pre-registration, not as the primary evidence" and directed the
+reader to the paired-mean test instead. That is a post-hoc substitution of the
+success criterion, which the prereg's guiding principle forbids, and it matters
+more than usual here because the two tests disagree in DIRECTION rather than
+only in significance. The power argument for why p95 is noisy at 50 clusters is
+sound and is kept — as an explanation accompanying a failed criterion, not as
+grounds for swapping which test counts.
+
+**Decided by:** Project team
+
+**Recorded by:** Ryan Gomez
