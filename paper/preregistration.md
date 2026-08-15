@@ -83,3 +83,18 @@ results are observed.
 - Success criteria frozen before data exists.
 - TTFA measured at the audio boundary only.
 - Every figure regenerable from raw logs by one command.
+
+### Implementation note
+
+The policy pre-registered as `forecast-timed` was implemented for E2 as
+`fixed_early_proxy`.
+
+`fixed_early_proxy` is not a live forecast or pause-prediction policy. It
+dispatches retrieval at a fixed early point in the modeled speech timeline and
+therefore serves as a proxy for early/overlapped retrieval placement.
+
+True forecast timing using a live VAD/VAP or pause-prediction signal was not
+implemented for this experiment and is left as future work.
+
+This note documents the implementation mapping and does not alter the frozen
+pre-registered success criterion.
