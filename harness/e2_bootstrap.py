@@ -7,6 +7,23 @@ resampled over SCENARIOS -- not over individual runs. Accuracy (hit@3) is 100% a
 equal across all three policies in this dataset, so TTFA is the only thing that can
 differ, and comparing it is valid.
 
+WHICH TEST IS THE CRITERION
+---------------------------
+E2's pre-registered success criterion is p95 TTFA (paper/preregistration.md):
+"forecast-timed retrieval gives lower p95 TTFA at equal accuracy". That is the
+PRIMARY result and this script evaluates it explicitly, printing MET / NOT MET.
+
+The paired-mean bootstrap is a SECONDARY analysis. It is the better-powered
+test -- p95 is a tail statistic on 50 clusters -- but being better powered is
+not what makes something the criterion. The criterion was frozen before data
+existed, and on this run the two tests disagree in DIRECTION, not merely in
+significance: `fixed_early_proxy` is ~479ms faster on the paired mean while its
+p95 is slightly HIGHER than baseline. Reporting the mean as though it were the
+pre-registered result would be a post-hoc substitution of success criteria,
+which paper/preregistration.md's guiding principle forbids. Report the p95
+verdict as the result; report the mean alongside it, labelled secondary, with
+the power argument stated.
+
 Why scenarios, not runs, are the resampling unit
 --------------------------------------------------
 Each scenario is run 5 times (seeds 0-4) per policy. Those 5 runs are NOT independent
@@ -45,6 +62,12 @@ from harness.metrics import parse_conversation_id
 POLICIES = ("sentence_end", "immediate", "fixed_early_proxy")
 BASELINE = "sentence_end"
 EARLY_POLICIES = ("immediate", "fixed_early_proxy")
+
+# The policy the pre-registration calls "forecast-timed" — retrieval fired
+# during a predicted user-still-talking window. Renamed from `predicted_pause`
+# (see simulator/e2_results/RUN_MANIFEST.md); the prereg's wording predates the
+# rename, so the mapping is pinned here rather than left to the reader.
+FORECAST_POLICY = "fixed_early_proxy"
 
 
 # ======================================================================
@@ -278,9 +301,12 @@ def main():
         sys.exit(1)
 
     # --- Step 4: paired bootstrap, per early policy vs baseline --------------------
+    # SECONDARY analysis. E2's pre-registered success criterion is the p95 test
+    # in Step 5, not this one — see that block's verdict.
     print("\n" + "=" * 70)
-    print("PAIRED BOOTSTRAP: per-scenario median-over-seeds TTFA difference")
+    print("SECONDARY: PAIRED BOOTSTRAP on per-scenario median-over-seeds TTFA")
     print("(early policy - sentence_end); negative = early policy is FASTER")
+    print("NOT the pre-registered criterion — see the p95 verdict below.")
     print("=" * 70)
 
     for early_policy in EARLY_POLICIES:
@@ -299,25 +325,67 @@ def main():
         print(f"  95% bootstrap CI           : ({ci_low:+.2f}, {ci_high:+.2f}) ms")
         print(f"  significant (CI excludes 0): {significant}")
 
-    # --- Step 5: pre-registered p95, with cluster-bootstrap CI ---------------------
+    # --- Step 5: PRIMARY — the pre-registered p95 criterion ------------------------
     print("\n" + "=" * 70)
-    print("PRE-REGISTERED P95 TTFA (over all runs, per policy)")
+    print("PRIMARY: PRE-REGISTERED P95 TTFA (over all runs, per policy)")
     print("=" * 70)
     print(
-        "NOTE: p95 is a tail statistic. With only 50 independent scenarios (each\n"
-        "contributing up to 5 correlated seed-runs), its bootstrap CI is inherently\n"
-        "noisier than the paired-mean test above. Treat the paired difference test\n"
-        "as the reliable significance signal for E2's claim; p95 here is reported\n"
-        "for completeness/pre-registration, not as the primary evidence."
+        "paper/preregistration.md, Experiment 2:\n"
+        '  Success: "forecast-timed retrieval gives lower p95 TTFA at equal\n'
+        '           accuracy."\n'
+        f"The forecast-timed policy is {FORECAST_POLICY!r}; the baseline is\n"
+        f"{BASELINE!r}. Accuracy (hit@3) is 100% and equal across all three\n"
+        "policies here, so the accuracy clause is satisfied and p95 decides it."
     )
 
+    p95_by_policy = {}
     for policy in POLICIES:
         observed_p95, ci_low, ci_high = p95_with_cluster_bootstrap(
             raw[policy], intersection, rng, args.iterations
         )
+        p95_by_policy[policy] = (observed_p95, ci_low, ci_high)
         print(f"\n{policy}")
         print(f"  p95 TTFA                  : {observed_p95:.2f} ms")
         print(f"  95% bootstrap CI (cluster) : ({ci_low:.2f}, {ci_high:.2f}) ms")
+
+    # The verdict, computed rather than narrated. The criterion was frozen
+    # before data existed and is evaluated exactly as written: lower p95 than
+    # the baseline. It is NOT restated in terms of the Step 4 mean once the
+    # numbers are in — paper/preregistration.md's standing rule is that success
+    # criteria do not change after seeing results.
+    forecast_p95 = p95_by_policy[FORECAST_POLICY][0]
+    baseline_p95 = p95_by_policy[BASELINE][0]
+    delta = forecast_p95 - baseline_p95
+    met = forecast_p95 < baseline_p95
+
+    print("\n" + "=" * 70)
+    print("PRE-REGISTERED CRITERION VERDICT")
+    print("=" * 70)
+    print(
+        f"  {FORECAST_POLICY} p95 : {forecast_p95:.2f} ms\n"
+        f"  {BASELINE} p95 : {baseline_p95:.2f} ms\n"
+        f"  difference            : {delta:+.2f} ms "
+        f"({'lower' if met else 'HIGHER'} than baseline)\n"
+    )
+    print(f"  VERDICT: pre-registered p95 criterion {'MET' if met else 'NOT MET'}.")
+
+    if not met:
+        print(
+            "\n  Report this as a failure of the pre-registered criterion. The\n"
+            "  prereg's failure branch for E2 reads: no timing benefit ->\n"
+            '  "timing is decoration"; contribution shrinks to trigger quality.\n'
+            "\n"
+            "  The Step 4 paired-mean result is a real effect and worth\n"
+            "  reporting, but as a SECONDARY finding, with the reason p95 was\n"
+            "  underpowered stated alongside it: p95 is a tail statistic and\n"
+            "  these are 50 independent scenarios each contributing up to 5\n"
+            "  correlated seed-runs, so its cluster-bootstrap CI is much wider\n"
+            "  than the paired-mean CI. That is an argument about statistical\n"
+            "  power, NOT grounds for treating the mean as the criterion.\n"
+            "\n"
+            "  Note the two disagree in DIRECTION here, not just in\n"
+            "  significance, which is why the distinction matters."
+        )
 
     print("\n" + "=" * 70)
 
