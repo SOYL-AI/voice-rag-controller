@@ -225,6 +225,98 @@ controller:
       # function words) passing on word count alone.
       require_content_word: true
 
+  # Experiment 3 (the coupling hypothesis): the scalarized objective and
+  # cost model the price-aware baselines optimize against. Read by
+  # controller/baselines/_objective.py, which mirrors every value below as
+  # its _DEFAULT_E3_CFG so the baselines stay runnable without this file.
+  #
+  # Used by: "ours" (joint), "b9" (decomposed-with-prices), and — for the
+  # b8 block ONLY — "b8" (independent-best, which never reads prices).
+  #
+  # FAIRNESS RULE (E3_BASELINE_INTERFACE.md, handbook 29.3): every
+  # threshold here must be SWEPT on the dev split under an equal tuning
+  # budget before any headline number is reported. These are the starting
+  # point of that sweep, not its result.
+  e3:
+    # Price point used only when the caller passes no prices (Ctx.prices
+    # empty). The real sweep always supplies both — see simulator/
+    # e3_sweep.py's --lambda-l/--lambda-c. lambda_l is quality lost per
+    # SECOND of latency (not per ms — see _objective.py on units);
+    # lambda_c is quality per retrieval of compute.
+    default_prices:
+      lambda_l: 1.0
+      lambda_c: 0.05
+
+    # MEASURED from logs/: median duration of a completed retrieval over
+    # 751 retrieval_launched -> retrieval_result pairs (p90 was 3187).
+    retrieval_latency_ms: 672
+
+    # MEASURED from logs/: mean overlap_with_speech_ms per E2 timing
+    # policy — how much of a retrieval landed inside the user's speech and
+    # so was never experienced as latency. This is coupling channel 1, and
+    # the difference between fixed_early_proxy and sentence_end (188 ms) is
+    # exactly the width of the predicted Ours-vs-B9 divergence band per
+    # unit lambda_l. See controller/baselines/ours.py's docstring.
+    overlap_ms:
+      sentence_end: 0        # 0 by construction: launches after user_end
+      immediate: 50          # median 0, mean 50, max 1091
+      fixed_early_proxy: 188 # median 156, mean 188, max 1428
+
+    # PLACEHOLDER — NOT MEASURED. Fraction of retrieval's quality gain lost
+    # by launching early on a partial transcript (coupling channel 2).
+    # Small because controller/timing.py's query_ready gate already removed
+    # the large version of this effect. To ground it: fit from per-policy
+    # hit@3 over simulator/e2_results/ as 1 - hit@3(t)/hit@3(sentence_end).
+    # This is the number Ours's TIMING choice is most sensitive to.
+    partial_query_risk:
+      sentence_end: 0.0
+      immediate: 0.02
+      fixed_early_proxy: 0.04
+
+    # PLACEHOLDER — NOT MEASURED. Expected extra compute per retrieval from
+    # an early launch being invalidated and relaunched. All 751 retrievals
+    # in logs/ show forecast_invalidated=false, but that's a property of
+    # the text path (which has no continued-speech signal to invalidate
+    # against), so 0 would encode more than the data supports. Replace with
+    # a real invalidation rate from a live-audio run.
+    waste_rate:
+      sentence_end: 0.0
+      immediate: 0.02
+      fixed_early_proxy: 0.08
+
+    # The value-of-information estimate — expected quality gain from
+    # retrieving, on [0, 1]. Shared UNCHANGED by ours and b9 so that any
+    # measured gap between them comes from joint-vs-decomposed reasoning
+    # and not from one side having a better belief estimate.
+    voi:
+      # max_entropy_nats has no natural ceiling, so it's divided by this to
+      # land on [0, 1]. Sweep it.
+      max_entropy_nats_scale: 2.5
+      # Blend weights when both the entropy and tracker signals are
+      # present. Entropy carries more because E1 was designed to validate
+      # that family.
+      entropy_weight: 0.65
+      tracker_weight: 0.35
+      # Never estimate a retrieval as worth exactly nothing — a hard zero
+      # would make the retrieve branch unreachable at any nonzero price,
+      # which would be an artifact of the estimator, not a decision.
+      floor: 0.05
+
+    # B8 (independent-best) only. B8 never reads any of the pricing values
+    # above — it's the no-price-coupling rival by definition.
+    b8:
+      # PLACEHOLDER trigger threshold. The only E1 artifact in the repo is
+      # a mock smoke run that explicitly must not be cited, so this is not
+      # backed by a real AUC yet — and the trigger is meant to be replaced
+      # wholesale by the best of B4-B6 once those land. See
+      # controller/baselines/b8_independent.py's plug point.
+      max_entropy_nats_threshold: 1.2
+      # Fallback threshold when no entropy signal is present.
+      unknown_fraction_threshold: 0.5
+      # Separately tuned in isolation: the policy that hides the most
+      # retrieval latency inside speech (see overlap_ms above).
+      timing: fixed_early_proxy
+
 # ---------------------------------------------------------------------------
 # Other components: add your section here.
 # ---------------------------------------------------------------------------

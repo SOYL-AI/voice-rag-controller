@@ -1,0 +1,16 @@
+[
+  {
+    "scenario_id": 1,
+    "conversation_id": "e3_b0_001",
+    "question": "What is the hotel's check-in policy?",
+    "status": "success",
+    "log_path": "logs/e3_b0_001.jsonl",
+    "prices": null,
+    "controller_action": {
+      "action": "skip_retrieval",
+      "reason": "B0: never retrieve",
+      "baseline": "b0",
+      "timing": "sentence_end"
+    }
+  }
+]
