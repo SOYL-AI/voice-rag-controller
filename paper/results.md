@@ -106,3 +106,52 @@ If confirmed, the pre-registered p95 success criterion is NOT MET:
 - `analysis/e2_accuracy_vs_latency.png`
 - `analysis/e2_ttfa_distribution.png`
 - Raw sweep: `logs/` — 750-run E2 Modal sweep
+
+### Paired-Scenario Analysis
+
+Accuracy was matched across all three policies at 100% Hit@3.
+
+Compared with `sentence_end`, `fixed_early_proxy` reduced median TTFA by
+479 ms. The paired-scenario bootstrap 95% confidence interval excluded zero,
+indicating a statistically significant latency reduction.
+
+Compared with `immediate`, `fixed_early_proxy` reduced median TTFA by
+approximately 180 ms, but the 95% confidence interval crossed zero. This
+difference is therefore directional but not statistically significant.
+
+### Mechanism Check
+
+Speech overlap was negatively correlated with TTFA:
+
+- Pearson r = -0.25
+
+Greater overlap between retrieval work and the user's speech was therefore
+associated with lower response latency.
+
+### Interpretation
+
+The p95 TTFA values were relatively similar across policies and were
+tail-noisy. The paired-scenario analysis provides the stronger evidence for
+the timing effect.
+
+The E2 result supports the claim that earlier retrieval placement can reduce
+latency at matched answer accuracy. The strongest evidence is against the
+`sentence_end` policy, where `fixed_early_proxy` produced a significant
+479 ms median-TTFA reduction.
+
+The effect is modest because overall TTFA remains largely dominated by
+language-model latency.
+
+### Implementation Limitation
+
+`fixed_early_proxy` is a fixed early dispatch point rather than a true
+forecast-timed policy. Live forecast timing using a VAD/VAP or pause-prediction
+signal remains future work.
+
+### Supporting Material
+
+- Raw sweep: `logs/` — clean 750-run E2 sweep
+- `analysis/e2_accuracy_vs_latency.png`
+- `analysis/e2_ttfa_distribution.png`
+- `analysis/e2_overlap_vs_ttfa.png`
+- `analysis/e2_launch_offset_distribution.png`
