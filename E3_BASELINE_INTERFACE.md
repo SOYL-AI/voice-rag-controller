@@ -72,6 +72,19 @@ the intended contrast.
   objective — the coupling hypothesis. The difference from B9 is the crux of H3, so implement
   the "decomposed vs unified" distinction faithfully.
 
+**The quality term is a fitted probability, not a heuristic.** `estimate_voi()` in the shared
+`controller/baselines/_objective.py` returns
+`P(retrieval needed | max_entropy_nats) * utility_scale`, using the logistic fitted on
+Experiment 1's 180 real Modal samples (`controller/baselines/e1_calibration.json`,
+AUC 0.978). B9 and Ours import that one function, so a measured gap between them can never
+be attributed to one side holding a better belief.
+
+**The λ_l grid is derived, not chosen.** `python -m simulator.e3_grid` tiles the
+retrieve/skip divergence bands edge-to-edge across the VoI distribution the 50 scenarios
+produce and writes `configs/e3_price_grid.json`. A hand-picked grid risks placing every band
+above or below the observed VoI values, where B9 and Ours cannot disagree — which returns a
+null that is an artifact of the grid rather than a result about coupling.
+
 ## Logging (reuse the frozen schema, no new event types)
 
 Every baseline logs through the shared `LogWriter` using the existing events

@@ -123,3 +123,43 @@ distinction faithfully; it's the actual research question (H3).
 
 All three get the same tuning budget as every other baseline: swept thresholds on the dev
 split, no strawmen.
+
+### The VoI calibration and the price grid
+
+The two numbers B9 and Ours are most sensitive to are both *derived*, not chosen, and each
+regenerates with one command.
+
+**1. The belief → quality mapping** (`controller/baselines/_objective.py`'s `estimate_voi`):
+
+```
+voi = P(retrieval needed | max_entropy_nats) * utility_scale
+    = sigmoid(11.7691 * max_entropy_nats - 16.0030)      # utility_scale = 1.0
+```
+
+fitted on the 180 real samples of Experiment 1's Mistral-7B Modal run (verdict PASS,
+`best_signal` `max_entropy_nats`, mean AUC 0.978). In-sample AUC 0.9784 — equal to E1's
+five-seed mean, as a monotone map must be. `P = 0.5` at 1.360 nats.
+
+```powershell
+python -m llm.experiment1.fit_calibration          # rewrites controller/baselines/e1_calibration.json
+python -m llm.experiment1.fit_calibration --check  # CI: committed artifact still matches a fresh fit
+```
+
+Both price-aware baselines import the one estimator, so neither can get a sharper belief
+than the other — see `_objective.py`'s docstring on why that is load-bearing for E3.
+
+**2. The λ_l price grid** (`configs/e3_price_grid.json`), derived by tiling divergence bands
+edge-to-edge across the VoI distribution the 50 scenarios actually produce, so the sweep
+spends its budget where the two controllers can disagree:
+
+```powershell
+python -m simulator.e3_grid                        # prints VoI distribution + grid, writes configs/e3_price_grid.json
+python -m simulator.e3_grid --refine 4             # same coverage, 4x resolution
+python -m simulator.e3_grid --refresh-signals      # after changing llm.backend/model
+```
+
+⚠ The grid is only as real as the signals it was tiled against. With `llm.backend: mock`
+the per-scenario `max_entropy_nats` values are MockClient's synthetic logprobs — the
+calibration is real, the signals it is applied to are not. Re-run with `--refresh-signals`
+against the real backend before any headline number comes off this grid; the artifact
+records which backend produced it.
