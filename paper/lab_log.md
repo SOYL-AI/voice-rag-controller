@@ -49,3 +49,36 @@ to proceed to the later experiments.
 for this difference before the Experiment 1 documentation is closed.
 
 **Recorded by:** Yashmita
+### 2026-08-15 — Experiment 2 timing-value result finalized
+
+**Experiment:** Timing value
+
+**Implementation:** The pre-registered forecast-timed condition was implemented
+as `fixed_early_proxy`, a fixed early point in the modeled speech timeline
+rather than a live forecasting or pause-prediction policy.
+
+**Accuracy:** Hit@3 = 100% for all three timing policies.
+
+**p95 TTFA:**
+- `fixed_early_proxy`: 7090 ms
+- `immediate`: 6915 ms
+- `sentence_end`: 7052 ms
+
+**Paired result:** `fixed_early_proxy` was 479 ms faster in median TTFA than
+`sentence_end`; the paired-bootstrap 95% confidence interval excluded zero.
+
+Against `immediate`, the improvement was approximately 180 ms, but the
+confidence interval crossed zero and was not statistically significant.
+
+**Mechanism check:** Speech overlap correlated with lower TTFA
+(Pearson r = -0.25).
+
+**Verdict:** The timing-value hypothesis is supported with qualification:
+earlier retrieval placement significantly reduces latency at matched accuracy
+relative to sentence-boundary retrieval. The effect is modest because TTFA
+remains largely LLM-dominated.
+
+**Limitation:** E2 tested a fixed early proxy rather than true live
+forecast-timing. VAD/VAP-based prediction remains future work.
+
+**Recorded by:** Yashmita
