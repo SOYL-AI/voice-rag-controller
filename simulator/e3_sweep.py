@@ -15,6 +15,16 @@ Usage:
     python -m simulator.e3_sweep --baseline b0 --limit-scenarios 3
     python -m simulator.e3_sweep --list-baselines
 
+    # price-aware baselines ("ours", "b9") at one point of the price grid:
+    python -m simulator.e3_sweep --baseline ours --lambda-l 1.0 --lambda-c 0.05
+
+--lambda-l/--lambda-c set the scalarized objective's price point
+(Ctx.prices). This runner still executes ONE baseline at ONE price point —
+it is not the frontier sweep, which crosses every baseline with a full
+price grid, seeds, and scoring. The flags exist so a price-aware baseline
+can be exercised at a real, chosen price rather than only at its config
+default.
+
 See controller/baseline.py for the contract every baseline implements, and
 controller/baselines/b0_never_retrieve.py for the reference baseline this
 file is tested against.
@@ -53,7 +63,11 @@ def load_scenarios():
 
 
 def run_one_scenario(
-    scenario, baseline_name: str, conversation_id: str, llm_client=None
+    scenario,
+    baseline_name: str,
+    conversation_id: str,
+    llm_client=None,
+    prices: dict = None,
 ) -> dict:
     """
     Run one scenario's question through the real pipeline with
@@ -70,6 +84,16 @@ def run_one_scenario(
     than as a live probe inside the baseline's own decision. `llm_client`,
     when given, is reused for the precompute call instead of opening a new
     one per scenario (see main()).
+
+    `prices` ({"lambda_l": ..., "lambda_c": ...} or None) is forwarded to
+    run_conversation(baseline_prices=...) and lands in the baseline's
+    Ctx.prices. Only the price-aware baselines read it — "ours" and "b9"
+    optimize the scalarized objective against it, while B0-B8 ignore it
+    entirely by design (E3_BASELINE_INTERFACE.md: the unpriced baselines
+    are single points, not frontiers). None means "no price given", which
+    leaves those two at their configs/config.yaml controller.e3
+    default_prices; the real frontier sweep always passes a point from the
+    grid.
     """
     scenario_id = scenario["id"]
     print(f"  Scenario {scenario_id}: {scenario['question']!r}")
@@ -81,6 +105,7 @@ def run_one_scenario(
                 conversation_id,
                 question=scenario["question"],
                 baseline=baseline_name,
+                baseline_prices=prices,
                 signals=signals,
             )
         )
@@ -92,6 +117,7 @@ def run_one_scenario(
             "question": scenario["question"],
             "status": "success",
             "log_path": str(log_path),
+            "prices": prices,
             "controller_action": action,
         }
     except Exception as error:  # noqa: BLE001 -- a sweep-stub sanity check should report *any* failure, not just the ones we anticipated
@@ -142,6 +168,27 @@ def main():
         action="store_true",
         help="Print every currently-registered baseline name and exit.",
     )
+    # The price point the price-aware baselines optimize against. Read only
+    # by "ours" and "b9" (via Ctx.prices); every other baseline ignores it
+    # by design. Both must be given together — half a price point is a
+    # silent misconfiguration, since the missing half would quietly fall
+    # back to configs/config.yaml's default while the other came from the
+    # command line, producing a run at a price point that appears nowhere.
+    parser.add_argument(
+        "--lambda-l",
+        type=float,
+        default=None,
+        help="Latency price for the scalarized objective, in quality lost "
+        "per SECOND of latency (used by 'ours' and 'b9'; ignored by the "
+        "unpriced baselines). Requires --lambda-c.",
+    )
+    parser.add_argument(
+        "--lambda-c",
+        type=float,
+        default=None,
+        help="Compute price for the scalarized objective, in quality per "
+        "retrieval (used by 'ours' and 'b9'). Requires --lambda-l.",
+    )
     args = parser.parse_args()
 
     if args.list_baselines:
@@ -159,6 +206,18 @@ def main():
             f"{', '.join(registered) or '(none)'}"
         )
 
+    if (args.lambda_l is None) != (args.lambda_c is None):
+        parser.error(
+            "--lambda-l and --lambda-c must be given together (a partial "
+            "price point would silently mix a command-line price with a "
+            "config default)."
+        )
+    prices = (
+        {"lambda_l": args.lambda_l, "lambda_c": args.lambda_c}
+        if args.lambda_l is not None
+        else None
+    )
+
     scenarios = load_scenarios()
     if args.limit_scenarios is not None:
         scenarios = scenarios[: args.limit_scenarios]
@@ -168,6 +227,14 @@ def main():
     print("=" * 60)
     print(f"Baseline  : {args.baseline}")
     print(f"Scenarios : {len(scenarios)}")
+    print(
+        "Prices    : "
+        + (
+            f"lambda_l={args.lambda_l:g}, lambda_c={args.lambda_c:g}"
+            if prices
+            else "(none given — priced baselines use their config default)"
+        )
+    )
     print()
 
     # Built once and reused across every scenario's precompute_signals()
@@ -180,7 +247,9 @@ def main():
     for scenario in scenarios:
         conversation_id = f"e3_{args.baseline}_{scenario['id']:03d}"
         results.append(
-            run_one_scenario(scenario, args.baseline, conversation_id, llm_client)
+            run_one_scenario(
+                scenario, args.baseline, conversation_id, llm_client, prices
+            )
         )
 
     with open(RESULTS_FILE, "w", encoding="utf-8") as file:

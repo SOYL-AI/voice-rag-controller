@@ -16,8 +16,14 @@ name so a merge conflict here is easy to resolve.
 """
 
 from controller.baselines import b0_never_retrieve  # noqa: F401 -- import-for-side-effect: runs @register("b0")
+from controller.baselines import b8_independent  # noqa: F401 -- import-for-side-effect: runs @register("b8")
+from controller.baselines import b9_decomposed  # noqa: F401 -- import-for-side-effect: runs @register("b9")
+from controller.baselines import ours  # noqa: F401 -- import-for-side-effect: runs @register("ours")
 
-# B1-B9 / Ours land here as their modules are built, e.g.:
+# B1-B7 land here as their modules are built, e.g.:
 #   from controller.baselines import b1_threshold_tracker  # noqa: F401
-#   from controller.baselines import b9_shared_price  # noqa: F401
-#   from controller.baselines import ours  # noqa: F401
+#
+# Note: controller/baselines/_objective.py is NOT imported here. It's the
+# shared objective/cost model the price-aware baselines (ours, b9) import
+# themselves — it registers no baseline, so it has no side effect to
+# trigger and doesn't belong in this list.
