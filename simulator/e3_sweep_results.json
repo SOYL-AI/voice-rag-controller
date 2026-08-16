@@ -1,16 +1,40 @@
 [
   {
     "scenario_id": 1,
-    "conversation_id": "e3_b0_001",
+    "conversation_id": "e3_ours_001",
     "question": "What is the hotel's check-in policy?",
     "status": "success",
-    "log_path": "logs/e3_b0_001.jsonl",
-    "prices": null,
+    "log_path": "logs/e3_ours_001.jsonl",
+    "prices": {
+      "lambda_l": 1.2571,
+      "lambda_c": 0.05
+    },
+    "controller_action": {
+      "action": "retrieve",
+      "reason": "Ours(joint): retrieve@fixed_early_proxy U=+0.304 (voi=0.966, q=0.966, lat=0.484s, comp=1.08) beats retrieve@immediate by +0.170 @ lambda_l=1.2571, lambda_c=0.05 | exposed_lat=0.484s (full 0.672s - hidden 0.188s) | band=(0.662,0.895]@fixed_early_proxy w=+0.232 | band:above (voi=0.966 > 0.895, B9 retrieves too)",
+      "baseline": "ours",
+      "timing": "fixed_early_proxy",
+      "lambda_l": 1.2571,
+      "lambda_c": 0.05
+    }
+  },
+  {
+    "scenario_id": 2,
+    "conversation_id": "e3_ours_002",
+    "question": "What is the hotel's check-out policy?",
+    "status": "success",
+    "log_path": "logs/e3_ours_002.jsonl",
+    "prices": {
+      "lambda_l": 1.2571,
+      "lambda_c": 0.05
+    },
     "controller_action": {
       "action": "skip_retrieval",
-      "reason": "B0: never retrieve",
-      "baseline": "b0",
-      "timing": "sentence_end"
+      "reason": "Ours(joint): skip@sentence_end U=+0.000 (voi=0.560, q=0.000, lat=0.000s, comp=0.00) beats retrieve@fixed_early_proxy by +0.102 @ lambda_l=1.2571, lambda_c=0.05 | exposed_lat=0.000s (skipped; would have been 0.484s @fixed_early_proxy vs B9's full 0.672s) | band=(0.662,0.895]@fixed_early_proxy w=+0.232 | band:below (voi=0.560, B9 skips too)",
+      "baseline": "ours",
+      "timing": "sentence_end",
+      "lambda_l": 1.2571,
+      "lambda_c": 0.05
     }
   }
 ]

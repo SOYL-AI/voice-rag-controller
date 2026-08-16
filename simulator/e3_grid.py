@@ -124,7 +124,11 @@ from controller.baselines._objective import (  # noqa: E402
 from harness.stats import percentile  # noqa: E402
 from llm.client import make_client  # noqa: E402
 from llm.config import load_config as load_llm_config  # noqa: E402
-from simulator.e3_signals import precompute_signals  # noqa: E402
+from simulator.e3_signals import (  # noqa: E402
+    PRECOMPUTE_PROTOCOL_VERSION,
+    load_e1_protocol,
+    precompute_signals,
+)
 
 SCENARIOS_FILE = Path(__file__).parent / "scenarios.json"
 SIGNALS_CACHE = Path(__file__).parent / "e3_scenario_signals.json"
@@ -154,21 +158,48 @@ def load_or_build_signals(refresh: bool = False) -> dict:
     regenerate rather than the cache being topped up in place: a cache
     holding half mock and half real signals would be undetectable
     downstream.
+
+    It records the PRECOMPUTE PROTOCOL for the same reason, and invalidates
+    on it too. Signals averaged over E1's five seeds are not comparable to
+    the single unseeded draw the pre-v2 cache holds (simulator/e3_signals.py's
+    docstring), and reusing the old file would derive a grid from signals no
+    current code path can reproduce.
     """
     llm_cfg = load_llm_config()
     backend = llm_cfg.get("backend")
     model = llm_cfg.get("active_model")
+    protocol = load_e1_protocol()
 
     if SIGNALS_CACHE.exists() and not refresh:
         with open(SIGNALS_CACHE, "r", encoding="utf-8") as handle:
             cache = json.load(handle)
-        if cache.get("backend") == backend and cache.get("active_model") == model:
+        cached_protocol = cache.get("precompute") or {}
+        if cache.get("backend") != backend or cache.get("active_model") != model:
+            print(
+                f"signals cache was built under backend={cache.get('backend')!r} / "
+                f"model={cache.get('active_model')!r} but the config now says "
+                f"backend={backend!r} / model={model!r} — rebuilding.",
+            )
+        elif (
+            cached_protocol.get("protocol_version") != PRECOMPUTE_PROTOCOL_VERSION
+            or cached_protocol.get("seeds") != list(protocol["seeds"])
+            or cached_protocol.get("temperature") != protocol["temperature"]
+            or cached_protocol.get("top_p") != protocol["top_p"]
+            or cached_protocol.get("max_tokens") != protocol["max_tokens"]
+        ):
+            print(
+                f"signals cache was built under precompute protocol "
+                f"v{cached_protocol.get('protocol_version')} "
+                f"(seeds={cached_protocol.get('seeds')}, "
+                f"temperature={cached_protocol.get('temperature')}, "
+                f"max_tokens={cached_protocol.get('max_tokens')}) but the current "
+                f"protocol is v{PRECOMPUTE_PROTOCOL_VERSION} "
+                f"(seeds={protocol['seeds']}, "
+                f"temperature={protocol['temperature']}, "
+                f"max_tokens={protocol['max_tokens']}) — rebuilding.",
+            )
+        else:
             return cache
-        print(
-            f"signals cache was built under backend={cache.get('backend')!r} / "
-            f"model={cache.get('active_model')!r} but the config now says "
-            f"backend={backend!r} / model={model!r} — rebuilding.",
-        )
 
     with open(SCENARIOS_FILE, "r", encoding="utf-8") as handle:
         scenarios = json.load(handle)
@@ -177,8 +208,20 @@ def load_or_build_signals(refresh: bool = False) -> dict:
           f"(backend={backend}, model={model}) ...")
     client = make_client(llm_cfg)
     entries = []
+    precompute_provenance = None
     for scenario in scenarios:
         snapshot = precompute_signals(scenario["question"], client=client, cfg=llm_cfg)
+        provenance = snapshot["precompute"]
+        if precompute_provenance is None:
+            # Identical for every scenario (it is the protocol, not the
+            # result), so it is stored once at the cache level rather than
+            # repeated 50 times.
+            precompute_provenance = {
+                key: value
+                for key, value in provenance.items()
+                if key not in {"per_draw_uncertainty", "token_counts_per_draw",
+                               "n_draws_by_signal"}
+            }
         entries.append(
             {
                 "scenario_id": scenario["id"],
@@ -189,6 +232,13 @@ def load_or_build_signals(refresh: bool = False) -> dict:
                 # generated text that no consumer of this file looks at.
                 "model_uncertainty": snapshot["model"]["uncertainty"],
                 "tracker": snapshot["tracker"],
+                # The draws behind the means above. Not read by the grid, and
+                # kept anyway: they are the only record of how much spread
+                # each mean was taken over, which is what a reader checking
+                # that these signals are stable has to look at. Numbers, not
+                # generated text, so this stays small.
+                "model_uncertainty_per_draw": provenance["per_draw_uncertainty"],
+                "n_draws_by_signal": provenance["n_draws_by_signal"],
             }
         )
 
@@ -196,11 +246,14 @@ def load_or_build_signals(refresh: bool = False) -> dict:
         "_comment": (
             "GENERATED by `python -m simulator.e3_grid --refresh-signals` — the "
             "frozen closed-book belief signals E3's price grid is derived from. "
-            "Same snapshot simulator/e3_signals.py hands every baseline."
+            "Same snapshot simulator/e3_signals.py hands every baseline. Each "
+            "model_uncertainty is a mean over the E1-matched draws recorded in "
+            "\"precompute\" below."
         ),
         "built_at_utc": datetime.now(timezone.utc).isoformat(),
         "backend": backend,
         "active_model": model,
+        "precompute": precompute_provenance,
         "n_scenarios": len(entries),
         "scenarios_file": "simulator/scenarios.json",
         "signals": entries,
@@ -441,6 +494,14 @@ def _print_report(cache, cfg, summary, grid) -> None:
     print(f"              {calibration.source}")
     print(f"signals     : backend={cache['backend']} model={cache['active_model']} "
           f"({cache['n_scenarios']} scenarios, built {cache['built_at_utc'][:19]}Z)")
+    precompute = cache.get("precompute") or {}
+    if precompute:
+        print(f"              protocol v{precompute.get('protocol_version')} "
+              f"{precompute.get('protocol')}: mean over "
+              f"{precompute.get('n_draws')} draws at temperature "
+              f"{precompute.get('temperature')}, seeds {precompute.get('seeds')}, "
+              f"max_tokens {precompute.get('max_tokens')} "
+              f"(from {precompute.get('protocol_source')})")
     if cache["backend"] == "mock":
         print("              *** MOCK SIGNALS — the calibration is real, the")
         print("              signals it is applied to are synthetic. Re-run")
@@ -566,6 +627,10 @@ def main() -> int:
             "built_at_utc": cache["built_at_utc"],
             "n_scenarios": cache["n_scenarios"],
             "are_real_model_signals": cache["backend"] != "mock",
+            # The sampling protocol behind those signals. A grid derived from
+            # one unseeded draw and one derived from the E1-matched mean are
+            # different artifacts; this is what tells them apart.
+            "precompute": cache.get("precompute"),
         },
         "voi_distribution": summary,
         "voi_per_scenario": records,

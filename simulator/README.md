@@ -33,6 +33,12 @@ Two Experiment 3 files sit in this folder because they operate on
 
 - `e3_signals.py` — the frozen per-scenario closed-book belief-signal precompute every E3
   baseline is handed (so baselines differ only in decision logic, never in what they saw).
+  It runs **Experiment 1's protocol**: one generation per E1 seed (`[11, 23, 37, 53, 71]`) at
+  E1's temperature 0.2 / top_p 0.9 / max_tokens 80, read straight out of
+  `llm/experiment1/config.json`, with every uncertainty signal averaged across the five draws.
+  Fixed seeds make it exactly reproducible; matching E1's sampling distribution is what makes
+  the averaged entropy the quantity `controller/baselines/e1_calibration.json` was fitted on.
+  A single unseeded draw (the pre-v2 protocol) was neither.
 - `e3_grid.py` — derives E3's λ_l price grid by tiling divergence bands across the VoI
   distribution of these 50 scenarios. One command regenerates it:
 
@@ -42,6 +48,7 @@ Two Experiment 3 files sit in this folder because they operate on
   ```
 
   It caches the per-scenario signals in `e3_scenario_signals.json` (committed) so grid
-  regeneration needs no model call, and records the backend those signals came from — with
+  regeneration needs no model call, and records the backend **and the precompute protocol**
+  those signals came from, rebuilding automatically if either no longer matches — with
   `llm.backend: mock` they are synthetic and the grid must be regenerated against the real
   backend before anything is reported off it. See `controller/README.md` for the formula.
