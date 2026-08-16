@@ -164,10 +164,21 @@ def load_or_build_signals(refresh: bool = False) -> dict:
     the single unseeded draw the pre-v2 cache holds (simulator/e3_signals.py's
     docstring), and reusing the old file would derive a grid from signals no
     current code path can reproduce.
+
+    The recorded model is llm/config.py's RESOLVED model_key, not the config
+    file's `active_model` literal. VOICE_RAG_MODEL overrides which model is
+    served (llm/client.py's VLLMClient sends cfg["model"], the resolved hf_id)
+    while leaving `active_model` at its YAML default, so reading `active_model`
+    here would stamp the cache — and the price grid derived from it — with a
+    model that never produced these signals. That is not hypothetical: the real
+    Modal runs are driven with VOICE_RAG_MODEL=mistral7b_v03 against a
+    config.yaml whose active_model is still llama31_8b. The hf_id is recorded
+    alongside it so the artifact is unambiguous about which checkpoint answered.
     """
     llm_cfg = load_llm_config()
     backend = llm_cfg.get("backend")
-    model = llm_cfg.get("active_model")
+    model = llm_cfg.get("model_key") or llm_cfg.get("active_model")
+    model_hf_id = llm_cfg.get("model")
     protocol = load_e1_protocol()
 
     if SIGNALS_CACHE.exists() and not refresh:
@@ -253,6 +264,7 @@ def load_or_build_signals(refresh: bool = False) -> dict:
         "built_at_utc": datetime.now(timezone.utc).isoformat(),
         "backend": backend,
         "active_model": model,
+        "model_hf_id": model_hf_id,
         "precompute": precompute_provenance,
         "n_scenarios": len(entries),
         "scenarios_file": "simulator/scenarios.json",
@@ -324,6 +336,45 @@ def summarize(records: list, cfg: dict) -> dict:
 # ---------------------------------------------------------------------------
 # Step 3 — the band-tiling grid
 # ---------------------------------------------------------------------------
+def _timing_stable_from(
+    cfg: dict, lambda_c: float, timing: str, probe: float = 1.0, tol: float = 1e-9
+) -> float:
+    """
+    Lowest lambda_l at or above which divergence_band()'s argmin timing is
+    `timing`, found by bisection on divergence_band() itself.
+
+    Returns 0.0 when `timing` already wins at arbitrarily small prices (no
+    constraint). Assumes what the pricing makes true: as lambda_l rises,
+    latency matters more and the argmin moves monotonically toward the
+    highest-overlap timing, so the set of prices where the argmin is the
+    high-overlap `timing` is an interval reaching upward. `probe` must be a
+    price where the argmin already IS `timing` — derive_grid() passes the same
+    probe it read the affine coefficients from.
+    """
+    def timing_at(lambda_l: float) -> str:
+        return divergence_band(Prices(lambda_l=lambda_l, lambda_c=lambda_c), cfg).timing
+
+    if timing_at(probe) != timing:
+        raise ValueError(
+            f"probe price {probe} has argmin timing {timing_at(probe)!r}, not "
+            f"{timing!r}; cannot bisect for the stability threshold from it."
+        )
+
+    low = 0.0
+    if timing_at(low) == timing:
+        return 0.0
+
+    high = probe
+    while high - low > tol:
+        mid = (low + high) / 2.0
+        if timing_at(mid) == timing:
+            high = mid
+        else:
+            low = mid
+    return high
+
+
+
 def derive_grid(records: list, cfg: dict, lambda_c: float, refine: int = 1) -> dict:
     """
     Tile divergence bands across the observed VoI range and return the
@@ -362,6 +413,21 @@ def derive_grid(records: list, cfg: dict, lambda_c: float, refine: int = 1) -> d
         lambda_c * (w_ours - w_b9) / overlap if overlap > 0 else float("inf")
     )
 
+    # SECOND lower bound on the start price, same shape as lambda_degenerate:
+    # the price below which the argmin timing is no longer `timing`, so the
+    # affine coefficients taken from it stop describing the band. Cheap
+    # latency makes the compute-waste term dominate, and the argmin walks back
+    # down TIMING_ORDER (fixed_early_proxy has the most overlap but the most
+    # waste; sentence_end the least of both). The tiling recurrence assumes one
+    # timing throughout — the assertion in the loop enforces that — so the grid
+    # has to start above the crossover rather than run into it.
+    #
+    # Found by bisection on _objective.divergence_band() rather than by solving
+    # the crossover in closed form here: the closed form is only clean while
+    # partial_query_risk is 0, and this module does not reimplement the
+    # controllers' arithmetic (see this function's docstring).
+    lambda_timing_stable = _timing_stable_from(cfg, lambda_c, timing)
+
     values = [r["voi"] for r in records]
     voi_max = max(values)
     # Reachable = above the compute floor of ours_cut, which no price can
@@ -383,6 +449,7 @@ def derive_grid(records: list, cfg: dict, lambda_c: float, refine: int = 1) -> d
         v_lo = min(reachable)
         # START: band top edge lands on the lowest reachable VoI.
         lambda_l = (v_lo - lambda_c * w_b9) / full_s
+        data_start = lambda_l
         if lambda_l <= lambda_degenerate:
             notes.append(
                 f"start price from the data ({lambda_l:.6f}) was at or below the "
@@ -390,6 +457,16 @@ def derive_grid(records: list, cfg: dict, lambda_c: float, refine: int = 1) -> d
                 f"non-positive width; started just above it instead."
             )
             lambda_l = lambda_degenerate * 1.000001
+        if lambda_l < lambda_timing_stable:
+            notes.append(
+                f"start price from the data ({data_start:.6f}) was below "
+                f"{lambda_timing_stable:.6f}, the price above which the argmin "
+                f"timing is stably {timing!r}; below it the cheaper-latency "
+                f"timings stop winning and the tiling recurrence's one-timing "
+                f"assumption fails. Started at the stable price instead, so the "
+                f"grid does not cover VoI below its first band's lower edge."
+            )
+            lambda_l = lambda_timing_stable
 
         step = 0
         # STOP: the first band whose bottom edge has passed the top of the
@@ -440,6 +517,7 @@ def derive_grid(records: list, cfg: dict, lambda_c: float, refine: int = 1) -> d
         "unreachable_voi_max": max(unreachable) if unreachable else None,
         "compute_floor": compute_floor,
         "lambda_degenerate": lambda_degenerate,
+        "lambda_timing_stable": lambda_timing_stable,
         "constants": {
             "timing": timing,
             "retrieval_latency_s": full_s,
@@ -493,6 +571,7 @@ def _print_report(cache, cfg, summary, grid) -> None:
     print(f"calibration : {calibration.describe()}")
     print(f"              {calibration.source}")
     print(f"signals     : backend={cache['backend']} model={cache['active_model']} "
+          f"({cache.get('model_hf_id')}) "
           f"({cache['n_scenarios']} scenarios, built {cache['built_at_utc'][:19]}Z)")
     precompute = cache.get("precompute") or {}
     if precompute:
@@ -624,6 +703,7 @@ def main() -> int:
             "cache": "simulator/e3_scenario_signals.json",
             "backend": cache["backend"],
             "active_model": cache["active_model"],
+            "model_hf_id": cache.get("model_hf_id"),
             "built_at_utc": cache["built_at_utc"],
             "n_scenarios": cache["n_scenarios"],
             "are_real_model_signals": cache["backend"] != "mock",
