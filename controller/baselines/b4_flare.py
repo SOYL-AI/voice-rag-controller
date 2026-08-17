@@ -97,7 +97,7 @@ if __name__ == "__main__":
         elapsed_ms=0,
         user_end_known=True,
         turn_id=1,
-        conversation_id="conv_b0_selftest",
+        conversation_id="conv_b4_selftest",
         prices={},
     )
     decision = baseline.decide(ctx)
