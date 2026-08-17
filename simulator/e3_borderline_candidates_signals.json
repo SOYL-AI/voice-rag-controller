@@ -1,0 +1,799 @@
+{
+  "_comment": "Screening pass over simulator/scenarios_borderline_candidates.json (Lakshya, branch phase3-e3), run through the SAME real-backend precompute as the committed balanced set so max_entropy_nats is on the same scale. Not a scenario set: this only says which candidates land in the borderline band. Keepers get folded into a rebalanced scenarios.json, after which the signal run and grid are redone.",
+  "generated_at_utc": "2026-08-17T06:23:21.914763+00:00",
+  "backend": "vllm",
+  "active_model": "mistral7b_v03",
+  "model_hf_id": "mistralai/Mistral-7B-Instruct-v0.3",
+  "precompute": {
+    "protocol_version": 2,
+    "protocol": "e1_matched_multi_seed_mean",
+    "n_draws": 5,
+    "seeds": [
+      11,
+      23,
+      37,
+      53,
+      71
+    ],
+    "temperature": 0.2,
+    "top_p": 0.9,
+    "max_tokens": 80,
+    "protocol_source": "llm\\experiment1\\config.json"
+  },
+  "keep_band_nats": {
+    "low": 1.1,
+    "high": 1.45,
+    "rationale": "Between the class means measured on the committed balanced run: not-needed 0.9670, needed 1.6707 nats. Candidates landing here populate the empty middle of the VoI distribution."
+  },
+  "source_file": "simulator/scenarios_borderline_candidates.json",
+  "source_branch": "phase3-e3",
+  "n_candidates": 20,
+  "n_keep": 0,
+  "candidates": [
+    {
+      "candidate_id": 1,
+      "question": "If a hotel's check-in time is 2 PM, what usually happens if I arrive at 11 AM?",
+      "retrieval_needed": false,
+      "max_entropy_nats": 1.6491755914630424,
+      "per_draw_max_entropy_nats": [
+        1.574822251766778,
+        1.6897669379337783,
+        1.6274083209806196,
+        1.6769402233170176,
+        1.6769402233170176
+      ],
+      "mean_entropy_nats": 0.48898165563780405,
+      "negative_min_logprob": 1.3102540969848633,
+      "verdict": "drop",
+      "model_uncertainty": {
+        "negative_mean_logprob": 0.2554436849825851,
+        "negative_min_logprob": 1.3102540969848633,
+        "perplexity": 1.2918730316550007,
+        "one_minus_mean_confidence": 0.1861921156541007,
+        "one_minus_min_confidence": 0.7270032475147652,
+        "low_confidence_fraction": 0.1325,
+        "mean_entropy_nats": 0.48898165563780405,
+        "max_entropy_nats": 1.6491755914630424
+      },
+      "tracker": {
+        "unknown_slots": [
+          "room",
+          "people"
+        ],
+        "unknown_count": 2,
+        "measured_slot_count": 4,
+        "unknown_fraction": 0.5,
+        "intent_unknown": false,
+        "parsed_ok": true
+      }
+    },
+    {
+      "candidate_id": 2,
+      "question": "If a hotel allows late check-out until 2 PM, under what circumstances would an additional charge usually apply?",
+      "retrieval_needed": true,
+      "max_entropy_nats": 1.6835738460208476,
+      "per_draw_max_entropy_nats": [
+        1.7356502995147032,
+        1.7367580157445117,
+        1.6594471206331387,
+        1.6450431021735983,
+        1.6409706920382852
+      ],
+      "mean_entropy_nats": 0.5445246065476246,
+      "negative_min_logprob": 1.6002898216247559,
+      "verdict": "drop",
+      "model_uncertainty": {
+        "negative_mean_logprob": 0.2985541928850387,
+        "negative_min_logprob": 1.6002898216247559,
+        "perplexity": 1.348585378044329,
+        "one_minus_mean_confidence": 0.21016478060845295,
+        "one_minus_min_confidence": 0.7894587887502278,
+        "low_confidence_fraction": 0.16999999999999998,
+        "mean_entropy_nats": 0.5445246065476246,
+        "max_entropy_nats": 1.6835738460208476
+      },
+      "tracker": {
+        "unknown_slots": [
+          "intent",
+          "room",
+          "people"
+        ],
+        "unknown_count": 3,
+        "measured_slot_count": 4,
+        "unknown_fraction": 0.75,
+        "intent_unknown": true,
+        "parsed_ok": true
+      }
+    },
+    {
+      "candidate_id": 3,
+      "question": "Under what circumstances might a hotel upgrade a guest's room?",
+      "retrieval_needed": false,
+      "max_entropy_nats": 1.5181203581214922,
+      "per_draw_max_entropy_nats": [
+        1.5291423326777616,
+        1.575235829007282,
+        1.5340293534005496,
+        1.3947400254167337,
+        1.5574542501051336
+      ],
+      "mean_entropy_nats": 0.3474949754460016,
+      "negative_min_logprob": 1.163662838935852,
+      "verdict": "drop",
+      "model_uncertainty": {
+        "negative_mean_logprob": 0.18108272368046707,
+        "negative_min_logprob": 1.163662838935852,
+        "perplexity": 1.198632735316517,
+        "one_minus_mean_confidence": 0.137150637056556,
+        "one_minus_min_confidence": 0.68363652700436,
+        "low_confidence_fraction": 0.0725,
+        "mean_entropy_nats": 0.3474949754460016,
+        "max_entropy_nats": 1.5181203581214922
+      },
+      "tracker": {
+        "unknown_slots": [
+          "room",
+          "time",
+          "people"
+        ],
+        "unknown_count": 3,
+        "measured_slot_count": 4,
+        "unknown_fraction": 0.75,
+        "intent_unknown": false,
+        "parsed_ok": true
+      }
+    },
+    {
+      "candidate_id": 4,
+      "question": "How would you decide whether to arrange airport transportation through the hotel or book a taxi yourself?",
+      "retrieval_needed": false,
+      "max_entropy_nats": 1.7221910011862938,
+      "per_draw_max_entropy_nats": [
+        1.7325491879271069,
+        1.728669616494638,
+        1.7126341581654776,
+        1.728669616494638,
+        1.7084324268496076
+      ],
+      "mean_entropy_nats": 0.4240867158324665,
+      "negative_min_logprob": 1.4890716791152954,
+      "verdict": "drop",
+      "model_uncertainty": {
+        "negative_mean_logprob": 0.21367555358030885,
+        "negative_min_logprob": 1.4890716791152954,
+        "perplexity": 1.2382691109409276,
+        "one_minus_mean_confidence": 0.15353188400988577,
+        "one_minus_min_confidence": 0.7702445101340919,
+        "low_confidence_fraction": 0.095,
+        "mean_entropy_nats": 0.4240867158324665,
+        "max_entropy_nats": 1.7221910011862938
+      },
+      "tracker": {
+        "unknown_slots": [
+          "intent",
+          "room",
+          "time",
+          "people"
+        ],
+        "unknown_count": 4,
+        "measured_slot_count": 4,
+        "unknown_fraction": 1.0,
+        "intent_unknown": true,
+        "parsed_ok": true
+      }
+    },
+    {
+      "candidate_id": 5,
+      "question": "Is breakfast usually included with a deluxe room booking?",
+      "retrieval_needed": true,
+      "max_entropy_nats": 1.4891608179767282,
+      "per_draw_max_entropy_nats": [
+        1.5214016186550448,
+        1.481100617807149,
+        1.481100617807149,
+        1.481100617807149,
+        1.481100617807149
+      ],
+      "mean_entropy_nats": 0.39603219120244404,
+      "negative_min_logprob": 1.0554358243942261,
+      "verdict": "drop",
+      "model_uncertainty": {
+        "negative_mean_logprob": 0.18824105288352522,
+        "negative_min_logprob": 1.0554358243942261,
+        "perplexity": 1.2071304142743913,
+        "one_minus_mean_confidence": 0.1461117244048849,
+        "one_minus_min_confidence": 0.651890096946967,
+        "low_confidence_fraction": 0.07850180721859636,
+        "mean_entropy_nats": 0.39603219120244404,
+        "max_entropy_nats": 1.4891608179767282
+      },
+      "tracker": {
+        "unknown_slots": [
+          "time",
+          "people"
+        ],
+        "unknown_count": 2,
+        "measured_slot_count": 4,
+        "unknown_fraction": 0.5,
+        "intent_unknown": false,
+        "parsed_ok": true
+      }
+    },
+    {
+      "candidate_id": 6,
+      "question": "Do hotels usually reserve parking spaces for guests automatically?",
+      "retrieval_needed": true,
+      "max_entropy_nats": 1.4753914344316985,
+      "per_draw_max_entropy_nats": [
+        1.4680288936485397,
+        1.477232069627488,
+        1.477232069627488,
+        1.477232069627488,
+        1.477232069627488
+      ],
+      "mean_entropy_nats": 0.4802699759292663,
+      "negative_min_logprob": 1.1171589970588685,
+      "verdict": "drop",
+      "model_uncertainty": {
+        "negative_mean_logprob": 0.23621162445642216,
+        "negative_min_logprob": 1.1171589970588685,
+        "perplexity": 1.2675146053260575,
+        "one_minus_mean_confidence": 0.17739592704811336,
+        "one_minus_min_confidence": 0.6702204909762257,
+        "low_confidence_fraction": 0.13862246793923813,
+        "mean_entropy_nats": 0.4802699759292663,
+        "max_entropy_nats": 1.4753914344316985
+      },
+      "tracker": {
+        "unknown_slots": [
+          "intent",
+          "room",
+          "time",
+          "people"
+        ],
+        "unknown_count": 4,
+        "measured_slot_count": 4,
+        "unknown_fraction": 1.0,
+        "intent_unknown": true,
+        "parsed_ok": true
+      }
+    },
+    {
+      "candidate_id": 7,
+      "question": "If I leave the 'Do Not Disturb' sign on all day, will housekeeping usually return later?",
+      "retrieval_needed": true,
+      "max_entropy_nats": 1.665626659253712,
+      "per_draw_max_entropy_nats": [
+        1.7101962158724957,
+        1.509018120335703,
+        1.6641369360692106,
+        1.6873085558041627,
+        1.7574734681869886
+      ],
+      "mean_entropy_nats": 0.5192237603192849,
+      "negative_min_logprob": 1.4471978425979615,
+      "verdict": "drop",
+      "model_uncertainty": {
+        "negative_mean_logprob": 0.2719994233751716,
+        "negative_min_logprob": 1.4471978425979615,
+        "perplexity": 1.312849954583285,
+        "one_minus_mean_confidence": 0.19562602680615113,
+        "one_minus_min_confidence": 0.7573643642017,
+        "low_confidence_fraction": 0.1570922225033027,
+        "mean_entropy_nats": 0.5192237603192849,
+        "max_entropy_nats": 1.665626659253712
+      },
+      "tracker": {
+        "unknown_slots": [
+          "room",
+          "time",
+          "people"
+        ],
+        "unknown_count": 3,
+        "measured_slot_count": 4,
+        "unknown_fraction": 0.75,
+        "intent_unknown": false,
+        "parsed_ok": true
+      }
+    },
+    {
+      "candidate_id": 8,
+      "question": "If I booked through a travel website, does the hotel's cancellation policy always apply?",
+      "retrieval_needed": true,
+      "max_entropy_nats": 1.6481129552237435,
+      "per_draw_max_entropy_nats": [
+        1.6902999785034583,
+        1.634234737652815,
+        1.697299800424988,
+        1.697299800424988,
+        1.5214304591124677
+      ],
+      "mean_entropy_nats": 0.46422428704786245,
+      "negative_min_logprob": 1.2976698875427246,
+      "verdict": "drop",
+      "model_uncertainty": {
+        "negative_mean_logprob": 0.24719028536577117,
+        "negative_min_logprob": 1.2976698875427246,
+        "perplexity": 1.281078967697899,
+        "one_minus_mean_confidence": 0.17753201415516426,
+        "one_minus_min_confidence": 0.7260616158597981,
+        "low_confidence_fraction": 0.1447776111944028,
+        "mean_entropy_nats": 0.46422428704786245,
+        "max_entropy_nats": 1.6481129552237435
+      },
+      "tracker": {
+        "unknown_slots": [
+          "intent",
+          "room",
+          "time",
+          "people"
+        ],
+        "unknown_count": 4,
+        "measured_slot_count": 4,
+        "unknown_fraction": 1.0,
+        "intent_unknown": true,
+        "parsed_ok": true
+      }
+    },
+    {
+      "candidate_id": 9,
+      "question": "My flight lands at 8 AM but hotel check-in is at 2 PM. What options do hotels usually offer?",
+      "retrieval_needed": false,
+      "max_entropy_nats": 1.6850955146404645,
+      "per_draw_max_entropy_nats": [
+        1.6235143589487366,
+        1.6745660126672224,
+        1.7168540357145474,
+        1.6745660126672224,
+        1.7359771532045922
+      ],
+      "mean_entropy_nats": 0.5171814893899251,
+      "negative_min_logprob": 1.343253254890442,
+      "verdict": "drop",
+      "model_uncertainty": {
+        "negative_mean_logprob": 0.26902284690261197,
+        "negative_min_logprob": 1.343253254890442,
+        "perplexity": 1.3088408269403529,
+        "one_minus_mean_confidence": 0.1960472871737507,
+        "one_minus_min_confidence": 0.737201699121891,
+        "low_confidence_fraction": 0.15425882744836777,
+        "mean_entropy_nats": 0.5171814893899251,
+        "max_entropy_nats": 1.6850955146404645
+      },
+      "tracker": {
+        "unknown_slots": [
+          "room",
+          "people"
+        ],
+        "unknown_count": 2,
+        "measured_slot_count": 4,
+        "unknown_fraction": 0.5,
+        "intent_unknown": false,
+        "parsed_ok": true
+      }
+    },
+    {
+      "candidate_id": 10,
+      "question": "If I need a suit cleaned before an evening meeting, when should I usually submit it for hotel laundry?",
+      "retrieval_needed": false,
+      "max_entropy_nats": 1.4858577494606742,
+      "per_draw_max_entropy_nats": [
+        1.5490899719166198,
+        1.4393373282430766,
+        1.4393373282430766,
+        1.4577642237344621,
+        1.543759895166136
+      ],
+      "mean_entropy_nats": 0.5088841022662516,
+      "negative_min_logprob": 1.0542188167572022,
+      "verdict": "drop",
+      "model_uncertainty": {
+        "negative_mean_logprob": 0.24410556935124195,
+        "negative_min_logprob": 1.0542188167572022,
+        "perplexity": 1.2766647043461197,
+        "one_minus_mean_confidence": 0.1849390926029963,
+        "one_minus_min_confidence": 0.649692731362028,
+        "low_confidence_fraction": 0.10987983809764734,
+        "mean_entropy_nats": 0.5088841022662516,
+        "max_entropy_nats": 1.4858577494606742
+      },
+      "tracker": {
+        "unknown_slots": [
+          "room",
+          "time",
+          "people"
+        ],
+        "unknown_count": 3,
+        "measured_slot_count": 4,
+        "unknown_fraction": 0.75,
+        "intent_unknown": false,
+        "parsed_ok": true
+      }
+    },
+    {
+      "candidate_id": 11,
+      "question": "If I have a severe nut allergy, what information should I give a hotel restaurant before ordering?",
+      "retrieval_needed": false,
+      "max_entropy_nats": 1.686924821856972,
+      "per_draw_max_entropy_nats": [
+        1.7527810209392005,
+        1.640312654540852,
+        1.6872532752836016,
+        1.6600720706181744,
+        1.6942050879030301
+      ],
+      "mean_entropy_nats": 0.6197136374075691,
+      "negative_min_logprob": 1.6498381853103639,
+      "verdict": "drop",
+      "model_uncertainty": {
+        "negative_mean_logprob": 0.3475667528436346,
+        "negative_min_logprob": 1.6498381853103639,
+        "perplexity": 1.417150292580725,
+        "one_minus_mean_confidence": 0.2422241785409423,
+        "one_minus_min_confidence": 0.7998304185875393,
+        "low_confidence_fraction": 0.21956203716323658,
+        "mean_entropy_nats": 0.6197136374075691,
+        "max_entropy_nats": 1.686924821856972
+      },
+      "tracker": {
+        "unknown_slots": [
+          "intent",
+          "room",
+          "time",
+          "people"
+        ],
+        "unknown_count": 4,
+        "measured_slot_count": 4,
+        "unknown_fraction": 1.0,
+        "intent_unknown": true,
+        "parsed_ok": true
+      }
+    },
+    {
+      "candidate_id": 12,
+      "question": "If I realize I left my charger after checking out, what is the normal process hotels follow?",
+      "retrieval_needed": false,
+      "max_entropy_nats": 1.7288457494908929,
+      "per_draw_max_entropy_nats": [
+        1.736097215824708,
+        1.7270328829074395,
+        1.7270328829074395,
+        1.7270328829074395,
+        1.7270328829074395
+      ],
+      "mean_entropy_nats": 0.47516120506013665,
+      "negative_min_logprob": 1.5365771055221558,
+      "verdict": "drop",
+      "model_uncertainty": {
+        "negative_mean_logprob": 0.24941257743769096,
+        "negative_min_logprob": 1.5365771055221558,
+        "perplexity": 1.2842341296126143,
+        "one_minus_mean_confidence": 0.17902553537927718,
+        "one_minus_min_confidence": 0.7798699831208407,
+        "low_confidence_fraction": 0.1325,
+        "mean_entropy_nats": 0.47516120506013665,
+        "max_entropy_nats": 1.7288457494908929
+      },
+      "tracker": {
+        "unknown_slots": [
+          "room",
+          "time",
+          "people"
+        ],
+        "unknown_count": 3,
+        "measured_slot_count": 4,
+        "unknown_fraction": 0.75,
+        "intent_unknown": false,
+        "parsed_ok": true
+      }
+    },
+    {
+      "candidate_id": 13,
+      "question": "If the business centre is closed, where can guests usually print boarding passes?",
+      "retrieval_needed": true,
+      "max_entropy_nats": 1.6605155351881737,
+      "per_draw_max_entropy_nats": [
+        1.512372245542494,
+        1.7492692652395163,
+        1.702283179649998,
+        1.6520303400742367,
+        1.6866226454346236
+      ],
+      "mean_entropy_nats": 0.5261357169622088,
+      "negative_min_logprob": 1.372881245613098,
+      "verdict": "drop",
+      "model_uncertainty": {
+        "negative_mean_logprob": 0.2660146508457548,
+        "negative_min_logprob": 1.372881245613098,
+        "perplexity": 1.305369748455116,
+        "one_minus_mean_confidence": 0.19319370042739076,
+        "one_minus_min_confidence": 0.7422970209709151,
+        "low_confidence_fraction": 0.12858729260935142,
+        "mean_entropy_nats": 0.5261357169622088,
+        "max_entropy_nats": 1.6605155351881737
+      },
+      "tracker": {
+        "unknown_slots": [
+          "intent",
+          "room",
+          "time",
+          "people"
+        ],
+        "unknown_count": 4,
+        "measured_slot_count": 4,
+        "unknown_fraction": 1.0,
+        "intent_unknown": true,
+        "parsed_ok": true
+      }
+    },
+    {
+      "candidate_id": 14,
+      "question": "If the hotel loses electricity, which guest services usually continue operating?",
+      "retrieval_needed": true,
+      "max_entropy_nats": 1.688090362296201,
+      "per_draw_max_entropy_nats": [
+        1.7665236655953973,
+        1.6427087967791438,
+        1.6517614021710836,
+        1.7167013775742606,
+        1.6627565693611195
+      ],
+      "mean_entropy_nats": 0.6202699664659874,
+      "negative_min_logprob": 1.9153624296188354,
+      "verdict": "drop",
+      "model_uncertainty": {
+        "negative_mean_logprob": 0.3633120099311255,
+        "negative_min_logprob": 1.9153624296188354,
+        "perplexity": 1.439952654251979,
+        "one_minus_mean_confidence": 0.23959125553838118,
+        "one_minus_min_confidence": 0.8501585021140065,
+        "low_confidence_fraction": 0.225,
+        "mean_entropy_nats": 0.6202699664659874,
+        "max_entropy_nats": 1.688090362296201
+      },
+      "tracker": {
+        "unknown_slots": [
+          "intent",
+          "room",
+          "time",
+          "people"
+        ],
+        "unknown_count": 4,
+        "measured_slot_count": 4,
+        "unknown_fraction": 1.0,
+        "intent_unknown": true,
+        "parsed_ok": true
+      }
+    },
+    {
+      "candidate_id": 15,
+      "question": "How long is an Indian passport typically valid for an adult?",
+      "retrieval_needed": false,
+      "max_entropy_nats": 1.637414457222301,
+      "per_draw_max_entropy_nats": [
+        1.685510119603136,
+        1.7285088362983108,
+        1.591017776736686,
+        1.591017776736686,
+        1.591017776736686
+      ],
+      "mean_entropy_nats": 0.4736646280536564,
+      "negative_min_logprob": 1.5972195386886596,
+      "verdict": "drop",
+      "model_uncertainty": {
+        "negative_mean_logprob": 0.2514522974987489,
+        "negative_min_logprob": 1.5972195386886596,
+        "perplexity": 1.287169802998332,
+        "one_minus_mean_confidence": 0.17897496296380414,
+        "one_minus_min_confidence": 0.7966287493586066,
+        "low_confidence_fraction": 0.13831432496326115,
+        "mean_entropy_nats": 0.4736646280536564,
+        "max_entropy_nats": 1.637414457222301
+      },
+      "tracker": {
+        "unknown_slots": [
+          "intent",
+          "room",
+          "time",
+          "people"
+        ],
+        "unknown_count": 4,
+        "measured_slot_count": 4,
+        "unknown_fraction": 1.0,
+        "intent_unknown": true,
+        "parsed_ok": true
+      }
+    },
+    {
+      "candidate_id": 16,
+      "question": "Why does India use only one time zone despite its width?",
+      "retrieval_needed": false,
+      "max_entropy_nats": 1.6947537146109568,
+      "per_draw_max_entropy_nats": [
+        1.677039159822108,
+        1.6935214354083117,
+        1.7161651070077404,
+        1.6935214354083117,
+        1.6935214354083117
+      ],
+      "mean_entropy_nats": 0.5568493787154175,
+      "negative_min_logprob": 1.5909830570220946,
+      "verdict": "drop",
+      "model_uncertainty": {
+        "negative_mean_logprob": 0.2973013353582809,
+        "negative_min_logprob": 1.5909830570220946,
+        "perplexity": 1.3468919374698245,
+        "one_minus_mean_confidence": 0.20662402223590784,
+        "one_minus_min_confidence": 0.7945437937570267,
+        "low_confidence_fraction": 0.20249999999999999,
+        "mean_entropy_nats": 0.5568493787154175,
+        "max_entropy_nats": 1.6947537146109568
+      },
+      "tracker": {
+        "unknown_slots": [
+          "room",
+          "time",
+          "people"
+        ],
+        "unknown_count": 3,
+        "measured_slot_count": 4,
+        "unknown_fraction": 0.75,
+        "intent_unknown": false,
+        "parsed_ok": true
+      }
+    },
+    {
+      "candidate_id": 17,
+      "question": "If you have an e-ticket but have not checked in, what travel documents will you still need before boarding?",
+      "retrieval_needed": false,
+      "max_entropy_nats": 1.6792082513114757,
+      "per_draw_max_entropy_nats": [
+        1.672100842020021,
+        1.653001885272292,
+        1.7649347587204813,
+        1.653001885272292,
+        1.653001885272292
+      ],
+      "mean_entropy_nats": 0.5729232751548128,
+      "negative_min_logprob": 1.3964614391326904,
+      "verdict": "drop",
+      "model_uncertainty": {
+        "negative_mean_logprob": 0.29520886345944836,
+        "negative_min_logprob": 1.3964614391326904,
+        "perplexity": 1.34388200972496,
+        "one_minus_mean_confidence": 0.2146061480010278,
+        "one_minus_min_confidence": 0.7499862527217458,
+        "low_confidence_fraction": 0.15416569541569541,
+        "mean_entropy_nats": 0.5729232751548128,
+        "max_entropy_nats": 1.6792082513114757
+      },
+      "tracker": {
+        "unknown_slots": [
+          "intent",
+          "room",
+          "time",
+          "people"
+        ],
+        "unknown_count": 4,
+        "measured_slot_count": 4,
+        "unknown_fraction": 1.0,
+        "intent_unknown": true,
+        "parsed_ok": true
+      }
+    },
+    {
+      "candidate_id": 18,
+      "question": "When a credit card is pre-authorized at a hotel, is that the same as being charged?",
+      "retrieval_needed": false,
+      "max_entropy_nats": 1.6494489091553681,
+      "per_draw_max_entropy_nats": [
+        1.6502496455239117,
+        1.6512274170800865,
+        1.609741086495148,
+        1.7262853101825473,
+        1.609741086495148
+      ],
+      "mean_entropy_nats": 0.5567958177282881,
+      "negative_min_logprob": 1.3523273706436156,
+      "verdict": "drop",
+      "model_uncertainty": {
+        "negative_mean_logprob": 0.27927372367915676,
+        "negative_min_logprob": 1.3523273706436156,
+        "perplexity": 1.3221915250596423,
+        "one_minus_mean_confidence": 0.20532526045600402,
+        "one_minus_min_confidence": 0.7408629077016655,
+        "low_confidence_fraction": 0.1454830958842153,
+        "mean_entropy_nats": 0.5567958177282881,
+        "max_entropy_nats": 1.6494489091553681
+      },
+      "tracker": {
+        "unknown_slots": [
+          "intent",
+          "room",
+          "time",
+          "people"
+        ],
+        "unknown_count": 4,
+        "measured_slot_count": 4,
+        "unknown_fraction": 1.0,
+        "intent_unknown": true,
+        "parsed_ok": true
+      }
+    },
+    {
+      "candidate_id": 19,
+      "question": "What amenities are commonly available in a deluxe hotel room?",
+      "retrieval_needed": false,
+      "max_entropy_nats": 1.6967325533660387,
+      "per_draw_max_entropy_nats": [
+        1.6902249306371255,
+        1.713712547196327,
+        1.7230217458145356,
+        1.749191358951297,
+        1.6075121842309068
+      ],
+      "mean_entropy_nats": 0.40532133858235764,
+      "negative_min_logprob": 1.5460684061050416,
+      "verdict": "drop",
+      "model_uncertainty": {
+        "negative_mean_logprob": 0.23147673022042303,
+        "negative_min_logprob": 1.5460684061050416,
+        "perplexity": 1.2612110662212364,
+        "one_minus_mean_confidence": 0.15959948702267146,
+        "one_minus_min_confidence": 0.7822448118753231,
+        "low_confidence_fraction": 0.13500000000000004,
+        "mean_entropy_nats": 0.40532133858235764,
+        "max_entropy_nats": 1.6967325533660387
+      },
+      "tracker": {
+        "unknown_slots": [
+          "time",
+          "people"
+        ],
+        "unknown_count": 2,
+        "measured_slot_count": 4,
+        "unknown_fraction": 0.5,
+        "intent_unknown": false,
+        "parsed_ok": true
+      }
+    },
+    {
+      "candidate_id": 20,
+      "question": "Why do hotels ask guests to show identification during check-in?",
+      "retrieval_needed": false,
+      "max_entropy_nats": 1.6456094779592807,
+      "per_draw_max_entropy_nats": [
+        1.6270163179436712,
+        1.6089927599845442,
+        1.660604552938333,
+        1.603105365433809,
+        1.7283283934960463
+      ],
+      "mean_entropy_nats": 0.5083356355639199,
+      "negative_min_logprob": 1.4026761531829834,
+      "verdict": "drop",
+      "model_uncertainty": {
+        "negative_mean_logprob": 0.2517085523722101,
+        "negative_min_logprob": 1.4026761531829834,
+        "perplexity": 1.286484786179398,
+        "one_minus_mean_confidence": 0.18652047083770776,
+        "one_minus_min_confidence": 0.7475600886874589,
+        "low_confidence_fraction": 0.1375,
+        "mean_entropy_nats": 0.5083356355639199,
+        "max_entropy_nats": 1.6456094779592807
+      },
+      "tracker": {
+        "unknown_slots": [
+          "room",
+          "time",
+          "people"
+        ],
+        "unknown_count": 3,
+        "measured_slot_count": 4,
+        "unknown_fraction": 0.75,
+        "intent_unknown": false,
+        "parsed_ok": true
+      }
+    }
+  ]
+}
