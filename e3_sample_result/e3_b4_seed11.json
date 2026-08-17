@@ -1,0 +1,242 @@
+[
+  {
+    "baseline": "b4",
+    "seed": 11,
+    "scenario_id": 1,
+    "conversation_id": "e3_b4_l0.0_c0.0_s11_001",
+    "question": "[sample scenario 1]",
+    "prices": null,
+    "decision": {
+      "retrieve": true,
+      "timing": "fixed_early_proxy",
+      "reason": "b4: retrieve@fixed_early_proxy (voi=0.8991)",
+      "divergence_band": null
+    },
+    "outcome": {
+      "retrieval_needed_gold": true,
+      "answer_correct": true,
+      "hit_at_3": true,
+      "ttfa_ms": 3146,
+      "retrievals": 1,
+      "prompt_tokens": 512,
+      "controller_overhead_ms": 3
+    },
+    "status": "success"
+  },
+  {
+    "baseline": "b4",
+    "seed": 11,
+    "scenario_id": 2,
+    "conversation_id": "e3_b4_l0.0_c0.0_s11_002",
+    "question": "[sample scenario 2]",
+    "prices": null,
+    "decision": {
+      "retrieve": false,
+      "timing": "sentence_end",
+      "reason": "b4: skip (voi=0.0747)",
+      "divergence_band": null
+    },
+    "outcome": {
+      "retrieval_needed_gold": false,
+      "answer_correct": true,
+      "hit_at_3": null,
+      "ttfa_ms": 3226,
+      "retrievals": 0,
+      "prompt_tokens": 256,
+      "controller_overhead_ms": 3
+    },
+    "status": "success"
+  },
+  {
+    "baseline": "b4",
+    "seed": 11,
+    "scenario_id": 3,
+    "conversation_id": "e3_b4_l0.0_c0.0_s11_003",
+    "question": "[sample scenario 3]",
+    "prices": null,
+    "decision": {
+      "retrieve": true,
+      "timing": "fixed_early_proxy",
+      "reason": "b4: retrieve@fixed_early_proxy (voi=0.7252)",
+      "divergence_band": null
+    },
+    "outcome": {
+      "retrieval_needed_gold": true,
+      "answer_correct": true,
+      "hit_at_3": true,
+      "ttfa_ms": 3184,
+      "retrievals": 1,
+      "prompt_tokens": 512,
+      "controller_overhead_ms": 3
+    },
+    "status": "success"
+  },
+  {
+    "baseline": "b4",
+    "seed": 11,
+    "scenario_id": 4,
+    "conversation_id": "e3_b4_l0.0_c0.0_s11_004",
+    "question": "[sample scenario 4]",
+    "prices": null,
+    "decision": {
+      "retrieve": true,
+      "timing": "fixed_early_proxy",
+      "reason": "b4: retrieve@fixed_early_proxy (voi=0.7399)",
+      "divergence_band": null
+    },
+    "outcome": {
+      "retrieval_needed_gold": true,
+      "answer_correct": true,
+      "hit_at_3": true,
+      "ttfa_ms": 2657,
+      "retrievals": 1,
+      "prompt_tokens": 512,
+      "controller_overhead_ms": 3
+    },
+    "status": "success"
+  },
+  {
+    "baseline": "b4",
+    "seed": 11,
+    "scenario_id": 5,
+    "conversation_id": "e3_b4_l0.0_c0.0_s11_005",
+    "question": "[sample scenario 5]",
+    "prices": null,
+    "decision": {
+      "retrieve": true,
+      "timing": "fixed_early_proxy",
+      "reason": "b4: retrieve@fixed_early_proxy (voi=0.7425)",
+      "divergence_band": null
+    },
+    "outcome": {
+      "retrieval_needed_gold": true,
+      "answer_correct": true,
+      "hit_at_3": true,
+      "ttfa_ms": 3221,
+      "retrievals": 1,
+      "prompt_tokens": 512,
+      "controller_overhead_ms": 3
+    },
+    "status": "success"
+  },
+  {
+    "baseline": "b4",
+    "seed": 11,
+    "scenario_id": 6,
+    "conversation_id": "e3_b4_l0.0_c0.0_s11_006",
+    "question": "[sample scenario 6]",
+    "prices": null,
+    "decision": {
+      "retrieve": true,
+      "timing": "fixed_early_proxy",
+      "reason": "b4: retrieve@fixed_early_proxy (voi=0.6992)",
+      "divergence_band": null
+    },
+    "outcome": {
+      "retrieval_needed_gold": true,
+      "answer_correct": true,
+      "hit_at_3": true,
+      "ttfa_ms": 3315,
+      "retrievals": 1,
+      "prompt_tokens": 512,
+      "controller_overhead_ms": 3
+    },
+    "status": "success"
+  },
+  {
+    "baseline": "b4",
+    "seed": 11,
+    "scenario_id": 7,
+    "conversation_id": "e3_b4_l0.0_c0.0_s11_007",
+    "question": "[sample scenario 7]",
+    "prices": null,
+    "decision": {
+      "retrieve": true,
+      "timing": "fixed_early_proxy",
+      "reason": "b4: retrieve@fixed_early_proxy (voi=0.5125)",
+      "divergence_band": null
+    },
+    "outcome": {
+      "retrieval_needed_gold": true,
+      "answer_correct": true,
+      "hit_at_3": true,
+      "ttfa_ms": 3172,
+      "retrievals": 1,
+      "prompt_tokens": 512,
+      "controller_overhead_ms": 3
+    },
+    "status": "success"
+  },
+  {
+    "baseline": "b4",
+    "seed": 11,
+    "scenario_id": 8,
+    "conversation_id": "e3_b4_l0.0_c0.0_s11_008",
+    "question": "[sample scenario 8]",
+    "prices": null,
+    "decision": {
+      "retrieve": false,
+      "timing": "sentence_end",
+      "reason": "b4: skip (voi=0.1193)",
+      "divergence_band": null
+    },
+    "outcome": {
+      "retrieval_needed_gold": false,
+      "answer_correct": true,
+      "hit_at_3": null,
+      "ttfa_ms": 2912,
+      "retrievals": 0,
+      "prompt_tokens": 256,
+      "controller_overhead_ms": 3
+    },
+    "status": "success"
+  },
+  {
+    "baseline": "b4",
+    "seed": 11,
+    "scenario_id": 9,
+    "conversation_id": "e3_b4_l0.0_c0.0_s11_009",
+    "question": "[sample scenario 9]",
+    "prices": null,
+    "decision": {
+      "retrieve": false,
+      "timing": "sentence_end",
+      "reason": "b4: skip (voi=0.2186)",
+      "divergence_band": null
+    },
+    "outcome": {
+      "retrieval_needed_gold": false,
+      "answer_correct": true,
+      "hit_at_3": null,
+      "ttfa_ms": 2912,
+      "retrievals": 0,
+      "prompt_tokens": 256,
+      "controller_overhead_ms": 3
+    },
+    "status": "success"
+  },
+  {
+    "baseline": "b4",
+    "seed": 11,
+    "scenario_id": 10,
+    "conversation_id": "e3_b4_l0.0_c0.0_s11_010",
+    "question": "[sample scenario 10]",
+    "prices": null,
+    "decision": {
+      "retrieve": false,
+      "timing": "sentence_end",
+      "reason": "b4: skip (voi=0.0606)",
+      "divergence_band": null
+    },
+    "outcome": {
+      "retrieval_needed_gold": false,
+      "answer_correct": true,
+      "hit_at_3": null,
+      "ttfa_ms": 3461,
+      "retrievals": 0,
+      "prompt_tokens": 256,
+      "controller_overhead_ms": 3
+    },
+    "status": "success"
+  }
+]
