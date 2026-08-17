@@ -85,13 +85,32 @@ DEFAULT_E1_RESULT = (
 )
 DEFAULT_ARTIFACT = _REPO_ROOT / "controller" / "baselines" / "e1_calibration.json"
 
-# The signal to fit on. Not a free choice — it must be the signal E1's gate
-# actually passed on, and load_e1_samples() below asserts that against the
-# result file's own best_signal rather than trusting this constant.
+# The signal fitted by default: E1's own headline. --signal overrides it, and
+# every guard below is written against the ARGUMENT rather than this constant,
+# so the constant is a default and not an assumption.
 SIGNAL = "max_entropy_nats"
 
+# Where a non-default --signal's artifact lands if --out is not given. Keeping
+# one artifact per signal, rather than overwriting e1_calibration.json, is what
+# lets a re-grounding be compared against the calibration it replaces instead
+# of destroying it.
+ARTIFACT_BY_SIGNAL = {
+    "max_entropy_nats": DEFAULT_ARTIFACT,
+    "mean_entropy_nats": (
+        _REPO_ROOT / "controller" / "baselines" / "e1_calibration_mean_entropy.json"
+    ),
+}
 
-def load_e1_samples(result_path: Path):
+
+def default_artifact_for(signal: str) -> Path:
+    """Artifact path for `signal`, so --signal alone is enough to produce a
+    correctly-named file and two signals can never share one artifact."""
+    if signal in ARTIFACT_BY_SIGNAL:
+        return ARTIFACT_BY_SIGNAL[signal]
+    return _REPO_ROOT / "controller" / "baselines" / f"e1_calibration_{signal}.json"
+
+
+def load_e1_samples(result_path: Path, signal: str = SIGNAL):
     """
     Read (x, y, metadata) out of a committed E1 result JSON.
 
@@ -102,6 +121,34 @@ def load_e1_samples(result_path: Path):
     is exactly what this guard exists to reject: a calibration fitted on
     mock data would install an INVERTED uncertainty -> value mapping while
     every log line downstream still looked healthy.
+
+    *** FITTING A SIGNAL THAT IS NOT E1'S best_signal. ***
+
+    This used to be a hard refusal, on the reasoning that only E1's headline
+    signal is traceable to a gated result. That reasoning was half right. What
+    E1's gate actually certifies is a THRESHOLD (aggregate_auc[signal].mean_auc
+    >= thresholds.success_auc), evaluated for every signal it scored;
+    best_signal is just the argmax over signals that cleared it. A non-argmax
+    signal that still clears the same pre-registered bar is therefore just as
+    gated — it is a different, weaker, equally pre-registered claim, not an
+    ungated one.
+
+    So the guard is now on the GATE and not on the argmax: any signal E1
+    scored may be fitted, provided E1's own five-seed mean AUC for it clears
+    E1's own success_auc. A signal below that bar, or absent from the run, is
+    still refused. The distinction is recorded in the artifact
+    (is_e1_headline_signal, e1_signal_mean_auc), so a reader can see at a
+    glance whether the controller is grounded on E1's best signal or on a
+    deliberately chosen alternative — and the non-headline case prints a
+    warning, because choosing one needs a reason that lives outside this file.
+
+    The reason in the present case: max_entropy_nats is a MAX over per-token
+    entropies and saturates on any open-ended answer, which makes the VoI
+    distribution near-binary and collapses E3's price grid onto ~2 usable
+    prices. mean_entropy_nats (E1 five-seed mean AUC 0.9253 vs the 0.70 bar)
+    separates the same classes with a continuous spread. That is a property of
+    the DOWNSTREAM estimator's needs, decided on E1's signal distribution
+    rather than on E3 outcomes — see simulator/e3_grid.py's docstring.
     """
     with open(result_path, "r", encoding="utf-8") as handle:
         result = json.load(handle)
@@ -118,19 +165,28 @@ def load_e1_samples(result_path: Path):
             f"Refusing to ground E3's quality term on a signal E1's own gate "
             f"did not clear."
         )
-    if result.get("best_signal") != SIGNAL:
+
+    aggregate = (result.get("aggregate_auc") or {}).get(signal)
+    if aggregate is None:
         raise ValueError(
-            f"{result_path}'s best_signal is {result.get('best_signal')!r}, "
-            f"but this script fits {SIGNAL!r}. Fitting a signal other than "
-            f"the one E1 validated would make E3's quality term untraceable "
-            f"to E1's result — update SIGNAL deliberately, or use the run "
-            f"whose headline signal this is."
+            f"{result_path} did not score {signal!r} — its aggregate_auc covers "
+            f"{sorted((result.get('aggregate_auc') or {}).keys())}. A signal E1 "
+            f"never evaluated has no gate behind it and cannot ground E3's "
+            f"quality term."
+        )
+    success_auc = float((result.get("thresholds") or {}).get("success_auc", 0.7))
+    signal_mean_auc = float(aggregate.get("mean_auc"))
+    if signal_mean_auc < success_auc:
+        raise ValueError(
+            f"{signal!r} has E1 five-seed mean AUC {signal_mean_auc:.4f}, below "
+            f"E1's own success threshold {success_auc:.4f}. Refusing to ground "
+            f"E3's quality term on a signal E1's gate did not clear."
         )
 
     samples = result.get("samples") or []
     values, labels, seeds = [], [], []
     for sample in samples:
-        raw = (sample.get("signals") or {}).get(SIGNAL)
+        raw = (sample.get("signals") or {}).get(signal)
         label = sample.get("retrieval_needed")
         # Both are required per-sample: a sample missing either cannot
         # contribute to the fit, and silently dropping it would change n
@@ -138,7 +194,7 @@ def load_e1_samples(result_path: Path):
         if raw is None or label is None:
             raise ValueError(
                 f"E1 sample {sample.get('id')!r} (seed {sample.get('seed')!r}) "
-                f"is missing {SIGNAL!r} or retrieval_needed; cannot fit."
+                f"is missing {signal!r} or retrieval_needed; cannot fit."
             )
         values.append(float(raw))
         labels.append(1.0 if label else 0.0)
@@ -193,13 +249,15 @@ def _sigmoid(z: np.ndarray) -> np.ndarray:
     return 1.0 / (1.0 + np.exp(-np.clip(z, -40.0, 40.0)))
 
 
-def build_calibration(result_path: Path = DEFAULT_E1_RESULT) -> dict:
+def build_calibration(
+    result_path: Path = DEFAULT_E1_RESULT, signal: str = SIGNAL
+) -> dict:
     """
     Fit on `result_path` and return the artifact dict, including the
     top-level "calibration" object _objective.py's load_voi_calibration()
     reads via from_artifact.
     """
-    x, y, seeds, result = load_e1_samples(result_path)
+    x, y, seeds, result = load_e1_samples(result_path, signal)
     slope, intercept, iterations = fit_logistic(x, y)
 
     probability = _sigmoid(slope * x + intercept)
@@ -222,6 +280,9 @@ def build_calibration(result_path: Path = DEFAULT_E1_RESULT) -> dict:
         )
     )
 
+    aggregate = (result.get("aggregate_auc") or {}).get(signal) or {}
+    is_headline = result.get("best_signal") == signal
+
     return {
         "_comment": (
             "GENERATED by `python -m llm.experiment1.fit_calibration` — do not "
@@ -240,6 +301,14 @@ def build_calibration(result_path: Path = DEFAULT_E1_RESULT) -> dict:
             "backend": result.get("backend"),
             "model": result.get("model"),
             "verdict": result.get("verdict"),
+            "fitted_signal": signal,
+            # Whether this is E1's argmax signal or a deliberately chosen
+            # alternative that cleared the same pre-registered bar. The three
+            # fields below are what let a reader tell those apart without
+            # reopening the E1 result — see load_e1_samples()'s docstring.
+            "is_e1_headline_signal": is_headline,
+            "e1_signal_mean_auc": aggregate.get("mean_auc"),
+            "e1_signal_seed_aucs": aggregate.get("seed_aucs"),
             "e1_best_signal": result.get("best_signal"),
             "e1_best_mean_auc": result.get("best_mean_auc"),
             "e1_thresholds": result.get("thresholds"),
@@ -275,17 +344,26 @@ def build_calibration(result_path: Path = DEFAULT_E1_RESULT) -> dict:
             "signal_mean_retrieval_not_needed": float(x[y == 0.0].mean()),
             "signal_min": float(x.min()),
             "signal_max": float(x.max()),
+            # How CONTINUOUS the signal is over its own range, not just how
+            # well it ranks. AUC is invariant to any monotone squashing, so a
+            # signal can rank almost perfectly and still take only two values —
+            # which is exactly what disqualified max_entropy_nats downstream
+            # (a near-binary signal gives a near-binary VoI, and a price grid
+            # tiled across it has nothing to resolve in the middle). These two
+            # numbers are the check AUC cannot make.
+            "signal_largest_gap": _largest_gap(x),
+            "signal_middle_third_fraction": _middle_third_fraction(x),
             "note": (
                 "auc_fitted_probability is a RECOVERY check, not held-out "
                 "evidence: the sigmoid is monotone, so it must reproduce the "
                 "raw signal's ranking exactly. Generalization evidence is E1's "
-                "own five-seed result (e1_best_mean_auc above)."
+                "own five-seed result (e1_signal_mean_auc above)."
             ),
         },
         # The block _objective.py's load_voi_calibration() splices over
         # config. Field names must match VoiCalibration's.
         "calibration": {
-            "signal": SIGNAL,
+            "signal": signal,
             "kind": "logistic",
             "slope": slope,
             "intercept": intercept,
@@ -295,14 +373,38 @@ def build_calibration(result_path: Path = DEFAULT_E1_RESULT) -> dict:
                 f"Fitted on Experiment 1 Modal run "
                 f"{result.get('model')} ({result.get('backend')}), "
                 f"{result.get('created_at_utc')}, verdict {result.get('verdict')}: "
-                f"P(retrieval_needed) = sigmoid({slope:.4f} * {SIGNAL} "
+                f"P(retrieval_needed) = sigmoid({slope:.4f} * {signal} "
                 f"{intercept:+.4f}) on n={int(x.size)} samples, in-sample "
-                f"AUC {auc_fitted:.4f} (E1 five-seed mean AUC "
-                f"{result.get('best_mean_auc'):.4f}). "
-                f"Regenerate: python -m llm.experiment1.fit_calibration"
+                f"AUC {auc_fitted:.4f} (E1 five-seed mean AUC for this signal "
+                f"{aggregate.get('mean_auc'):.4f}"
+                + ("" if is_headline else f", E1 headline signal was "
+                   f"{result.get('best_signal')} at "
+                   f"{result.get('best_mean_auc'):.4f}")
+                + f"). Regenerate: python -m llm.experiment1.fit_calibration "
+                f"--signal {signal}"
             ),
         },
     }
+
+
+def _largest_gap(x: np.ndarray) -> float:
+    """Widest empty interval between consecutive sorted signal values — the
+    biggest hole a price grid derived from this signal would have to tile
+    over."""
+    ordered = np.sort(np.asarray(x, dtype=float))
+    return float(np.max(np.diff(ordered))) if ordered.size > 1 else 0.0
+
+
+def _middle_third_fraction(x: np.ndarray) -> float:
+    """Fraction of samples in the middle third of the signal's observed range.
+    A perfectly uniform signal gives 1/3; a saturating one gives ~0."""
+    ordered = np.asarray(x, dtype=float)
+    low, high = float(ordered.min()), float(ordered.max())
+    if high <= low:
+        return 0.0
+    span = high - low
+    inside = (ordered >= low + span / 3.0) & (ordered <= low + 2.0 * span / 3.0)
+    return float(np.mean(inside))
 
 
 def _sha256(path: Path) -> str:
@@ -317,8 +419,8 @@ def main() -> int:
     parser = argparse.ArgumentParser(
         description=(
             "Fit E3's VoI calibration — P(retrieval_needed) = "
-            "sigmoid(slope * max_entropy_nats + intercept) — on Experiment 1's "
-            "real samples, and write controller/baselines/e1_calibration.json."
+            "sigmoid(slope * <signal> + intercept) — on Experiment 1's real "
+            "samples, and write a calibration artifact for that signal."
         )
     )
     parser.add_argument(
@@ -327,9 +429,18 @@ def main() -> int:
         help="Committed E1 result JSON to fit on (default: the Modal run).",
     )
     parser.add_argument(
+        "--signal",
+        default=SIGNAL,
+        help=f"Uncertainty signal to fit (default: {SIGNAL}, E1's headline). "
+        f"Any signal E1 scored at or above its own success_auc is accepted; "
+        f"see load_e1_samples() on why the gate and not the argmax is the "
+        f"right guard.",
+    )
+    parser.add_argument(
         "--out",
-        default=str(DEFAULT_ARTIFACT),
-        help="Where to write the calibration artifact.",
+        default=None,
+        help="Where to write the calibration artifact (default: the "
+        "per-signal path from default_artifact_for()).",
     )
     parser.add_argument(
         "--check",
@@ -339,21 +450,32 @@ def main() -> int:
     )
     args = parser.parse_args()
 
-    artifact = build_calibration(Path(args.result))
+    signal = args.signal
+    artifact = build_calibration(Path(args.result), signal)
     fitted = artifact["calibration"]
+    provenance = artifact["provenance"]
 
-    print(f"E1 result : {artifact['provenance']['source_file']}")
-    print(f"            {artifact['provenance']['model']} "
-          f"({artifact['provenance']['backend']}), "
-          f"verdict {artifact['provenance']['verdict']}")
-    print(f"n samples : {artifact['provenance']['n_samples']} "
-          f"({artifact['provenance']['n_retrieval_needed']} needed / "
-          f"{artifact['provenance']['n_retrieval_not_needed']} not needed, "
-          f"{artifact['provenance']['n_questions']} questions x "
-          f"{artifact['provenance']['n_seeds']} seeds)")
+    print(f"E1 result : {provenance['source_file']}")
+    print(f"            {provenance['model']} ({provenance['backend']}), "
+          f"verdict {provenance['verdict']}")
+    print(f"n samples : {provenance['n_samples']} "
+          f"({provenance['n_retrieval_needed']} needed / "
+          f"{provenance['n_retrieval_not_needed']} not needed, "
+          f"{provenance['n_questions']} questions x "
+          f"{provenance['n_seeds']} seeds)")
+    print(f"signal    : {signal} "
+          f"({'E1 headline' if provenance['is_e1_headline_signal'] else 'NOT E1 headline'})")
+    if not provenance["is_e1_headline_signal"]:
+        print(f"            *** re-grounded off E1's argmax signal "
+              f"({provenance['e1_best_signal']}, mean AUC "
+              f"{provenance['e1_best_mean_auc']:.4f}). This signal's own E1 "
+              f"five-seed mean AUC is {provenance['e1_signal_mean_auc']:.4f}, "
+              f"above E1's success bar "
+              f"{provenance['e1_thresholds']['success_auc']:.2f} — gated, but "
+              f"not the headline. The reason must be stated in the paper. ***")
     print()
     print(f"  P(retrieval_needed) = sigmoid({fitted['slope']:.4f} * "
-          f"{SIGNAL} {fitted['intercept']:+.4f})")
+          f"{signal} {fitted['intercept']:+.4f})")
     print()
     print(f"slope a   : {fitted['slope']:+.4f}   "
           f"({'OK, > 0' if fitted['slope'] > 0 else 'FAIL, <= 0'} — higher "
@@ -363,9 +485,20 @@ def main() -> int:
           f"(P = 0.5)")
     print(f"in-sample AUC : {artifact['diagnostics']['auc_fitted_probability']:.4f} "
           f"(raw signal {artifact['diagnostics']['auc_raw_signal']:.4f}, "
-          f"E1 five-seed mean {artifact['provenance']['e1_best_mean_auc']:.4f})")
+          f"E1 five-seed mean for this signal "
+          f"{provenance['e1_signal_mean_auc']:.4f})")
     print(f"log loss / acc: {artifact['diagnostics']['log_loss']:.4f} / "
           f"{artifact['diagnostics']['accuracy_at_0_5']:.4f}")
+    print(f"class means   : needed "
+          f"{artifact['diagnostics']['signal_mean_retrieval_needed']:.4f} / "
+          f"not-needed "
+          f"{artifact['diagnostics']['signal_mean_retrieval_not_needed']:.4f}")
+    print(f"signal spread : range "
+          f"[{artifact['diagnostics']['signal_min']:.4f}, "
+          f"{artifact['diagnostics']['signal_max']:.4f}], largest gap "
+          f"{artifact['diagnostics']['signal_largest_gap']:.4f}, "
+          f"{artifact['diagnostics']['signal_middle_third_fraction'] * 100:.1f}% "
+          f"in the middle third")
 
     if fitted["slope"] <= 0:
         print(
@@ -375,7 +508,7 @@ def main() -> int:
         )
         return 1
 
-    out_path = Path(args.out)
+    out_path = Path(args.out) if args.out else default_artifact_for(signal)
     if args.check:
         try:
             with open(out_path, "r", encoding="utf-8") as handle:

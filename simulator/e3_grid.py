@@ -86,15 +86,38 @@ reimplement the estimator — a second copy of the belief -> VoI mapping is
 exactly the drift the shared-objective design exists to prevent.
 
 *** THE SIGNALS ARE ONLY AS REAL AS THE BACKEND THAT PRODUCED THEM. *** With
-configs/config.yaml's llm.backend = mock, max_entropy_nats comes from
+configs/config.yaml's llm.backend = mock, the uncertainty signals come from
 MockClient's synthetic logprobs, which are seeded on the prompt (so this is
 deterministic and reproducible) but say nothing about what the real model is
 uncertain about. The CALIBRATION is real — it is fitted on E1's 180 real Modal
 samples — but a real calibration applied to mock signals still yields a mock
 VoI distribution, and therefore a mock grid. The signals cache and the grid
 artifact both record the backend and model they were produced under, and the
-printed report says so out loud. Re-run this one command against the real
-backend before any headline number is reported off the grid.
+printed report says so out loud.
+
+The COMMITTED cache holds real Mistral-7B signals, and load_or_build_signals()
+invalidates on backend/model, so re-derive under the environment that produced
+them —
+
+    VOICE_RAG_LLM_BACKEND=vllm VOICE_RAG_MODEL=mistral7b_v03 \
+        python -m simulator.e3_grid
+
+— or the config's mock default will look like a backend change and the real
+cache will be rebuilt with synthetic draws. No model call is made either way
+when the cache is judged current; the environment is there to make that
+judgement come out right.
+
+---------------------------------------------------------------------------
+AND WHETHER THE GRID RESOLVES ANYTHING
+---------------------------------------------------------------------------
+n_scenarios_in_band, reported per price below, is a PREDICTION: the count of
+VoI values inside an interval computed in closed form. It says the grid is
+tiled where the scenarios are; it does not say the two controllers actually
+decide differently there. simulator/e3_divergence_check.py runs Ours and B9
+over the same 50 snapshots at these prices and counts observed disagreements,
+which is the check that closes the loop. Its headline is how many PRICES
+resolve a disagreement, not how many scenarios — the frontier is a curve, and
+a grid where two prices carry every divergence yields a two-point frontier.
 """
 
 from __future__ import annotations

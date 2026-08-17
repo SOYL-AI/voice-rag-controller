@@ -132,18 +132,30 @@ regenerates with one command.
 **1. The belief → quality mapping** (`controller/baselines/_objective.py`'s `estimate_voi`):
 
 ```
-voi = P(retrieval needed | max_entropy_nats) * utility_scale
-    = sigmoid(11.7691 * max_entropy_nats - 16.0030)      # utility_scale = 1.0
+voi = P(retrieval needed | mean_entropy_nats) * utility_scale
+    = sigmoid(11.2878 * mean_entropy_nats - 3.6334)      # utility_scale = 1.0
 ```
 
-fitted on the 180 real samples of Experiment 1's Mistral-7B Modal run (verdict PASS,
-`best_signal` `max_entropy_nats`, mean AUC 0.978). In-sample AUC 0.9784 — equal to E1's
-five-seed mean, as a monotone map must be. `P = 0.5` at 1.360 nats.
+fitted on the 180 real samples of Experiment 1's Mistral-7B Modal run (verdict PASS).
+In-sample AUC 0.9260 — equal to E1's five-seed mean 0.9253 for this signal, as a monotone
+map must be. `P = 0.5` at 0.322 nats.
 
 ```powershell
-python -m llm.experiment1.fit_calibration          # rewrites controller/baselines/e1_calibration.json
-python -m llm.experiment1.fit_calibration --check  # CI: committed artifact still matches a fresh fit
+python -m llm.experiment1.fit_calibration --signal mean_entropy_nats   # rewrites controller/baselines/e1_calibration_mean_entropy.json
+python -m llm.experiment1.fit_calibration --check                      # CI: committed max-entropy artifact still matches a fresh fit
 ```
+
+**Why `mean_entropy_nats` and not E1's headline `max_entropy_nats`** (AUC 0.978, artifact
+kept at `controller/baselines/e1_calibration.json`). `max_entropy_nats` is a MAX over
+per-token entropies, so one uncertain token saturates it and it saturates on nearly any
+open-ended answer. Over the 50 scenarios that made VoI near-binary — 14 at the 0.05 floor,
+median 0.95, nothing between 0.07 and 0.73 — and the derived grid resolved an Ours-vs-B9
+disagreement at only **3 of its 26 prices**. `mean_entropy_nats` is the same measurement
+averaged: E1 five-seed mean AUC 0.9253, over E1's own 0.70 success bar (so it is gated,
+just not the argmax), and continuous across the scenarios (signal range 0.006–0.660,
+largest gap 0.073). The same grid then resolves a disagreement at **11 of 26 prices**.
+The choice was made on the signal's distribution, never on an Ours-vs-B9 outcome.
+Reproduce with `python -m simulator.e3_divergence_check`.
 
 Both price-aware baselines import the one estimator, so neither can get a sharper belief
 than the other — see `_objective.py`'s docstring on why that is load-bearing for E3.
@@ -159,7 +171,21 @@ python -m simulator.e3_grid --refresh-signals      # after changing llm.backend/
 ```
 
 ⚠ The grid is only as real as the signals it was tiled against. With `llm.backend: mock`
-the per-scenario `max_entropy_nats` values are MockClient's synthetic logprobs — the
-calibration is real, the signals it is applied to are not. Re-run with `--refresh-signals`
-against the real backend before any headline number comes off this grid; the artifact
-records which backend produced it.
+the per-scenario uncertainty values are MockClient's synthetic logprobs — the calibration
+is real, the signals it is applied to are not. The committed cache holds REAL Mistral-7B
+signals, so re-derive the grid with the same environment that produced them
+(`VOICE_RAG_LLM_BACKEND=vllm VOICE_RAG_MODEL=mistral7b_v03`) or `load_or_build_signals()`
+will judge the cache stale and overwrite it with mock draws. The artifact records which
+backend produced it.
+
+**3. Does the grid actually resolve anything?** (`simulator/e3_divergence_check.py`) Runs
+Ours and B9 over all 50 frozen snapshots at every grid price and counts the disagreements
+it observes, next to the ones the divergence band predicts:
+
+```powershell
+python -m simulator.e3_divergence_check            # per-price divergence table
+```
+
+The number to look at is *prices with ≥1 divergence*, not the total: the frontier is a
+curve, and a grid where only two prices resolve anything gives a two-point frontier however
+many scenarios diverge at those two.
