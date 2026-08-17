@@ -247,6 +247,12 @@ controller:
       lambda_l: 1.0
       lambda_c: 0.05
 
+    b4:
+      threshold: 0.5
+
+    b6:
+      threshold: 1.0
+
     # MEASURED from logs/: median duration of a completed retrieval over
     # 751 retrieval_launched -> retrieval_result pairs (p90 was 3187).
     retrieval_latency_ms: 672

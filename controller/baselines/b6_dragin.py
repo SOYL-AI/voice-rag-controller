@@ -37,7 +37,8 @@ if str(_REPO_ROOT) not in sys.path:
 # everything it's allowed to see arrives via the Ctx that decide() is
 # called with.
 from controller.baseline import BaselineController, Ctx, Decision, register
-ENTROPY_THRESHOLD = 1.0
+from controller.baselines._objective import load_e3_config
+
 
 # COPY THIS: @register("<your baseline's name>") — the string every other
 # component (pipeline/spine.py's baseline= arg, simulator/e3_sweep.py's
@@ -65,9 +66,10 @@ class DraginBaseline(BaselineController):
             "max_entropy_nats",
             0.0,
         )
+        cfg = load_e3_config()
+        threshold = cfg["b6"]["threshold"]
 
-        retrieve = entropy_score >= ENTROPY_THRESHOLD
-
+        retrieve = entropy_score >= threshold
         reason = (
             "entropy above threshold"
             if retrieve

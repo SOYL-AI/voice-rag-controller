@@ -37,7 +37,8 @@ if str(_REPO_ROOT) not in sys.path:
 # everything it's allowed to see arrives via the Ctx that decide() is
 # called with.
 from controller.baseline import BaselineController, Ctx, Decision, register
-UNCERTAINTY_THRESHOLD = 0.5
+from controller.baselines._objective import load_e3_config
+
 
 
 # COPY THIS: @register("<your baseline's name>") — the string every other
@@ -69,7 +70,9 @@ class FlareBaseline(BaselineController):
             "one_minus_mean_confidence",
             0.0,
         )
-        retrieve = uncertainty_score >= UNCERTAINTY_THRESHOLD
+        cfg = load_e3_config()
+        threshold = cfg["b4"]["threshold"]
+        retrieve = uncertainty_score >= threshold
 
         reason = (
             "uncertainty above threshold"
