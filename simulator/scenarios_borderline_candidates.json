@@ -1,0 +1,222 @@
+[
+  {
+    "id": 1,
+    "document": "",
+    "source": "",
+    "goal": "Early Arrival",
+    "question": "If a hotel's check-in time is 2 PM, what usually happens if I arrive at 11 AM?",
+    "expected_answer": "Hotels often offer luggage storage and may allow early check-in if a room is available.",
+    "requires_lookup": false,
+    "retrieval_needed": false,
+    "history": []
+  },
+  {
+    "id": 2,
+    "document": "",
+    "source": "",
+    "goal": "Late Checkout Charges",
+    "question": "If a hotel allows late check-out until 2 PM, under what circumstances would an additional charge usually apply?",
+    "expected_answer": "Many hotels charge depending on how late the check-out is and room availability.",
+    "requires_lookup": false,
+    "retrieval_needed": true,
+    "history": []
+  },
+  {
+    "id": 3,
+    "document": "",
+    "source": "",
+    "goal": "Room Upgrade",
+    "question": "Under what circumstances might a hotel upgrade a guest's room?",
+    "expected_answer": "Hotels may upgrade guests based on availability, loyalty status, special occasions, or operational needs.",
+    "requires_lookup": false,
+    "retrieval_needed": false,
+    "history": []
+  },
+  {
+    "id": 4,
+    "document": "",
+    "source": "",
+    "goal": "Airport Transport Decision",
+    "question": "How would you decide whether to arrange airport transportation through the hotel or book a taxi yourself?",
+    "expected_answer": "It depends on cost, convenience, availability, arrival time, and hotel services.",
+    "requires_lookup": false,
+    "retrieval_needed": false,
+    "history": []
+  },
+  {
+    "id": 5,
+    "document": "",
+    "source": "",
+    "goal": "Breakfast Inclusion",
+    "question": "Is breakfast usually included with a deluxe room booking?",
+    "expected_answer": "It depends on the hotel's booking package and rate plan.",
+    "requires_lookup": false,
+    "retrieval_needed": true,
+    "history": []
+  },
+  {
+    "id": 6,
+    "document": "",
+    "source": "",
+    "goal": "Parking Reservation",
+    "question": "Do hotels usually reserve parking spaces for guests automatically?",
+    "expected_answer": "Policies vary; some reserve parking while others operate on a first-come basis.",
+    "requires_lookup": false,
+    "retrieval_needed": true,
+    "history": []
+  },
+  {
+    "id": 7,
+    "document": "",
+    "source": "",
+    "goal": "Housekeeping",
+    "question": "If I leave the 'Do Not Disturb' sign on all day, will housekeeping usually return later?",
+    "expected_answer": "Policies vary, but guests can often request housekeeping later.",
+    "requires_lookup": false,
+    "retrieval_needed": true,
+    "history": []
+  },
+  {
+    "id": 8,
+    "document": "",
+    "source": "",
+    "goal": "Third Party Booking",
+    "question": "If I booked through a travel website, does the hotel's cancellation policy always apply?",
+    "expected_answer": "Not always; cancellation may follow the booking platform's terms.",
+    "requires_lookup": false,
+    "retrieval_needed": true,
+    "history": []
+  },
+  {
+    "id": 9,
+    "document": "",
+    "source": "",
+    "goal": "Early Flight",
+    "question": "My flight lands at 8 AM but hotel check-in is at 2 PM. What options do hotels usually offer?",
+    "expected_answer": "Hotels commonly offer luggage storage and may provide early check-in if rooms are available.",
+    "requires_lookup": false,
+    "retrieval_needed": false,
+    "history": []
+  },
+  {
+    "id": 10,
+    "document": "",
+    "source": "",
+    "goal": "Laundry Timing",
+    "question": "If I need a suit cleaned before an evening meeting, when should I usually submit it for hotel laundry?",
+    "expected_answer": "Hotels generally recommend submitting it as early as possible, often in the morning.",
+    "requires_lookup": false,
+    "retrieval_needed": false,
+    "history": []
+  },
+  {
+    "id": 11,
+    "document": "",
+    "source": "",
+    "goal": "Food Allergy",
+    "question": "If I have a severe nut allergy, what information should I give a hotel restaurant before ordering?",
+    "expected_answer": "Inform staff clearly about the allergy and cross-contamination concerns.",
+    "requires_lookup": false,
+    "retrieval_needed": false,
+    "history": []
+  },
+  {
+    "id": 12,
+    "document": "",
+    "source": "",
+    "goal": "Lost Charger",
+    "question": "If I realize I left my charger after checking out, what is the normal process hotels follow?",
+    "expected_answer": "Hotels typically check lost-and-found records and arrange return if found.",
+    "requires_lookup": false,
+    "retrieval_needed": false,
+    "history": []
+  },
+  {
+    "id": 13,
+    "document": "",
+    "source": "",
+    "goal": "Business Centre",
+    "question": "If the business centre is closed, where can guests usually print boarding passes?",
+    "expected_answer": "Some hotels allow the front desk or concierge to assist, but policies vary.",
+    "requires_lookup": false,
+    "retrieval_needed": true,
+    "history": []
+  },
+  {
+    "id": 14,
+    "document": "",
+    "source": "",
+    "goal": "Power Failure",
+    "question": "If the hotel loses electricity, which guest services usually continue operating?",
+    "expected_answer": "Critical systems may run on backup power, but services vary by hotel.",
+    "requires_lookup": false,
+    "retrieval_needed": true,
+    "history": []
+  },
+  {
+    "id": 15,
+    "document": "",
+    "source": "",
+    "goal": "Passport Validity",
+    "question": "How long is an Indian passport typically valid for an adult?",
+    "expected_answer": "Typically 10 years.",
+    "requires_lookup": false,
+    "retrieval_needed": false,
+    "history": []
+  },
+  {
+    "id": 16,
+    "document": "",
+    "source": "",
+    "goal": "India Time Zone",
+    "question": "Why does India use only one time zone despite its width?",
+    "expected_answer": "India follows a single national time standard for administrative simplicity.",
+    "requires_lookup": false,
+    "retrieval_needed": false,
+    "history": []
+  },
+  {
+    "id": 17,
+    "document": "",
+    "source": "",
+    "goal": "Boarding Pass",
+    "question": "If you have an e-ticket but have not checked in, what travel documents will you still need before boarding?",
+    "expected_answer": "You generally need to complete check-in to obtain a boarding pass and carry valid identification.",
+    "requires_lookup": false,
+    "retrieval_needed": false,
+    "history": []
+  },
+  {
+    "id": 18,
+    "document": "",
+    "source": "",
+    "goal": "Credit Card Hold",
+    "question": "When a credit card is pre-authorized at a hotel, is that the same as being charged?",
+    "expected_answer": "No. A pre-authorization is a temporary hold, not a final charge.",
+    "requires_lookup": false,
+    "retrieval_needed": false,
+    "history": []
+  },
+  {
+    "id": 19,
+    "document": "",
+    "source": "",
+    "goal": "Hotel Amenities",
+    "question": "What amenities are commonly available in a deluxe hotel room?",
+    "expected_answer": "Common amenities include Wi-Fi, TV, air conditioning, toiletries, and tea/coffee facilities, though they vary by hotel.",
+    "requires_lookup": false,
+    "retrieval_needed": false,
+    "history": []
+  },
+  {
+    "id": 20,
+    "document": "",
+    "source": "",
+    "goal": "Check-in ID",
+    "question": "Why do hotels ask guests to show identification during check-in?",
+    "expected_answer": "To verify identity, comply with regulations, and confirm the reservation.",
+    "requires_lookup": false,
+    "retrieval_needed": false,
+    "history": []
+  }
+]
