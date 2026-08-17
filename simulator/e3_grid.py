@@ -208,6 +208,19 @@ def load_or_build_signals(refresh: bool = False) -> dict:
         with open(SIGNALS_CACHE, "r", encoding="utf-8") as handle:
             cache = json.load(handle)
         cached_protocol = cache.get("precompute") or {}
+        # GUARD: never overwrite a real (vllm) signals cache with mock draws.
+        # mock -> real is a legitimate rebuild; real -> mock silently destroys
+        # the committed Mistral signals and turns the grid degenerate, so refuse
+        # it. To rebuild deliberately, run under the real backend, or delete the
+        # cache first if mock is truly intended.
+        if cache.get("backend") == "vllm" and backend == "mock":
+            raise SystemExit(
+                "Refusing to overwrite the real (vllm) signals cache with mock "
+                "draws. The committed cache holds real Mistral-7B signals. Re-run "
+                "under VOICE_RAG_LLM_BACKEND=vllm VOICE_RAG_MODEL=mistral7b_v03, "
+                "or delete simulator/e3_scenario_signals.json first if you truly "
+                "want mock signals."
+            )
         if cache.get("backend") != backend or cache.get("active_model") != model:
             print(
                 f"signals cache was built under backend={cache.get('backend')!r} / "
