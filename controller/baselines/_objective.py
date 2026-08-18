@@ -177,6 +177,13 @@ _DEFAULT_E3_CFG = {
     # real prices (simulator/e3_sweep.py's --lambda-l/--lambda-c); this is
     # only so a price-aware baseline is still runnable standalone.
     "default_prices": {"lambda_l": 1.0, "lambda_c": 0.05},
+    "b4": {
+        "threshold": 0.5,
+    },
+
+    "b6": {
+        "threshold": 1.0,
+    },
     # MEASURED (see module docstring): median retrieval duration.
     "retrieval_latency_ms": 672,
     # MEASURED: mean overlap_with_speech_ms per E2 timing policy — how much
