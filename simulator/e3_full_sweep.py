@@ -597,7 +597,7 @@ AZURE_ENV_VARS = (
 # Bumped whenever the judge changes in a way that invalidates verdicts.
 # Part of the cache key, so old verdicts cannot be read back. v1 was the
 # Mistral/mock era.
-JUDGE_CACHE_VERSION = "v2-azure"
+JUDGE_CACHE_VERSION = "v3-azure-stripped"
 
 
 def _slugify(text: str) -> str:
@@ -858,6 +858,28 @@ def judge_answer(
     absorbed: a run with a nonzero parse-failure count needs looking at
     before its accuracy numbers are believed.
     """
+    # Strip before BOTH the key and the prompt, never one or the other:
+    # the cache key has to describe the text the judge was actually shown.
+    #
+    # Not cosmetic. The generator's answers begin with a leading space, and
+    # on a borderline answer that single character decides the verdict. On
+    # s003 ("Tell me about deluxe room.") the retrieved answer reproduces
+    # the reference and omits one list item, "air conditioning" — which
+    # JUDGE_INSTRUCTIONS explicitly calls correct ("omits detail but
+    # contradicts nothing"). Graded with the leading space it returned NO
+    # five times out of five; graded stripped, YES five out of five, same
+    # deployment at temperature 0. That flipped all 15 of s003's retrieve
+    # cells to incorrect, and 5 of the 12 retrieve-path failures in the
+    # first 360 cells of the first full sweep were this artifact.
+    #
+    # The judge is deterministic (10/10 identical on repeat calls); it is
+    # the whitespace that moved it, so the fix is to stop varying it.
+    # Leading/trailing whitespace is not content and must not reach a
+    # grader. NOTE this does not make borderline grading robust in
+    # general — it removes one known perturbation. See the omission rule
+    # in JUDGE_INSTRUCTIONS.
+    answer = (answer or "").strip()
+
     key = judge_cache_key(judge, scenario, answer)
     path = judge_path(cache_dir, judge.slug, key)
     if path.exists():
