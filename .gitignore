@@ -239,3 +239,15 @@ datasets/spokenwoz/
 datasets/spoken_squad/
 datasets/processed/
 
+
+# LaTeX build outputs (paper/)
+# Scoped to paper/ root: pdflatex writes these beside main.tex.
+# NOT recursive, so vector figures like paper/figures/*.pdf stay committable.
+paper/*.aux
+paper/*.log
+paper/*.pdf
+paper/*.bbl
+paper/*.blg
+paper/*.out
+paper/*.toc
+paper/*.synctex.gz
