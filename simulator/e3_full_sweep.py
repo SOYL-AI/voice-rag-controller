@@ -112,19 +112,42 @@ SCORING — answer_correct
 ---------------------------------------------------------------------------
 An LLM judge at temperature 0 compares the generated answer to the
 scenario's expected_answer and returns a strict yes/no on FACTUAL
-CORRECTNESS. It is not asked whether retrieval fired, and must not be: a
+CORRECTNESS. The judge is Azure OpenAI and is a SEPARATE client from the
+system's self-hosted Mistral: Mistral generates the answers, Azure grades
+them, and the two are never the same object (see make_judge()). Mistral-7B
+graded itself for one run and scored "the spa opens at 9AM" correct
+against a 10AM reference, and a wrong wifi network correct — under a judge
+that cannot see an error, skipping retrieval costs no accuracy and B0 wins
+the frontier by construction. Judge configuration is read from the
+environment only (AZURE_OPENAI_API_KEY, AZURE_OPENAI_ENDPOINT,
+AZURE_OPENAI_DEPLOYMENT, AZURE_OPENAI_API_VERSION); a missing variable is
+a hard error, never a downgrade to a weaker judge. `--judge-selftest`
+grades three fixed pairs to prove the wiring and the judge's strength
+before a sweep.
+
+Swapping the judge does not require regenerating anything. `--rejudge`
+re-scores the answers already in the cache with the current judge and
+rewrites answers/*.json in place; cells/ (ttfa_ms, retrievals, logs) is
+measurement of the SYSTEM, not of the judge, and is not touched, so no
+model client is opened and no latency is re-measured. The verdict the
+previous judge gave is kept on the record as `previous_verdict`. It is not asked whether retrieval fired, and must not be: a
 closed-book answer that happens to state the fact correctly scores true.
 Retrieval's cost shows up in the compute axis (the retrievals count) and
 in the latency axis, which is exactly the trade-off the frontier is about.
 Scoring "did it retrieve" as quality would build the answer into the
 question.
 
-Verdicts are cached by sha256 over (scenario_id, expected_answer, answer
-text), so an answer generated under five seeds that lands identically is
+Verdicts are cached by sha256 over (judge identity, judge cache version,
+scenario_id, expected_answer, answer text) and stored under judge/<judge
+slug>/, so an answer generated under five seeds that lands identically is
 judged once. The key covers the reference, not just the answer: identical
 answer STRINGS occur across scenarios (a refusal, a generic greeting) and
 they are correct against different references, so keying on the answer
 alone would let one scenario's verdict answer another scenario's question.
+It covers the JUDGE for the same class of reason: this cache has already
+held a mock run's steered YESes and Mistral's, and if the key ignored who
+graded, swapping in a stronger judge would silently re-serve the weak
+verdicts and look like it had worked.
 
 ---------------------------------------------------------------------------
 PHASE B — WHERE THE SIGNALS COME FROM
@@ -393,8 +416,44 @@ def answer_path(cache_dir: Path, scenario_id, seed: int, path: str) -> Path:
     return cache_dir / "answers" / f"s{scenario_id:03d}_seed{seed}_{path}.json"
 
 
-def judge_path(cache_dir: Path, key: str) -> Path:
-    return cache_dir / "judge" / f"{key}.json"
+def judge_path(cache_dir: Path, judge_slug: str, key: str) -> Path:
+    """Verdicts live under the judge that produced them.
+
+    The directory is belt to the cache key's braces (judge_cache_key()
+    already mixes the judge identity into the hash). Two independent
+    guards, because the failure this closes is silent: a verdict cached by
+    one judge and served to another looks exactly like a cache hit. It is
+    also the version you can see — `ls judge/` names every judge that has
+    ever written into this cache."""
+    return cache_dir / "judge" / judge_slug / f"{key}.json"
+
+
+def judge_cache_key(judge, scenario: dict, answer: str) -> str:
+    """
+    The verdict cache key: (judge identity, cache version, scenario id,
+    reference answer, candidate answer).
+
+    The judge belongs in the key. Verdicts are a function of WHO graded as
+    much as of what was graded, and this cache has already held verdicts
+    from a weaker grader — a mock run's steered YES, and Mistral-7B's,
+    which scored "the spa opens at 9AM" correct against a 10AM reference.
+    Keying on the text alone would let those stale YESes shadow the Azure
+    judge's fresh verdict on the identical answer string, so swapping in a
+    stronger judge would change nothing at all and the swap would look
+    like it had worked. JUDGE_CACHE_VERSION invalidates on top of that,
+    for changes (prompt, parsing, request shape) that a deployment name
+    does not capture.
+
+    Everything in the key is public: a deployment name and an API version.
+    No endpoint, no credential.
+    """
+    return _sha256(
+        JUDGE_CACHE_VERSION,
+        judge.identity,
+        scenario["id"],
+        scenario["expected_answer"],
+        answer,
+    )
 
 
 def scenario_path(cache_dir: Path, scenario_id) -> Path:
@@ -493,23 +552,304 @@ def read_outcome_from_log(log_path: Path) -> dict:
 
 
 # ---------------------------------------------------------------------------
+# Phase A — the JUDGE CLIENT (Azure OpenAI), separate from the system client
+# ---------------------------------------------------------------------------
+# Two clients, two roles, deliberately not shared:
+#
+#   system client  — llm/client.py's make_client(env["llm_cfg"]), the
+#                    self-hosted Mistral that GENERATES the answers. It is
+#                    the system under measurement. It must not change.
+#   judge  client  — AzureOpenaiJudge below, which GRADES those answers. It
+#                    is the measuring instrument and is deliberately a
+#                    stronger, different model.
+#
+# They are constructed separately, configured separately (llm/config.json
+# vs. the AZURE_* environment), and never substituted for one another.
+# Mistral-7B graded "the spa opens at 9AM" as correct against a 10AM
+# reference, and a wrong wifi network as correct: a judge that cannot see
+# an error cannot see the accuracy that skipping retrieval costs, and the
+# frontier then reports "skip is free" and B0 wins by construction. The
+# judge being weak is not a small measurement error — it is the one that
+# manufactures the headline result.
+
+
+class JudgeConfigError(RuntimeError):
+    """Judge configuration is missing or unusable. Never fall back to a
+    weaker judge on this — a silently downgraded instrument produces
+    numbers that look fine and are not."""
+
+
+class JudgeCallError(RuntimeError):
+    """The judge was configured but the call did not produce a verdict."""
+
+
+# Read from the environment, never from a config file and never a literal
+# in this repo. The key in particular must not reach disk, logs, cached
+# verdicts or git; see _judge_record() for what a verdict is allowed to
+# carry.
+AZURE_ENV_VARS = (
+    "AZURE_OPENAI_API_KEY",
+    "AZURE_OPENAI_ENDPOINT",
+    "AZURE_OPENAI_DEPLOYMENT",
+    "AZURE_OPENAI_API_VERSION",
+)
+
+# Bumped whenever the judge changes in a way that invalidates verdicts.
+# Part of the cache key, so old verdicts cannot be read back. v1 was the
+# Mistral/mock era.
+JUDGE_CACHE_VERSION = "v2-azure"
+
+
+def _slugify(text: str) -> str:
+    """Filesystem-safe identity fragment. Purely cosmetic — the cache key
+    is the hash; this only decides which directory a verdict lands in."""
+    return "".join(ch if ch.isalnum() or ch in "-._" else "-" for ch in text)[:64]
+
+
+class AzureOpenaiJudge:
+    """
+    The Azure OpenAI judge, at temperature 0.
+
+    Configuration is read from the environment ONLY (AZURE_ENV_VARS). A
+    missing variable is a hard error naming the variable; there is no
+    fallback to the system's Mistral client and no fallback to a mock,
+    because both of those failure modes are invisible downstream — the
+    sweep would complete, write a full results file, and be wrong.
+
+    Transport is the openai SDK's AzureOpenAI client when it is installed,
+    and a direct httpx POST to the deployment's chat/completions endpoint
+    when it is not. Same request either way.
+    """
+
+    def __init__(self, api_key, endpoint, deployment, api_version):
+        # Held in memory for the process lifetime and never written
+        # anywhere. Not stored on any record, not printed, not logged.
+        self._api_key = api_key
+        self._endpoint = endpoint.rstrip("/")
+        self.deployment = deployment
+        self.api_version = api_version
+        # Sticky request-shape flags, resolved on first use: newer Azure
+        # deployments (o-series / reasoning models) reject `max_tokens` in
+        # favour of `max_completion_tokens`, and some reject a temperature
+        # override entirely. Discovering that once per process beats
+        # failing the whole sweep on the first call.
+        self._token_param = "max_tokens"
+        self.temperature_supported = True
+
+        try:
+            from openai import AzureOpenAI  # noqa: PLC0415 -- optional dep, probed at construction
+        except ImportError:
+            self._sdk = None
+            self.transport = "httpx"
+        else:
+            self._sdk = AzureOpenAI(
+                api_key=api_key,
+                azure_endpoint=self._endpoint,
+                api_version=api_version,
+            )
+            self.transport = "openai-sdk"
+
+    @classmethod
+    def from_env(cls) -> "AzureOpenaiJudge":
+        missing = [name for name in AZURE_ENV_VARS if not (os.environ.get(name) or "").strip()]
+        if missing:
+            raise JudgeConfigError(
+                "The E3 judge is Azure OpenAI and is not configured: "
+                f"{', '.join(missing)} " + ("is" if len(missing) == 1 else "are")
+                + " not set in the environment.\n"
+                "Set every one of "
+                f"{', '.join(AZURE_ENV_VARS)} and re-run, e.g.\n\n"
+                "  export AZURE_OPENAI_API_KEY=...        # never commit this\n"
+                "  export AZURE_OPENAI_ENDPOINT=https://<resource>.openai.azure.com\n"
+                "  export AZURE_OPENAI_DEPLOYMENT=<deployment-name>\n"
+                "  export AZURE_OPENAI_API_VERSION=<api-version>\n\n"
+                "There is deliberately no fallback judge: grading these "
+                "answers with a weak model (or a mock) scores wrong answers "
+                "correct, which makes skipping retrieval look free and hands "
+                "the frontier to B0 by construction."
+            )
+        return cls(
+            api_key=os.environ["AZURE_OPENAI_API_KEY"].strip(),
+            endpoint=os.environ["AZURE_OPENAI_ENDPOINT"].strip(),
+            deployment=os.environ["AZURE_OPENAI_DEPLOYMENT"].strip(),
+            api_version=os.environ["AZURE_OPENAI_API_VERSION"].strip(),
+        )
+
+    @property
+    def identity(self) -> str:
+        """What this judge IS, for the cache key and the verdict record.
+
+        Deployment name and API version only. The endpoint is left out
+        (it names the Azure resource) and the key obviously so. Two
+        different deployments therefore get two different cache
+        namespaces, which is the whole point."""
+        return f"azure-openai/{self.deployment}@{self.api_version}"
+
+    @property
+    def slug(self) -> str:
+        return _slugify(f"{JUDGE_CACHE_VERSION}-{self.deployment}-{self.api_version}")
+
+    def complete(self, system_prompt: str, user_prompt: str) -> str:
+        """One graded call at temperature 0. Returns the raw text.
+
+        Bounded retries on transient failures (rate limit, 5xx, dropped
+        connection) because the sweep makes hundreds of judge calls over
+        hours and a single 429 must not end it. Anything else is re-raised:
+        a judge that is failing for a real reason should stop the run, not
+        quietly leave answers ungraded."""
+        messages = [
+            {"role": "system", "content": system_prompt},
+            {"role": "user", "content": user_prompt},
+        ]
+        transient = 0
+        for _ in range(6):  # >= 3 transient retries, plus room for shape adaptation
+            try:
+                return self._call(messages)
+            except Exception as error:  # noqa: BLE001 -- classified below, then retried or re-raised
+                if self._adapt_request_shape(error):
+                    continue
+                transient += 1
+                if not _is_retryable(error) or transient > 3:
+                    raise
+                time.sleep(2 ** (transient - 1))
+        raise JudgeCallError("The Azure judge call did not settle after retries.")
+
+    def _call(self, messages) -> str:
+        kwargs = {self._token_param: 8}
+        if self.temperature_supported:
+            kwargs["temperature"] = 0
+        if self._sdk is not None:
+            response = self._sdk.chat.completions.create(
+                model=self.deployment, messages=messages, **kwargs
+            )
+            return (response.choices[0].message.content or "").strip()
+        return self._call_httpx(messages, kwargs)
+
+    def _call_httpx(self, messages, kwargs) -> str:
+        import httpx  # noqa: PLC0415 -- only needed when the openai SDK is absent
+
+        url = (
+            f"{self._endpoint}/openai/deployments/{self.deployment}"
+            f"/chat/completions?api-version={self.api_version}"
+        )
+        response = httpx.post(
+            url,
+            # The key travels in the header and nowhere else. Do not add it
+            # to the URL: URLs end up in exception strings and proxy logs.
+            headers={"api-key": self._api_key, "Content-Type": "application/json"},
+            json={"messages": messages, **kwargs},
+            timeout=60.0,
+        )
+        if response.status_code >= 400:
+            raise _HttpJudgeError(response.status_code, response.text)
+        payload = response.json()
+        return (payload["choices"][0]["message"].get("content") or "").strip()
+
+    def _adapt_request_shape(self, error) -> bool:
+        """Some deployments reject `max_tokens` (want `max_completion_tokens`)
+        or reject any temperature override. Adapt once and retry, rather
+        than failing a multi-hour sweep on the request shape. Returns True
+        if something was changed and the call is worth retrying."""
+        text = str(error).lower()
+        if "max_tokens" in text and self._token_param == "max_tokens":
+            self._token_param = "max_completion_tokens"
+            print("[judge] deployment rejects max_tokens; retrying with max_completion_tokens")
+            return True
+        if "temperature" in text and self.temperature_supported:
+            self.temperature_supported = False
+            print(
+                "[judge] deployment rejects a temperature override; retrying at its "
+                "default. NOTE: verdicts from this deployment are not "
+                "temperature-0 and are recorded as such."
+            )
+            return True
+        return False
+
+
+class _HttpJudgeError(RuntimeError):
+    def __init__(self, status, body):
+        self.status = status
+        # Azure error bodies echo the request, never the api-key header.
+        super().__init__(f"HTTP {status}: {body[:500]}")
+
+
+def _is_retryable(error) -> bool:
+    status = getattr(error, "status", None) or getattr(error, "status_code", None)
+    if status in (408, 409, 429, 500, 502, 503, 504):
+        return True
+    name = type(error).__name__
+    return name in (
+        "APIConnectionError",
+        "APITimeoutError",
+        "RateLimitError",
+        "InternalServerError",
+        "ConnectError",
+        "ConnectTimeout",
+        "ReadTimeout",
+        "RemoteProtocolError",
+    )
+
+
+class MockJudge:
+    """
+    Steered verdicts for --allow-mock wiring smoke tests ONLY.
+
+    This is not a fallback: it is reachable only when the operator passes
+    --allow-mock, which already redirects the entire cache and every
+    result file into *_mock siblings that no analysis reads. Its verdicts
+    additionally land under their own cache namespace (see slug), so a
+    mock YES can never be served to a real Azure-keyed lookup.
+    """
+
+    identity = "mock-steered/not-a-judge"
+    slug = "mock-steered-not-data"
+    transport = "none"
+    temperature_supported = True
+
+    def complete(self, system_prompt: str, user_prompt: str) -> str:
+        return "YES"
+
+
+def make_judge(is_mock: bool):
+    """Build the judge client. The ONLY place a mock judge can appear is
+    an explicit --allow-mock run; every real run gets Azure or a hard
+    error."""
+    if is_mock:
+        print(
+            "[judge] MOCK BACKEND — using steered verdicts, quarantined in "
+            f"judge/{MockJudge.slug}/. Not data."
+        )
+        return MockJudge()
+    judge = AzureOpenaiJudge.from_env()
+    # Deployment + api-version only. Never the endpoint, never the key.
+    print(
+        f"[judge] Azure OpenAI judge: deployment={judge.deployment} "
+        f"api-version={judge.api_version} transport={judge.transport} "
+        "(system client stays Mistral)"
+    )
+    return judge
+
+
+# ---------------------------------------------------------------------------
 # Phase A — the judge
 # ---------------------------------------------------------------------------
 def judge_answer(
-    client,
-    is_mock: bool,
+    judge,
     scenario: dict,
     answer: str,
     cache_dir: Path,
 ) -> dict:
     """
-    Score one answer against the scenario's expected_answer with an LLM
+    Score one answer against the scenario's expected_answer with the Azure
     judge at temperature 0, and cache the verdict.
 
     Temperature 0, not 0.2: the judge is a measuring instrument, not a
     sample from the model's answer distribution. The ANSWERS are sampled
     at 0.2 with fixed seeds (E1's protocol); grading them is extraction,
     and re-grading identical text should never return two answers.
+
+    The judge is `judge`, NOT the system's client: the Mistral that
+    produced `answer` never grades it. See make_judge().
 
     A verdict that cannot be parsed as YES/NO is recorded as
     parsed_ok=False and scored incorrect, and Phase A's summary counts
@@ -518,8 +858,8 @@ def judge_answer(
     absorbed: a run with a nonzero parse-failure count needs looking at
     before its accuracy numbers are believed.
     """
-    key = _sha256(scenario["id"], scenario["expected_answer"], answer)
-    path = judge_path(cache_dir, key)
+    key = judge_cache_key(judge, scenario, answer)
+    path = judge_path(cache_dir, judge.slug, key)
     if path.exists():
         return _read_json(path)
 
@@ -530,51 +870,134 @@ def judge_answer(
         f"Candidate answer:\n{answer}\n\n"
         "Verdict (YES or NO):"
     )
-    overrides = {
-        "temperature": 0.0,
-        "top_p": 1.0,
-        "max_tokens": 4,
-        "seed": 0,
-    }
-    if is_mock:
-        # MockClient returns a canned hotel answer, which would fail to
-        # parse for every single cell and make a mock smoke test prove
-        # nothing about the happy path. Steering it to a parseable verdict
-        # exercises the real plumbing; the verdict itself is meaningless,
-        # which is why it is labelled as such in the cached record and why
-        # mock runs are quarantined in *_mock directories.
-        overrides["mock_answer"] = "YES"
+    raw = judge.complete(JUDGE_SYSTEM_PROMPT, user_prompt)
+    verdict = _judge_record(judge, raw, key, scenario["id"])
+    _atomic_write_json(path, verdict)
+    return verdict
 
-    generation = client.generate(
-        [
-            {"role": "system", "content": JUDGE_SYSTEM_PROMPT},
-            {"role": "user", "content": user_prompt},
-        ],
-        **overrides,
-    )
-    raw = (generation.text or "").strip()
-    token = raw.upper().lstrip("*\"' \n\t.:-")[:3]
+
+def parse_verdict(raw: str) -> tuple:
+    """(answer_correct, parsed_ok) from the judge's raw reply. Unchanged
+    from the Mistral era on purpose — only the model call and the cache
+    key move."""
+    token = (raw or "").strip().upper().lstrip("*\"' \n\t.:-")[:3]
     if token.startswith("YES"):
-        correct, parsed_ok = True, True
-    elif token.startswith("NO"):
-        correct, parsed_ok = False, True
-    else:
-        correct, parsed_ok = False, False
+        return True, True
+    if token.startswith("NO"):
+        return False, True
+    return False, False
 
-    verdict = {
+
+def _judge_record(judge, raw: str, key: str, scenario_id) -> dict:
+    """The cached verdict.
+
+    Carries the judge's IDENTITY (deployment + api version) and nothing
+    else about its configuration: no endpoint, and above all no API key.
+    These files are written to the cache directory and are read back by
+    later runs, so anything recorded here is on disk permanently.
+    """
+    raw = (raw or "").strip()
+    correct, parsed_ok = parse_verdict(raw)
+    record = {
         "answer_correct": correct,
         "parsed_ok": parsed_ok,
         "judge_raw": raw,
         "judge_key": key,
-        "scenario_id": scenario["id"],
-        "temperature": 0.0,
+        "judge_identity": judge.identity,
+        "judge_cache_version": JUDGE_CACHE_VERSION,
+        "scenario_id": scenario_id,
+        "temperature": 0.0 if judge.temperature_supported else None,
     }
-    if is_mock:
-        verdict["judge_note"] = (
-            "MOCK BACKEND — this verdict was steered, not judged. Not data."
+    if isinstance(judge, MockJudge):
+        record["judge_note"] = (
+            "MOCK JUDGE — this verdict was steered, not judged. Not data."
         )
-    _atomic_write_json(path, verdict)
-    return verdict
+    elif not judge.temperature_supported:
+        record["judge_note"] = (
+            "This deployment rejected a temperature override; the verdict "
+            "was produced at the deployment default, not at 0."
+        )
+    return record
+
+
+# ---------------------------------------------------------------------------
+# Phase A — judge self-test
+# ---------------------------------------------------------------------------
+# Three pairs with unarguable answers, two of them the exact failures that
+# retired the Mistral judge. Run it the moment credentials are set: it
+# proves the Azure judge is wired up AND that it is strong enough to see a
+# wrong fact, in one call each, before committing to a multi-hour sweep.
+JUDGE_SELFTEST_CASES = (
+    {
+        "name": "correct-answer",
+        "question": "What time does the hotel gym open?",
+        "expected_answer": "The gym opens at 6AM and closes at 10PM.",
+        "answer": "The gym is open from 6AM until 10PM.",
+        "want_correct": True,
+    },
+    {
+        "name": "spa-9AM-vs-reference-10AM",
+        "question": "What time does the spa open?",
+        "expected_answer": "The spa opens at 10AM.",
+        "answer": "The spa opens at 9AM.",
+        "want_correct": False,
+    },
+    {
+        "name": "contradiction",
+        "question": "Is breakfast included with the room rate?",
+        "expected_answer": "Breakfast is included with every room rate.",
+        "answer": "No, breakfast is not included; it costs 25 dollars extra.",
+        "want_correct": False,
+    },
+)
+
+
+def run_judge_selftest() -> int:
+    """
+    Judge three fixed pairs and report. Bypasses the cache entirely (both
+    read and write) — a self-test that could be answered from cache would
+    verify nothing about the live credentials.
+
+    Returns a process exit code: 0 if every case matched.
+    """
+    judge = make_judge(is_mock=False)
+    print(f"\n  judge identity: {judge.identity}")
+    print(f"  cache namespace: judge/{judge.slug}/\n")
+
+    failures = []
+    for case in JUDGE_SELFTEST_CASES:
+        user_prompt = (
+            f"{JUDGE_INSTRUCTIONS}\n\n"
+            f"Question:\n{case['question']}\n\n"
+            f"Reference answer:\n{case['expected_answer']}\n\n"
+            f"Candidate answer:\n{case['answer']}\n\n"
+            "Verdict (YES or NO):"
+        )
+        raw = judge.complete(JUDGE_SYSTEM_PROMPT, user_prompt)
+        correct, parsed_ok = parse_verdict(raw)
+        ok = parsed_ok and correct == case["want_correct"]
+        want = "YES" if case["want_correct"] else "NO"
+        got = raw if parsed_ok else f"{raw!r} (UNPARSEABLE)"
+        print(
+            f"  {'PASS' if ok else 'FAIL'}  {case['name']:34s} "
+            f"want {want:3s}  got {got}"
+        )
+        if not ok:
+            failures.append(case["name"])
+
+    if failures:
+        print(
+            f"\n{len(failures)} of {len(JUDGE_SELFTEST_CASES)} cases failed: "
+            f"{', '.join(failures)}.\n"
+            "This judge is not fit to score E3. A judge that scores a wrong "
+            "fact as correct makes skipping retrieval look free, which hands "
+            "the frontier to B0 by construction — the exact failure that "
+            "retired Mistral-7B as the judge. Do not run the sweep until "
+            "this passes."
+        )
+        return 1
+    print(f"\nAll {len(JUDGE_SELFTEST_CASES)} cases passed. Judge is fit to score E3.")
+    return 0
 
 
 # ---------------------------------------------------------------------------
@@ -704,6 +1127,7 @@ def phase_a(
     seeds: tuple,
     timings: tuple,
     env: dict,
+    judge,
     verbose: bool,
     skip_warmup: bool,
 ) -> dict:
@@ -719,6 +1143,9 @@ def phase_a(
     last, where it would masquerade as a timing effect.
     """
     cache_dir = env["cache_dir"]
+    # The system client (generation) and the judge client (grading) are
+    # two separate objects from two separate providers, and stay that way:
+    # `client` answers the questions, `judge` grades the answers.
     client = make_client(env["llm_cfg"])
 
     if env["backend"] == "vllm" and not client.health_check():
@@ -789,9 +1216,7 @@ def phase_a(
                         # First cell for this (scenario, seed, path) — this
                         # is the answer the pair is scored on, for every
                         # timing.
-                        verdict = judge_answer(
-                            client, env["is_mock"], scenario, answer, cache_dir
-                        )
+                        verdict = judge_answer(judge, scenario, answer, cache_dir)
                         stats["judge_calls"] += 1
                         if not verdict["parsed_ok"]:
                             stats["judge_parse_failures"] += 1
@@ -850,6 +1275,130 @@ def phase_a(
                     )
 
     stats["elapsed_s"] = time.time() - started
+    return stats
+
+
+# ---------------------------------------------------------------------------
+# Re-scoring an existing cache with a new judge
+# ---------------------------------------------------------------------------
+def rejudge(
+    scenarios: list,
+    seeds: tuple,
+    env: dict,
+    judge,
+    dry_run: bool,
+) -> dict:
+    """
+    Re-score already-cached answers with the CURRENT judge, generating
+    nothing.
+
+    What this touches and what it does not:
+
+      answers/*.json   REWRITTEN — answer_correct and the judge record are
+                       replaced with the current judge's verdict. The
+                       answer TEXT is read, never regenerated.
+      cells/*.json     UNTOUCHED — ttfa_ms, retrievals, conversation_id
+                       and the log pointers are measurements of the
+                       system, not of the judge, and re-scoring must not
+                       disturb them. No cell is read or written here.
+      judge/<slug>/    Written under the current judge's namespace only.
+
+    No model client is opened: the Mistral that produced these answers is
+    never contacted, so a re-score cannot perturb the measured latencies
+    or spend hours regenerating text that is already on disk. This is the
+    supported alternative to deleting answers/ by hand — that also works,
+    but it silently discards what the previous judge said, and it is one
+    slipped keystroke away from taking cells/ with it.
+
+    The previous verdict is kept on the record as `previous_verdict`, so
+    "the old judge said YES here and the new one says NO" stays
+    answerable without re-running anything. It is single-level: a second
+    re-score overwrites it with the first re-score's result.
+
+    Re-scoring cannot be done with a mock judge against real data. It is
+    structurally impossible rather than checked: a mock judge only exists
+    under --allow-mock, which points env["cache_dir"] at the *_mock
+    sibling, so a steered verdict has no path into the real cache.
+    """
+    cache_dir = env["cache_dir"]
+    by_id = {scenario["id"]: scenario for scenario in scenarios}
+    stats = {
+        "answers_found": 0,
+        "rejudged": 0,
+        "unchanged": 0,
+        "flipped_to_incorrect": 0,
+        "flipped_to_correct": 0,
+        "parse_failures": 0,
+        "skipped": [],
+        "flips": [],
+    }
+
+    targets = [
+        (scenario_id, seed, path_kind, answer_path(cache_dir, scenario_id, seed, path_kind))
+        for scenario_id in by_id
+        for seed in seeds
+        for path_kind in PATHS
+    ]
+    present = [item for item in targets if item[3].exists()]
+    stats["answers_found"] = len(present)
+
+    if not present:
+        print(
+            f"  no cached answers under {cache_dir / 'answers'} for the "
+            "requested scenarios and seeds — nothing to re-score."
+        )
+        return stats
+
+    if dry_run:
+        print(f"  {len(present)} cached answer(s) would be re-scored by {judge.identity}:")
+        for scenario_id, seed, path_kind, file_path in present:
+            record = _read_json(file_path)
+            previous = record.get("judge", {}).get("judge_identity", "unknown judge")
+            print(
+                f"    s{scenario_id:03d} seed{seed} {path_kind:8s} "
+                f"currently answer_correct={record.get('answer_correct')} "
+                f"(by {previous})"
+            )
+        print("  --dry-run: no judge calls made, nothing written.")
+        return stats
+
+    for scenario_id, seed, path_kind, file_path in present:
+        label = f"s{scenario_id:03d} seed{seed} {path_kind:8s}"
+        record = _read_json(file_path)
+        answer = record.get("answer_text")
+        if not answer:
+            # An answer file with no text cannot be re-scored, and
+            # inventing a verdict for it is exactly the failure this whole
+            # change is about. Left alone and reported.
+            stats["skipped"].append({"cell": label, "reason": "no answer_text on record"})
+            print(f"  {label}  SKIPPED: no answer_text on record")
+            continue
+
+        was = record.get("answer_correct")
+        verdict = judge_answer(judge, by_id[scenario_id], answer, cache_dir)
+        now = verdict["answer_correct"]
+
+        record["answer_correct"] = now
+        record["previous_verdict"] = {
+            "answer_correct": was,
+            "judge_identity": record.get("judge", {}).get("judge_identity", "unknown"),
+            "judge_raw": record.get("judge", {}).get("judge_raw"),
+        }
+        record["judge"] = verdict
+        _atomic_write_json(file_path, record)
+
+        stats["rejudged"] += 1
+        if not verdict["parsed_ok"]:
+            stats["parse_failures"] += 1
+        if was == now:
+            stats["unchanged"] += 1
+            print(f"  {label}  {was} -> {now}")
+        else:
+            key = "flipped_to_correct" if now else "flipped_to_incorrect"
+            stats[key] += 1
+            stats["flips"].append({"cell": label, "was": was, "now": now})
+            print(f"  {label}  {was} -> {now}   *** FLIPPED ***")
+
     return stats
 
 
@@ -1107,14 +1656,50 @@ def main():
         "captured, and replayed only when a cell fails).",
     )
     parser.add_argument(
+        "--judge-selftest",
+        action="store_true",
+        help="Judge three fixed pairs with the Azure judge and exit "
+        "non-zero if any is graded wrong. Run this the moment the AZURE_* "
+        "environment is set: it verifies the credentials and that the "
+        "judge is strong enough to fail a wrong fact. Bypasses the cache; "
+        "measures nothing.",
+    )
+    parser.add_argument(
+        "--rejudge",
+        action="store_true",
+        help="Re-score every cached answer with the CURRENT judge and "
+        "exit. Rewrites answers/*.json only — no generation, no model "
+        "client, and cells/ (timing, retrievals, logs) is not touched. "
+        "Scoped by --limit-scenarios and --seeds. Use after swapping the "
+        "judge; combine with --dry-run to list what would be re-scored "
+        "without spending a judge call.",
+    )
+    parser.add_argument(
         "--dry-run",
         action="store_true",
         help="Print the work plan and what is already cached, then exit.",
     )
     args = parser.parse_args()
 
+    if args.judge_selftest:
+        # Before any other validation: this is the one mode that needs
+        # nothing but credentials.
+        try:
+            raise SystemExit(run_judge_selftest())
+        except JudgeConfigError as error:
+            # A misconfigured environment is an operator error, not a bug;
+            # print the instructions, not a traceback.
+            raise SystemExit(str(error)) from None
+
     if args.phase_a_only and args.phase_b_only:
         parser.error("--phase-a-only and --phase-b-only are mutually exclusive.")
+    if args.rejudge and (args.phase_a_only or args.phase_b_only):
+        parser.error(
+            "--rejudge is a mode of its own: it re-scores the cache and "
+            "exits, measuring nothing and writing no result files. Run it "
+            "alone, then re-run with --phase-b-only to rewrite the results "
+            "from the new verdicts."
+        )
 
     registered = list_baselines()
     unknown = [name for name in args.baselines if name not in registered]
@@ -1127,10 +1712,54 @@ def main():
     run_b = not args.phase_a_only
 
     env = resolve_backend(args.allow_mock)
+    # Built up front, not lazily inside Phase A: a missing AZURE_* variable
+    # must fail in the first second, not after warm-up has already spent
+    # six conversations against the real backend.
+    try:
+        judge = make_judge(env["is_mock"]) if (run_a or args.rejudge) else None
+    except JudgeConfigError as error:
+        raise SystemExit(str(error)) from None
     scenarios = load_scenarios(args.limit_scenarios)
     seeds = tuple(args.seeds)
     timings = tuple(args.timings)
     lambda_l_grid, lambda_c = load_grid()
+
+    if args.rejudge:
+        check_cache_provenance(env)
+        print("=" * 70)
+        print("E3 — RE-SCORING CACHED ANSWERS WITH THE CURRENT JUDGE")
+        print("=" * 70)
+        print(f"judge      : {judge.identity}")
+        print(f"cache      : {env['cache_dir']}")
+        print(f"scope      : {len(scenarios)} scenario(s), seeds {list(seeds)}")
+        print("generation : none — cells/ (timing, retrievals) is not touched")
+        print()
+        stats = rejudge(scenarios, seeds, env, judge, args.dry_run)
+        if args.dry_run:
+            return
+        print()
+        print("-" * 70)
+        print(f"cached answers found  : {stats['answers_found']}")
+        print(f"re-scored             : {stats['rejudged']}")
+        print(f"verdict unchanged     : {stats['unchanged']}")
+        print(f"flipped to INCORRECT  : {stats['flipped_to_incorrect']}")
+        print(f"flipped to correct    : {stats['flipped_to_correct']}")
+        print(f"judge parse failures  : {stats['parse_failures']}")
+        if stats["skipped"]:
+            print(f"skipped               : {len(stats['skipped'])}")
+            for item in stats["skipped"]:
+                print(f"  {item['cell']}: {item['reason']}")
+        if stats["parse_failures"]:
+            print(
+                "\nSome verdicts did not parse as YES/NO and were scored "
+                "incorrect. That is the conservative reading, not a safe one "
+                "— check them before believing the accuracy numbers."
+            )
+        print(
+            "\nanswers/*.json rewritten. Re-run with --phase-b-only to "
+            "rebuild the result files from these verdicts."
+        )
+        return
 
     priced = [name for name in args.baselines if name in PRICED_BASELINES]
     unpriced = [name for name in args.baselines if name not in PRICED_BASELINES]
@@ -1149,6 +1778,9 @@ def main():
     print(f"timings    : {list(timings)}")
     print(f"grid       : {len(lambda_l_grid)} lambda_l points, lambda_c={lambda_c:g}")
     print(f"baselines  : priced={priced}  unpriced={unpriced}")
+    if judge is not None:
+        print(f"judge      : {judge.identity}  (separate client — the system "
+              "model does not grade itself)")
     print(f"cache      : {env['cache_dir']}")
     print(f"results    : {env['results_dir']}")
     print()
@@ -1177,7 +1809,9 @@ def main():
         print("-" * 70)
         print("PHASE A — measuring cells against the real pipeline")
         print("-" * 70)
-        stats = phase_a(scenarios, seeds, timings, env, args.verbose, skip_warmup=False)
+        stats = phase_a(
+            scenarios, seeds, timings, env, judge, args.verbose, skip_warmup=False
+        )
         print()
         print("-" * 70)
         print("PHASE A COMPLETE")
