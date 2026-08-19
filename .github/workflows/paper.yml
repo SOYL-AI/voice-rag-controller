@@ -1,0 +1,70 @@
+name: Paper
+
+# Compile the LaTeX paper on every PR that touches paper/, and on direct
+# pushes to main, so drafting breakage is caught early either way.
+on:
+  pull_request:
+    paths:
+      - 'paper/**'
+      - '.github/workflows/paper.yml'
+  push:
+    branches: [main]
+    paths:
+      - 'paper/**'
+      - '.github/workflows/paper.yml'
+
+# A newer commit on the same branch supersedes the previous build.
+concurrency:
+  group: paper-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    name: Compile paper/main.tex
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      # xu-cheng/latex-action runs in a full TeX Live image, which ships
+      # IEEEtran.cls and IEEEtran.bst -- no manual package install needed.
+      - name: pdflatex -> bibtex -> pdflatex x2
+        uses: xu-cheng/latex-action@v3
+        with:
+          working_directory: paper
+          root_file: main.tex
+          compiler: pdflatex
+          args: -interaction=nonstopmode -halt-on-error -file-line-error
+          post_compile: |
+            set -e
+            # BibTeX errors out ("I found no \citation commands") while the
+            # skeleton has no \cite calls yet. Only run it once there are
+            # citations -- from then on a BibTeX failure fails the build.
+            if grep -q '\\citation' main.aux; then
+              bibtex main
+            else
+              echo "No \\citation commands yet; skipping BibTeX."
+            fi
+            pdflatex -interaction=nonstopmode -halt-on-error -file-line-error main.tex
+            pdflatex -interaction=nonstopmode -halt-on-error -file-line-error main.tex
+
+      - name: Check a non-empty PDF was produced
+        run: |
+          test -s paper/main.pdf
+          head -c 5 paper/main.pdf | grep -q '%PDF-' || { echo "main.pdf is not a valid PDF"; exit 1; }
+          echo "Built $(du -h paper/main.pdf | cut -f1) PDF."
+
+      # Surface undefined refs/citations without failing the build -- these are
+      # normal mid-draft. Flip to a hard failure before submission if you want.
+      - name: Report LaTeX warnings
+        if: always()
+        run: |
+          grep -E 'LaTeX Warning: (Reference|Citation).*undefined' paper/main.log || \
+            echo "No undefined references or citations."
+
+      - name: Upload PDF
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: paper-pdf
+          path: paper/main.pdf
+          if-no-files-found: warn

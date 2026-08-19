@@ -1,0 +1,92 @@
+\documentclass[conference]{IEEEtran}
+\IEEEoverridecommandlockouts
+
+% ============================================================================
+% PACKAGES
+% ============================================================================
+\usepackage{cite}
+\usepackage{amsmath,amssymb,amsfonts}
+\usepackage{algorithmic}
+\usepackage{graphicx}
+\usepackage{textcomp}
+\usepackage{xcolor}
+
+\def\BibTeX{{\rm B\kern-.05em{\sc i\kern-.025em b}\kern-.08em
+    T\kern-.1667em\lower.7ex\hbox{E}\kern-.125emX}}
+
+\begin{document}
+
+% ============================================================================
+% TITLE
+% ============================================================================
+\title{A Unified Multi-Timescale Information-Theoretic Control Framework for
+Streaming Voice Retrieval-Augmented Generation}
+
+% ============================================================================
+% AUTHORS
+% NOTE:
+% If submitting to a double-blind venue, anonymize this block before submission.
+% ============================================================================
+\author{
+\IEEEauthorblockN{
+Renya Peter\textsuperscript{1},
+Ryan Gomez\textsuperscript{1},
+Author Three\textsuperscript{1},
+Author Four\textsuperscript{1},
+Author Five\textsuperscript{1},
+Author Six\textsuperscript{1}
+}
+\IEEEauthorblockA{
+\textsuperscript{1}\textit{SOYL AI Private Limited, Bengaluru, India}\\
+Emails: [renya email], [ryan email], [author 3 email], [author 4 email],
+[author 5 email], [author 6 email]
+}
+}
+
+\maketitle
+
+% ============================================================================
+% ABSTRACT
+% ============================================================================
+\begin{abstract}
+\input{sections/abstract}
+\end{abstract}
+
+\begin{IEEEkeywords}
+retrieval-augmented generation, Voice-RAG, adaptive retrieval,
+spoken dialogue systems, conversational memory, turn-taking,
+sequential decision making, latency-aware AI
+\end{IEEEkeywords}
+
+% ============================================================================
+% PAPER SECTIONS
+%
+% GitHub workflow:
+% Each author should edit only the section file assigned to them where possible.
+% This reduces merge conflicts.
+% ============================================================================
+
+\input{sections/introduction}
+\input{sections/related_work}
+\input{sections/proposed_framework}
+\input{sections/experimental_methodology}
+\input{sections/results}
+\input{sections/discussion}
+\input{sections/limitations}
+\input{sections/conclusion}
+
+% ============================================================================
+% OPTIONAL ACKNOWLEDGMENT
+% Uncomment when needed.
+% ============================================================================
+% \section*{Acknowledgment}
+% Add funding, compute, institutional, or other acknowledgments here.
+
+% ============================================================================
+% REFERENCES
+% Keep all BibTeX entries in references.bib.
+% ============================================================================
+\bibliographystyle{IEEEtran}
+\bibliography{references}
+
+\end{document}
