@@ -1,0 +1,28 @@
+{
+  "_comment": "Hand labels for choosing E3's answer judge. Labelled by reading each candidate against its reference under ONE stated rule (see labelling_rule). Recorded so the choice of judge is auditable and overridable rather than resting on one person's taste - flip a label here and re-run simulator/judge_validation/score_judges.py to see whether the conclusion moves.",
+  "labelling_rule": "correct = the candidate states nothing that conflicts with the reference. Omitting reference detail is correct. Rephrasing, naming the hotel, and added detail are correct unless they contradict a specific fact (time, price, name, number, location). Declining to answer is incorrect. Inventing a specific figure the reference gives differently is incorrect.",
+  "labelled_by": "Ryan Gomez",
+  "labelled_at": "2026-08-19",
+  "source": "simulator/e3_sweep_cache/answers, first ~810 cells of the first full sweep",
+  "cases": [
+    {"scenario_id": 3,  "seed": 11, "path": "retrieve", "label": true,  "why": "reproduces the reference; omits only 'air conditioning'. Omission, no conflict."},
+    {"scenario_id": 8,  "seed": 11, "path": "retrieve", "label": true,  "why": "all reference features present ('workspace' for 'ergonomic workspace'); no conflict."},
+    {"scenario_id": 11, "seed": 11, "path": "retrieve", "label": false, "why": "introduces Skyline Rooftop Restaurant with dinner hours conflicting with the reference's 7:00-10:30 PM."},
+    {"scenario_id": 12, "seed": 11, "path": "retrieve", "label": true,  "why": "matches; omits the allergen list only."},
+    {"scenario_id": 18, "seed": 11, "path": "retrieve", "label": true,  "why": "BORDERLINE. Omits the 11:00 AM standard time and adds unreferenced charge bands, but states nothing incompatible with 'may incur additional charges'."},
+    {"scenario_id": 20, "seed": 11, "path": "retrieve", "label": true,  "why": "48h window and one-night charge both match; extra non-refundable clause conflicts with nothing."},
+    {"scenario_id": 1,  "seed": 11, "path": "retrieve", "label": true,  "why": "network name and credential process match the reference."},
+    {"scenario_id": 2,  "seed": 11, "path": "retrieve", "label": true,  "why": "10:00 AM-9:00 PM and treatment list match."},
+    {"scenario_id": 4,  "seed": 11, "path": "retrieve", "label": true,  "why": "visiting hours, ID requirement and overnight rule all match."},
+    {"scenario_id": 1,  "seed": 11, "path": "skip",     "label": false, "why": "invents network 'HotelWiFi' and a telephone password against GrandHorizon_Guest / check-in credentials."},
+    {"scenario_id": 2,  "seed": 11, "path": "skip",     "label": false, "why": "says 9 AM open against the reference's 10:00 AM, and invents 'lower level'."},
+    {"scenario_id": 3,  "seed": 11, "path": "skip",     "label": false, "why": "invents seating area and bathtub; omits most reference features."},
+    {"scenario_id": 18, "seed": 11, "path": "skip",     "label": true,  "why": "states the 11:00 AM check-out time correctly; brief but conflicts with nothing."},
+    {"scenario_id": 26, "seed": 11, "path": "skip",     "label": true,  "why": "New Delhi, matches."},
+    {"scenario_id": 27, "seed": 11, "path": "skip",     "label": true,  "why": "Paris, matches."},
+    {"scenario_id": 28, "seed": 11, "path": "skip",     "label": true,  "why": "Jupiter, matches."},
+    {"scenario_id": 26, "seed": 11, "path": "retrieve", "label": false, "why": "declines to answer after retrieving irrelevant hotel passages."},
+    {"scenario_id": 27, "seed": 11, "path": "retrieve", "label": false, "why": "declines to answer."},
+    {"scenario_id": 30, "seed": 11, "path": "retrieve", "label": false, "why": "declines to answer."}
+  ]
+}
