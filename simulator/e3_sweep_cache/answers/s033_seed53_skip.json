@@ -1,0 +1,24 @@
+{
+  "scenario_id": 33,
+  "seed": 53,
+  "path": "skip",
+  "answer_text": " Seventeen hundred and eight, sir.",
+  "answer_sha256": "8474edd7a38badbb74d8616c2ceac16ea21f629c21350bb468adcf66d29e48f7",
+  "answer_correct": false,
+  "judge": {
+    "answer_correct": false,
+    "parsed_ok": true,
+    "judge_raw": "CONFLICT: reference says 126, candidate says 1708.  \nVERDICT: NO",
+    "judge_key": "e1cfab2051418484b63db7359ccb62ff4f60ae2c7d40aee866c6bcf929641b10",
+    "judge_identity": "azure-openai/gpt-4o@2025-01-01-preview",
+    "judge_cache_version": "v4-azure-reasoned",
+    "scenario_id": 33,
+    "temperature": 0.0
+  },
+  "measured_under_timing": "sentence_end",
+  "previous_verdict": {
+    "answer_correct": false,
+    "judge_identity": "azure-openai/gpt-4o@2025-01-01-preview",
+    "judge_raw": "NO"
+  }
+}

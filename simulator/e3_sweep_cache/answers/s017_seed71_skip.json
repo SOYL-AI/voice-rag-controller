@@ -1,0 +1,24 @@
+{
+  "scenario_id": 17,
+  "seed": 71,
+  "path": "skip",
+  "answer_text": " Based on the information provided, I'm unable to confirm if the hotel offers airport pickup service.",
+  "answer_sha256": "db26674f877e401f6febc7ecf7aaf46a0fefd0627292ccea846231c22de6adaa",
+  "answer_correct": false,
+  "judge": {
+    "answer_correct": false,
+    "parsed_ok": true,
+    "judge_raw": "CONFLICT: reference says airport transportation is available, candidate says they are unable to confirm if the hotel offers airport pickup service.  \nVERDICT: NO",
+    "judge_key": "256a4eb2f950d488ce2f7936e42f69c85ddc90ca62c96813b40d466d78bd1435",
+    "judge_identity": "azure-openai/gpt-4o@2025-01-01-preview",
+    "judge_cache_version": "v4-azure-reasoned",
+    "scenario_id": 17,
+    "temperature": 0.0
+  },
+  "measured_under_timing": "sentence_end",
+  "previous_verdict": {
+    "answer_correct": false,
+    "judge_identity": "azure-openai/gpt-4o@2025-01-01-preview",
+    "judge_raw": "NO"
+  }
+}

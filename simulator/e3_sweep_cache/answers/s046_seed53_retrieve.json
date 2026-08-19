@@ -1,0 +1,24 @@
+{
+  "scenario_id": 46,
+  "seed": 53,
+  "path": "retrieve",
+  "answer_text": " I'm sorry for any confusion, but as a hotel concierge, I don't have information about the fastest land animals. However, the cheetah is known to be one of the fastest animals on land, reaching speeds up to 60-70 miles per hour. Enjoy your stay at Grand Horizon Hotel & Suites!",
+  "answer_sha256": "bd665bd10f0bc5f25a0874bc63808562a17bc749b684058e0e55601255c9ceb3",
+  "answer_correct": false,
+  "judge": {
+    "answer_correct": false,
+    "parsed_ok": true,
+    "judge_raw": "CONFLICT: reference says the cheetah is the fastest land animal, candidate says they don't have information about the fastest land animals.\nVERDICT: NO",
+    "judge_key": "fc1b89f29f757ed92478be41305269f9f03a0305f51d2cd34de605cf2e3028c9",
+    "judge_identity": "azure-openai/gpt-4o@2025-01-01-preview",
+    "judge_cache_version": "v4-azure-reasoned",
+    "scenario_id": 46,
+    "temperature": 0.0
+  },
+  "measured_under_timing": "sentence_end",
+  "previous_verdict": {
+    "answer_correct": false,
+    "judge_identity": "azure-openai/gpt-4o@2025-01-01-preview",
+    "judge_raw": "CONFLICT: reference says the cheetah is the fastest land animal, candidate says they don't have information about the fastest land animals.\nVERDICT: NO"
+  }
+}

@@ -1,0 +1,24 @@
+{
+  "scenario_id": 29,
+  "seed": 71,
+  "path": "retrieve",
+  "answer_text": " The planet known as the Red Planet is Mars. This information is not in the provided documents, but it's a common knowledge fact.",
+  "answer_sha256": "3230ee63d3a4acd9c2d6c401cc87406e22637609b88b69b2d6f7e5d3dfe9826f",
+  "answer_correct": true,
+  "judge": {
+    "answer_correct": true,
+    "parsed_ok": true,
+    "judge_raw": "CONFLICT: none  \nVERDICT: YES",
+    "judge_key": "31dc47afd60ff8296dc51534194106e44a3fffc45e965cb717fa6c96f9842b37",
+    "judge_identity": "azure-openai/gpt-4o@2025-01-01-preview",
+    "judge_cache_version": "v4-azure-reasoned",
+    "scenario_id": 29,
+    "temperature": 0.0
+  },
+  "measured_under_timing": "sentence_end",
+  "previous_verdict": {
+    "answer_correct": true,
+    "judge_identity": "azure-openai/gpt-4o@2025-01-01-preview",
+    "judge_raw": "YES"
+  }
+}

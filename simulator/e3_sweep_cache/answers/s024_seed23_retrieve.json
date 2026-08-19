@@ -1,0 +1,24 @@
+{
+  "scenario_id": 24,
+  "seed": 23,
+  "path": "retrieve",
+  "answer_text": " Room service is available 24/7 at the Grand Horizon Hotel & Suites. You can order Indian, Continental, and international dishes using the in-room phone, with delivery taking 25 to 40 minutes. Premium menu items may have additional charges.",
+  "answer_sha256": "3689d981d1019d2f79a433bcd03a89b651322f3d2eba65e5198d74ae07987d73",
+  "answer_correct": true,
+  "judge": {
+    "answer_correct": true,
+    "parsed_ok": true,
+    "judge_raw": "CONFLICT: none  \nVERDICT: YES",
+    "judge_key": "c18891b7381982b5e35d96513004192f03af3e0ece29584a48a81c14c55e9e74",
+    "judge_identity": "azure-openai/gpt-4o@2025-01-01-preview",
+    "judge_cache_version": "v4-azure-reasoned",
+    "scenario_id": 24,
+    "temperature": 0.0
+  },
+  "measured_under_timing": "sentence_end",
+  "previous_verdict": {
+    "answer_correct": true,
+    "judge_identity": "azure-openai/gpt-4o@2025-01-01-preview",
+    "judge_raw": "YES"
+  }
+}

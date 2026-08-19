@@ -1,0 +1,24 @@
+{
+  "scenario_id": 7,
+  "seed": 37,
+  "path": "skip",
+  "answer_text": " According to the information provided, the hotel offers rollaway beds for an additional fee. However, the exact cost isn't specified. I recommend contacting the front desk for more details.",
+  "answer_sha256": "f384b857cf55fbd611c3ff013c35ae6d4aba6a1dad91483999bd291df05e080e",
+  "answer_correct": false,
+  "judge": {
+    "answer_correct": false,
+    "parsed_ok": true,
+    "judge_raw": "CONFLICT: reference says extra beds are available upon request for selected room categories, candidate says the hotel offers rollaway beds without specifying selected room categories.  \nCONFLICT: reference says extra beds include bedding and basic amenities, candidate does not mention this.  \nCONFLICT: reference says the hotel recommends requesting an extra bed during the reservation process to ensure availability before arrival, candidate says to contact the front desk for more details instead.  \n\nVERDICT: NO",
+    "judge_key": "05dd2f41cab0b367bc1367dd1430c42eae9d5d561f9e03b313ae6363d47c93e0",
+    "judge_identity": "azure-openai/gpt-4o@2025-01-01-preview",
+    "judge_cache_version": "v4-azure-reasoned",
+    "scenario_id": 7,
+    "temperature": 0.0
+  },
+  "measured_under_timing": "sentence_end",
+  "previous_verdict": {
+    "answer_correct": false,
+    "judge_identity": "azure-openai/gpt-4o@2025-01-01-preview",
+    "judge_raw": "NO"
+  }
+}

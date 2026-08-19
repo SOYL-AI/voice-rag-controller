@@ -1,0 +1,13 @@
+{
+  "scenario_id": 7,
+  "seed": 37,
+  "path": "skip",
+  "timing": "sentence_end",
+  "ttfa_ms": 2094.0,
+  "retrievals": 0,
+  "answer_sha256": "f384b857cf55fbd611c3ff013c35ae6d4aba6a1dad91483999bd291df05e080e",
+  "matches_canonical_answer": true,
+  "conversation_id": "e3full_s007_seed37_skip_sentence_end",
+  "log_path": "logs\\e3full_s007_seed37_skip_sentence_end.jsonl",
+  "frozen_query": "\"Bed with extra space or additional sleeping area\""
+}

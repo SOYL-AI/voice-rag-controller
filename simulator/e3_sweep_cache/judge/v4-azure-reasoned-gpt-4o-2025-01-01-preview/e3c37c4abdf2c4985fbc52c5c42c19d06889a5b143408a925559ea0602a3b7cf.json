@@ -1,0 +1,10 @@
+{
+  "answer_correct": false,
+  "parsed_ok": true,
+  "judge_raw": "CONFLICT: reference says charging fees are calculated according to electricity consumption and payable during check-out, candidate does not mention this and implies no fees by omitting it.\nCONFLICT: reference says guests should contact the Front Desk to reserve a charging slot if required, candidate does not mention the need to reserve a slot.\n\nVERDICT: NO",
+  "judge_key": "e3c37c4abdf2c4985fbc52c5c42c19d06889a5b143408a925559ea0602a3b7cf",
+  "judge_identity": "azure-openai/gpt-4o@2025-01-01-preview",
+  "judge_cache_version": "v4-azure-reasoned",
+  "scenario_id": 22,
+  "temperature": 0.0
+}

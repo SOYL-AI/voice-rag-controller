@@ -1,0 +1,10 @@
+{
+  "answer_correct": true,
+  "parsed_ok": true,
+  "judge_raw": "CONFLICT: reference says 100 degrees Celsius, candidate says 212 degrees Fahrenheit (100 degrees Celsius).  \nVERDICT: YES",
+  "judge_key": "23e2d21033296df893879fa3988ad0cf0ee8844e46a59a13cdcead440eb7387d",
+  "judge_identity": "azure-openai/gpt-4o@2025-01-01-preview",
+  "judge_cache_version": "v4-azure-reasoned",
+  "scenario_id": 31,
+  "temperature": 0.0
+}

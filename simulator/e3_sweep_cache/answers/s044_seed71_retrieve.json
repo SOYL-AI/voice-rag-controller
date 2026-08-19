@@ -1,0 +1,24 @@
+{
+  "scenario_id": 44,
+  "seed": 71,
+  "path": "retrieve",
+  "answer_text": " I'm sorry for any inconvenience, but the provided reference passages do not contain information about the number of days in a leap year.",
+  "answer_sha256": "a71012483d373558b98a5a80583768d9490265f7f15608dac8aa8ae7134e7de3",
+  "answer_correct": false,
+  "judge": {
+    "answer_correct": false,
+    "parsed_ok": true,
+    "judge_raw": "CONFLICT: reference says 366, candidate says the reference does not contain information about the number of days in a leap year.  \nVERDICT: NO",
+    "judge_key": "ffe80e6c7df4bd328da347f72de520a64ad90bd5ab6f7fa27cfd0c5e7ef706ec",
+    "judge_identity": "azure-openai/gpt-4o@2025-01-01-preview",
+    "judge_cache_version": "v4-azure-reasoned",
+    "scenario_id": 44,
+    "temperature": 0.0
+  },
+  "measured_under_timing": "sentence_end",
+  "previous_verdict": {
+    "answer_correct": false,
+    "judge_identity": "azure-openai/gpt-4o@2025-01-01-preview",
+    "judge_raw": "CONFLICT: reference says 366, candidate says the reference does not contain information about the number of days in a leap year.  \nVERDICT: NO"
+  }
+}

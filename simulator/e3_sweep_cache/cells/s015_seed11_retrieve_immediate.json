@@ -1,0 +1,13 @@
+{
+  "scenario_id": 15,
+  "seed": 11,
+  "path": "retrieve",
+  "timing": "immediate",
+  "ttfa_ms": 3437.0,
+  "retrievals": 1,
+  "answer_sha256": "24b725b6c9396a869ec6f855ef472cb375d6abc6b28f53afa202c13a3897744c",
+  "matches_canonical_answer": true,
+  "conversation_id": "e3full_s015_seed11_retrieve_immediate",
+  "log_path": "logs\\e3full_s015_seed11_retrieve_immediate.jsonl",
+  "frozen_query": "\"Taxi booking services\""
+}

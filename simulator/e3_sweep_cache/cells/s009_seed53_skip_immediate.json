@@ -1,0 +1,13 @@
+{
+  "scenario_id": 9,
+  "seed": 53,
+  "path": "skip",
+  "timing": "immediate",
+  "ttfa_ms": 1828.0,
+  "retrievals": 0,
+  "answer_sha256": "c99e841efb0599ff355767c31f95061ae82e4565dfcac98877262250c3b99510",
+  "matches_canonical_answer": true,
+  "conversation_id": "e3full_s009_seed53_skip_immediate",
+  "log_path": "logs\\e3full_s009_seed53_skip_immediate.jsonl",
+  "frozen_query": "How to handle lost items"
+}

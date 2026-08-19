@@ -1,0 +1,13 @@
+{
+  "scenario_id": 30,
+  "seed": 71,
+  "path": "skip",
+  "timing": "sentence_end",
+  "ttfa_ms": 2281.0,
+  "retrievals": 0,
+  "answer_sha256": "00e2fcaaa55e6341dc5a424aee4c26c409fb2921caada7f372e386a1a6799935",
+  "matches_canonical_answer": true,
+  "conversation_id": "e3full_s030_seed71_skip_sentence_end",
+  "log_path": "logs\\e3full_s030_seed71_skip_sentence_end.jsonl",
+  "frozen_query": "Chemical formula of water"
+}

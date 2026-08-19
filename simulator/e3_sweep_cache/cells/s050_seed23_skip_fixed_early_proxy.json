@@ -1,0 +1,13 @@
+{
+  "scenario_id": 50,
+  "seed": 23,
+  "path": "skip",
+  "timing": "fixed_early_proxy",
+  "ttfa_ms": 1531.0,
+  "retrievals": 0,
+  "answer_sha256": "e8c894048e088f7c33b402d745577233d2bb3c5433c36feb3c69a8dfe25a1261",
+  "matches_canonical_answer": true,
+  "conversation_id": "e3full_s050_seed23_skip_fixed_early_proxy",
+  "log_path": "logs\\e3full_s050_seed23_skip_fixed_early_proxy.jsonl",
+  "frozen_query": "\"Reason for requiring identification during hotel check-in\""
+}

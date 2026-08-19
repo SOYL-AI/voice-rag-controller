@@ -1,0 +1,24 @@
+{
+  "scenario_id": 2,
+  "seed": 37,
+  "path": "skip",
+  "answer_text": " The spa offers a variety of treatments, including massages, facials, and body wraps. It's located on the lower level and is open from 9 AM to 9 PM daily.",
+  "answer_sha256": "5045a268bc7f113c370f869d32b892d804677609a52b7c93a3996ca7576ca83d",
+  "answer_correct": false,
+  "judge": {
+    "answer_correct": false,
+    "parsed_ok": true,
+    "judge_raw": "CONFLICT: reference says the spa operates from 10:00 AM to 9:00 PM, candidate says it operates from 9:00 AM to 9:00 PM.  \nCONFLICT: none.  \nVERDICT: NO",
+    "judge_key": "13306d4bea478e60001ae2e87a35772f5991700c71357cb211526a85c8250127",
+    "judge_identity": "azure-openai/gpt-4o@2025-01-01-preview",
+    "judge_cache_version": "v4-azure-reasoned",
+    "scenario_id": 2,
+    "temperature": 0.0
+  },
+  "measured_under_timing": "sentence_end",
+  "previous_verdict": {
+    "answer_correct": false,
+    "judge_identity": "azure-openai/gpt-4o@2025-01-01-preview",
+    "judge_raw": "NO"
+  }
+}

@@ -1,0 +1,13 @@
+{
+  "scenario_id": 23,
+  "seed": 71,
+  "path": "skip",
+  "timing": "immediate",
+  "ttfa_ms": 1813.0,
+  "retrievals": 0,
+  "answer_sha256": "7ba4194bd4f0a336c226728fa0c79a41efe9c5f77692756ee327d8b6f76f574e",
+  "matches_canonical_answer": true,
+  "conversation_id": "e3full_s023_seed71_skip_immediate",
+  "log_path": "logs\\e3full_s023_seed71_skip_immediate.jsonl",
+  "frozen_query": "\"Baby crib information\""
+}

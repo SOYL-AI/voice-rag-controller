@@ -1,0 +1,13 @@
+{
+  "scenario_id": 34,
+  "seed": 37,
+  "path": "retrieve",
+  "timing": "sentence_end",
+  "ttfa_ms": 3266.0,
+  "retrievals": 1,
+  "answer_sha256": "993ecd1dcba83ea44412b5e87c0825298b0946a5da46f44c243038e019f3d8e6",
+  "matches_canonical_answer": true,
+  "conversation_id": "e3full_s034_seed37_retrieve_sentence_end",
+  "log_path": "logs\\e3full_s034_seed37_retrieve_sentence_end.jsonl",
+  "frozen_query": "\"Check if 17 is a prime number\""
+}

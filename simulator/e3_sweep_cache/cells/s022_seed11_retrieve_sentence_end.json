@@ -1,0 +1,13 @@
+{
+  "scenario_id": 22,
+  "seed": 11,
+  "path": "retrieve",
+  "timing": "sentence_end",
+  "ttfa_ms": 4625.0,
+  "retrievals": 1,
+  "answer_sha256": "42c1acd39c26e871ba4a51d889f4b9b01ed364663ec7bf0d472162e11fd36aca",
+  "matches_canonical_answer": true,
+  "conversation_id": "e3full_s022_seed11_retrieve_sentence_end",
+  "log_path": "logs\\e3full_s022_seed11_retrieve_sentence_end.jsonl",
+  "frozen_query": "\"Electric vehicle charging stations\""
+}

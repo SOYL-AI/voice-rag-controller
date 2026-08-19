@@ -1,0 +1,24 @@
+{
+  "scenario_id": 27,
+  "seed": 53,
+  "path": "skip",
+  "answer_text": " The capital of France is Paris.",
+  "answer_sha256": "1e44ae806e2f4594a9350de421c7a08295eed45b20f7af1ae7273fa915709789",
+  "answer_correct": true,
+  "judge": {
+    "answer_correct": true,
+    "parsed_ok": true,
+    "judge_raw": "CONFLICT: none  \nVERDICT: YES",
+    "judge_key": "ea4f75a17d1b42128d640d7cc6980d39ffac64edbed3201347365c7e0d81fd0b",
+    "judge_identity": "azure-openai/gpt-4o@2025-01-01-preview",
+    "judge_cache_version": "v4-azure-reasoned",
+    "scenario_id": 27,
+    "temperature": 0.0
+  },
+  "measured_under_timing": "sentence_end",
+  "previous_verdict": {
+    "answer_correct": true,
+    "judge_identity": "azure-openai/gpt-4o@2025-01-01-preview",
+    "judge_raw": "YES"
+  }
+}

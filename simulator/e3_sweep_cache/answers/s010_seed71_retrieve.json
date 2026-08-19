@@ -1,0 +1,24 @@
+{
+  "scenario_id": 10,
+  "seed": 71,
+  "path": "retrieve",
+  "answer_text": " The hotel's check-out policy is that late check-out is available upon request and depends on room availability. Guests checking out between 11:00 AM and 2:00 PM may be charged a partial room rate, while check-outs after 2:00 PM are generally charged as a full night's stay. Guests are advised to contact the Front Desk at least one day in advance to request a late check-out.",
+  "answer_sha256": "904a3093e54012523f24664461442814ab23a8000c1f5603122fb5f0076b5533",
+  "answer_correct": true,
+  "judge": {
+    "answer_correct": true,
+    "parsed_ok": true,
+    "judge_raw": "CONFLICT: none  \nVERDICT: YES",
+    "judge_key": "97af9236b033ecacc527b2a4d4e2e83af8dd01601471f2e939f1dea59cfb36c1",
+    "judge_identity": "azure-openai/gpt-4o@2025-01-01-preview",
+    "judge_cache_version": "v4-azure-reasoned",
+    "scenario_id": 10,
+    "temperature": 0.0
+  },
+  "measured_under_timing": "sentence_end",
+  "previous_verdict": {
+    "answer_correct": true,
+    "judge_identity": "azure-openai/gpt-4o@2025-01-01-preview",
+    "judge_raw": "YES"
+  }
+}

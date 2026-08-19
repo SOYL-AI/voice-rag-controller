@@ -1,0 +1,13 @@
+{
+  "scenario_id": 43,
+  "seed": 53,
+  "path": "retrieve",
+  "timing": "fixed_early_proxy",
+  "ttfa_ms": 1375.0,
+  "retrievals": 1,
+  "answer_sha256": "1c875d12ef1861acdd6d3ff324c0bf37d5ad1c8f059c6cfe0439ed5ed5027e9f",
+  "matches_canonical_answer": true,
+  "conversation_id": "e3full_s043_seed53_retrieve_fixed_early_proxy",
+  "log_path": "logs\\e3full_s043_seed53_retrieve_fixed_early_proxy.jsonl",
+  "frozen_query": "Number of continents in the world"
+}

@@ -1,0 +1,24 @@
+{
+  "scenario_id": 19,
+  "seed": 37,
+  "path": "retrieve",
+  "answer_text": " The Business Centre at Grand Horizon Hotel & Suites is open daily from 8:00 AM to 8:00 PM. It offers desktop computers, high-speed internet access, printing, scanning, photocopying, and meeting workstations. Guests may request administrative assistance during operating hours.",
+  "answer_sha256": "b13b0300a46fb47936e16f26b36c27f713cb6734f93e438093e257e56a2996cb",
+  "answer_correct": true,
+  "judge": {
+    "answer_correct": true,
+    "parsed_ok": true,
+    "judge_raw": "CONFLICT: none  \nVERDICT: YES",
+    "judge_key": "9f09116cbefcc4ed9c85e2bd27a2f5422572a566f08186499665846dd7822d83",
+    "judge_identity": "azure-openai/gpt-4o@2025-01-01-preview",
+    "judge_cache_version": "v4-azure-reasoned",
+    "scenario_id": 19,
+    "temperature": 0.0
+  },
+  "measured_under_timing": "sentence_end",
+  "previous_verdict": {
+    "answer_correct": true,
+    "judge_identity": "azure-openai/gpt-4o@2025-01-01-preview",
+    "judge_raw": "YES"
+  }
+}

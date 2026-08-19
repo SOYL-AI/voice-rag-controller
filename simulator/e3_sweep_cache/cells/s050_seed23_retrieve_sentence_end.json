@@ -1,0 +1,13 @@
+{
+  "scenario_id": 50,
+  "seed": 23,
+  "path": "retrieve",
+  "timing": "sentence_end",
+  "ttfa_ms": 2703.0,
+  "retrievals": 1,
+  "answer_sha256": "8da70911f80cf747b69d54ffed49ac39cf2e02726dad3fe641ed571091972beb",
+  "matches_canonical_answer": true,
+  "conversation_id": "e3full_s050_seed23_retrieve_sentence_end",
+  "log_path": "logs\\e3full_s050_seed23_retrieve_sentence_end.jsonl",
+  "frozen_query": "\"Reason for requiring identification during hotel check-in\""
+}

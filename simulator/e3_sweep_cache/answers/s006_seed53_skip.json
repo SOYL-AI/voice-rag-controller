@@ -1,0 +1,24 @@
+{
+  "scenario_id": 6,
+  "seed": 53,
+  "path": "skip",
+  "answer_text": " Yes, you can store your luggage at the hotel. The front desk will be happy to assist you.",
+  "answer_sha256": "5794bbf003ada5a6e529ca37e1ea2cd2faa64d40379d4dea71395cd8143d917c",
+  "answer_correct": false,
+  "judge": {
+    "answer_correct": false,
+    "parsed_ok": true,
+    "judge_raw": "CONFLICT: reference says luggage storage is available before check-in or after check-out on the same day, candidate does not specify this limitation.  \nCONFLICT: reference says long-term luggage storage is subject to space availability and may be available upon request, candidate does not mention this condition.  \nCONFLICT: reference advises against storing valuable items in luggage, candidate does not mention this caution.  \n\nVERDICT: NO",
+    "judge_key": "235d3807c2b0de14495def4a01a3a849c9272c33eb8ef229e1f4b359dd1c4496",
+    "judge_identity": "azure-openai/gpt-4o@2025-01-01-preview",
+    "judge_cache_version": "v4-azure-reasoned",
+    "scenario_id": 6,
+    "temperature": 0.0
+  },
+  "measured_under_timing": "sentence_end",
+  "previous_verdict": {
+    "answer_correct": false,
+    "judge_identity": "azure-openai/gpt-4o@2025-01-01-preview",
+    "judge_raw": "NO"
+  }
+}

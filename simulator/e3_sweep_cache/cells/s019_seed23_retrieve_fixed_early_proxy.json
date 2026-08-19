@@ -1,0 +1,13 @@
+{
+  "scenario_id": 19,
+  "seed": 23,
+  "path": "retrieve",
+  "timing": "fixed_early_proxy",
+  "ttfa_ms": 2984.0,
+  "retrievals": 1,
+  "answer_sha256": "910c3768581e9927d1021e087ddc5fe803efdc2dfb1ea845499abb1858155723",
+  "matches_canonical_answer": true,
+  "conversation_id": "e3full_s019_seed23_retrieve_fixed_early_proxy",
+  "log_path": "logs\\e3full_s019_seed23_retrieve_fixed_early_proxy.jsonl",
+  "frozen_query": "\"Business center information\""
+}

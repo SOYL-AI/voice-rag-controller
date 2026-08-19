@@ -1,0 +1,24 @@
+{
+  "scenario_id": 31,
+  "seed": 71,
+  "path": "retrieve",
+  "answer_text": " I'm sorry for any confusion, but the provided passages do not contain information about the boiling point of water at sea level. The temperature at which water boils at sea level is 212 degrees Fahrenheit (100 degrees Celsius).",
+  "answer_sha256": "d647881e093c80a8577da8582b17f82a6da25627265e9f8161bd8bfa57babe9e",
+  "answer_correct": true,
+  "judge": {
+    "answer_correct": true,
+    "parsed_ok": true,
+    "judge_raw": "CONFLICT: reference says 100 degrees Celsius, candidate says 212 degrees Fahrenheit (100 degrees Celsius).  \nVERDICT: YES",
+    "judge_key": "23e2d21033296df893879fa3988ad0cf0ee8844e46a59a13cdcead440eb7387d",
+    "judge_identity": "azure-openai/gpt-4o@2025-01-01-preview",
+    "judge_cache_version": "v4-azure-reasoned",
+    "scenario_id": 31,
+    "temperature": 0.0
+  },
+  "measured_under_timing": "sentence_end",
+  "previous_verdict": {
+    "answer_correct": true,
+    "judge_identity": "azure-openai/gpt-4o@2025-01-01-preview",
+    "judge_raw": "YES"
+  }
+}

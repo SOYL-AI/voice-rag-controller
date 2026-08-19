@@ -1,0 +1,13 @@
+{
+  "scenario_id": 49,
+  "seed": 71,
+  "path": "skip",
+  "timing": "sentence_end",
+  "ttfa_ms": 2765.0,
+  "retrievals": 0,
+  "answer_sha256": "29ca71e551e6d9974ae85d3f2694c6947e61e24fed7afbce8cb0e98f18b0aea2",
+  "matches_canonical_answer": true,
+  "conversation_id": "e3full_s049_seed71_skip_sentence_end",
+  "log_path": "logs\\e3full_s049_seed71_skip_sentence_end.jsonl",
+  "frozen_query": "\"Common amenities in deluxe hotel rooms\""
+}

@@ -1,0 +1,24 @@
+{
+  "scenario_id": 50,
+  "seed": 71,
+  "path": "skip",
+  "answer_text": " Hotels ask guests to show identification during check-in to verify their identity and ensure the accuracy of the reservation.",
+  "answer_sha256": "e8c894048e088f7c33b402d745577233d2bb3c5433c36feb3c69a8dfe25a1261",
+  "answer_correct": false,
+  "judge": {
+    "answer_correct": false,
+    "parsed_ok": true,
+    "judge_raw": "CONFLICT: reference says hotels ask for identification to comply with local regulations, candidate does not mention this and instead says it is to ensure the accuracy of the reservation.\n\nVERDICT: NO",
+    "judge_key": "43b28a281f592aca973645dc9f1ad1185809575a751b8e0c3ebe20a5f4922eaa",
+    "judge_identity": "azure-openai/gpt-4o@2025-01-01-preview",
+    "judge_cache_version": "v4-azure-reasoned",
+    "scenario_id": 50,
+    "temperature": 0.0
+  },
+  "measured_under_timing": "sentence_end",
+  "previous_verdict": {
+    "answer_correct": false,
+    "judge_identity": "azure-openai/gpt-4o@2025-01-01-preview",
+    "judge_raw": "CONFLICT: reference says hotels ask for identification to comply with local regulations, candidate does not mention this and instead says it is to ensure the accuracy of the reservation.\n\nVERDICT: NO"
+  }
+}

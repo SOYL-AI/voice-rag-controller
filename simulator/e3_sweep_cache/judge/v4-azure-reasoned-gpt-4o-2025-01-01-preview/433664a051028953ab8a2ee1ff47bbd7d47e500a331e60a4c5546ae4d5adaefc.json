@@ -1,0 +1,10 @@
+{
+  "answer_correct": false,
+  "parsed_ok": true,
+  "judge_raw": "CONFLICT: reference says the Deluxe Room includes air conditioning, candidate does not mention it.  \nCONFLICT: reference says the Deluxe Room includes complimentary Wi-Fi, candidate does not mention it.  \nCONFLICT: reference says the Deluxe Room includes tea and coffee-making facilities, candidate says it includes a coffee maker but does not mention tea-making facilities.  \nCONFLICT: reference says the Deluxe Room includes a work desk, candidate does not mention it.  \nCONFLICT: reference says the Deluxe Room includes an attached bathroom with premium toiletries and a hairdryer, candidate does not mention it.  \nCONFLICT: reference says the Deluxe Room accommodates up to two adults and one child, candidate does not mention it.  \nCONFLICT: reference says daily housekeeping is included in the room rate, candidate does not mention it.  \nCONFLICT: reference does not mention a seating area, private balcony or terrace, or mini-fridge, but candidate says these are included.  \n\nVERDICT: NO",
+  "judge_key": "433664a051028953ab8a2ee1ff47bbd7d47e500a331e60a4c5546ae4d5adaefc",
+  "judge_identity": "azure-openai/gpt-4o@2025-01-01-preview",
+  "judge_cache_version": "v4-azure-reasoned",
+  "scenario_id": 3,
+  "temperature": 0.0
+}

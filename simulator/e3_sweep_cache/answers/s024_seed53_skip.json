@@ -1,0 +1,24 @@
+{
+  "scenario_id": 24,
+  "seed": 53,
+  "path": "skip",
+  "answer_text": " Room service is available 24 hours a day. You can order from the room service menu in your guestroom.",
+  "answer_sha256": "90485e9d99110027bbed744640da87aaccb4c32b99a73cb150961df79b8e055c",
+  "answer_correct": true,
+  "judge": {
+    "answer_correct": true,
+    "parsed_ok": true,
+    "judge_raw": "CONFLICT: reference says a selection of Indian, Continental, and international dishes can be ordered, candidate does not specify this and instead refers to a generic \"room service menu.\"\nCONFLICT: reference says estimated delivery time is 25 to 40 minutes, candidate does not mention delivery time.\nCONFLICT: reference says additional service charges may apply for certain premium menu items, candidate does not mention this.\n\nVERDICT: YES",
+    "judge_key": "751130c2321b5eea2356f0ef0edad7549dac2a525675b4842b7507fefd85c996",
+    "judge_identity": "azure-openai/gpt-4o@2025-01-01-preview",
+    "judge_cache_version": "v4-azure-reasoned",
+    "scenario_id": 24,
+    "temperature": 0.0
+  },
+  "measured_under_timing": "sentence_end",
+  "previous_verdict": {
+    "answer_correct": false,
+    "judge_identity": "azure-openai/gpt-4o@2025-01-01-preview",
+    "judge_raw": "NO"
+  }
+}

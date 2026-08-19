@@ -1,0 +1,24 @@
+{
+  "scenario_id": 9,
+  "seed": 71,
+  "path": "skip",
+  "answer_text": " I'm sorry for your inconvenience, sir. Please contact our front desk immediately for lost and found inquiries. They will assist you further.",
+  "answer_sha256": "da9e86a6fb1b2b002faa8400b3182d13543c6564c80f93771db95295027d853f",
+  "answer_correct": false,
+  "judge": {
+    "answer_correct": false,
+    "parsed_ok": true,
+    "judge_raw": "CONFLICT: reference says unclaimed items are retained for 90 days, candidate does not mention this and implies no specific retention policy.\nVERDICT: NO",
+    "judge_key": "d4e6262be31a862d29502981697952bfc2954542ebf779dfb3704d336c35f42d",
+    "judge_identity": "azure-openai/gpt-4o@2025-01-01-preview",
+    "judge_cache_version": "v4-azure-reasoned",
+    "scenario_id": 9,
+    "temperature": 0.0
+  },
+  "measured_under_timing": "sentence_end",
+  "previous_verdict": {
+    "answer_correct": true,
+    "judge_identity": "azure-openai/gpt-4o@2025-01-01-preview",
+    "judge_raw": "YES"
+  }
+}

@@ -1,0 +1,24 @@
+{
+  "scenario_id": 11,
+  "seed": 37,
+  "path": "retrieve",
+  "answer_text": " The Horizon Restaurant serves meals throughout the day, from breakfast to dinner. It offers a variety of options and requires reservations during weekends and public holidays. Smart casual attire is encouraged. Additionally, there's a kids menu available. For the rooftop dining experience, the Skyline Rooftop Restaurant offers panoramic city views and operates from 6:30 PM to 11:00 PM daily, with advance reservations recommended.",
+  "answer_sha256": "373fb779a7b0e8a34b526f126559212c1edd078e10536c6126212e630e6126b3",
+  "answer_correct": false,
+  "judge": {
+    "answer_correct": false,
+    "parsed_ok": true,
+    "judge_raw": "CONFLICT: reference says lunch is available from 12:30 PM to 3:00 PM, candidate does not specify lunch hours and instead mentions meals are served throughout the day.\nCONFLICT: reference says dinner is served between 7:00 PM and 10:30 PM, candidate does not specify dinner hours and instead mentions meals are served throughout the day.\nCONFLICT: reference does not mention a kids menu, candidate says there is a kids menu available.\nCONFLICT: reference does not mention the Skyline Rooftop Restaurant, candidate introduces it and provides its operating hours as 6:30 PM to 11:00 PM daily.\n\nVERDICT: NO",
+    "judge_key": "8c6881c8aa0ae5e3635820038d4b94b52ef1c64220d84cf092e5f2918e43bc0d",
+    "judge_identity": "azure-openai/gpt-4o@2025-01-01-preview",
+    "judge_cache_version": "v4-azure-reasoned",
+    "scenario_id": 11,
+    "temperature": 0.0
+  },
+  "measured_under_timing": "sentence_end",
+  "previous_verdict": {
+    "answer_correct": false,
+    "judge_identity": "azure-openai/gpt-4o@2025-01-01-preview",
+    "judge_raw": "NO"
+  }
+}

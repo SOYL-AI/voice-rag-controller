@@ -1,0 +1,24 @@
+{
+  "scenario_id": 5,
+  "seed": 53,
+  "path": "skip",
+  "answer_text": " Our vegan menu offers a variety of plant-based dishes, including the Quinoa Salad and the Grilled Vegetable Platter. You can find more details in the dining section of your room's information guide.",
+  "answer_sha256": "a1d0ccf4cb774f6ae371a04ed27861a782043886fe81e3c35e1023e35307f4dc",
+  "answer_correct": false,
+  "judge": {
+    "answer_correct": false,
+    "parsed_ok": true,
+    "judge_raw": "CONFLICT: reference says vegan dishes include salads, soups, plant-based curries, pasta, rice bowls, and dairy-free desserts, candidate says vegan dishes include Quinoa Salad and Grilled Vegetable Platter.\nCONFLICT: reference says customized vegan meals can be prepared upon request, candidate does not mention this and instead directs to the room's information guide.\nCONFLICT: reference says to inform the restaurant staff of dietary preferences before ordering, candidate does not mention this.\n\nVERDICT: NO",
+    "judge_key": "081133328d23c21e5223537a0ed6f2bf825d06b50b041ae87fabb36676ce00f4",
+    "judge_identity": "azure-openai/gpt-4o@2025-01-01-preview",
+    "judge_cache_version": "v4-azure-reasoned",
+    "scenario_id": 5,
+    "temperature": 0.0
+  },
+  "measured_under_timing": "sentence_end",
+  "previous_verdict": {
+    "answer_correct": false,
+    "judge_identity": "azure-openai/gpt-4o@2025-01-01-preview",
+    "judge_raw": "NO"
+  }
+}

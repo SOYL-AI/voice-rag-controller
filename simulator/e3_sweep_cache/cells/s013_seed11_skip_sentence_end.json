@@ -1,0 +1,13 @@
+{
+  "scenario_id": 13,
+  "seed": 11,
+  "path": "skip",
+  "timing": "sentence_end",
+  "ttfa_ms": 2234.0,
+  "retrievals": 0,
+  "answer_sha256": "a7b1b4b13c8d60a05b15d5b5e1053ff65fffe30fb82f119271ec0aaccda3896f",
+  "matches_canonical_answer": true,
+  "conversation_id": "e3full_s013_seed11_skip_sentence_end",
+  "log_path": "logs\\e3full_s013_seed11_skip_sentence_end.jsonl",
+  "frozen_query": "Medical services or healthcare information"
+}

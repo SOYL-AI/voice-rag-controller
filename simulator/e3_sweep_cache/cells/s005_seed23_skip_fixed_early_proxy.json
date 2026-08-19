@@ -1,0 +1,13 @@
+{
+  "scenario_id": 5,
+  "seed": 23,
+  "path": "skip",
+  "timing": "fixed_early_proxy",
+  "ttfa_ms": 2281.0,
+  "retrievals": 0,
+  "answer_sha256": "781b884ec316d2b870beb45c22ee741cd36db927dd59dc0a4b8478ec1cda9bff",
+  "matches_canonical_answer": true,
+  "conversation_id": "e3full_s005_seed23_skip_fixed_early_proxy",
+  "log_path": "logs\\e3full_s005_seed23_skip_fixed_early_proxy.jsonl",
+  "frozen_query": "Vegan menu recipes"
+}

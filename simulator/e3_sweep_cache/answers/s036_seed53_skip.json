@@ -1,0 +1,24 @@
+{
+  "scenario_id": 36,
+  "seed": 53,
+  "path": "skip",
+  "answer_text": " A variable in programming is a named location used to store data that can change during the execution of a program.",
+  "answer_sha256": "15578132bc8bf9a997b75af5754e4446d105e1fe4a5f7406a20305ad4686abb8",
+  "answer_correct": true,
+  "judge": {
+    "answer_correct": true,
+    "parsed_ok": true,
+    "judge_raw": "CONFLICT: none  \nVERDICT: YES",
+    "judge_key": "9b4b7b160b47988788e306020e260c20c450ee0ad70944b6694d1243c9ade0d7",
+    "judge_identity": "azure-openai/gpt-4o@2025-01-01-preview",
+    "judge_cache_version": "v4-azure-reasoned",
+    "scenario_id": 36,
+    "temperature": 0.0
+  },
+  "measured_under_timing": "sentence_end",
+  "previous_verdict": {
+    "answer_correct": true,
+    "judge_identity": "azure-openai/gpt-4o@2025-01-01-preview",
+    "judge_raw": "CONFLICT: none  \nVERDICT: YES"
+  }
+}

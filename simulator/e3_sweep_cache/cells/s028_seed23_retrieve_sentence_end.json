@@ -1,0 +1,13 @@
+{
+  "scenario_id": 28,
+  "seed": 23,
+  "path": "retrieve",
+  "timing": "sentence_end",
+  "ttfa_ms": 2657.0,
+  "retrievals": 1,
+  "answer_sha256": "51ea56785d5b3e79bd5eb4d0702b4166198e1543ec72c513540c3b36fc1c22b3",
+  "matches_canonical_answer": true,
+  "conversation_id": "e3full_s028_seed23_retrieve_sentence_end",
+  "log_path": "logs\\e3full_s028_seed23_retrieve_sentence_end.jsonl",
+  "frozen_query": "Largest planet in the solar system"
+}

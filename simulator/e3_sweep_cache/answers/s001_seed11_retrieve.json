@@ -1,0 +1,24 @@
+{
+  "scenario_id": 1,
+  "seed": 11,
+  "path": "retrieve",
+  "answer_text": " Complimentary high-speed Wi-Fi is available throughout the hotel. Guests can connect using the network GrandHorizon_Guest and enter the access credentials provided during check-in. For technical assistance or connectivity issues, guests may contact the Front Desk at any time.",
+  "answer_sha256": "b994961b08fe6df6697024860c4f5d8afbb7fb4262af9c9f421513fe33a79b51",
+  "answer_correct": true,
+  "judge": {
+    "answer_correct": true,
+    "parsed_ok": true,
+    "judge_raw": "CONFLICT: none  \nVERDICT: YES",
+    "judge_key": "51ceb78cd82ff53a6aa0ae831888d8f62e01076b9fc0914e4b18fef0c0a538b6",
+    "judge_identity": "azure-openai/gpt-4o@2025-01-01-preview",
+    "judge_cache_version": "v4-azure-reasoned",
+    "scenario_id": 1,
+    "temperature": 0.0
+  },
+  "measured_under_timing": "sentence_end",
+  "previous_verdict": {
+    "answer_correct": true,
+    "judge_identity": "azure-openai/gpt-4o@2025-01-01-preview",
+    "judge_raw": "YES"
+  }
+}

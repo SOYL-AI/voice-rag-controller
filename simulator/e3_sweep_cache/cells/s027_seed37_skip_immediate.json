@@ -1,0 +1,13 @@
+{
+  "scenario_id": 27,
+  "seed": 37,
+  "path": "skip",
+  "timing": "immediate",
+  "ttfa_ms": 1109.0,
+  "retrievals": 0,
+  "answer_sha256": "1e44ae806e2f4594a9350de421c7a08295eed45b20f7af1ae7273fa915709789",
+  "matches_canonical_answer": true,
+  "conversation_id": "e3full_s027_seed37_skip_immediate",
+  "log_path": "logs\\e3full_s027_seed37_skip_immediate.jsonl",
+  "frozen_query": "Capital of France"
+}

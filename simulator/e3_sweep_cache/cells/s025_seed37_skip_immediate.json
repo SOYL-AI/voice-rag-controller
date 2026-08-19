@@ -1,0 +1,13 @@
+{
+  "scenario_id": 25,
+  "seed": 37,
+  "path": "skip",
+  "timing": "immediate",
+  "ttfa_ms": 1687.0,
+  "retrievals": 0,
+  "answer_sha256": "1559ba36f536307dba296b999be9727cdbe8d0e37c82554ff6e6b767cde15e3b",
+  "matches_canonical_answer": true,
+  "conversation_id": "e3full_s025_seed37_skip_immediate",
+  "log_path": "logs\\e3full_s025_seed37_skip_immediate.jsonl",
+  "frozen_query": "\"Laundry techniques and processes\""
+}

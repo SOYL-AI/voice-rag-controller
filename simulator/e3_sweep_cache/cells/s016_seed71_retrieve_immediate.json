@@ -1,0 +1,13 @@
+{
+  "scenario_id": 16,
+  "seed": 71,
+  "path": "retrieve",
+  "timing": "immediate",
+  "ttfa_ms": 3312.0,
+  "retrievals": 1,
+  "answer_sha256": "21a86432d7d7a771169ec2f9dc031402f829c6721f901d706a1552e5d0e6593f",
+  "matches_canonical_answer": true,
+  "conversation_id": "e3full_s016_seed71_retrieve_immediate",
+  "log_path": "logs\\e3full_s016_seed71_retrieve_immediate.jsonl",
+  "frozen_query": "gym information"
+}

@@ -1,0 +1,24 @@
+{
+  "scenario_id": 13,
+  "seed": 53,
+  "path": "skip",
+  "answer_text": " I'm sorry for any concerns, but our hotel does not provide on-site medical assistance. However, we can arrange for an ambulance or contact a local medical facility if needed.",
+  "answer_sha256": "2abbd20245788b5af4c77d62cd562c1a3e94fdc0714be3dae974f9762faf2557",
+  "answer_correct": false,
+  "judge": {
+    "answer_correct": false,
+    "parsed_ok": true,
+    "judge_raw": "CONFLICT: reference says basic first aid assistance is available at the Front Desk at all times, candidate says the hotel does not provide on-site medical assistance.\nCONFLICT: reference says the hotel can contact an on-call doctor, candidate does not mention this and instead says they can contact a local medical facility.\nVERDICT: NO",
+    "judge_key": "40e2fd6662c74d263b4327b12bee0f888653ebcbe27ecef590fec50a74656ded",
+    "judge_identity": "azure-openai/gpt-4o@2025-01-01-preview",
+    "judge_cache_version": "v4-azure-reasoned",
+    "scenario_id": 13,
+    "temperature": 0.0
+  },
+  "measured_under_timing": "sentence_end",
+  "previous_verdict": {
+    "answer_correct": false,
+    "judge_identity": "azure-openai/gpt-4o@2025-01-01-preview",
+    "judge_raw": "NO"
+  }
+}

@@ -1,0 +1,13 @@
+{
+  "scenario_id": 6,
+  "seed": 71,
+  "path": "skip",
+  "timing": "sentence_end",
+  "ttfa_ms": 1656.0,
+  "retrievals": 0,
+  "answer_sha256": "ead6dffee2e5835e24be50739adf69b0ddfff373ee892284238c0fdf8405be6b",
+  "matches_canonical_answer": true,
+  "conversation_id": "e3full_s006_seed71_skip_sentence_end",
+  "log_path": "logs\\e3full_s006_seed71_skip_sentence_end.jsonl",
+  "frozen_query": "\"Hotel luggage storage availability\""
+}

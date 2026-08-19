@@ -1,0 +1,24 @@
+{
+  "scenario_id": 30,
+  "seed": 23,
+  "path": "skip",
+  "answer_text": " I'm sorry for any confusion, but I don't have the information regarding the chemical formula of water. However, you can find it easily online or in a chemistry textbook. It's H2O.",
+  "answer_sha256": "00e2fcaaa55e6341dc5a424aee4c26c409fb2921caada7f372e386a1a6799935",
+  "answer_correct": false,
+  "judge": {
+    "answer_correct": false,
+    "parsed_ok": true,
+    "judge_raw": "CONFLICT: reference says H2O, candidate says \"I don't have the information regarding the chemical formula of water.\"\nVERDICT: NO",
+    "judge_key": "14fa24decc53ae8e0f09840a26332a07ba59e21280d3ab21c649708a1b556b3e",
+    "judge_identity": "azure-openai/gpt-4o@2025-01-01-preview",
+    "judge_cache_version": "v4-azure-reasoned",
+    "scenario_id": 30,
+    "temperature": 0.0
+  },
+  "measured_under_timing": "sentence_end",
+  "previous_verdict": {
+    "answer_correct": false,
+    "judge_identity": "azure-openai/gpt-4o@2025-01-01-preview",
+    "judge_raw": "NO"
+  }
+}

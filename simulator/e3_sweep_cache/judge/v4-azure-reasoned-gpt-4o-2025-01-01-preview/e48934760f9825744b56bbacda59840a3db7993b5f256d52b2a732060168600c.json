@@ -1,0 +1,10 @@
+{
+  "answer_correct": false,
+  "parsed_ok": true,
+  "judge_raw": "CONFLICT: reference says lunch is available from 12:30 PM to 3:00 PM, candidate does not specify lunch hours but mentions a different restaurant, the Skyline Rooftop Restaurant, which is not in the reference.\nCONFLICT: reference says dinner is served between 7:00 PM and 10:30 PM, candidate does not specify dinner hours but mentions a different restaurant, the Skyline Rooftop Restaurant, which is not in the reference.\nCONFLICT: reference says reservations are recommended during weekends and public holidays, candidate says reservations are recommended during weekends and festive seasons.\nCONFLICT: reference does not mention a kids menu, candidate says the Horizon Restaurant provides a kids menu.\nCONFLICT: reference only mentions the Horizon Restaurant, candidate introduces the Skyline Rooftop Restaurant, which is not in the reference.\n\nVERDICT: NO",
+  "judge_key": "e48934760f9825744b56bbacda59840a3db7993b5f256d52b2a732060168600c",
+  "judge_identity": "azure-openai/gpt-4o@2025-01-01-preview",
+  "judge_cache_version": "v4-azure-reasoned",
+  "scenario_id": 11,
+  "temperature": 0.0
+}

@@ -1,0 +1,24 @@
+{
+  "scenario_id": 25,
+  "seed": 71,
+  "path": "retrieve",
+  "answer_text": " Laundry services are available daily from 8:00 AM to 8:00 PM. Regular service returns items within 24 hours, while express service is available for an additional charge. Dry cleaning for delicate garments is also available.",
+  "answer_sha256": "41d4559bcda6bdf1279a7f7c94933c810fe3fa652dc0ea11c42352c49f29ec4d",
+  "answer_correct": true,
+  "judge": {
+    "answer_correct": true,
+    "parsed_ok": true,
+    "judge_raw": "CONFLICT: none  \nVERDICT: YES",
+    "judge_key": "1db508cebb4c9434a5877d368185128e33c4d2b13b867a68f5ae9f9500e87b8d",
+    "judge_identity": "azure-openai/gpt-4o@2025-01-01-preview",
+    "judge_cache_version": "v4-azure-reasoned",
+    "scenario_id": 25,
+    "temperature": 0.0
+  },
+  "measured_under_timing": "sentence_end",
+  "previous_verdict": {
+    "answer_correct": false,
+    "judge_identity": "azure-openai/gpt-4o@2025-01-01-preview",
+    "judge_raw": "NO"
+  }
+}

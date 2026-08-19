@@ -1,0 +1,13 @@
+{
+  "scenario_id": 44,
+  "seed": 23,
+  "path": "skip",
+  "timing": "immediate",
+  "ttfa_ms": 1187.0,
+  "retrievals": 0,
+  "answer_sha256": "623df8069daca0c2f20da45aade5712b826e0d209f4914580906bfb38e314d55",
+  "matches_canonical_answer": true,
+  "conversation_id": "e3full_s044_seed23_skip_immediate",
+  "log_path": "logs\\e3full_s044_seed23_skip_immediate.jsonl",
+  "frozen_query": "Number of days in a leap year"
+}

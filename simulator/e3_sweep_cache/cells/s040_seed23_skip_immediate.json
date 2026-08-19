@@ -1,0 +1,13 @@
+{
+  "scenario_id": 40,
+  "seed": 23,
+  "path": "skip",
+  "timing": "immediate",
+  "ttfa_ms": 641.0,
+  "retrievals": 0,
+  "answer_sha256": "c5466a7889cfabd712f9fabe0fa7fbd4254b43d411ca6aa9cc66038be466e147",
+  "matches_canonical_answer": true,
+  "conversation_id": "e3full_s040_seed23_skip_immediate",
+  "log_path": "logs\\e3full_s040_seed23_skip_immediate.jsonl",
+  "frozen_query": "\"Author of Hamlet\""
+}

@@ -1,0 +1,24 @@
+{
+  "scenario_id": 5,
+  "seed": 53,
+  "path": "retrieve",
+  "answer_text": " At Grand Horizon Hotel & Suites, you'll find a variety of vegan dishes across all dining outlets, including salads, soups, curries, pasta, rice bowls, and dairy-free desserts. Customized vegan meals can be prepared upon request. Please inform the restaurant staff of your dietary preferences before ordering.",
+  "answer_sha256": "b7c8a45e74e8cc0239de6a27f456387d20f7ef32f884d0ccefc6198d4cbf0d98",
+  "answer_correct": true,
+  "judge": {
+    "answer_correct": true,
+    "parsed_ok": true,
+    "judge_raw": "CONFLICT: none  \nVERDICT: YES",
+    "judge_key": "791519f9c11549d7bb8c31c8cf8a8e17b0a17a25bad03b4497844668dc5a7ea6",
+    "judge_identity": "azure-openai/gpt-4o@2025-01-01-preview",
+    "judge_cache_version": "v4-azure-reasoned",
+    "scenario_id": 5,
+    "temperature": 0.0
+  },
+  "measured_under_timing": "sentence_end",
+  "previous_verdict": {
+    "answer_correct": true,
+    "judge_identity": "azure-openai/gpt-4o@2025-01-01-preview",
+    "judge_raw": "YES"
+  }
+}

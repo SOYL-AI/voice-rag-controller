@@ -1,0 +1,13 @@
+{
+  "scenario_id": 1,
+  "seed": 53,
+  "path": "skip",
+  "timing": "fixed_early_proxy",
+  "ttfa_ms": 2343.0,
+  "retrievals": 0,
+  "answer_sha256": "afcce9e65ab2bcb710e45d2d9e3659b0a221eadf5f0253e1a011aa2c36fbae83",
+  "matches_canonical_answer": true,
+  "conversation_id": "e3full_s001_seed53_skip_fixed_early_proxy",
+  "log_path": "logs\\e3full_s001_seed53_skip_fixed_early_proxy.jsonl",
+  "frozen_query": "\"What is Wifi?\""
+}

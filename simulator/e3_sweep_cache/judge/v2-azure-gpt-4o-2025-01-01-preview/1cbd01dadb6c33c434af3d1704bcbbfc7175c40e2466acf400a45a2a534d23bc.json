@@ -1,0 +1,10 @@
+{
+  "answer_correct": false,
+  "parsed_ok": true,
+  "judge_raw": "NO",
+  "judge_key": "1cbd01dadb6c33c434af3d1704bcbbfc7175c40e2466acf400a45a2a534d23bc",
+  "judge_identity": "azure-openai/gpt-4o@2025-01-01-preview",
+  "judge_cache_version": "v2-azure",
+  "scenario_id": 30,
+  "temperature": 0.0
+}

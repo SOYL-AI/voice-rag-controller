@@ -1,0 +1,13 @@
+{
+  "scenario_id": 24,
+  "seed": 23,
+  "path": "retrieve",
+  "timing": "immediate",
+  "ttfa_ms": 2922.0,
+  "retrievals": 1,
+  "answer_sha256": "3689d981d1019d2f79a433bcd03a89b651322f3d2eba65e5198d74ae07987d73",
+  "matches_canonical_answer": true,
+  "conversation_id": "e3full_s024_seed23_retrieve_immediate",
+  "log_path": "logs\\e3full_s024_seed23_retrieve_immediate.jsonl",
+  "frozen_query": "Room service information"
+}

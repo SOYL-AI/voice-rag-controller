@@ -1,0 +1,24 @@
+{
+  "scenario_id": 14,
+  "seed": 23,
+  "path": "retrieve",
+  "answer_text": " Every guest room at Grand Horizon Hotel & Suites comes with complimentary Wi-Fi, air conditioning, a smart TV, electronic safe, telephone, minibar, tea and coffee-making facilities, bottled drinking water, premium toiletries, fresh towels, and a hairdryer. Additional amenities like an iron, ironing board, or extra pillows can be requested through housekeeping.",
+  "answer_sha256": "8a1221dffb142f1cbea571cf456acd88f60464599b68a8fa3cbc58405ed7bad4",
+  "answer_correct": true,
+  "judge": {
+    "answer_correct": true,
+    "parsed_ok": true,
+    "judge_raw": "CONFLICT: none  \nVERDICT: YES",
+    "judge_key": "de495c8e5ef54c8960a18d2958aac24b9c98bb2d38ba7741a78660cf20828d33",
+    "judge_identity": "azure-openai/gpt-4o@2025-01-01-preview",
+    "judge_cache_version": "v4-azure-reasoned",
+    "scenario_id": 14,
+    "temperature": 0.0
+  },
+  "measured_under_timing": "sentence_end",
+  "previous_verdict": {
+    "answer_correct": false,
+    "judge_identity": "azure-openai/gpt-4o@2025-01-01-preview",
+    "judge_raw": "NO"
+  }
+}

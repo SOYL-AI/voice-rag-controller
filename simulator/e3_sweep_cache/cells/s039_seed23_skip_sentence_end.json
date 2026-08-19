@@ -1,0 +1,13 @@
+{
+  "scenario_id": 39,
+  "seed": 23,
+  "path": "skip",
+  "timing": "sentence_end",
+  "ttfa_ms": 1015.0,
+  "retrievals": 0,
+  "answer_sha256": "5206f02448f6048ce38917d276faaf2c8ff27977c5e2b49e577b642f08a2d160",
+  "matches_canonical_answer": true,
+  "conversation_id": "e3full_s039_seed23_skip_sentence_end",
+  "log_path": "logs\\e3full_s039_seed23_skip_sentence_end.jsonl",
+  "frozen_query": "What is the meaning of RAM?"
+}

@@ -1,0 +1,13 @@
+{
+  "scenario_id": 8,
+  "seed": 11,
+  "path": "retrieve",
+  "timing": "fixed_early_proxy",
+  "ttfa_ms": 3906.0,
+  "retrievals": 1,
+  "answer_sha256": "589c766e35d24620224592b4f6c8e022548e3f33f4f60619099dab380e76960f",
+  "matches_canonical_answer": true,
+  "conversation_id": "e3full_s008_seed11_retrieve_fixed_early_proxy",
+  "log_path": "logs\\e3full_s008_seed11_retrieve_fixed_early_proxy.jsonl",
+  "frozen_query": "\"Hotel executive room information\""
+}

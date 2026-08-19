@@ -1,0 +1,13 @@
+{
+  "scenario_id": 33,
+  "seed": 23,
+  "path": "skip",
+  "timing": "fixed_early_proxy",
+  "ttfa_ms": 1407.0,
+  "retrievals": 0,
+  "answer_sha256": "88e6779e00cad6ee2f6125ab761773b0d5f219cc04266ce43d740caa9fd1ccae",
+  "matches_canonical_answer": true,
+  "conversation_id": "e3full_s033_seed23_skip_fixed_early_proxy",
+  "log_path": "logs\\e3full_s033_seed23_skip_fixed_early_proxy.jsonl",
+  "frozen_query": "Multiply 18 by 7"
+}

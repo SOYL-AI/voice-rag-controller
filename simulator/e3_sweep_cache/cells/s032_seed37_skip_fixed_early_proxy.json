@@ -1,0 +1,13 @@
+{
+  "scenario_id": 32,
+  "seed": 37,
+  "path": "skip",
+  "timing": "fixed_early_proxy",
+  "ttfa_ms": 1282.0,
+  "retrievals": 0,
+  "answer_sha256": "724c85dd4afdcabe7a5f6fc4e784ed0d4ee1c8deb9f697685d5a6c2f2e63e37c",
+  "matches_canonical_answer": true,
+  "conversation_id": "e3full_s032_seed37_skip_fixed_early_proxy",
+  "log_path": "logs\\e3full_s032_seed37_skip_fixed_early_proxy.jsonl",
+  "frozen_query": "square root of 64"
+}

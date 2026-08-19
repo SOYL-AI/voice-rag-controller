@@ -1,0 +1,13 @@
+{
+  "scenario_id": 8,
+  "seed": 71,
+  "path": "skip",
+  "timing": "sentence_end",
+  "ttfa_ms": 1750.0,
+  "retrievals": 0,
+  "answer_sha256": "36a67bb258471f073b5de1b11070d3bb32ccd3124a8bd3f5bc25e1a850843b70",
+  "matches_canonical_answer": true,
+  "conversation_id": "e3full_s008_seed71_skip_sentence_end",
+  "log_path": "logs\\e3full_s008_seed71_skip_sentence_end.jsonl",
+  "frozen_query": "\"Hotel executive room information\""
+}

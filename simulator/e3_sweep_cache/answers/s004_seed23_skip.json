@@ -1,0 +1,24 @@
+{
+  "scenario_id": 4,
+  "seed": 23,
+  "path": "skip",
+  "answer_text": " According to the information provided, visitors are allowed in the hotel, but they must sign in at the front desk and wear a visitor badge.",
+  "answer_sha256": "21558f41995fb7441f441b77bc3996bc2b73c364fb5a2d0052e1ac4d044f8157",
+  "answer_correct": false,
+  "judge": {
+    "answer_correct": false,
+    "parsed_ok": true,
+    "judge_raw": "CONFLICT: reference says visitors are permitted between 8:00 AM and 10:00 PM, candidate does not mention this restriction.  \nCONFLICT: reference says visitors must register with a valid photo ID, candidate does not mention this requirement.  \nCONFLICT: reference says overnight visitors are not allowed unless officially added to the room reservation and charges settled, candidate does not mention this restriction.  \nCONFLICT: reference says hotel management reserves the right to deny entry if security concerns arise, candidate does not mention this.  \nCONFLICT: reference does not mention wearing a visitor badge, candidate says visitors must wear a visitor badge.  \n\nVERDICT: NO",
+    "judge_key": "71ab0333d2a85e7d378dc64ca5e82f3d29cd7ad4ee9ed9b585b33d0f62470b57",
+    "judge_identity": "azure-openai/gpt-4o@2025-01-01-preview",
+    "judge_cache_version": "v4-azure-reasoned",
+    "scenario_id": 4,
+    "temperature": 0.0
+  },
+  "measured_under_timing": "sentence_end",
+  "previous_verdict": {
+    "answer_correct": false,
+    "judge_identity": "azure-openai/gpt-4o@2025-01-01-preview",
+    "judge_raw": "NO"
+  }
+}

@@ -1,0 +1,13 @@
+{
+  "scenario_id": 12,
+  "seed": 53,
+  "path": "retrieve",
+  "timing": "immediate",
+  "ttfa_ms": 3250.0,
+  "retrievals": 1,
+  "answer_sha256": "97b51171b9474465409d0ec1ae5bd09045df5c5c249cb0328b60d0c2cd276bcf",
+  "matches_canonical_answer": true,
+  "conversation_id": "e3full_s012_seed53_retrieve_immediate",
+  "log_path": "logs\\e3full_s012_seed53_retrieve_immediate.jsonl",
+  "frozen_query": "\"Food allergy information\""
+}

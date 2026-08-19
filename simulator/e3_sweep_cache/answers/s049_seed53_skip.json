@@ -1,0 +1,24 @@
+{
+  "scenario_id": 49,
+  "seed": 53,
+  "path": "skip",
+  "answer_text": " In a deluxe hotel room, you can expect to find a minibar, a flat-screen TV, a coffee maker, and high-speed internet access. Some rooms may also offer a seating area, a work desk, and a luxury bathroom with a bathtub and separate shower.",
+  "answer_sha256": "4f9698239faf52300c7d15ab1b20a215053a1ffc00737404a864984cb187cee7",
+  "answer_correct": false,
+  "judge": {
+    "answer_correct": false,
+    "parsed_ok": true,
+    "judge_raw": "CONFLICT: reference says Wi-Fi, candidate says high-speed internet access.  \nCONFLICT: reference says television, candidate says flat-screen TV.  \nCONFLICT: reference says air conditioning, candidate does not mention it.  \nCONFLICT: reference says toiletries, candidate does not mention it.  \nCONFLICT: reference says tea/coffee facilities, candidate says coffee maker.  \n\nVERDICT: NO",
+    "judge_key": "043b74076ff8d843b519e4bb6385040cf6f7a7df02e3989e0a253e8eccb5f305",
+    "judge_identity": "azure-openai/gpt-4o@2025-01-01-preview",
+    "judge_cache_version": "v4-azure-reasoned",
+    "scenario_id": 49,
+    "temperature": 0.0
+  },
+  "measured_under_timing": "sentence_end",
+  "previous_verdict": {
+    "answer_correct": false,
+    "judge_identity": "azure-openai/gpt-4o@2025-01-01-preview",
+    "judge_raw": "CONFLICT: reference says Wi-Fi, candidate says high-speed internet access.  \nCONFLICT: reference says television, candidate says flat-screen TV.  \nCONFLICT: reference says air conditioning, candidate does not mention it.  \nCONFLICT: reference says toiletries, candidate does not mention it.  \nCONFLICT: reference says tea/coffee facilities, candidate says coffee maker.  \n\nVERDICT: NO"
+  }
+}

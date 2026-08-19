@@ -1,0 +1,24 @@
+{
+  "scenario_id": 49,
+  "seed": 23,
+  "path": "skip",
+  "answer_text": " In a deluxe hotel room, you'll typically find a minibar, a flat-screen TV, a comfortable seating area, and a luxurious bathroom with high-quality toiletries.",
+  "answer_sha256": "11f4270f66ca4f59705a2266a4910b091256123c6561d44766628c32ae8f507e",
+  "answer_correct": false,
+  "judge": {
+    "answer_correct": false,
+    "parsed_ok": true,
+    "judge_raw": "CONFLICT: reference says Wi-Fi is included, candidate does not mention Wi-Fi.  \nCONFLICT: reference says air conditioning is included, candidate does not mention air conditioning.  \nCONFLICT: reference says tea/coffee facilities are included, candidate does not mention tea/coffee facilities.  \nCONFLICT: candidate says a minibar is included, reference does not mention a minibar.  \nCONFLICT: candidate says a comfortable seating area is included, reference does not mention a seating area.  \nCONFLICT: candidate says a luxurious bathroom is included, reference does not mention a luxurious bathroom.  \n\nVERDICT: NO",
+    "judge_key": "56e3b73a4a314075a5c9b5d73b520d9488910ada874d222ce10730c372288e42",
+    "judge_identity": "azure-openai/gpt-4o@2025-01-01-preview",
+    "judge_cache_version": "v4-azure-reasoned",
+    "scenario_id": 49,
+    "temperature": 0.0
+  },
+  "measured_under_timing": "sentence_end",
+  "previous_verdict": {
+    "answer_correct": false,
+    "judge_identity": "azure-openai/gpt-4o@2025-01-01-preview",
+    "judge_raw": "CONFLICT: reference says Wi-Fi is included, candidate does not mention Wi-Fi.  \nCONFLICT: reference says air conditioning is included, candidate does not mention air conditioning.  \nCONFLICT: reference says tea/coffee facilities are included, candidate does not mention tea/coffee facilities.  \nCONFLICT: candidate says a minibar is included, reference does not mention a minibar.  \nCONFLICT: candidate says a comfortable seating area is included, reference does not mention a seating area.  \nCONFLICT: candidate says a luxurious bathroom is included, reference does not mention a luxurious bathroom.  \n\nVERDICT: NO"
+  }
+}

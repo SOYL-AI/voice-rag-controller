@@ -1,0 +1,10 @@
+{
+  "answer_correct": false,
+  "parsed_ok": true,
+  "judge_raw": "CONFLICT: reference says laundry services are available daily from 8:00 AM to 8:00 PM, candidate does not mention this and implies no time restriction.  \nCONFLICT: reference says guests may place their laundry in the designated laundry bag provided in the room and contact housekeeping for collection, candidate does not mention this and implies a different process.  \nCONFLICT: reference says regular laundry is typically returned within 24 hours, candidate does not mention this and implies no specific return time.  \nCONFLICT: reference says express service is available for an additional charge, candidate does not mention this and implies no express service option.  \n\nVERDICT: NO",
+  "judge_key": "d6a23e44f678d146aebd56b73da9110871d2865d534c7c5397d4a4f92295e011",
+  "judge_identity": "azure-openai/gpt-4o@2025-01-01-preview",
+  "judge_cache_version": "v4-azure-reasoned",
+  "scenario_id": 25,
+  "temperature": 0.0
+}

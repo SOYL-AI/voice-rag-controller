@@ -1,0 +1,13 @@
+{
+  "scenario_id": 19,
+  "seed": 11,
+  "path": "skip",
+  "timing": "sentence_end",
+  "ttfa_ms": 1969.0,
+  "retrievals": 0,
+  "answer_sha256": "6c8134c3c2e8039972172851519ed4551ba889057a7337d57a9f18944ff0e106",
+  "matches_canonical_answer": true,
+  "conversation_id": "e3full_s019_seed11_skip_sentence_end",
+  "log_path": "logs\\e3full_s019_seed11_skip_sentence_end.jsonl",
+  "frozen_query": "\"Business center information\""
+}

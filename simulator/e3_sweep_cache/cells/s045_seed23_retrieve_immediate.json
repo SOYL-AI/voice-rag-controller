@@ -1,0 +1,13 @@
+{
+  "scenario_id": 45,
+  "seed": 23,
+  "path": "retrieve",
+  "timing": "immediate",
+  "ttfa_ms": 3188.0,
+  "retrievals": 1,
+  "answer_sha256": "9b7d19a486e983fc873a1ce73ecad4c034f7b246e4993426f2963a4667974f14",
+  "matches_canonical_answer": true,
+  "conversation_id": "e3full_s045_seed23_retrieve_immediate",
+  "log_path": "logs\\e3full_s045_seed23_retrieve_immediate.jsonl",
+  "frozen_query": "Largest ocean on Earth\n\n(or)\n\nSize of the largest ocean on Earth\n\n(or)\n\nWhich is the biggest ocean in the world?\n\n(or)\n\nWhat is the largest body of water on Earth?\n\n(or)\n\nRanking of oceans by size, which one is the largest?\n\n(or)\n\nWhat is the largest ocean by area?\n\n(or)\n\nWhich ocean has the largest surface area on Earth?\n\n(or)\n\nWhat is the largest ocean in terms of surface area?\n\n(or)\n\nWhat is the largest ocean in the world in terms of size?\n\n(or)\n\nWhich ocean is the largest in terms of extent?\n\n(or)\n\nWhat is the largest ocean in the world in terms of coverage?\n\n(or)\n\nWhat is the largest ocean in the world in terms of expanse?\n\n(or)\n\nWhat is the largest ocean in the world in terms of dimension?\n\n(or)\n\nWhat is the largest ocean in the world in terms of magnitude?\n\n(or)\n\nWhat is the largest ocean in"
+}

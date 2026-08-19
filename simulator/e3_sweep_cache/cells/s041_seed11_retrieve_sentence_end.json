@@ -1,0 +1,13 @@
+{
+  "scenario_id": 41,
+  "seed": 11,
+  "path": "retrieve",
+  "timing": "sentence_end",
+  "ttfa_ms": 2328.0,
+  "retrievals": 1,
+  "answer_sha256": "d2f0263e98dd648f40c7a70e84f8868e7871e563b5a347da7cdd8af7fca704db",
+  "matches_canonical_answer": true,
+  "conversation_id": "e3full_s041_seed11_retrieve_sentence_end",
+  "log_path": "logs\\e3full_s041_seed11_retrieve_sentence_end.jsonl",
+  "frozen_query": "\"Leonardo da Vinci painted the Mona Lisa\" (rewritten as a search query): \"Who is the artist of the Mona Lisa painting?\""
+}

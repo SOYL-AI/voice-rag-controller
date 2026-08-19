@@ -1,0 +1,10 @@
+{
+  "answer_correct": false,
+  "parsed_ok": true,
+  "judge_raw": "CONFLICT: reference says visitors are permitted between 8:00 AM and 10:00 PM after registering at the Front Desk with a valid photo ID, candidate does not state this and instead declines to answer.\nCONFLICT: reference says overnight visitors are not allowed unless officially added to the room reservation and applicable charges have been settled, candidate does not state this and instead declines to answer.\nCONFLICT: reference says hotel management reserves the right to deny entry if security concerns arise, candidate does not state this and instead declines to answer.\n\nVERDICT: NO",
+  "judge_key": "c6c90b35a70a1f9df9ac70feb5edd2496d48b2ad3a0214ac3d1adb17cf545b1c",
+  "judge_identity": "azure-openai/gpt-4o@2025-01-01-preview",
+  "judge_cache_version": "v4-azure-reasoned",
+  "scenario_id": 4,
+  "temperature": 0.0
+}

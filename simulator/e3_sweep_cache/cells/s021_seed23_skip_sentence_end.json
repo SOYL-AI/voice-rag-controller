@@ -1,0 +1,13 @@
+{
+  "scenario_id": 21,
+  "seed": 23,
+  "path": "skip",
+  "timing": "sentence_end",
+  "ttfa_ms": 1719.0,
+  "retrievals": 0,
+  "answer_sha256": "8f6cab383a7bb12aa94f6c3b85997ed394d11b4517f84d93952b4ac7b656facd",
+  "matches_canonical_answer": true,
+  "conversation_id": "e3full_s021_seed23_skip_sentence_end",
+  "log_path": "logs\\e3full_s021_seed23_skip_sentence_end.jsonl",
+  "frozen_query": "\"Hotel check-in policy\""
+}

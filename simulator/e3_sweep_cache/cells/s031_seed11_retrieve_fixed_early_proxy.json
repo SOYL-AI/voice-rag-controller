@@ -1,0 +1,13 @@
+{
+  "scenario_id": 31,
+  "seed": 11,
+  "path": "retrieve",
+  "timing": "fixed_early_proxy",
+  "ttfa_ms": 2750.0,
+  "retrievals": 1,
+  "answer_sha256": "054739943762cfee0f4ffbecb601c4a0d6f243e244086e9cda006a69778afdfd",
+  "matches_canonical_answer": true,
+  "conversation_id": "e3full_s031_seed11_retrieve_fixed_early_proxy",
+  "log_path": "logs\\e3full_s031_seed11_retrieve_fixed_early_proxy.jsonl",
+  "frozen_query": "What is the boiling point of water at sea level?"
+}

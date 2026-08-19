@@ -1,0 +1,902 @@
+[
+  {
+    "baseline": "b0",
+    "seed": 23,
+    "scenario_id": 1,
+    "prices": null,
+    "outcome": {
+      "answer_correct": false,
+      "ttfa_ms": 2343.0,
+      "retrievals": 0
+    },
+    "decision": {
+      "retrieve": false,
+      "timing": "sentence_end",
+      "memory_op": null,
+      "reason": "B0: never retrieve"
+    },
+    "source_cell": "e3full_s001_seed23_skip_sentence_end"
+  },
+  {
+    "baseline": "b0",
+    "seed": 23,
+    "scenario_id": 2,
+    "prices": null,
+    "outcome": {
+      "answer_correct": false,
+      "ttfa_ms": 1906.0,
+      "retrievals": 0
+    },
+    "decision": {
+      "retrieve": false,
+      "timing": "sentence_end",
+      "memory_op": null,
+      "reason": "B0: never retrieve"
+    },
+    "source_cell": "e3full_s002_seed23_skip_sentence_end"
+  },
+  {
+    "baseline": "b0",
+    "seed": 23,
+    "scenario_id": 3,
+    "prices": null,
+    "outcome": {
+      "answer_correct": false,
+      "ttfa_ms": 2406.0,
+      "retrievals": 0
+    },
+    "decision": {
+      "retrieve": false,
+      "timing": "sentence_end",
+      "memory_op": null,
+      "reason": "B0: never retrieve"
+    },
+    "source_cell": "e3full_s003_seed23_skip_sentence_end"
+  },
+  {
+    "baseline": "b0",
+    "seed": 23,
+    "scenario_id": 4,
+    "prices": null,
+    "outcome": {
+      "answer_correct": false,
+      "ttfa_ms": 1922.0,
+      "retrievals": 0
+    },
+    "decision": {
+      "retrieve": false,
+      "timing": "sentence_end",
+      "memory_op": null,
+      "reason": "B0: never retrieve"
+    },
+    "source_cell": "e3full_s004_seed23_skip_sentence_end"
+  },
+  {
+    "baseline": "b0",
+    "seed": 23,
+    "scenario_id": 5,
+    "prices": null,
+    "outcome": {
+      "answer_correct": false,
+      "ttfa_ms": 2454.0,
+      "retrievals": 0
+    },
+    "decision": {
+      "retrieve": false,
+      "timing": "sentence_end",
+      "memory_op": null,
+      "reason": "B0: never retrieve"
+    },
+    "source_cell": "e3full_s005_seed23_skip_sentence_end"
+  },
+  {
+    "baseline": "b0",
+    "seed": 23,
+    "scenario_id": 6,
+    "prices": null,
+    "outcome": {
+      "answer_correct": false,
+      "ttfa_ms": 1594.0,
+      "retrievals": 0
+    },
+    "decision": {
+      "retrieve": false,
+      "timing": "sentence_end",
+      "memory_op": null,
+      "reason": "B0: never retrieve"
+    },
+    "source_cell": "e3full_s006_seed23_skip_sentence_end"
+  },
+  {
+    "baseline": "b0",
+    "seed": 23,
+    "scenario_id": 7,
+    "prices": null,
+    "outcome": {
+      "answer_correct": false,
+      "ttfa_ms": 1500.0,
+      "retrievals": 0
+    },
+    "decision": {
+      "retrieve": false,
+      "timing": "sentence_end",
+      "memory_op": null,
+      "reason": "B0: never retrieve"
+    },
+    "source_cell": "e3full_s007_seed23_skip_sentence_end"
+  },
+  {
+    "baseline": "b0",
+    "seed": 23,
+    "scenario_id": 8,
+    "prices": null,
+    "outcome": {
+      "answer_correct": false,
+      "ttfa_ms": 1938.0,
+      "retrievals": 0
+    },
+    "decision": {
+      "retrieve": false,
+      "timing": "sentence_end",
+      "memory_op": null,
+      "reason": "B0: never retrieve"
+    },
+    "source_cell": "e3full_s008_seed23_skip_sentence_end"
+  },
+  {
+    "baseline": "b0",
+    "seed": 23,
+    "scenario_id": 9,
+    "prices": null,
+    "outcome": {
+      "answer_correct": true,
+      "ttfa_ms": 2032.0,
+      "retrievals": 0
+    },
+    "decision": {
+      "retrieve": false,
+      "timing": "sentence_end",
+      "memory_op": null,
+      "reason": "B0: never retrieve"
+    },
+    "source_cell": "e3full_s009_seed23_skip_sentence_end"
+  },
+  {
+    "baseline": "b0",
+    "seed": 23,
+    "scenario_id": 10,
+    "prices": null,
+    "outcome": {
+      "answer_correct": false,
+      "ttfa_ms": 1438.0,
+      "retrievals": 0
+    },
+    "decision": {
+      "retrieve": false,
+      "timing": "sentence_end",
+      "memory_op": null,
+      "reason": "B0: never retrieve"
+    },
+    "source_cell": "e3full_s010_seed23_skip_sentence_end"
+  },
+  {
+    "baseline": "b0",
+    "seed": 23,
+    "scenario_id": 11,
+    "prices": null,
+    "outcome": {
+      "answer_correct": false,
+      "ttfa_ms": 2188.0,
+      "retrievals": 0
+    },
+    "decision": {
+      "retrieve": false,
+      "timing": "sentence_end",
+      "memory_op": null,
+      "reason": "B0: never retrieve"
+    },
+    "source_cell": "e3full_s011_seed23_skip_sentence_end"
+  },
+  {
+    "baseline": "b0",
+    "seed": 23,
+    "scenario_id": 12,
+    "prices": null,
+    "outcome": {
+      "answer_correct": false,
+      "ttfa_ms": 2296.0,
+      "retrievals": 0
+    },
+    "decision": {
+      "retrieve": false,
+      "timing": "sentence_end",
+      "memory_op": null,
+      "reason": "B0: never retrieve"
+    },
+    "source_cell": "e3full_s012_seed23_skip_sentence_end"
+  },
+  {
+    "baseline": "b0",
+    "seed": 23,
+    "scenario_id": 13,
+    "prices": null,
+    "outcome": {
+      "answer_correct": false,
+      "ttfa_ms": 2359.0,
+      "retrievals": 0
+    },
+    "decision": {
+      "retrieve": false,
+      "timing": "sentence_end",
+      "memory_op": null,
+      "reason": "B0: never retrieve"
+    },
+    "source_cell": "e3full_s013_seed23_skip_sentence_end"
+  },
+  {
+    "baseline": "b0",
+    "seed": 23,
+    "scenario_id": 14,
+    "prices": null,
+    "outcome": {
+      "answer_correct": false,
+      "ttfa_ms": 1859.0,
+      "retrievals": 0
+    },
+    "decision": {
+      "retrieve": false,
+      "timing": "sentence_end",
+      "memory_op": null,
+      "reason": "B0: never retrieve"
+    },
+    "source_cell": "e3full_s014_seed23_skip_sentence_end"
+  },
+  {
+    "baseline": "b0",
+    "seed": 23,
+    "scenario_id": 15,
+    "prices": null,
+    "outcome": {
+      "answer_correct": false,
+      "ttfa_ms": 1406.0,
+      "retrievals": 0
+    },
+    "decision": {
+      "retrieve": false,
+      "timing": "sentence_end",
+      "memory_op": null,
+      "reason": "B0: never retrieve"
+    },
+    "source_cell": "e3full_s015_seed23_skip_sentence_end"
+  },
+  {
+    "baseline": "b0",
+    "seed": 23,
+    "scenario_id": 16,
+    "prices": null,
+    "outcome": {
+      "answer_correct": false,
+      "ttfa_ms": 1766.0,
+      "retrievals": 0
+    },
+    "decision": {
+      "retrieve": false,
+      "timing": "sentence_end",
+      "memory_op": null,
+      "reason": "B0: never retrieve"
+    },
+    "source_cell": "e3full_s016_seed23_skip_sentence_end"
+  },
+  {
+    "baseline": "b0",
+    "seed": 23,
+    "scenario_id": 17,
+    "prices": null,
+    "outcome": {
+      "answer_correct": false,
+      "ttfa_ms": 1453.0,
+      "retrievals": 0
+    },
+    "decision": {
+      "retrieve": false,
+      "timing": "sentence_end",
+      "memory_op": null,
+      "reason": "B0: never retrieve"
+    },
+    "source_cell": "e3full_s017_seed23_skip_sentence_end"
+  },
+  {
+    "baseline": "b0",
+    "seed": 23,
+    "scenario_id": 18,
+    "prices": null,
+    "outcome": {
+      "answer_correct": true,
+      "ttfa_ms": 1328.0,
+      "retrievals": 0
+    },
+    "decision": {
+      "retrieve": false,
+      "timing": "sentence_end",
+      "memory_op": null,
+      "reason": "B0: never retrieve"
+    },
+    "source_cell": "e3full_s018_seed23_skip_sentence_end"
+  },
+  {
+    "baseline": "b0",
+    "seed": 23,
+    "scenario_id": 19,
+    "prices": null,
+    "outcome": {
+      "answer_correct": false,
+      "ttfa_ms": 2218.0,
+      "retrievals": 0
+    },
+    "decision": {
+      "retrieve": false,
+      "timing": "sentence_end",
+      "memory_op": null,
+      "reason": "B0: never retrieve"
+    },
+    "source_cell": "e3full_s019_seed23_skip_sentence_end"
+  },
+  {
+    "baseline": "b0",
+    "seed": 23,
+    "scenario_id": 20,
+    "prices": null,
+    "outcome": {
+      "answer_correct": false,
+      "ttfa_ms": 1703.0,
+      "retrievals": 0
+    },
+    "decision": {
+      "retrieve": false,
+      "timing": "sentence_end",
+      "memory_op": null,
+      "reason": "B0: never retrieve"
+    },
+    "source_cell": "e3full_s020_seed23_skip_sentence_end"
+  },
+  {
+    "baseline": "b0",
+    "seed": 23,
+    "scenario_id": 21,
+    "prices": null,
+    "outcome": {
+      "answer_correct": false,
+      "ttfa_ms": 1719.0,
+      "retrievals": 0
+    },
+    "decision": {
+      "retrieve": false,
+      "timing": "sentence_end",
+      "memory_op": null,
+      "reason": "B0: never retrieve"
+    },
+    "source_cell": "e3full_s021_seed23_skip_sentence_end"
+  },
+  {
+    "baseline": "b0",
+    "seed": 23,
+    "scenario_id": 22,
+    "prices": null,
+    "outcome": {
+      "answer_correct": false,
+      "ttfa_ms": 1718.0,
+      "retrievals": 0
+    },
+    "decision": {
+      "retrieve": false,
+      "timing": "sentence_end",
+      "memory_op": null,
+      "reason": "B0: never retrieve"
+    },
+    "source_cell": "e3full_s022_seed23_skip_sentence_end"
+  },
+  {
+    "baseline": "b0",
+    "seed": 23,
+    "scenario_id": 23,
+    "prices": null,
+    "outcome": {
+      "answer_correct": false,
+      "ttfa_ms": 1922.0,
+      "retrievals": 0
+    },
+    "decision": {
+      "retrieve": false,
+      "timing": "sentence_end",
+      "memory_op": null,
+      "reason": "B0: never retrieve"
+    },
+    "source_cell": "e3full_s023_seed23_skip_sentence_end"
+  },
+  {
+    "baseline": "b0",
+    "seed": 23,
+    "scenario_id": 24,
+    "prices": null,
+    "outcome": {
+      "answer_correct": true,
+      "ttfa_ms": 1657.0,
+      "retrievals": 0
+    },
+    "decision": {
+      "retrieve": false,
+      "timing": "sentence_end",
+      "memory_op": null,
+      "reason": "B0: never retrieve"
+    },
+    "source_cell": "e3full_s024_seed23_skip_sentence_end"
+  },
+  {
+    "baseline": "b0",
+    "seed": 23,
+    "scenario_id": 25,
+    "prices": null,
+    "outcome": {
+      "answer_correct": false,
+      "ttfa_ms": 1812.0,
+      "retrievals": 0
+    },
+    "decision": {
+      "retrieve": false,
+      "timing": "sentence_end",
+      "memory_op": null,
+      "reason": "B0: never retrieve"
+    },
+    "source_cell": "e3full_s025_seed23_skip_sentence_end"
+  },
+  {
+    "baseline": "b0",
+    "seed": 23,
+    "scenario_id": 26,
+    "prices": null,
+    "outcome": {
+      "answer_correct": true,
+      "ttfa_ms": 1094.0,
+      "retrievals": 0
+    },
+    "decision": {
+      "retrieve": false,
+      "timing": "sentence_end",
+      "memory_op": null,
+      "reason": "B0: never retrieve"
+    },
+    "source_cell": "e3full_s026_seed23_skip_sentence_end"
+  },
+  {
+    "baseline": "b0",
+    "seed": 23,
+    "scenario_id": 27,
+    "prices": null,
+    "outcome": {
+      "answer_correct": true,
+      "ttfa_ms": 1078.0,
+      "retrievals": 0
+    },
+    "decision": {
+      "retrieve": false,
+      "timing": "sentence_end",
+      "memory_op": null,
+      "reason": "B0: never retrieve"
+    },
+    "source_cell": "e3full_s027_seed23_skip_sentence_end"
+  },
+  {
+    "baseline": "b0",
+    "seed": 23,
+    "scenario_id": 28,
+    "prices": null,
+    "outcome": {
+      "answer_correct": true,
+      "ttfa_ms": 1235.0,
+      "retrievals": 0
+    },
+    "decision": {
+      "retrieve": false,
+      "timing": "sentence_end",
+      "memory_op": null,
+      "reason": "B0: never retrieve"
+    },
+    "source_cell": "e3full_s028_seed23_skip_sentence_end"
+  },
+  {
+    "baseline": "b0",
+    "seed": 23,
+    "scenario_id": 29,
+    "prices": null,
+    "outcome": {
+      "answer_correct": true,
+      "ttfa_ms": 984.0,
+      "retrievals": 0
+    },
+    "decision": {
+      "retrieve": false,
+      "timing": "sentence_end",
+      "memory_op": null,
+      "reason": "B0: never retrieve"
+    },
+    "source_cell": "e3full_s029_seed23_skip_sentence_end"
+  },
+  {
+    "baseline": "b0",
+    "seed": 23,
+    "scenario_id": 30,
+    "prices": null,
+    "outcome": {
+      "answer_correct": false,
+      "ttfa_ms": 2422.0,
+      "retrievals": 0
+    },
+    "decision": {
+      "retrieve": false,
+      "timing": "sentence_end",
+      "memory_op": null,
+      "reason": "B0: never retrieve"
+    },
+    "source_cell": "e3full_s030_seed23_skip_sentence_end"
+  },
+  {
+    "baseline": "b0",
+    "seed": 23,
+    "scenario_id": 31,
+    "prices": null,
+    "outcome": {
+      "answer_correct": true,
+      "ttfa_ms": 1484.0,
+      "retrievals": 0
+    },
+    "decision": {
+      "retrieve": false,
+      "timing": "sentence_end",
+      "memory_op": null,
+      "reason": "B0: never retrieve"
+    },
+    "source_cell": "e3full_s031_seed23_skip_sentence_end"
+  },
+  {
+    "baseline": "b0",
+    "seed": 23,
+    "scenario_id": 32,
+    "prices": null,
+    "outcome": {
+      "answer_correct": true,
+      "ttfa_ms": 1140.0,
+      "retrievals": 0
+    },
+    "decision": {
+      "retrieve": false,
+      "timing": "sentence_end",
+      "memory_op": null,
+      "reason": "B0: never retrieve"
+    },
+    "source_cell": "e3full_s032_seed23_skip_sentence_end"
+  },
+  {
+    "baseline": "b0",
+    "seed": 23,
+    "scenario_id": 33,
+    "prices": null,
+    "outcome": {
+      "answer_correct": true,
+      "ttfa_ms": 1344.0,
+      "retrievals": 0
+    },
+    "decision": {
+      "retrieve": false,
+      "timing": "sentence_end",
+      "memory_op": null,
+      "reason": "B0: never retrieve"
+    },
+    "source_cell": "e3full_s033_seed23_skip_sentence_end"
+  },
+  {
+    "baseline": "b0",
+    "seed": 23,
+    "scenario_id": 34,
+    "prices": null,
+    "outcome": {
+      "answer_correct": false,
+      "ttfa_ms": 4578.0,
+      "retrievals": 0
+    },
+    "decision": {
+      "retrieve": false,
+      "timing": "sentence_end",
+      "memory_op": null,
+      "reason": "B0: never retrieve"
+    },
+    "source_cell": "e3full_s034_seed23_skip_sentence_end"
+  },
+  {
+    "baseline": "b0",
+    "seed": 23,
+    "scenario_id": 35,
+    "prices": null,
+    "outcome": {
+      "answer_correct": false,
+      "ttfa_ms": 1719.0,
+      "retrievals": 0
+    },
+    "decision": {
+      "retrieve": false,
+      "timing": "sentence_end",
+      "memory_op": null,
+      "reason": "B0: never retrieve"
+    },
+    "source_cell": "e3full_s035_seed23_skip_sentence_end"
+  },
+  {
+    "baseline": "b0",
+    "seed": 23,
+    "scenario_id": 36,
+    "prices": null,
+    "outcome": {
+      "answer_correct": true,
+      "ttfa_ms": 1500.0,
+      "retrievals": 0
+    },
+    "decision": {
+      "retrieve": false,
+      "timing": "sentence_end",
+      "memory_op": null,
+      "reason": "B0: never retrieve"
+    },
+    "source_cell": "e3full_s036_seed23_skip_sentence_end"
+  },
+  {
+    "baseline": "b0",
+    "seed": 23,
+    "scenario_id": 37,
+    "prices": null,
+    "outcome": {
+      "answer_correct": false,
+      "ttfa_ms": 2234.0,
+      "retrievals": 0
+    },
+    "decision": {
+      "retrieve": false,
+      "timing": "sentence_end",
+      "memory_op": null,
+      "reason": "B0: never retrieve"
+    },
+    "source_cell": "e3full_s037_seed23_skip_sentence_end"
+  },
+  {
+    "baseline": "b0",
+    "seed": 23,
+    "scenario_id": 38,
+    "prices": null,
+    "outcome": {
+      "answer_correct": true,
+      "ttfa_ms": 1125.0,
+      "retrievals": 0
+    },
+    "decision": {
+      "retrieve": false,
+      "timing": "sentence_end",
+      "memory_op": null,
+      "reason": "B0: never retrieve"
+    },
+    "source_cell": "e3full_s038_seed23_skip_sentence_end"
+  },
+  {
+    "baseline": "b0",
+    "seed": 23,
+    "scenario_id": 39,
+    "prices": null,
+    "outcome": {
+      "answer_correct": true,
+      "ttfa_ms": 1015.0,
+      "retrievals": 0
+    },
+    "decision": {
+      "retrieve": false,
+      "timing": "sentence_end",
+      "memory_op": null,
+      "reason": "B0: never retrieve"
+    },
+    "source_cell": "e3full_s039_seed23_skip_sentence_end"
+  },
+  {
+    "baseline": "b0",
+    "seed": 23,
+    "scenario_id": 40,
+    "prices": null,
+    "outcome": {
+      "answer_correct": true,
+      "ttfa_ms": 1187.0,
+      "retrievals": 0
+    },
+    "decision": {
+      "retrieve": false,
+      "timing": "sentence_end",
+      "memory_op": null,
+      "reason": "B0: never retrieve"
+    },
+    "source_cell": "e3full_s040_seed23_skip_sentence_end"
+  },
+  {
+    "baseline": "b0",
+    "seed": 23,
+    "scenario_id": 41,
+    "prices": null,
+    "outcome": {
+      "answer_correct": true,
+      "ttfa_ms": 1219.0,
+      "retrievals": 0
+    },
+    "decision": {
+      "retrieve": false,
+      "timing": "sentence_end",
+      "memory_op": null,
+      "reason": "B0: never retrieve"
+    },
+    "source_cell": "e3full_s041_seed23_skip_sentence_end"
+  },
+  {
+    "baseline": "b0",
+    "seed": 23,
+    "scenario_id": 42,
+    "prices": null,
+    "outcome": {
+      "answer_correct": true,
+      "ttfa_ms": 1266.0,
+      "retrievals": 0
+    },
+    "decision": {
+      "retrieve": false,
+      "timing": "sentence_end",
+      "memory_op": null,
+      "reason": "B0: never retrieve"
+    },
+    "source_cell": "e3full_s042_seed23_skip_sentence_end"
+  },
+  {
+    "baseline": "b0",
+    "seed": 23,
+    "scenario_id": 43,
+    "prices": null,
+    "outcome": {
+      "answer_correct": true,
+      "ttfa_ms": 1265.0,
+      "retrievals": 0
+    },
+    "decision": {
+      "retrieve": false,
+      "timing": "sentence_end",
+      "memory_op": null,
+      "reason": "B0: never retrieve"
+    },
+    "source_cell": "e3full_s043_seed23_skip_sentence_end"
+  },
+  {
+    "baseline": "b0",
+    "seed": 23,
+    "scenario_id": 44,
+    "prices": null,
+    "outcome": {
+      "answer_correct": true,
+      "ttfa_ms": 1203.0,
+      "retrievals": 0
+    },
+    "decision": {
+      "retrieve": false,
+      "timing": "sentence_end",
+      "memory_op": null,
+      "reason": "B0: never retrieve"
+    },
+    "source_cell": "e3full_s044_seed23_skip_sentence_end"
+  },
+  {
+    "baseline": "b0",
+    "seed": 23,
+    "scenario_id": 45,
+    "prices": null,
+    "outcome": {
+      "answer_correct": true,
+      "ttfa_ms": 1078.0,
+      "retrievals": 0
+    },
+    "decision": {
+      "retrieve": false,
+      "timing": "sentence_end",
+      "memory_op": null,
+      "reason": "B0: never retrieve"
+    },
+    "source_cell": "e3full_s045_seed23_skip_sentence_end"
+  },
+  {
+    "baseline": "b0",
+    "seed": 23,
+    "scenario_id": 46,
+    "prices": null,
+    "outcome": {
+      "answer_correct": true,
+      "ttfa_ms": 1563.0,
+      "retrievals": 0
+    },
+    "decision": {
+      "retrieve": false,
+      "timing": "sentence_end",
+      "memory_op": null,
+      "reason": "B0: never retrieve"
+    },
+    "source_cell": "e3full_s046_seed23_skip_sentence_end"
+  },
+  {
+    "baseline": "b0",
+    "seed": 23,
+    "scenario_id": 47,
+    "prices": null,
+    "outcome": {
+      "answer_correct": true,
+      "ttfa_ms": 1375.0,
+      "retrievals": 0
+    },
+    "decision": {
+      "retrieve": false,
+      "timing": "sentence_end",
+      "memory_op": null,
+      "reason": "B0: never retrieve"
+    },
+    "source_cell": "e3full_s047_seed23_skip_sentence_end"
+  },
+  {
+    "baseline": "b0",
+    "seed": 23,
+    "scenario_id": 48,
+    "prices": null,
+    "outcome": {
+      "answer_correct": false,
+      "ttfa_ms": 1297.0,
+      "retrievals": 0
+    },
+    "decision": {
+      "retrieve": false,
+      "timing": "sentence_end",
+      "memory_op": null,
+      "reason": "B0: never retrieve"
+    },
+    "source_cell": "e3full_s048_seed23_skip_sentence_end"
+  },
+  {
+    "baseline": "b0",
+    "seed": 23,
+    "scenario_id": 49,
+    "prices": null,
+    "outcome": {
+      "answer_correct": false,
+      "ttfa_ms": 2172.0,
+      "retrievals": 0
+    },
+    "decision": {
+      "retrieve": false,
+      "timing": "sentence_end",
+      "memory_op": null,
+      "reason": "B0: never retrieve"
+    },
+    "source_cell": "e3full_s049_seed23_skip_sentence_end"
+  },
+  {
+    "baseline": "b0",
+    "seed": 23,
+    "scenario_id": 50,
+    "prices": null,
+    "outcome": {
+      "answer_correct": false,
+      "ttfa_ms": 1625.0,
+      "retrievals": 0
+    },
+    "decision": {
+      "retrieve": false,
+      "timing": "sentence_end",
+      "memory_op": null,
+      "reason": "B0: never retrieve"
+    },
+    "source_cell": "e3full_s050_seed23_skip_sentence_end"
+  }
+]

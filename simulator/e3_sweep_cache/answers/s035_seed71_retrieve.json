@@ -1,0 +1,24 @@
+{
+  "scenario_id": 35,
+  "seed": 71,
+  "path": "retrieve",
+  "answer_text": " I'm sorry for any confusion, but the provided reference passages do not contain information about Python. They are hotel documents related to services such as foreign currency exchange, taxi booking, and other hotel-related topics. If you have a question about Python, I would recommend consulting a resource specifically about programming languages.",
+  "answer_sha256": "22f1fccc08427cee309bbdf89ffad4b78880e76e5bcc13e4a2e72d41d139a15a",
+  "answer_correct": false,
+  "judge": {
+    "answer_correct": false,
+    "parsed_ok": true,
+    "judge_raw": "CONFLICT: reference says Python is a high-level, general-purpose programming language, candidate says the reference does not contain information about Python and declines to answer.\nVERDICT: NO",
+    "judge_key": "762aa40538e0355a2bc7a10f8493e75d6e473a74ffdf0d19fe9a532f3e86400a",
+    "judge_identity": "azure-openai/gpt-4o@2025-01-01-preview",
+    "judge_cache_version": "v4-azure-reasoned",
+    "scenario_id": 35,
+    "temperature": 0.0
+  },
+  "measured_under_timing": "sentence_end",
+  "previous_verdict": {
+    "answer_correct": false,
+    "judge_identity": "azure-openai/gpt-4o@2025-01-01-preview",
+    "judge_raw": "CONFLICT: reference says Python is a high-level, general-purpose programming language, candidate says the reference does not contain information about Python and declines to answer.\nVERDICT: NO"
+  }
+}

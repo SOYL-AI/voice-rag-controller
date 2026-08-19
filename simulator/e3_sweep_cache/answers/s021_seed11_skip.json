@@ -1,0 +1,24 @@
+{
+  "scenario_id": 21,
+  "seed": 11,
+  "path": "skip",
+  "answer_text": " The check-in time at our hotel is 3:00 PM.",
+  "answer_sha256": "dd88f6c6552b363b969cbd68ed530b07b4450ed20ad63855e711739e759dab19",
+  "answer_correct": false,
+  "judge": {
+    "answer_correct": false,
+    "parsed_ok": true,
+    "judge_raw": "CONFLICT: reference says standard check-in time is 2:00 PM, candidate says check-in time is 3:00 PM.  \nVERDICT: NO",
+    "judge_key": "0fd856eed2a13a71d322a38fb913d2a52690cab08b57832bfa1ce678141118f3",
+    "judge_identity": "azure-openai/gpt-4o@2025-01-01-preview",
+    "judge_cache_version": "v4-azure-reasoned",
+    "scenario_id": 21,
+    "temperature": 0.0
+  },
+  "measured_under_timing": "sentence_end",
+  "previous_verdict": {
+    "answer_correct": false,
+    "judge_identity": "azure-openai/gpt-4o@2025-01-01-preview",
+    "judge_raw": "NO"
+  }
+}

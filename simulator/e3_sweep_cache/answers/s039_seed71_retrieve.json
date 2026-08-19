@@ -1,0 +1,24 @@
+{
+  "scenario_id": 39,
+  "seed": 71,
+  "path": "retrieve",
+  "answer_text": " I'm sorry for any confusion, but the provided documents do not contain information about what RAM stands for. That question is outside the scope of the hotel documents.",
+  "answer_sha256": "315e29831e9964275fe14b0c243c801b4080e6fa1ac52a1a4224142df8d8851a",
+  "answer_correct": false,
+  "judge": {
+    "answer_correct": false,
+    "parsed_ok": true,
+    "judge_raw": "CONFLICT: reference says Random Access Memory, candidate says the question is outside the scope of the hotel documents.  \nVERDICT: NO",
+    "judge_key": "7770b3a2d01203588757f26c2fca6cde705ef48b7967ee863affb6ac7d5b0e41",
+    "judge_identity": "azure-openai/gpt-4o@2025-01-01-preview",
+    "judge_cache_version": "v4-azure-reasoned",
+    "scenario_id": 39,
+    "temperature": 0.0
+  },
+  "measured_under_timing": "sentence_end",
+  "previous_verdict": {
+    "answer_correct": false,
+    "judge_identity": "azure-openai/gpt-4o@2025-01-01-preview",
+    "judge_raw": "CONFLICT: reference says Random Access Memory, candidate says the question is outside the scope of the hotel documents.  \nVERDICT: NO"
+  }
+}

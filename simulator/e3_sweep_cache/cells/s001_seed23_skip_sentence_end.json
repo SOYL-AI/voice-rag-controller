@@ -1,0 +1,13 @@
+{
+  "scenario_id": 1,
+  "seed": 23,
+  "path": "skip",
+  "timing": "sentence_end",
+  "ttfa_ms": 2343.0,
+  "retrievals": 0,
+  "answer_sha256": "fcaeb0ea5e072434cd90e4b2602cd5ce67311994e52e58c6eed1f2ecffcd8a3a",
+  "matches_canonical_answer": true,
+  "conversation_id": "e3full_s001_seed23_skip_sentence_end",
+  "log_path": "logs\\e3full_s001_seed23_skip_sentence_end.jsonl",
+  "frozen_query": "\"What is Wifi?\""
+}
