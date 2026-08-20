@@ -1,2 +1,30 @@
 \section{Related Work}
 % TODO: draft this section. No AI-generated text per team policy.
+\subsection{RAG and Adaptive Retrieval}
+
+Retrieval-Augmented Generation (RAG) combines the knowledge stored in a language model with information retrieved from an external memory. Lewis et al. introduced RAG to address the limitation that parametric language models cannot always access, update, or precisely use knowledge needed for knowledge-intensive questions. In their setup, the parametric memory is the pretrained sequence-to-sequence model, while the non-parametric memory is a dense index of Wikipedia. Retrieved passages are provided to the generator so that the answer can be conditioned on external evidence. Their results show improvements in factuality and performance on knowledge-intensive tasks.
+
+The quality of retrieval is also important for the overall performance of a RAG system. Karpukhin et al. introduced Dense Passage Retrieval (DPR) for open-domain question answering. Unlike sparse methods such as BM25, which mainly depend on word overlap, DPR uses dense representations learned with a dual-encoder to retrieve passages based on their semantic similarity to the question. DPR improved top-20 passage retrieval accuracy over a strong BM25 baseline by 9--19 percentage points across several question answering datasets.
+
+Although retrieval can improve the quality of an answer, it is not necessary for every query. Asai et al. note that indiscriminate retrieval can add computation and may also introduce irrelevant passages. Self-RAG addresses this by allowing the model to retrieve information on demand and to evaluate both retrieved passages and its own generation using reflection tokens. This makes retrieval more selective instead of treating it as a fixed step for every input.
+
+Retrieval can also be performed during generation rather than only at the beginning. Jiang et al. proposed FLARE, which predicts the upcoming sentence and uses it as a query for retrieving relevant documents. When the predicted sentence contains low-confidence tokens, the retrieved information is used to regenerate the sentence. This active retrieval strategy is particularly useful for long-form and knowledge-intensive generation, where the information needed can change during generation.
+
+Another direction is to select the retrieval strategy according to the complexity of the query. Jeong et al. proposed Adaptive-RAG, where a smaller language model predicts the complexity of an incoming query and selects between no retrieval, single-step retrieval, and iterative retrieval. Simple questions can therefore avoid unnecessary retrieval, while more complex questions can use stronger retrieval strategies. The results show that adapting the retrieval process can improve both efficiency and question answering performance.
+
+Uncertainty can also be used as a signal for adaptive retrieval. Moskvoretskii et al. study uncertainty-based retrieval and compare it with other adaptive retrieval methods. Their analysis shows that uncertainty estimation can provide a more efficient way to decide when external information is needed, while maintaining comparable question answering performance in many settings. This supports treating retrieval as a decision that depends on the model's uncertainty rather than as a fixed operation.
+
+
+\subsection{Decision-Theoretic Control}
+
+Decision-theoretic approaches select actions by considering their expected outcomes and costs. Instead of treating every possible action as equally desirable, a system can compare the expected benefit of an action with the cost of taking it. This provides a general way to make decisions under uncertainty, where the preferred action depends on both the expected outcome and the information available to the system.
+
+A related idea is selective prediction, where a model can choose not to make a prediction when its confidence is low. This creates a trade-off between the accuracy of the predictions that are made and the number of cases on which the model chooses to act. The same idea can be applied to retrieval: when the model is sufficiently confident, it may answer directly, while low confidence can provide a reason to obtain additional information.
+
+The Value of Information (VOI) provides a decision-theoretic way to determine whether obtaining additional information is worth its cost. Information has value when it can change a decision or improve its expected outcome, but acquiring that information can also introduce a cost. For retrieval systems, this gives a natural way to view external retrieval: retrieval may improve the answer, but it also adds latency and computational cost.
+
+Decision theory has also been applied directly to information retrieval. Cooper argued that the evaluation of information-retrieval systems should be considered in terms of expected utility, including both the value and cost of the system. This provides an early foundation for treating information retrieval as a decision problem rather than only as a fixed sequence of operations.
+
+Similar decision-theoretic ideas have been applied to spoken dialogue. Bohus and Horvitz presented a decision-theoretic approach to turn-taking in multiparty conversation, combining uncertainty about conversational state with the costs of different outcomes. Their approach also considers uncertainty caused by computational delays in perception and response generation. This shows that conversational timing can be treated as a decision where acting too early and waiting too long can have different costs.
+
+These works suggest that retrieval and conversational actions can be viewed through a common decision-making perspective. However, adaptive retrieval, uncertainty-based retrieval, and decision-theoretic dialogue systems have generally focused on individual decisions or a particular action. Retrieval, timing, memory use, and speaking decisions can affect one another in a conversational system. This leaves an open question of whether these actions can be selected jointly under a common utility objective.
