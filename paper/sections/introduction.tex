@@ -1,2 +1,38 @@
 \section{Introduction}
 % TODO: draft this section. No AI-generated text per team policy.
+
+I. INTRODUCTION
+
+When we speak to voice-based systems we want them to respond quickly and accurately. This is where retrieval-augmented generation comes in. It allows the system to provide answers by finding information. However this process can take time. Slow down the conversation.
+
+In voice conversations every second matters. If the system takes long to respond it can be frustrating. A single approach does not work for all questions. Some questions require information while others can be answered using what the system already knows.
+
+Also knowing when to search for information is important. It can affect how quickly the system responds. This becomes more complex when considering how the system remembers interactions and takes turns speaking.
+
+Most systems today handle finding information remembering conversations and generating answers as tasks. They follow fixed rules to decide when to look for information. While this works in some cases it does not always balance giving answers being fast and using resources effectively.
+
+A better approach would be to have a controller that takes all these factors into account and changes its strategy based on the conversation.
+
+In this study we examine a controller that makes decisions about finding information during conversations. This controller evaluates the benefits of finding information against how it takes and how much it costs. We test this approach against methods and look at how well it answers questions how long it takes to respond and how much it costs.
+
+We focus on the trade-offs, not an overall score.
+
+A. Real-World Relevance
+
+Voice assistants need to respond because users notice delays. Also searching for information can increase costs without improving the answer. So a good voice system needs to balance giving answers being fast using resources wisely and knowing what information to remember.
+
+This balance is important in conversations because the system constantly needs to decide if getting information is worth the effort. The controller we study treats finding information as a decision, not a fixed step.
+
+B. Contributions
+
+The main contributions of this work are
+
+- A controller that makes decisions about finding information in voice-based systems.
+
+- An approach that considers when to find information when to do it and how to remember conversations together.
+
+- A framework to compare answer quality response time and cost.
+
+- A study of the trade-offs, between answer accuracy response time and cost.
+
+- A framework that answers whether the additional information should be provided or it is not required.
