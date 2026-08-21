@@ -15,6 +15,79 @@ experiment decisions, and blockers.
 
 **Recorded by:** Yashmita Sudhir
 
+### 2026-08-11 — Experiment 1 finalized and first run started
+
+**Decision:** Experiment 1 remains final/frozen before results are observed.
+
+**Confirmed by:** Ryan
+
+**Run status:** Ryan began the first Experiment 1 run.
+
+**Blocker:** GPU issues delayed experiment execution.
+
+**Impact:** No changes will be made to the frozen Experiment 1 criteria as a result of
+execution issues.
+
+**Recorded by:** Yashmita
+
+### 2026-08-15 — Experiment 1 result recorded
+
+**Experiment:** Signal validity
+
+**Pre-registered success criterion:** Best signal AUC >= 0.70.
+
+**Observed result:** `max_entropy_nats` was the best signal with a mean AUC of
+0.9784 across five seeds.
+
+**Verdict:** PASS.
+
+**Impact:** Experiment 1 passed its pre-registered AUC gate, allowing the team
+to proceed to the later experiments.
+
+**Documentation issue identified:** The Experiment 1 result artifact reports
+`mistralai/Mistral-7B-Instruct-v0.3`, while the current pre-registration lists
+`meta-llama/Llama-3.1-8B-Instruct`. This discrepancy was subsequently resolved
+and recorded on 2026-08-16.
+
+**Recorded by:** Yashmita
+
+### 2026-08-15 — Experiment 2 timing-value result finalized
+
+**Experiment:** Timing value
+
+**Implementation:** The pre-registered forecast-timed condition was implemented
+as `fixed_early_proxy`, a fixed early point in the modeled speech timeline
+rather than a live forecasting or pause-prediction policy.
+
+**Accuracy:** Hit@3 = 100% for all three timing policies.
+
+**p95 TTFA:**
+- `fixed_early_proxy`: 7089.90 ms
+- `immediate`: 6915 ms
+- `sentence_end`: 7051.70 ms
+
+**Pre-registered verdict:** NOT MET. `fixed_early_proxy` had a p95 TTFA
+38.20 ms higher than `sentence_end`.
+
+**Secondary paired result:** `fixed_early_proxy` was 479.36 ms faster in mean
+TTFA than `sentence_end`; the paired-bootstrap 95% confidence interval excluded
+zero.
+
+Against `immediate`, the improvement was approximately 180 ms, but the
+confidence interval crossed zero and was not statistically significant.
+
+**Mechanism check:** Speech overlap correlated with lower TTFA
+(Pearson r = -0.25).
+
+**Interpretation:** The pre-registered p95 criterion was not met. The paired
+analysis is retained as a secondary finding showing that earlier retrieval
+placement can reduce average latency relative to sentence-end retrieval.
+
+**Limitation:** E2 tested a fixed early proxy rather than true live
+forecast-timing. VAD/VAP-based prediction remains future work.
+
+**Recorded by:** Yashmita
+
 ### 2026-08-16 — Model substitution logged against the frozen pre-registration
 
 **Decision:** Recorded in `paper/preregistration.md` that every real run
@@ -46,7 +119,7 @@ is **NOT MET**: `fixed_early_proxy` p95 TTFA is 7089.90 ms against
 completeness/pre-registration, not as the primary evidence" and directed the
 reader to the paired-mean test instead. That is a post-hoc substitution of the
 success criterion, which the prereg's guiding principle forbids, and it matters
-more than usual here because the two tests disagree in DIRECTION rather than
+more than usual here because the two tests disagree in direction rather than
 only in significance. The power argument for why p95 is noisy at 50 clusters is
 sound and is kept — as an explanation accompanying a failed criterion, not as
 grounds for swapping which test counts.
