@@ -1,0 +1,242 @@
+[
+  {
+    "baseline": "b0",
+    "seed": 37,
+    "scenario_id": 1,
+    "conversation_id": "e3_b0_l0.0_c0.0_s37_001",
+    "question": "[sample scenario 1]",
+    "prices": null,
+    "decision": {
+      "retrieve": false,
+      "timing": "sentence_end",
+      "reason": "b0: skip (voi=0.3133)",
+      "divergence_band": null
+    },
+    "outcome": {
+      "retrieval_needed_gold": false,
+      "answer_correct": true,
+      "hit_at_3": null,
+      "ttfa_ms": 3413,
+      "retrievals": 0,
+      "prompt_tokens": 256,
+      "controller_overhead_ms": 3
+    },
+    "status": "success"
+  },
+  {
+    "baseline": "b0",
+    "seed": 37,
+    "scenario_id": 2,
+    "conversation_id": "e3_b0_l0.0_c0.0_s37_002",
+    "question": "[sample scenario 2]",
+    "prices": null,
+    "decision": {
+      "retrieve": false,
+      "timing": "sentence_end",
+      "reason": "b0: skip (voi=0.632)",
+      "divergence_band": null
+    },
+    "outcome": {
+      "retrieval_needed_gold": true,
+      "answer_correct": false,
+      "hit_at_3": null,
+      "ttfa_ms": 3426,
+      "retrievals": 0,
+      "prompt_tokens": 256,
+      "controller_overhead_ms": 3
+    },
+    "status": "success"
+  },
+  {
+    "baseline": "b0",
+    "seed": 37,
+    "scenario_id": 3,
+    "conversation_id": "e3_b0_l0.0_c0.0_s37_003",
+    "question": "[sample scenario 3]",
+    "prices": null,
+    "decision": {
+      "retrieve": false,
+      "timing": "sentence_end",
+      "reason": "b0: skip (voi=0.8163)",
+      "divergence_band": null
+    },
+    "outcome": {
+      "retrieval_needed_gold": true,
+      "answer_correct": false,
+      "hit_at_3": null,
+      "ttfa_ms": 3265,
+      "retrievals": 0,
+      "prompt_tokens": 256,
+      "controller_overhead_ms": 3
+    },
+    "status": "success"
+  },
+  {
+    "baseline": "b0",
+    "seed": 37,
+    "scenario_id": 4,
+    "conversation_id": "e3_b0_l0.0_c0.0_s37_004",
+    "question": "[sample scenario 4]",
+    "prices": null,
+    "decision": {
+      "retrieve": false,
+      "timing": "sentence_end",
+      "reason": "b0: skip (voi=0.0821)",
+      "divergence_band": null
+    },
+    "outcome": {
+      "retrieval_needed_gold": false,
+      "answer_correct": true,
+      "hit_at_3": null,
+      "ttfa_ms": 2952,
+      "retrievals": 0,
+      "prompt_tokens": 256,
+      "controller_overhead_ms": 3
+    },
+    "status": "success"
+  },
+  {
+    "baseline": "b0",
+    "seed": 37,
+    "scenario_id": 5,
+    "conversation_id": "e3_b0_l0.0_c0.0_s37_005",
+    "question": "[sample scenario 5]",
+    "prices": null,
+    "decision": {
+      "retrieve": false,
+      "timing": "sentence_end",
+      "reason": "b0: skip (voi=0.5503)",
+      "divergence_band": null
+    },
+    "outcome": {
+      "retrieval_needed_gold": true,
+      "answer_correct": false,
+      "hit_at_3": null,
+      "ttfa_ms": 3165,
+      "retrievals": 0,
+      "prompt_tokens": 256,
+      "controller_overhead_ms": 3
+    },
+    "status": "success"
+  },
+  {
+    "baseline": "b0",
+    "seed": 37,
+    "scenario_id": 6,
+    "conversation_id": "e3_b0_l0.0_c0.0_s37_006",
+    "question": "[sample scenario 6]",
+    "prices": null,
+    "decision": {
+      "retrieve": false,
+      "timing": "sentence_end",
+      "reason": "b0: skip (voi=0.6225)",
+      "divergence_band": null
+    },
+    "outcome": {
+      "retrieval_needed_gold": true,
+      "answer_correct": false,
+      "hit_at_3": null,
+      "ttfa_ms": 3133,
+      "retrievals": 0,
+      "prompt_tokens": 256,
+      "controller_overhead_ms": 3
+    },
+    "status": "success"
+  },
+  {
+    "baseline": "b0",
+    "seed": 37,
+    "scenario_id": 7,
+    "conversation_id": "e3_b0_l0.0_c0.0_s37_007",
+    "question": "[sample scenario 7]",
+    "prices": null,
+    "decision": {
+      "retrieve": false,
+      "timing": "sentence_end",
+      "reason": "b0: skip (voi=0.1029)",
+      "divergence_band": null
+    },
+    "outcome": {
+      "retrieval_needed_gold": false,
+      "answer_correct": true,
+      "hit_at_3": null,
+      "ttfa_ms": 3327,
+      "retrievals": 0,
+      "prompt_tokens": 256,
+      "controller_overhead_ms": 3
+    },
+    "status": "success"
+  },
+  {
+    "baseline": "b0",
+    "seed": 37,
+    "scenario_id": 8,
+    "conversation_id": "e3_b0_l0.0_c0.0_s37_008",
+    "question": "[sample scenario 8]",
+    "prices": null,
+    "decision": {
+      "retrieve": false,
+      "timing": "sentence_end",
+      "reason": "b0: skip (voi=0.3048)",
+      "divergence_band": null
+    },
+    "outcome": {
+      "retrieval_needed_gold": false,
+      "answer_correct": true,
+      "hit_at_3": null,
+      "ttfa_ms": 3457,
+      "retrievals": 0,
+      "prompt_tokens": 256,
+      "controller_overhead_ms": 3
+    },
+    "status": "success"
+  },
+  {
+    "baseline": "b0",
+    "seed": 37,
+    "scenario_id": 9,
+    "conversation_id": "e3_b0_l0.0_c0.0_s37_009",
+    "question": "[sample scenario 9]",
+    "prices": null,
+    "decision": {
+      "retrieve": false,
+      "timing": "sentence_end",
+      "reason": "b0: skip (voi=0.734)",
+      "divergence_band": null
+    },
+    "outcome": {
+      "retrieval_needed_gold": true,
+      "answer_correct": false,
+      "hit_at_3": null,
+      "ttfa_ms": 3409,
+      "retrievals": 0,
+      "prompt_tokens": 256,
+      "controller_overhead_ms": 3
+    },
+    "status": "success"
+  },
+  {
+    "baseline": "b0",
+    "seed": 37,
+    "scenario_id": 10,
+    "conversation_id": "e3_b0_l0.0_c0.0_s37_010",
+    "question": "[sample scenario 10]",
+    "prices": null,
+    "decision": {
+      "retrieve": false,
+      "timing": "sentence_end",
+      "reason": "b0: skip (voi=0.279)",
+      "divergence_band": null
+    },
+    "outcome": {
+      "retrieval_needed_gold": false,
+      "answer_correct": true,
+      "hit_at_3": null,
+      "ttfa_ms": 3342,
+      "retrievals": 0,
+      "prompt_tokens": 256,
+      "controller_overhead_ms": 3
+    },
+    "status": "success"
+  }
+]
