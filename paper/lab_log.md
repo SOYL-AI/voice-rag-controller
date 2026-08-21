@@ -127,3 +127,14 @@ grounds for swapping which test counts.
 **Decided by:** Project team
 
 **Recorded by:** Ryan Gomez
+
+### 2026-08-21 — E3 pre-registration finalized
+
+- Experiment 3 methods and decision criteria finalized.
+- Primary comparison: B9 (`decomposed-with-prices`) vs Ours (`unified controller`), with B8 (`independent-best`) reported as the strongest unpriced rival.
+- Primary metric: frontier dominance across accuracy vs p95 TTFA and accuracy vs compute.
+- Pre-committed success rule remains dominance over B9 with non-overlapping bootstrap confidence bands in at least 3 of 5 seeds.
+- E3 price grid finalized at `lambda_c = 0.05` with 26 fixed `lambda_l` points spanning approximately 0.022 to 1.713, derived by tiling the empirical value-of-information distribution.
+- Operational uncertainty signal confirmed as `mean_entropy_nats`.
+- Answer correctness for E3 is evaluated using the Azure GPT-4o judge at temperature 0 through the locked `answer_correct` metric.
+- E3 numerical results are not compiled here yet; they will be added once the final result artifacts and exact numbers are available on `main`.
