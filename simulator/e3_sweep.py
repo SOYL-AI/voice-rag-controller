@@ -1,0 +1,294 @@
+"""
+e3_sweep.py — Experiment 3's stub sweep runner.
+
+Proves one thing, end to end: a baseline built against
+controller/baseline.py's contract (Ctx / Decision / BaselineController)
+actually plugs into the real pipeline and produces a real, readable log.
+It is deliberately NOT the full E3 sweep — no price grid, no seeds, no
+accuracy-vs-latency curves, no comparison across baselines. That's built
+once there's more than one baseline (B0) to compare. Teammates use this
+file the same way simulator/batch_runner.py's --single mode is used today:
+a quick sanity check that a new component (here, a baseline) actually
+works against the real pipeline before it's wired into anything bigger.
+
+Usage:
+    python -m simulator.e3_sweep --baseline b0 --limit-scenarios 3
+    python -m simulator.e3_sweep --list-baselines
+
+    # price-aware baselines ("ours", "b9") at one point of the price grid:
+    python -m simulator.e3_sweep --baseline ours --lambda-l 1.0 --lambda-c 0.05
+
+--lambda-l/--lambda-c set the scalarized objective's price point
+(Ctx.prices). This runner still executes ONE baseline at ONE price point —
+it is not the frontier sweep, which crosses every baseline with a full
+price grid, seeds, and scoring. The flags exist so a price-aware baseline
+can be exercised at a real, chosen price rather than only at its config
+default.
+
+See controller/baseline.py for the contract every baseline implements, and
+controller/baselines/b0_never_retrieve.py for the reference baseline this
+file is tested against.
+"""
+
+import argparse
+import asyncio
+import json
+import sys
+from pathlib import Path
+
+_REPO_ROOT = Path(__file__).resolve().parent.parent
+if str(_REPO_ROOT) not in sys.path:
+    sys.path.insert(0, str(_REPO_ROOT))
+
+# import-for-side-effect: registers every baseline module (see
+# controller/baselines/__init__.py) so list_baselines()/get_baseline()
+# below can find them by name.
+import controller.baselines  # noqa: F401
+from controller.baseline import list_baselines
+from llm.client import make_client
+from llm.config import load_config as load_llm_config
+from pipeline.spine import run_conversation
+from simulator.e3_signals import precompute_signals
+
+SCENARIOS_FILE = Path(__file__).parent / "scenarios.json"
+RESULTS_FILE = Path(__file__).parent / "e3_sweep_results.json"
+
+
+def load_scenarios():
+    """Same scenarios.json simulator/batch_runner.py reads — one shared
+    scenario set across every experiment's runner, so E3 baselines are
+    tested against the same questions E2's sweep already exercised."""
+    with open(SCENARIOS_FILE, "r", encoding="utf-8") as file:
+        return json.load(file)
+
+
+def run_one_scenario(
+    scenario,
+    baseline_name: str,
+    conversation_id: str,
+    llm_client=None,
+    prices: dict = None,
+) -> dict:
+    """
+    Run one scenario's question through the real pipeline with
+    baseline=baseline_name, and return a small result record — enough to
+    eyeball that the baseline actually ran (action/reason logged, log file
+    produced) without pulling in harness/metrics.py's full scoring, which
+    is out of scope for this stub (see this module's docstring).
+
+    Precomputes this scenario's Experiment 1 belief-signal snapshot once
+    (simulator/e3_signals.py's precompute_signals()) before running the
+    baseline, and passes it through to run_conversation(signals=...) — see
+    that module's docstring for why this has to happen before, and
+    identically for, every baseline compared against this scenario, rather
+    than as a live probe inside the baseline's own decision. `llm_client`,
+    when given, is reused for the precompute call instead of opening a new
+    one per scenario (see main()).
+
+    `prices` ({"lambda_l": ..., "lambda_c": ...} or None) is forwarded to
+    run_conversation(baseline_prices=...) and lands in the baseline's
+    Ctx.prices. Only the price-aware baselines read it — "ours" and "b9"
+    optimize the scalarized objective against it, while B0-B8 ignore it
+    entirely by design (E3_BASELINE_INTERFACE.md: the unpriced baselines
+    are single points, not frontiers). None means "no price given", which
+    leaves those two at their configs/config.yaml controller.e3
+    default_prices; the real frontier sweep always passes a point from the
+    grid.
+    """
+    scenario_id = scenario["id"]
+    print(f"  Scenario {scenario_id}: {scenario['question']!r}")
+
+    try:
+        signals = precompute_signals(scenario["question"], client=llm_client)
+        log_path = asyncio.run(
+            run_conversation(
+                conversation_id,
+                question=scenario["question"],
+                baseline=baseline_name,
+                baseline_prices=prices,
+                signals=signals,
+            )
+        )
+        action = _read_controller_action(log_path)
+        print(f"    -> controller_action: {action}")
+        return {
+            "scenario_id": scenario_id,
+            "conversation_id": conversation_id,
+            "question": scenario["question"],
+            "status": "success",
+            "log_path": str(log_path),
+            "prices": prices,
+            "controller_action": action,
+        }
+    except Exception as error:  # noqa: BLE001 -- a sweep-stub sanity check should report *any* failure, not just the ones we anticipated
+        print(f"    ERROR: scenario {scenario_id} failed: {error}")
+        return {
+            "scenario_id": scenario_id,
+            "conversation_id": conversation_id,
+            "question": scenario["question"],
+            "status": "failed",
+            "error": str(error),
+        }
+
+
+def _read_controller_action(log_path: Path) -> dict:
+    """
+    Pull the controller_action event's payload back out of the log this
+    run just wrote — proof the baseline's decision actually reached the
+    log, in the shape controller/baseline.py's BaselineController.
+    log_decision() produces, not just that decide() returned something in
+    memory.
+
+    Returns the LAST controller_action in the file, not the first. The
+    event log is opened in append mode, so re-running a scenario under the
+    same conversation_id (which this stub does by construction — its ids
+    are f"e3_{baseline}_{id:03d}", with no run counter) leaves every
+    previous run's events in place ahead of this one's. Taking the first
+    match therefore reported a STALE decision from an earlier run, silently
+    and with no error: a sweep re-run after a config or controller change
+    would write correct events and read back the old ones, and the results
+    JSON would disagree with the log it cites. This is the same hazard
+    simulator/e2_results/RUN_MANIFEST.md records for E2's logs, and the
+    same "latest event wins" convention harness/metrics.py's
+    hit_at_k_per_turn() already applies to repeated retrieval_result
+    events.
+
+    Reading the last match is the minimal correct fix here; it does not
+    make repeated runs tidy, it just makes them honest. For a clean log per
+    run, delete logs/e3_<baseline>_*.jsonl before sweeping.
+    """
+    payload = {}
+    with open(log_path, "r", encoding="utf-8") as file:
+        for line in file:
+            event = json.loads(line)
+            if event.get("event_type") == "controller_action":
+                payload = event["payload"]
+    return payload
+
+
+def main():
+    parser = argparse.ArgumentParser(
+        description="Experiment 3 stub sweep: run one baseline over a few "
+        "scenarios end to end, to prove it plugs into the real pipeline. "
+        "Not the full price-grid sweep — see this file's module docstring."
+    )
+    parser.add_argument(
+        "--baseline",
+        help="Registered baseline name to run (e.g. b0). See --list-baselines.",
+    )
+    parser.add_argument(
+        "--limit-scenarios",
+        type=int,
+        default=None,
+        help="Only run the first N scenarios from scenarios.json (default: all).",
+    )
+    parser.add_argument(
+        "--list-baselines",
+        action="store_true",
+        help="Print every currently-registered baseline name and exit.",
+    )
+    # The price point the price-aware baselines optimize against. Read only
+    # by "ours" and "b9" (via Ctx.prices); every other baseline ignores it
+    # by design. Both must be given together — half a price point is a
+    # silent misconfiguration, since the missing half would quietly fall
+    # back to configs/config.yaml's default while the other came from the
+    # command line, producing a run at a price point that appears nowhere.
+    parser.add_argument(
+        "--lambda-l",
+        type=float,
+        default=None,
+        help="Latency price for the scalarized objective, in quality lost "
+        "per SECOND of latency (used by 'ours' and 'b9'; ignored by the "
+        "unpriced baselines). Requires --lambda-c.",
+    )
+    parser.add_argument(
+        "--lambda-c",
+        type=float,
+        default=None,
+        help="Compute price for the scalarized objective, in quality per "
+        "retrieval (used by 'ours' and 'b9'). Requires --lambda-l.",
+    )
+    args = parser.parse_args()
+
+    if args.list_baselines:
+        names = list_baselines()
+        print("Registered baselines:", ", ".join(names) if names else "(none)")
+        return
+
+    if not args.baseline:
+        parser.error("--baseline is required (or pass --list-baselines).")
+
+    registered = list_baselines()
+    if args.baseline not in registered:
+        parser.error(
+            f"unknown baseline {args.baseline!r}. Registered: "
+            f"{', '.join(registered) or '(none)'}"
+        )
+
+    if (args.lambda_l is None) != (args.lambda_c is None):
+        parser.error(
+            "--lambda-l and --lambda-c must be given together (a partial "
+            "price point would silently mix a command-line price with a "
+            "config default)."
+        )
+    prices = (
+        {"lambda_l": args.lambda_l, "lambda_c": args.lambda_c}
+        if args.lambda_l is not None
+        else None
+    )
+
+    scenarios = load_scenarios()
+    if args.limit_scenarios is not None:
+        scenarios = scenarios[: args.limit_scenarios]
+
+    print("=" * 60)
+    print("EXPERIMENT 3 — STUB SWEEP (proves a baseline plugs in)")
+    print("=" * 60)
+    print(f"Baseline  : {args.baseline}")
+    print(f"Scenarios : {len(scenarios)}")
+    print(
+        "Prices    : "
+        + (
+            f"lambda_l={args.lambda_l:g}, lambda_c={args.lambda_c:g}"
+            if prices
+            else "(none given — priced baselines use their config default)"
+        )
+    )
+    print()
+
+    # Built once and reused across every scenario's precompute_signals()
+    # call — a fresh client per scenario would mean re-opening an HTTP
+    # session (vllm backend) for no reason; see llm/client.py's
+    # generate_answer() for the same reasoning.
+    llm_client = make_client(load_llm_config())
+
+    results = []
+    for scenario in scenarios:
+        conversation_id = f"e3_{args.baseline}_{scenario['id']:03d}"
+        results.append(
+            run_one_scenario(
+                scenario, args.baseline, conversation_id, llm_client, prices
+            )
+        )
+
+    with open(RESULTS_FILE, "w", encoding="utf-8") as file:
+        json.dump(results, file, indent=2)
+
+    successful = sum(1 for r in results if r["status"] == "success")
+    failed = len(results) - successful
+
+    print()
+    print("=" * 60)
+    print("STUB SWEEP COMPLETE")
+    print("=" * 60)
+    print(f"Total scenarios : {len(results)}")
+    print(f"Successful      : {successful}")
+    print(f"Failed          : {failed}")
+    print(f"Results saved   : {RESULTS_FILE}")
+
+    if failed:
+        sys.exit(1)
+
+
+if __name__ == "__main__":
+    main()

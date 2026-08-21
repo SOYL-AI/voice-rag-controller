@@ -140,3 +140,25 @@ simulator generates scored test conversations grounded in the corpus.
 
 Ryan (public datasets feed his Experiment 1 question set), and Shubhankit (his batch runner 
 plays your simulator's conversations through the pipeline).
+
+---
+
+## Experiment 3 (E3) — Lakshya's baselines: B4, B5, B6
+
+**Owner: Lakshya.** The adaptive-retrieval baselines — controllers whose only decision is a
+confidence/entropy-driven retrieval trigger. Each implements
+`controller/baseline.py`'s `BaselineController` interface (copy
+`controller/baselines/b0_never_retrieve.py` as the template). Full contract in
+[`../E3_BASELINE_INTERFACE.md`](../E3_BASELINE_INTERFACE.md).
+
+- **B4 (FLARE confidence trigger):** retrieve when the model's own generation confidence
+  drops below a threshold.
+- **B5 (Adaptive-RAG router):** a router decides per-query whether retrieval is needed at
+  all, versus always/never.
+- **B6 (DRAGIN entropy trigger):** retrieve when per-token output entropy spikes.
+
+Same fairness rule as every baseline: sweep each threshold on the dev split, same tuning
+budget as everyone else — no defaulting to a guessed cutoff.
+
+The best of B4-B6 (by dev-split performance) feeds Renya's B8 (independent-best) as its
+trigger.

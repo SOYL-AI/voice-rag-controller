@@ -177,21 +177,24 @@ controller:
   # Experiment 2 (timing value): WHEN retrieval launches relative to the
   # user's speech. See controller/timing.py. The retrieve-or-not rule above
   # never changes with this — only the trigger moment does.
-  #   sentence_end    — retrieve only after user_end (baseline; unchanged
-  #                      pipeline behavior).
-  #   immediate       — retrieve as soon as a partial transcript exists,
-  #                      overlapping retrieval with the tail of speech.
-  #   predicted_pause — retrieve on a forecast mid-utterance pause, earlier
-  #                      than `immediate`. Real pause detection needs a
-  #                      signal audio/stt.py doesn't expose yet (see
-  #                      controller/timing.py's docstring) — this policy
-  #                      runs on a clearly-labeled proxy until that lands.
+  #   sentence_end      — retrieve only after user_end (baseline; unchanged
+  #                        pipeline behavior).
+  #   immediate         — retrieve as soon as a partial transcript exists,
+  #                        overlapping retrieval with the tail of speech.
+  #   fixed_early_proxy — retrieve at a fixed point in the modeled speech
+  #                        timeline, earlier than `immediate`. NOT a
+  #                        forecast of a real pause — there's no
+  #                        pause-prediction signal wired in; real pause
+  #                        detection needs a signal audio/stt.py doesn't
+  #                        expose yet (see controller/timing.py's
+  #                        docstring). This policy runs on a
+  #                        clearly-labeled fixed proxy until that lands.
   # Override without editing this file: VOICE_RAG_TIMING_POLICY=immediate
   timing:
     policy: sentence_end
     # There's no real audio in the text-input batch/experiment path
     # (simulator scenarios run through pipeline/spine.py's `question=`
-    # argument), so `immediate`/`predicted_pause` have nothing real to
+    # argument), so `immediate`/`fixed_early_proxy` have nothing real to
     # trigger on there unless we model how long saying the transcript
     # would actually take and sleep through it for real. See
     # controller/timing.py's plan_simulated_speech().
@@ -200,10 +203,250 @@ controller:
       # transcript = word_count / words_per_minute * 60s, actually slept
       # through (asyncio.sleep), not just subtracted from a metric.
       words_per_minute: 150
-      # predicted_pause's proxy trigger point, as a fraction of the
-      # (modeled) speech duration. Clearly a stub for the text path — see
-      # controller/timing.py.
+      # fixed_early_proxy's fixed proxy trigger point, as a fraction of the
+      # (modeled) speech duration — not a forecast, just a fixed point.
+      # Clearly a stub for the text path — see controller/timing.py.
       pause_at_fraction: 0.35
+
+    # Experiment 2 fix: query_ready gate. immediate/fixed_early_proxy must
+    # not dispatch retrieval on a (partial) query this short/empty of
+    # content — e.g. a single word ("What"/"Tell"/"Can") tanks hit@3 even
+    # though it looks fast. Retrieval instead fires at the earliest
+    # partial (real, or simulated on the text path — see
+    # controller/timing.py) that satisfies BOTH conditions below, never
+    # later than sentence_end's own trigger. See
+    # controller/timing.py's is_query_ready().
+    query_ready:
+      # Minimum word count before a (partial) query counts as retrievable.
+      min_words: 4
+      # Require at least one word outside the small stopword set in
+      # controller/timing.py's _QUERY_READY_STOPWORDS (what, is, the, a,
+      # can, tell, ...) — guards against e.g. "What is the" (3+ words, all
+      # function words) passing on word count alone.
+      require_content_word: true
+
+  # Experiment 3 (the coupling hypothesis): the scalarized objective and
+  # cost model the price-aware baselines optimize against. Read by
+  # controller/baselines/_objective.py, which mirrors every value below as
+  # its _DEFAULT_E3_CFG so the baselines stay runnable without this file.
+  #
+  # Used by: "ours" (joint), "b9" (decomposed-with-prices), and — for the
+  # b8 block ONLY — "b8" (independent-best, which never reads prices).
+  #
+  # FAIRNESS RULE (E3_BASELINE_INTERFACE.md, handbook 29.3): every
+  # threshold here must be SWEPT on the dev split under an equal tuning
+  # budget before any headline number is reported. These are the starting
+  # point of that sweep, not its result.
+  e3:
+    # Price point used only when the caller passes no prices (Ctx.prices
+    # empty). The real sweep always supplies both — see simulator/
+    # e3_sweep.py's --lambda-l/--lambda-c. lambda_l is quality lost per
+    # SECOND of latency (not per ms — see _objective.py on units);
+    # lambda_c is quality per retrieval of compute.
+    default_prices:
+      lambda_l: 1.0
+      lambda_c: 0.05
+
+    b4:
+      threshold: 0.5
+
+    b6:
+      threshold: 1.0
+
+    # MEASURED from logs/: median duration of a completed retrieval over
+    # 751 retrieval_launched -> retrieval_result pairs (p90 was 3187).
+    retrieval_latency_ms: 672
+
+    # MEASURED from logs/: mean overlap_with_speech_ms per E2 timing
+    # policy — how much of a retrieval landed inside the user's speech and
+    # so was never experienced as latency. This is coupling channel 1, and
+    # the difference between fixed_early_proxy and sentence_end (188 ms) is
+    # exactly the width of the predicted Ours-vs-B9 divergence band per
+    # unit lambda_l. See controller/baselines/ours.py's docstring.
+    overlap_ms:
+      sentence_end: 0        # 0 by construction: launches after user_end
+      immediate: 50          # median 0, mean 50, max 1091
+      fixed_early_proxy: 188 # median 156, mean 188, max 1428
+
+    # MEASURED from simulator/e2_results/ + logs/ — and the measured value is
+    # exactly ZERO for every timing policy. Fraction of retrieval's quality
+    # gain lost by launching early on a partial transcript (the quality
+    # coupling channel). Fit as 1 - hit@3(t)/hit@3(sentence_end) over E2's
+    # 750 scored runs (harness/metrics.py's hit_at_k_report over logs/):
+    #
+    #   policy              hit@1        hit@2        hit@3
+    #   sentence_end        92.0%        96.0%        100.0%  (250/250)
+    #   immediate           92.0%        96.0%        100.0%  (250/250)
+    #   fixed_early_proxy   92.0%        96.0%        100.0%  (250/250)
+    #
+    # so risk = 1 - 1.00/1.00 = 0.0 for all three.
+    #
+    # This is NOT a hit@3 ceiling artifact. At k=1, where there is ample
+    # headroom (92%), all three policies miss on the IDENTICAL 20
+    # (scenario, seed) pairs — retrieval quality is identical per instance,
+    # not merely equal in aggregate.
+    #
+    # WHY it is zero here — both causes, because only naming the first would
+    # overstate what E2 tested:
+    #   1. E2 ran with frozen_query (see simulator/e2_results/RUN_MANIFEST.md
+    #      and pipeline/spine.py:411). The rewrite was precomputed once from
+    #      the FULL question and handed to every policy, so all three
+    #      retrieved on a byte-identical query string. Partial-transcript
+    #      degradation was structurally impossible in this run, not merely
+    #      small.
+    #   2. controller/timing.py's query_ready gate delays dispatch to the
+    #      earliest MEANINGFUL partial. This is the mechanism that would keep
+    #      the risk small on a LIVE partial-transcript path (no frozen
+    #      query) — but E2 did not exercise it as a query-CONTENT effect.
+    #
+    # Kept as a swept parameter rather than deleted: it would be nonzero on
+    # harder retrieval (a corpus where top-3 isn't saturated) or on a live
+    # partial-transcript run without the frozen query. Its measured value in
+    # THIS configuration is 0, and that is what the paper should report.
+    partial_query_risk:
+      sentence_end: 0.0
+      immediate: 0.0
+      fixed_early_proxy: 0.0
+
+    # PLACEHOLDER — NOT MEASURED. Expected extra compute per retrieval from
+    # an early launch being invalidated and relaunched. All 751 retrievals
+    # in logs/ show forecast_invalidated=false, but that's a property of
+    # the text path (which has no continued-speech signal to invalidate
+    # against), so 0 would encode more than the data supports. Replace with
+    # a real invalidation rate from a live-audio run.
+    waste_rate:
+      sentence_end: 0.0
+      immediate: 0.02
+      fixed_early_proxy: 0.08
+
+    # The value-of-information estimate — expected quality gain from
+    # retrieving, on [0, 1]. Shared UNCHANGED by ours and b9 so that any
+    # measured gap between them comes from joint-vs-decomposed reasoning
+    # and not from one side having a better belief estimate.
+    voi:
+      # The belief -> quality mapping, read as
+      #     voi = P(retrieval is needed | this turn's uncertainty signal)
+      # which is the quantity Experiment 1 exists to establish. Shared
+      # UNCHANGED by ours and b9 (both call _objective.estimate_voi), so it
+      # can never advantage one side; only the joint-vs-decomposed USE of
+      # the number differs.
+      calibration:
+        # *** THE CALIBRATION LIVES IN ONE FILE, AND THIS POINTS AT IT. ***
+        #
+        # controller/baselines/e1_calibration_mean_entropy.json is generated
+        # by
+        #     python -m llm.experiment1.fit_calibration \
+        #         --signal mean_entropy_nats
+        # from the committed Experiment 1 Modal result
+        # (llm/experiment1/results/experiment_1_modal_mistral7b_20260811_151212.json,
+        # Mistral-7B-Instruct-v0.3 on vLLM, verdict PASS). It carries a
+        # top-level "calibration" object
+        # {signal, kind, slope, intercept, calibrated, source, auc} whose
+        # fields override anything set here, plus the source run's sha256,
+        # sample count and fit diagnostics.
+        #
+        # THE FIT (180 real samples):
+        #     P(retrieval needed) = sigmoid(11.2878 * mean_entropy_nats
+        #                                   - 3.6334)
+        #     slope +11.2878 (> 0, the direction E1 predicts)
+        #     in-sample AUC 0.9260 == E1's five-seed mean AUC 0.9253 for
+        #     this signal, as it must be: a sigmoid is monotone, so it
+        #     preserves the ranking AUC scores. P = 0.5 at 0.3219 nats.
+        #
+        # WHY mean_entropy_nats AND NOT max_entropy_nats, E1's headline.
+        # Until 2026-08-16 this pointed at controller/baselines/
+        # e1_calibration.json, the max_entropy fit (AUC 0.9784). That file
+        # is kept for reference. max_entropy_nats ranks better and is worse
+        # as a calibration input, for a reason AUC cannot see: it is a MAX
+        # over per-token entropies, so one uncertain token saturates it and
+        # it saturates on nearly any open-ended answer. Over E3's 50
+        # scenarios that made VoI near-binary (14 at the 0.05 floor, median
+        # 0.9515, an empty middle), and the derived price grid had
+        # scenarios in only 3 of 26 bands — no populated middle, which is
+        # exactly where an Ours-vs-B9 divergence lives.
+        #
+        # mean_entropy_nats is the same per-token entropy averaged instead
+        # of maxed. It separates the classes on E1 (needed 0.4435,
+        # not-needed 0.1981; five-seed mean AUC 0.9253, well over E1's own
+        # 0.70 success bar, so it is GATED — just not the argmax) and it is
+        # continuous where the max is not: across the 50 scenarios it spans
+        # 0.006-0.660 with a largest gap of 0.073 and 14 of 50 in the middle
+        # third. The choice was made on the SIGNAL's distribution, not on
+        # any Ours-vs-B9 outcome.
+        #
+        # STILL A SINGLE SIGNAL, and not a multi-signal combination: E1
+        # saved no logistic combo. Its result is a single-signal ranking
+        # result, and fitting a combination here would be a post-hoc model
+        # selection with no gate behind it.
+        #
+        # The coefficients are deliberately NOT duplicated here. A second
+        # copy is a copy that can drift away from the run it cites; if you
+        # need to see them without opening the artifact, they are quoted
+        # above and in controller/baselines/_objective.py's docstring, both
+        # of which are prose, not inputs.
+        #
+        # A missing/typo'd path raises rather than falling back — see
+        # _objective.load_voi_calibration(). That is deliberate: a silent
+        # fallback would publish an uncalibrated run as a calibrated one.
+        from_artifact: controller/baselines/e1_calibration_mean_entropy.json
+
+        # Which key of signals["model"]["uncertainty"] to read. The artifact
+        # sets it too, and _objective.load_voi_calibration() CROSS-CHECKS the
+        # two and raises if they disagree — this line is the request, the
+        # artifact is the fit, and applying one signal's coefficients to
+        # another signal's values is a silent miscalibration with no bad
+        # log line to catch it. Swapping signals is therefore a deliberate
+        # two-line edit: this key and from_artifact above, together.
+        signal: mean_entropy_nats
+
+        # *** THE SIGN GUARD, and the run that motivated it. ***
+        # _objective.load_voi_calibration() REFUSES any calibrated fit with
+        # slope <= 0. Fitting the same model on the repo's OTHER E1 file,
+        # llm/experiment1/results/smoke_mock.json (verdict
+        # NOT_EVALUATED_SMOKE, valid_gate_run false, MockClient logprobs
+        # drawn independently of the labels), gives
+        #     P = sigmoid(+2.3964 - 1.5144 * H),  raw AUC 0.4453
+        # a NEGATIVE slope, below chance, with mean entropy higher on the
+        # not-needed class — and every other signal in that file scores in
+        # [0.48, 0.55]. That is what "no signal" looks like. Installing it
+        # would invert the uncertainty -> value direction the controller
+        # rests on, while every log line still looked healthy.
+        # llm/experiment1/fit_calibration.py refuses to fit that file at all
+        # (valid_gate_run false), and the guard is the second line of
+        # defence.
+
+      # Quality units earned by a retrieval that is certainly needed:
+      #     voi = P(retrieval needed) * utility_scale
+      # At 1.0 VoI IS the probability and quality stays on [0, 1], which is
+      # the scale _objective.py's unit contract assumes and the scale the
+      # derived price grid (simulator/e3_grid.py) is tiled against. Present
+      # as a knob so the assumption is stated rather than implicit; changing
+      # it rescales quality against latency and compute and invalidates the
+      # committed grid, so regenerate the grid if you ever do.
+      utility_scale: 1.0
+
+      # Never estimate a retrieval as worth exactly nothing — a hard zero
+      # would make the retrieve branch unreachable at any nonzero price,
+      # which would be an artifact of the estimator, not a decision.
+      floor: 0.05
+
+    # B8 (independent-best) only. B8 never reads any of the pricing values
+    # above — it's the no-price-coupling rival by definition.
+    b8:
+      # UN-SWEPT trigger threshold. The SIGNAL is now backed by the real E1
+      # gate run (max_entropy_nats, mean AUC 0.978, verdict PASS); the
+      # THRESHOLD predates it. The fitted calibration puts
+      # P(retrieval needed) = 0.5 at 1.360 nats
+      # (controller/baselines/e1_calibration.json), which is where the
+      # fairness-rule sweep should start. The trigger is also still meant to
+      # be replaced wholesale by the best of B4-B6 once those land — see
+      # controller/baselines/b8_independent.py's plug point.
+      max_entropy_nats_threshold: 1.2
+      # Fallback threshold when no entropy signal is present.
+      unknown_fraction_threshold: 0.5
+      # Separately tuned in isolation: the policy that hides the most
+      # retrieval latency inside speech (see overlap_ms above).
+      timing: fixed_early_proxy
 
 # ---------------------------------------------------------------------------
 # Other components: add your section here.

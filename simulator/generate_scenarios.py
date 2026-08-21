@@ -1,3 +1,19 @@
+"""
+Generate one all-positive scenario per corpus document.
+
+*** THIS IS NOT THE SOURCE OF THE COMMITTED scenarios.json. *** Every scenario
+it emits is hardcoded `retrieval_needed: True` (see main()), so it structurally
+cannot produce the balanced 25-positive / 25-negative set that E3 now depends
+on — the negatives are authored, not derived from the corpus. Running this
+against the default output path OVERWRITES that curated, committed file with
+the legacy all-positive set, which silently turns E3's price grid back into the
+degenerate one (no negative class, no VoI spread).
+
+So pass --out when you just want to see what the generator produces. The
+default path is kept only because the file it writes predates the curated set.
+"""
+
+import argparse
 import json
 import re
 from pathlib import Path
@@ -91,7 +107,9 @@ def generate_question(goal: str) -> str:
     return f"Tell me about {goal}."
 
 
-def main():
+def main(out_path=None):
+
+    out_path = Path(out_path) if out_path else OUTPUT_FILE
 
     scenarios = []
 
@@ -131,13 +149,22 @@ def main():
 
         })
 
-    with open(OUTPUT_FILE, "w", encoding="utf-8") as f:
+    with open(out_path, "w", encoding="utf-8") as f:
 
         json.dump(scenarios, f, indent=2)
 
     print(f"Generated {len(scenarios)} scenarios.")
-    print(f"Saved to {OUTPUT_FILE}")
+    print(f"Saved to {out_path}")
 
 
 if __name__ == "__main__":
-    main()
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument(
+        "--out",
+        default=None,
+        help="Where to write. Defaults to simulator/scenarios.json — which is "
+        "the curated balanced dataset and will be OVERWRITTEN with the "
+        "legacy all-positive set. See this module's docstring.",
+    )
+    args = parser.parse_args()
+    main(out_path=args.out)

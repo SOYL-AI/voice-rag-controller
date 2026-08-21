@@ -1,6 +1,8 @@
 import json
+import re
 import sys
 from collections import defaultdict
+from pathlib import Path
 
 from harness.stats import percentile, bootstrap_confidence_interval
 
@@ -160,12 +162,6 @@ def main():
 
     else:
         print("No Dead Air values found.")
-
-
-if __name__ == "__main__":
-    main()
-
-
 # ============================================================
 # ADDITIONAL METRICS
 # IMPORTANT:
@@ -470,7 +466,693 @@ def additional_metrics(log_file):
 # RUN ADDITIONAL METRICS
 # ============================================================
 
+
+# ============================================================
+# HIT@K METRICS (Experiment 2)
+# IMPORTANT:
+# Everything above this section is the existing code.
+# ============================================================
+#
+# Retrieval hit@k: did the scenario's gold source document actually show
+# up in the top-k retrieved passages? Experiment 2 compares timing
+# policies (sentence_end/immediate/fixed_early_proxy) on the claim that
+# retrieving earlier doesn't cost accuracy -- but pipeline/spine.py's
+# retrieval_result event only logged "passages" (raw text) and "scores"
+# (FAISS distances), neither of which says WHICH document a passage came
+# from, so hit@k wasn't computable from the log at all. spine.py's
+# retrieve() now also logs "filenames" (retrieval/search.py already
+# returns this per hit) -- this section reads that back out and joins it
+# against each scenario's gold `source` field from simulator/scenarios.json
+# to compute hit@3.
+
+# simulator/batch_runner.py's run_sweep() names each conversation
+# f"conv_{policy}_s{seed}_{scenario['id']:03d}" (its --single mode instead
+# uses plain f"conv_{scenario['id']:03d}", no policy/seed). This regex
+# parses both: policy/seed are None when the "_s<seed>_" segment isn't
+# there at all.
+_CONV_ID_RE = re.compile(r"^conv_(?:(?P<policy>.+)_s(?P<seed>\d+)_)?(?P<scenario_id>\d+)$")
+
+DEFAULT_SCENARIOS_FILE = Path(__file__).resolve().parent.parent / "simulator" / "scenarios.json"
+
+
+def parse_conversation_id(conversation_id):
+    """
+    Parses a batch-runner conversation_id into {policy, seed, scenario_id},
+    or None if it doesn't match the expected conv_... naming at all (e.g.
+    Week 1's hand-run conv_001 IS matched -- scenario_id=1, policy=None,
+    seed=None -- it's only conversation_ids with no numeric id suffix at
+    all that return None).
+    """
+    match = _CONV_ID_RE.match(conversation_id)
+    if not match:
+        return None
+
+    seed = match.group("seed")
+
+    return {
+        "policy": match.group("policy"),
+        "seed": int(seed) if seed is not None else None,
+        "scenario_id": int(match.group("scenario_id")),
+    }
+
+
+def load_gold_sources(scenarios_file=DEFAULT_SCENARIOS_FILE):
+    """
+    Returns {scenario_id: source_document} from simulator/scenarios.json --
+    the gold document hit@k checks retrieval against, e.g.
+    {1: "01_checkin_policy.txt", ...}.
+    """
+    with open(scenarios_file, "r", encoding="utf-8") as file:
+        scenarios = json.load(file)
+
+    return {scenario["id"]: scenario["source"] for scenario in scenarios}
+
+
+def hit_at_k_per_turn(log_path, gold_source, k=3):
+    """
+    Reads one conversation log and returns {turn_id: hit_bool} for every
+    turn that actually ran a retrieval. A turn with no retrieval_result
+    event at all (the controller decided to skip retrieval) is simply
+    absent from the result -- hit@k isn't defined when nothing was
+    retrieved.
+
+    A turn can have more than one retrieval_result event -- fixed_early_proxy
+    can launch an early retrieval, discard it when the fixed proxy point's
+    assumption turns out wrong (see controller/timing.py's
+    wait_for_growth()/forecast_invalidated), and retrieve again on the
+    real transcript. Only one retrieval's passages ever actually reach
+    generate_answer() per turn (pipeline/spine.py's run_conversation()
+    awaits exactly one retrieval path per turn), and that's always the
+    one launched last: a discarded early attempt's retrieval_result, if it
+    even finishes before being cancelled, is logged before the fallback
+    retrieval it's replaced by, never after. So among a turn's
+    retrieval_result events, the one with the latest t_ms is the one hit@k
+    should score.
+    """
+    events_by_turn = defaultdict(list)
+
+    with open(log_path, "r", encoding="utf-8") as file:
+        for line in file:
+            line = line.strip()
+
+            if not line:
+                continue
+
+            event = json.loads(line)
+
+            if event["event_type"] == "retrieval_result":
+                events_by_turn[event["turn_id"]].append(event)
+
+    hits = {}
+
+    for turn_id, events in events_by_turn.items():
+        events.sort(key=lambda event: event["t_ms"])
+        used = events[-1]
+        filenames = used["payload"].get("filenames") or []
+        hits[turn_id] = gold_source in filenames[:k]
+
+    return hits
+
+
+def hit_at_k_report(log_dir, scenarios_file=DEFAULT_SCENARIOS_FILE, k=3):
+    """
+    Walks every *.jsonl log in log_dir, joins each conversation_id to its
+    scenario's gold source document (via parse_conversation_id() +
+    load_gold_sources()), and reports the hit@k rate -- overall and broken
+    out per timing policy, so Experiment 2's "equal accuracy across
+    policies" claim is something this prints instead of something asserted.
+
+    Logs that don't match the conv_... naming, or whose scenario_id has no
+    entry in scenarios_file, or that never ran a retrieval at all, are
+    counted and reported separately rather than silently dropped.
+    """
+    gold_sources = load_gold_sources(scenarios_file)
+
+    per_policy_hits = defaultdict(list)  # policy -> [bool, ...]
+    skipped_unparseable = []
+    skipped_no_gold = []
+    skipped_no_retrieval = []
+
+    for log_path in sorted(Path(log_dir).glob("*.jsonl")):
+        conversation_id = log_path.stem
+        parsed = parse_conversation_id(conversation_id)
+
+        if parsed is None:
+            skipped_unparseable.append(conversation_id)
+            continue
+
+        gold_source = gold_sources.get(parsed["scenario_id"])
+
+        if gold_source is None:
+            skipped_no_gold.append(conversation_id)
+            continue
+
+        turns = hit_at_k_per_turn(log_path, gold_source, k=k)
+
+        if not turns:
+            skipped_no_retrieval.append(conversation_id)
+            continue
+
+        policy_key = parsed["policy"] or "(no policy in conversation_id)"
+        per_policy_hits[policy_key].extend(turns.values())
+
+    print("\n" + "=" * 50)
+    print(f"HIT@{k} REPORT")
+    print("=" * 50)
+
+    if not per_policy_hits:
+        print("No scored conversations found.")
+    else:
+        all_hits = []
+
+        for policy in sorted(per_policy_hits):
+            hits = per_policy_hits[policy]
+            rate = 100 * sum(hits) / len(hits)
+            all_hits.extend(hits)
+            print(f"{policy:24s} hit@{k} = {rate:6.2f}%  ({sum(hits)}/{len(hits)})")
+
+        overall_rate = 100 * sum(all_hits) / len(all_hits)
+        print("-" * 50)
+        print(f"{'overall':24s} hit@{k} = {overall_rate:6.2f}%  ({sum(all_hits)}/{len(all_hits)})")
+
+    if skipped_unparseable:
+        print(f"\nSkipped (conversation_id didn't match conv_... naming): {len(skipped_unparseable)}")
+    if skipped_no_gold:
+        print(f"Skipped (scenario_id has no entry in {scenarios_file}): {len(skipped_no_gold)}")
+    if skipped_no_retrieval:
+        print(f"Skipped (no retrieval happened this conversation): {len(skipped_no_retrieval)}")
+
+    return per_policy_hits
+
+
+def aggregate_ttfa_by_policy(log_dir):
+    """
+    Computes TTFA statistics grouped by timing policy.
+
+    Each conversation log is expected to have a conversation_id
+    that can be parsed by parse_conversation_id(), for example:
+
+        conv_sentence_end_s0_001.jsonl
+        conv_immediate_s0_001.jsonl
+        conv_fixed_early_proxy_s0_001.jsonl
+
+    TTFA = tts_first_audio - user_end.
+
+    Returns:
+        dict mapping policy -> list of TTFA values
+    """
+
+    per_policy_ttfa = defaultdict(list)
+
+    for log_path in sorted(Path(log_dir).glob("*.jsonl")):
+        conversation_id = log_path.stem
+        parsed = parse_conversation_id(conversation_id)
+
+        if parsed is None:
+            continue
+
+        policy = parsed["policy"]
+
+        if policy is None:
+            continue
+
+        turns = defaultdict(list)
+
+        with open(log_path, "r", encoding="utf-8") as file:
+            for line in file:
+                line = line.strip()
+
+                if not line:
+                    continue
+
+                event = json.loads(line)
+                turns[event["turn_id"]].append(event)
+
+        for turn_id in sorted(turns):
+            events = sorted(
+                turns[turn_id],
+                key=lambda event: event["t_ms"]
+            )
+
+            user_end = None
+            first_audio = None
+
+            for event in events:
+                if event["event_type"] == "user_end":
+                    user_end = event["t_ms"]
+
+                elif event["event_type"] == "tts_first_audio":
+                    first_audio = event["t_ms"]
+
+            if user_end is not None and first_audio is not None:
+                ttfa = first_audio - user_end
+                per_policy_ttfa[policy].append(ttfa)
+
+    print("\n" + "=" * 50)
+    print("TTFA BY POLICY")
+    print("=" * 50)
+
+    if not per_policy_ttfa:
+        print("No TTFA values found.")
+        return per_policy_ttfa
+
+    all_ttfa = []
+
+    for policy in sorted(per_policy_ttfa):
+        values = per_policy_ttfa[policy]
+
+        p50 = percentile(values, 50)
+        p95 = percentile(values, 95)
+
+        print(f"{policy:24s} "
+              f"n={len(values):4d} "
+              f"p50={p50:.2f} ms "
+              f"p95={p95:.2f} ms"
+)
+
+        all_ttfa.extend(values)
+
+    return per_policy_ttfa
+
+def collect_e2_analysis_data(log_dir):
+    """
+    Collects per-run E2 analysis data needed for the plots.
+
+    For each policy-tagged log, collects:
+        - policy
+        - TTFA
+        - launch_offset_ms_vs_user_end
+        - overlap_with_speech_ms
+
+    Returns:
+        list of dictionaries, one per valid E2 run.
+    """
+
+    analysis_data = []
+
+    for log_path in sorted(Path(log_dir).glob("*.jsonl")):
+        conversation_id = log_path.stem
+        parsed = parse_conversation_id(conversation_id)
+
+        if parsed is None:
+            continue
+
+        policy = parsed["policy"]
+
+        if policy is None:
+            continue
+
+        turns = defaultdict(list)
+
+        try:
+            with open(log_path, "r", encoding="utf-8") as file:
+                for line in file:
+                    line = line.strip()
+
+                    if not line:
+                        continue
+
+                    event = json.loads(line)
+                    turns[event["turn_id"]].append(event)
+
+        except (OSError, json.JSONDecodeError):
+            continue
+
+        for turn_id in sorted(turns):
+
+            events = sorted(
+                turns[turn_id],
+                key=lambda event: event["t_ms"]
+            )
+
+            user_end = None
+            first_audio = None
+            launch_offset = None
+            overlap_with_speech = None
+
+            for event in events:
+
+                event_type = event["event_type"]
+                payload = event.get("payload", {})
+
+                if event_type == "user_end":
+                    user_end = event["t_ms"]
+
+                elif event_type == "tts_first_audio":
+                    first_audio = event["t_ms"]
+
+                elif event_type == "retrieval_launched":
+                    if "launch_offset_ms_vs_user_end" in payload:
+                        launch_offset = payload[
+                            "launch_offset_ms_vs_user_end"
+                        ]
+
+                elif event_type == "retrieval_result":
+                    if "launch_offset_ms_vs_user_end" in payload:
+                        launch_offset = payload[
+                            "launch_offset_ms_vs_user_end"
+                        ]
+
+                    if "overlap_with_speech_ms" in payload:
+                        overlap_with_speech = payload[
+                            "overlap_with_speech_ms"
+                        ]
+
+            if user_end is None or first_audio is None:
+                continue
+
+            if launch_offset is None or overlap_with_speech is None:
+                continue
+
+            ttfa = first_audio - user_end
+
+            analysis_data.append(
+                {
+                    "conversation_id": conversation_id,
+                    "turn_id": turn_id,
+                    "policy": policy,
+                    "ttfa_ms": ttfa,
+                    "launch_offset_ms": launch_offset,
+                    "overlap_with_speech_ms": overlap_with_speech,
+                }
+            )
+
+    print("\n" + "=" * 50)
+    print("E2 ANALYSIS DATA")
+    print("=" * 50)
+    print(f"Valid runs collected: {len(analysis_data)}")
+
+    per_policy = defaultdict(int)
+
+    for row in analysis_data:
+        per_policy[row["policy"]] += 1
+
+    for policy in sorted(per_policy):
+        print(f"{policy:24s} n={per_policy[policy]:4d}")
+
+    return analysis_data
+
+def generate_e2_plots(analysis_data, output_dir="analysis"):
+    """
+    Generate the plots requested for E2 analysis.
+
+    Plots:
+        1. TTFA distribution per policy with p95 marked
+        2. Accuracy vs latency
+        3. Launch-offset distribution per policy
+        4. Speech-overlap vs TTFA mechanism scatter
+
+    Also prints the Pearson correlation between
+    overlap_with_speech_ms and TTFA.
+    """
+
+    import matplotlib.pyplot as plt
+
+    output_path = Path(output_dir)
+    output_path.mkdir(parents=True, exist_ok=True)
+
+    # ---------------------------------------------------------
+    # Group data by policy
+    # ---------------------------------------------------------
+
+    policies = sorted(
+        set(row["policy"] for row in analysis_data)
+    )
+
+    ttfa_by_policy = {
+        policy: [
+            row["ttfa_ms"]
+            for row in analysis_data
+            if row["policy"] == policy
+        ]
+        for policy in policies
+    }
+
+    launch_by_policy = {
+        policy: [
+            row["launch_offset_ms"]
+            for row in analysis_data
+            if row["policy"] == policy
+        ]
+        for policy in policies
+    }
+
+    # ---------------------------------------------------------
+    # 1. TTFA distribution per policy
+    # ---------------------------------------------------------
+
+    plt.figure(figsize=(10, 6))
+
+    data = [
+        ttfa_by_policy[policy]
+        for policy in policies
+    ]
+
+    plt.boxplot(
+        data,
+        tick_labels=policies,
+        showfliers=True
+    )
+
+    for index, policy in enumerate(policies, start=1):
+        p95 = percentile(ttfa_by_policy[policy], 95)
+
+        plt.scatter(
+            index,
+            p95,
+            marker="D",
+            s=50,
+            label="p95" if index == 1 else None
+        )
+
+        plt.text(
+            index,
+            p95,
+            f"  p95={p95:.0f} ms",
+            va="center"
+        )
+
+    plt.ylabel("TTFA (ms)")
+    plt.xlabel("Timing Policy")
+    plt.title("E2 TTFA Distribution by Policy")
+    plt.grid(axis="y", alpha=0.3)
+    plt.legend()
+
+    plt.tight_layout()
+
+    plt.savefig(
+        output_path / "e2_ttfa_distribution.png",
+        dpi=200
+    )
+
+    plt.close()
+
+    # ---------------------------------------------------------
+    # 2. Accuracy vs latency
+    # ---------------------------------------------------------
+    #
+    # Hit@3 is 100% for all three policies.
+    # We use median TTFA (p50) as the latency value.
+    # ---------------------------------------------------------
+
+    plt.figure(figsize=(9, 6))
+
+    for policy in policies:
+
+        values = ttfa_by_policy[policy]
+
+        p50 = percentile(values, 50)
+
+        accuracy = 100.0
+
+        plt.scatter(
+            p50,
+            accuracy,
+            s=100
+        )
+
+        plt.annotate(
+            policy,
+            (p50, accuracy),
+            xytext=(8, 5),
+            textcoords="offset points"
+        )
+
+    plt.xlabel("Median TTFA / p50 (ms)")
+    plt.ylabel("Hit@3 Accuracy (%)")
+    plt.title("E2 Accuracy vs Latency")
+    plt.ylim(98, 101)
+    plt.grid(alpha=0.3)
+
+    plt.tight_layout()
+
+    plt.savefig(
+        output_path / "e2_accuracy_vs_latency.png",
+        dpi=200
+    )
+
+    plt.close()
+
+    # ---------------------------------------------------------
+    # 3. Launch-offset distribution
+    # ---------------------------------------------------------
+
+    plt.figure(figsize=(10, 6))
+
+    launch_data = [
+        launch_by_policy[policy]
+        for policy in policies
+    ]
+
+    plt.boxplot(
+        launch_data,
+        tick_labels=policies,
+        showfliers=True
+    )
+
+    plt.axhline(
+        0,
+        linestyle="--",
+        linewidth=1
+    )
+
+    plt.ylabel("Launch Offset vs User End (ms)")
+    plt.xlabel("Timing Policy")
+    plt.title("E2 Retrieval Launch Offset by Policy")
+    plt.grid(axis="y", alpha=0.3)
+
+    plt.tight_layout()
+
+    plt.savefig(
+        output_path / "e2_launch_offset_distribution.png",
+        dpi=200
+    )
+
+    plt.close()
+
+    # ---------------------------------------------------------
+    # 4. Mechanism scatter:
+    #    overlap_with_speech_ms vs TTFA
+    # ---------------------------------------------------------
+
+    plt.figure(figsize=(10, 6))
+
+    overlap_values = [
+        row["overlap_with_speech_ms"]
+        for row in analysis_data
+    ]
+
+    ttfa_values = [
+        row["ttfa_ms"]
+        for row in analysis_data
+    ]
+
+    plt.scatter(
+        overlap_values,
+        ttfa_values,
+        alpha=0.5
+    )
+
+    plt.xlabel("Overlap With Speech (ms)")
+    plt.ylabel("TTFA (ms)")
+    plt.title(
+        "E2 Mechanism: Speech Overlap vs TTFA"
+    )
+    plt.grid(alpha=0.3)
+
+    plt.tight_layout()
+
+    plt.savefig(
+        output_path / "e2_overlap_vs_ttfa.png",
+        dpi=200
+    )
+
+    plt.close()
+
+    # ---------------------------------------------------------
+    # 5. Pearson correlation
+    # ---------------------------------------------------------
+
+    n = len(overlap_values)
+
+    mean_overlap = sum(overlap_values) / n
+    mean_ttfa = sum(ttfa_values) / n
+
+    numerator = sum(
+        (x - mean_overlap) * (y - mean_ttfa)
+        for x, y in zip(overlap_values, ttfa_values)
+    )
+
+    denominator_x = sum(
+        (x - mean_overlap) ** 2
+        for x in overlap_values
+    )
+
+    denominator_y = sum(
+        (y - mean_ttfa) ** 2
+        for y in ttfa_values
+    )
+
+    denominator = (
+        denominator_x * denominator_y
+    ) ** 0.5
+
+    if denominator == 0:
+        correlation = float("nan")
+    else:
+        correlation = numerator / denominator
+
+    print()
+    print("=" * 50)
+    print("E2 PLOTS GENERATED")
+    print("=" * 50)
+
+    print(
+        f"Pearson correlation "
+        f"(overlap vs TTFA): {correlation:.4f}"
+    )
+
+    print()
+    print(f"Output directory: {output_path}")
+
+    print()
+    print("Generated files:")
+
+    print(
+        output_path / "e2_ttfa_distribution.png"
+    )
+
+    print(
+        output_path / "e2_accuracy_vs_latency.png"
+    )
+
+    print(
+        output_path / "e2_launch_offset_distribution.png"
+    )
+
+    print(
+        output_path / "e2_overlap_vs_ttfa.png"
+    )
+
+    return correlation
+
 if __name__ == "__main__":
 
-    if len(sys.argv) == 2:
+    if len(sys.argv) >= 3 and sys.argv[1] == "--e2-data":
+        log_dir = sys.argv[2]
+        analysis_data = collect_e2_analysis_data(log_dir)
+        generate_e2_plots(analysis_data)
+
+    elif len(sys.argv) >= 3 and sys.argv[1] == "--ttfa":
+        log_dir = sys.argv[2]
+        aggregate_ttfa_by_policy(log_dir)
+
+    elif len(sys.argv) >= 3 and sys.argv[1] == "--hit3":
+        log_dir = sys.argv[2]
+        hit_at_k_report(log_dir, k=3)
+
+    elif len(sys.argv) == 2:
         additional_metrics(sys.argv[1])
+
+    else:
+        main()

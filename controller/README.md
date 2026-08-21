@@ -98,3 +98,94 @@ stage on the returned action — the decision is no longer just logged, it actua
 what the pipeline does. Ryan's confidence logprobs and retrieval scores are the natural next
 signals to fold into this same rule once they're available at decide()-time (e.g. by moving
 the decision point, or adding a second, post-generation check).
+
+---
+
+## Experiment 3 (E3) — Renya's baselines: B8, B9, Ours
+
+**Owner: Renya.** The controller variants — the three baselines built directly against the
+E3 shared contract (`controller/baseline.py`'s `Ctx` / `Decision` / `BaselineController`; copy
+`controller/baselines/b0_never_retrieve.py` as the reference template). Full contract in
+[`E3_BASELINE_INTERFACE.md`](../E3_BASELINE_INTERFACE.md) — read that first.
+
+- **B8 (independent-best):** the strongest single controller built with no shared state or
+  price signal — rival A from the pre-registration. Takes the best of Lakshya's B4-B6
+  adaptive-retrieval baselines as its trigger.
+- **B9 (decomposed-with-prices):** trigger, timing, and memory each separately optimize
+  `quality − λ_l·latency − λ_c·compute` against the shared `ctx.prices` — coordinated by
+  price, but not jointly reasoned. Rival B.
+- **Ours (unified controller):** one controller reasons about all three decisions together
+  under the same objective — the coupling hypothesis this whole project is testing.
+
+**The crux is B9 vs Ours** — decomposed vs unified, same objective and same prices, so the
+comparison isolates coupling itself rather than any other advantage. Implement that
+distinction faithfully; it's the actual research question (H3).
+
+All three get the same tuning budget as every other baseline: swept thresholds on the dev
+split, no strawmen.
+
+### The VoI calibration and the price grid
+
+The two numbers B9 and Ours are most sensitive to are both *derived*, not chosen, and each
+regenerates with one command.
+
+**1. The belief → quality mapping** (`controller/baselines/_objective.py`'s `estimate_voi`):
+
+```
+voi = P(retrieval needed | mean_entropy_nats) * utility_scale
+    = sigmoid(11.2878 * mean_entropy_nats - 3.6334)      # utility_scale = 1.0
+```
+
+fitted on the 180 real samples of Experiment 1's Mistral-7B Modal run (verdict PASS).
+In-sample AUC 0.9260 — equal to E1's five-seed mean 0.9253 for this signal, as a monotone
+map must be. `P = 0.5` at 0.322 nats.
+
+```powershell
+python -m llm.experiment1.fit_calibration --signal mean_entropy_nats   # rewrites controller/baselines/e1_calibration_mean_entropy.json
+python -m llm.experiment1.fit_calibration --check                      # CI: committed max-entropy artifact still matches a fresh fit
+```
+
+**Why `mean_entropy_nats` and not E1's headline `max_entropy_nats`** (AUC 0.978, artifact
+kept at `controller/baselines/e1_calibration.json`). `max_entropy_nats` is a MAX over
+per-token entropies, so one uncertain token saturates it and it saturates on nearly any
+open-ended answer. Over the 50 scenarios that made VoI near-binary — 14 at the 0.05 floor,
+median 0.95, nothing between 0.07 and 0.73 — and the derived grid resolved an Ours-vs-B9
+disagreement at only **3 of its 26 prices**. `mean_entropy_nats` is the same measurement
+averaged: E1 five-seed mean AUC 0.9253, over E1's own 0.70 success bar (so it is gated,
+just not the argmax), and continuous across the scenarios (signal range 0.006–0.660,
+largest gap 0.073). The same grid then resolves a disagreement at **11 of 26 prices**.
+The choice was made on the signal's distribution, never on an Ours-vs-B9 outcome.
+Reproduce with `python -m simulator.e3_divergence_check`.
+
+Both price-aware baselines import the one estimator, so neither can get a sharper belief
+than the other — see `_objective.py`'s docstring on why that is load-bearing for E3.
+
+**2. The λ_l price grid** (`configs/e3_price_grid.json`), derived by tiling divergence bands
+edge-to-edge across the VoI distribution the 50 scenarios actually produce, so the sweep
+spends its budget where the two controllers can disagree:
+
+```powershell
+python -m simulator.e3_grid                        # prints VoI distribution + grid, writes configs/e3_price_grid.json
+python -m simulator.e3_grid --refine 4             # same coverage, 4x resolution
+python -m simulator.e3_grid --refresh-signals      # after changing llm.backend/model
+```
+
+⚠ The grid is only as real as the signals it was tiled against. With `llm.backend: mock`
+the per-scenario uncertainty values are MockClient's synthetic logprobs — the calibration
+is real, the signals it is applied to are not. The committed cache holds REAL Mistral-7B
+signals, so re-derive the grid with the same environment that produced them
+(`VOICE_RAG_LLM_BACKEND=vllm VOICE_RAG_MODEL=mistral7b_v03`) or `load_or_build_signals()`
+will judge the cache stale and overwrite it with mock draws. The artifact records which
+backend produced it.
+
+**3. Does the grid actually resolve anything?** (`simulator/e3_divergence_check.py`) Runs
+Ours and B9 over all 50 frozen snapshots at every grid price and counts the disagreements
+it observes, next to the ones the divergence band predicts:
+
+```powershell
+python -m simulator.e3_divergence_check            # per-price divergence table
+```
+
+The number to look at is *prices with ≥1 divergence*, not the total: the frontier is a
+curve, and a grid where only two prices resolve anything gives a two-point frontier however
+many scenarios diverge at those two.

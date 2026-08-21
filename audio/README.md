@@ -122,3 +122,22 @@ playback sounds clean, and barge-in stops speech quickly when the user interrupt
 
 Renya (plugging audio into the spine), and keep logging every event through the shared 
 eventlog log_writer as before.
+
+---
+
+## Experiment 3 (E3) — Adithi's baselines: B3, plus B0/B1
+
+**Owner: Adithi.** The turn-taking/endpointing baseline, plus the two simplest retrieval
+baselines. Each implements `controller/baseline.py`'s `BaselineController` interface (copy
+`controller/baselines/b0_never_retrieve.py` as the template). Full contract in
+[`../E3_BASELINE_INTERFACE.md`](../E3_BASELINE_INTERFACE.md).
+
+- **B3 (tuned silence-timeout endpointing):** your main deliverable — a controller whose
+  timing decision is purely a silence-timeout on the endpointing signal, tuned (swept, not
+  guessed) on the dev split like every other baseline.
+- **B0 (never-retrieve):** the reference baseline — already built at
+  `controller/baselines/b0_never_retrieve.py`, nothing to do here except read it as the
+  worked example.
+- **B1 (always-retrieve-once):** retrieve exactly once per turn, unconditionally.
+
+Same fairness rule as every baseline: same tuning budget, thresholds swept, no strawmen.
