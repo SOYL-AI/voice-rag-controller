@@ -1,2 +1,39 @@
 \section{Experimental Methodology}
 % TODO: draft this section. No AI-generated text per team policy.
+\section{Experimental Methodology}
+
+\subsection{Research Questions and Hypotheses}
+\label{subsec:research_questions}
+% TODO (Renya): state H1-H3 to match the frozen preregistration.
+% H1: Signal validity. H2: Timing value. H3: Coupling value (headline).
+% H4 (memory scheduling) was NOT evaluated - present it as future work, not a result.
+
+\subsection{Datasets and Evaluation Scenarios}
+\label{subsec:datasets}
+% TODO (Lakshya): the hotel-concierge scenario corpus and EXACT final counts.
+% Report only datasets actually used in the final experiments.
+% State the 50-scenario E3 set and the E1 labeled set with real sizes.
+
+\subsection{System Implementation}
+\label{subsec:system_impl}
+% TODO (Adithi + Ryan for backend): exact versions of the FINAL stack used.
+% Audio: VAD, ASR, TTS. Backend: LLM (Mistral-7B-Instruct-v0.3, NOT Llama),
+% embedding/retriever, FAISS index, hardware (Modal endpoint).
+% Report the configuration actually run, not the planned one.
+
+\subsection{Baselines}
+\label{subsec:baselines}
+% TODO (Lakshya): report ONLY baselines actually evaluated: b0, b4, b6, b8, b9, Ours.
+% Note b4 is degenerate (retrieves 0%, identical to b0) - flag it, do not present as distinct.
+% Do NOT list B1/B2/B3/B5/B7 as run if they were not. State equal tuning budgets.
+
+\subsection{Metrics}
+\label{subsec:metrics}
+% TODO (Renya): accuracy via Azure gpt-4o judge (temp 0, reproducible),
+% Hit@3, p50/p95 TTFA, wasted retrieval rate, retrievals/dialogue, controller overhead.
+% State what each measures and how.
+
+\subsection{Statistical Analysis}
+\label{subsec:statistical_analysis}
+% TODO (Shubhankit): number of seeds (5: 11,23,37,53,71), paired bootstrap details,
+% confidence intervals, primary metric (frontier dominance), treatment of multiple comparisons.
