@@ -2,10 +2,11 @@
 
 This document records what each experiment measures and what counts as success or failure, 
 decided BEFORE running them. We do not change success criteria after seeing results. 
-Owner: Yashmitha. Sign-off: Ryan.
+Owner: Yashmita. Sign-off: Ryan.
 
-Status: DRAFT — remaining criteria to be confirmed with the team. The Experiment 1 
-model and dataset below are FROZEN as of 2026-08-10, before any real data collection.
+Status: FROZEN — methods, metrics, decision criteria, and price-grid construction
+are finalized. Experiment outcomes are recorded separately in the results compilation
+and lab log.
 
 ## Guiding principle
 The project claims three live decisions (when to retrieve, what to remember, when to speak) 
@@ -13,6 +14,11 @@ are better made by one unified controller than three separate rules. Each experi
 tests one assumption behind that claim. All outcomes, including failures, will be reported.
 
 ## Experiment 1 — Signal validity (the gatekeeper)
+**Status: FINAL / FROZEN**
+
+Confirmed by Ryan on 2026-08-11, before the first experimental run. The success
+criterion, kill criterion, model, datasets, and seeds below must not be changed after
+results are observed.
 - Question: When the language model is uncertain (measured from its confidence numbers / 
   logprobs), does that reliably indicate it needs to retrieve a document?
 - How: Offline, over questions with known answers and known "was retrieval needed" labels. 
@@ -80,16 +86,125 @@ Reported results name Mistral-7B. No result on Llama-3.1-8B exists.
   quality.
 
 ## Experiment 3 — Coupling value (the headline)
-- Question: Does one unified controller beat well-tuned separate controllers?
-- How: Compare our unified controller against two rivals we build and tune equally: 
-  (A) three independent best controllers sharing nothing; (B) the same three given a shared 
-  latency/compute price but no shared state. Compare as accuracy-vs-latency curves across a 
-  grid of settings. 5 seeds.
-- Success (pre-committed): our curve clearly beats rival B over a meaningful region, with 
-  non-overlapping confidence bands, in at least 3 of 5 seeds. Ties are reported as ties.
-- Three honest outcomes, all publishable: unified wins (thesis confirmed); rival B ties 
-  ("shared prices suffice, full unification unnecessary"); nothing beats simple heuristics 
-  ("coupling intuition was wrong") + we publish the benchmark.
+
+### Status
+
+FROZEN — E3 methods, metrics, decision rule, tuning protocol, and price-grid
+construction are finalized. Experiment outcomes are recorded separately in
+`results.md` and `lab_log.md`.
+
+### Question
+
+Does one unified controller beat well-tuned separate controllers?
+
+### Primary Comparison
+
+The headline comparison is:
+
+- **B9 — decomposed-with-prices:** retrieval trigger, timing, and memory each
+  separately optimize against the same latency and compute prices, with no
+  shared state between the components.
+
+- **Ours — unified controller:** one controller reasons jointly about retrieval,
+  timing, and memory under the same objective.
+
+B9 vs Ours is the primary comparison because both use the same prices and the
+same scalarization objective. The difference being tested is decomposed versus
+joint decision-making.
+
+B8 (`independent-best`) is also reported as the strongest unpriced rival.
+
+### Scalarization Objective
+
+`quality − lambda_l * latency − lambda_c * compute`
+
+B9 and Ours are swept across the same `(lambda_l, lambda_c)` price grid to
+produce their trade-off frontiers.
+
+### Primary Metric
+
+Frontier dominance.
+
+The harness constructs:
+
+- accuracy vs p95 TTFA frontiers
+- accuracy vs compute frontiers
+
+for each `(baseline, price point)`.
+
+B0-B7 appear as individual points. B9 and Ours appear as swept price-point
+frontiers.
+
+### Pre-Committed Decision Rule
+
+Success requires the unified controller's frontier to clearly beat B9's
+frontier over a meaningful region, with non-overlapping bootstrap confidence
+bands, in at least 3 of 5 seeds.
+
+Ties are reported as ties.
+
+The three pre-committed outcomes are:
+
+1. **Unified wins:** coupling hypothesis supported.
+2. **B9 ties:** shared prices are sufficient and full unification is not
+   necessary.
+3. **Neither beats simple heuristics:** coupling hypothesis is not supported;
+   the benchmark and negative result are still reported.
+
+### Lambda Grid
+
+The E3 sweep uses a fixed price grid:
+
+- `lambda_c = 0.05`
+- 26 fixed `lambda_l` points spanning approximately 0.022 to 1.713
+- The `lambda_l` points were derived by tiling the empirical
+  value-of-information distribution rather than selecting arbitrary values.
+
+This is the same grid used in the completed E3 run.
+
+**Price-grid construction confirmed by:** Renya
+
+### Tuning Protocol
+
+All baselines receive the same tuning budget on the same development split.
+
+Thresholds are swept rather than left at default values. No baseline may be
+used as an untuned strawman.
+
+B8, B9, and Ours receive the same tuning treatment as the other baselines.
+
+### Seeds
+
+5 seeds per reported result.
+
+### Metrics Recorded
+
+**Quality**
+- Task success
+- Answer accuracy against gold
+- Hit@3 retrieval accuracy
+
+**Latency**
+- p50 TTFA
+- p95 TTFA
+- Dead-air rate
+
+**Compute**
+- Retrievals per dialogue
+- Wasted-retrieval rate
+- Prompt tokens per turn
+- Controller overhead per decision
+
+### Confidence Analysis
+
+Bootstrap confidence bands are used for the frontier comparison.
+
+### Sign-Off
+
+**Overall experiment sign-off:** Ryan  
+**Price-grid confirmation:** Renya  
+**Status:** FROZEN  
+**Freeze date:** 2026-08-21
 
 ## Experiment 4 — Memory scheduling (CUT for this deadline)
 - Deferring memory operations to idle windows, tested for latency benefit at equal recall. 
@@ -102,3 +217,69 @@ Reported results name Mistral-7B. No result on Llama-3.1-8B exists.
 - Success criteria frozen before data exists.
 - TTFA measured at the audio boundary only.
 - Every figure regenerable from raw logs by one command.
+
+### Implementation note
+
+The policy pre-registered as `forecast-timed` was implemented for E2 as
+`fixed_early_proxy`.
+
+`fixed_early_proxy` is not a live forecast or pause-prediction policy. It
+dispatches retrieval at a fixed early point in the modeled speech timeline and
+therefore serves as a proxy for early/overlapped retrieval placement.
+
+True forecast timing using a live VAD/VAP or pause-prediction signal was not
+implemented for this experiment and is left as future work.
+
+This note documents the implementation mapping and does not alter the frozen
+pre-registered success criterion.
+
+### Operational Uncertainty Signal
+
+The operational uncertainty signal used by the controller is
+`mean_entropy_nats`.
+
+Experiment 1's strongest gate result was obtained with `max_entropy_nats`.
+Both signals exceeded the pre-registered AUC success threshold of 0.70.
+
+The distinction is retained explicitly: `max_entropy_nats` was the strongest
+E1 gate signal, while `mean_entropy_nats` is the signal committed for
+downstream controller operation.
+
+### Answer Accuracy Metric
+
+Answer correctness is evaluated using the Azure GPT-4o judge.
+
+- Temperature: 0
+- Deterministic evaluation configuration
+- Used as the locked `answer_correct` metric for the E3 sweep
+- Configuration verified for reproducibility
+
+### Methodological Disclosures
+
+1. **Operational signal vs. E1 best signal**
+
+   Experiment 1's strongest AUC was obtained with `max_entropy_nats`, while
+   the downstream controller uses `mean_entropy_nats` as its operational
+   uncertainty signal. Both exceeded the frozen E1 success threshold of 0.70.
+
+2. **Waste-rate term**
+
+   `waste_rate` appears in the compute/cost formulation as an unmeasured
+   placeholder. It is not treated as an empirically measured constant in the
+   current experiments.
+
+3. **E1 dataset limitation**
+
+   The primary E1 gate dataset has a known surface-form separability issue,
+   already identified in the preregistration: retrieval-positive examples are
+   hotel-specific while many negatives are simple general-knowledge or
+   arithmetic questions. The gate result is reported with this limitation.
+
+### Final Sign-Off
+
+- **Document owner:** Yashmitha
+- **Overall pre-registration sign-off:** Ryan
+- **E2 implementation mapping confirmation:** Renya
+- **E3 price-grid construction confirmation:** Renya
+- **Status:** FROZEN
+- **Freeze date:** 2026-08-21

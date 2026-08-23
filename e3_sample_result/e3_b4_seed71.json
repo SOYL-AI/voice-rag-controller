@@ -1,0 +1,242 @@
+[
+  {
+    "baseline": "b4",
+    "seed": 71,
+    "scenario_id": 1,
+    "conversation_id": "e3_b4_l0.0_c0.0_s71_001",
+    "question": "[sample scenario 1]",
+    "prices": null,
+    "decision": {
+      "retrieve": false,
+      "timing": "sentence_end",
+      "reason": "b4: skip (voi=0.4495)",
+      "divergence_band": null
+    },
+    "outcome": {
+      "retrieval_needed_gold": false,
+      "answer_correct": true,
+      "hit_at_3": null,
+      "ttfa_ms": 3285,
+      "retrievals": 0,
+      "prompt_tokens": 256,
+      "controller_overhead_ms": 3
+    },
+    "status": "success"
+  },
+  {
+    "baseline": "b4",
+    "seed": 71,
+    "scenario_id": 2,
+    "conversation_id": "e3_b4_l0.0_c0.0_s71_002",
+    "question": "[sample scenario 2]",
+    "prices": null,
+    "decision": {
+      "retrieve": true,
+      "timing": "fixed_early_proxy",
+      "reason": "b4: retrieve@fixed_early_proxy (voi=0.6925)",
+      "divergence_band": null
+    },
+    "outcome": {
+      "retrieval_needed_gold": true,
+      "answer_correct": true,
+      "hit_at_3": true,
+      "ttfa_ms": 3269,
+      "retrievals": 1,
+      "prompt_tokens": 512,
+      "controller_overhead_ms": 3
+    },
+    "status": "success"
+  },
+  {
+    "baseline": "b4",
+    "seed": 71,
+    "scenario_id": 3,
+    "conversation_id": "e3_b4_l0.0_c0.0_s71_003",
+    "question": "[sample scenario 3]",
+    "prices": null,
+    "decision": {
+      "retrieve": false,
+      "timing": "sentence_end",
+      "reason": "b4: skip (voi=0.1282)",
+      "divergence_band": null
+    },
+    "outcome": {
+      "retrieval_needed_gold": false,
+      "answer_correct": true,
+      "hit_at_3": null,
+      "ttfa_ms": 2957,
+      "retrievals": 0,
+      "prompt_tokens": 256,
+      "controller_overhead_ms": 3
+    },
+    "status": "success"
+  },
+  {
+    "baseline": "b4",
+    "seed": 71,
+    "scenario_id": 4,
+    "conversation_id": "e3_b4_l0.0_c0.0_s71_004",
+    "question": "[sample scenario 4]",
+    "prices": null,
+    "decision": {
+      "retrieve": false,
+      "timing": "sentence_end",
+      "reason": "b4: skip (voi=0.253)",
+      "divergence_band": null
+    },
+    "outcome": {
+      "retrieval_needed_gold": false,
+      "answer_correct": true,
+      "hit_at_3": null,
+      "ttfa_ms": 3453,
+      "retrievals": 0,
+      "prompt_tokens": 256,
+      "controller_overhead_ms": 3
+    },
+    "status": "success"
+  },
+  {
+    "baseline": "b4",
+    "seed": 71,
+    "scenario_id": 5,
+    "conversation_id": "e3_b4_l0.0_c0.0_s71_005",
+    "question": "[sample scenario 5]",
+    "prices": null,
+    "decision": {
+      "retrieve": false,
+      "timing": "sentence_end",
+      "reason": "b4: skip (voi=0.2079)",
+      "divergence_band": null
+    },
+    "outcome": {
+      "retrieval_needed_gold": false,
+      "answer_correct": true,
+      "hit_at_3": null,
+      "ttfa_ms": 3294,
+      "retrievals": 0,
+      "prompt_tokens": 256,
+      "controller_overhead_ms": 3
+    },
+    "status": "success"
+  },
+  {
+    "baseline": "b4",
+    "seed": 71,
+    "scenario_id": 6,
+    "conversation_id": "e3_b4_l0.0_c0.0_s71_006",
+    "question": "[sample scenario 6]",
+    "prices": null,
+    "decision": {
+      "retrieve": true,
+      "timing": "fixed_early_proxy",
+      "reason": "b4: retrieve@fixed_early_proxy (voi=0.5012)",
+      "divergence_band": null
+    },
+    "outcome": {
+      "retrieval_needed_gold": true,
+      "answer_correct": true,
+      "hit_at_3": true,
+      "ttfa_ms": 2839,
+      "retrievals": 1,
+      "prompt_tokens": 512,
+      "controller_overhead_ms": 3
+    },
+    "status": "success"
+  },
+  {
+    "baseline": "b4",
+    "seed": 71,
+    "scenario_id": 7,
+    "conversation_id": "e3_b4_l0.0_c0.0_s71_007",
+    "question": "[sample scenario 7]",
+    "prices": null,
+    "decision": {
+      "retrieve": true,
+      "timing": "fixed_early_proxy",
+      "reason": "b4: retrieve@fixed_early_proxy (voi=0.6701)",
+      "divergence_band": null
+    },
+    "outcome": {
+      "retrieval_needed_gold": true,
+      "answer_correct": true,
+      "hit_at_3": true,
+      "ttfa_ms": 2881,
+      "retrievals": 1,
+      "prompt_tokens": 512,
+      "controller_overhead_ms": 3
+    },
+    "status": "success"
+  },
+  {
+    "baseline": "b4",
+    "seed": 71,
+    "scenario_id": 8,
+    "conversation_id": "e3_b4_l0.0_c0.0_s71_008",
+    "question": "[sample scenario 8]",
+    "prices": null,
+    "decision": {
+      "retrieve": true,
+      "timing": "fixed_early_proxy",
+      "reason": "b4: retrieve@fixed_early_proxy (voi=0.821)",
+      "divergence_band": null
+    },
+    "outcome": {
+      "retrieval_needed_gold": true,
+      "answer_correct": true,
+      "hit_at_3": true,
+      "ttfa_ms": 3309,
+      "retrievals": 1,
+      "prompt_tokens": 512,
+      "controller_overhead_ms": 3
+    },
+    "status": "success"
+  },
+  {
+    "baseline": "b4",
+    "seed": 71,
+    "scenario_id": 9,
+    "conversation_id": "e3_b4_l0.0_c0.0_s71_009",
+    "question": "[sample scenario 9]",
+    "prices": null,
+    "decision": {
+      "retrieve": false,
+      "timing": "sentence_end",
+      "reason": "b4: skip (voi=0.295)",
+      "divergence_band": null
+    },
+    "outcome": {
+      "retrieval_needed_gold": false,
+      "answer_correct": true,
+      "hit_at_3": null,
+      "ttfa_ms": 2924,
+      "retrievals": 0,
+      "prompt_tokens": 256,
+      "controller_overhead_ms": 3
+    },
+    "status": "success"
+  },
+  {
+    "baseline": "b4",
+    "seed": 71,
+    "scenario_id": 10,
+    "conversation_id": "e3_b4_l0.0_c0.0_s71_010",
+    "question": "[sample scenario 10]",
+    "prices": null,
+    "decision": {
+      "retrieve": true,
+      "timing": "fixed_early_proxy",
+      "reason": "b4: retrieve@fixed_early_proxy (voi=0.6546)",
+      "divergence_band": null
+    },
+    "outcome": {
+      "retrieval_needed_gold": true,
+      "answer_correct": true,
+      "hit_at_3": true,
+      "ttfa_ms": 3192,
+      "retrievals": 1,
+      "prompt_tokens": 512,
+      "controller_overhead_ms": 3
+    },
+    "status": "success"
+  }
+]
