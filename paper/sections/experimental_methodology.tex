@@ -4,9 +4,22 @@
 
 \subsection{Research Questions and Hypotheses}
 \label{subsec:research_questions}
-% TODO (Renya): state H1-H3 to match the frozen preregistration.
-% H1: Signal validity. H2: Timing value. H3: Coupling value (headline).
-% H4 (memory scheduling) was NOT evaluated - present it as future work, not a result.
+
+Our evaluation is guided by three core research questions and pre-registered hypotheses, alongside one formally scoped-out hypothesis:
+\begin{itemize}
+    \item \textbf{H1 (Signal Validity):} \textit{Does the language model's internal uncertainty reliably indicate when external retrieval is required?}
+    We hypothesize that output token uncertainty (mean per-token entropy) discriminates between queries requiring retrieval and those that can be solved via closed-book knowledge. Pre-registered decision rule: success requires a best signal AUC $\ge 0.70$ on the validation split; an AUC $< 0.60$ serves as a kill criterion for the belief-driven framework.
+
+    \item \textbf{H2 (Timing Value):} \textit{Does initiating retrieval during user speech reduce response latency without degrading accuracy?}
+    We hypothesize that overlapping retrieval execution with user utterance streaming hides exposed delay. Pre-registered decision rule: early-timed retrieval policies ($\text{immediate}$ or $\text{fixed\_early\_proxy}$) must achieve a lower tail time-to-first-audio ($\text{TTFA}_{p95}$) compared to the $\text{sentence\_end}$ baseline while maintaining non-inferior answer accuracy.
+
+    \item \textbf{H3 (Coupling Value):} \textit{Does a unified controller that jointly optimizes retrieval selection and timing outperform a decomposed controller optimizing them independently?}
+    We hypothesize that joint optimization avoids the systematic retrieval overpricing inherent in independent composition. Pre-registered decision rule: the coupled controller's trade-off frontier must strictly dominate the decomposed baseline (B9) across a meaningful region of price space with non-overlapping confidence bands in $\ge 3$ out of $5$ random seeds.
+
+    \item \textbf{H4 (Memory Scheduling --- Scope Cut):} \textit{Does unified memory scheduling further optimize resource allocation?} 
+    While originally pre-registered as part of our broader architecture, hypothesis H4 was formally cut from the evaluation scope prior to execution. The system evaluated in this paper focuses strictly on the trade-offs between retrieval selection and temporal execution.
+\end{itemize}
+
 
 \subsection{Datasets and Evaluation Scenarios}
 \label{subsec:datasets}
@@ -29,9 +42,25 @@
 
 \subsection{Metrics}
 \label{subsec:metrics}
-% TODO (Renya): accuracy via Azure gpt-4o judge (temp 0, reproducible),
-% Hit@3, p50/p95 TTFA, wasted retrieval rate, retrievals/dialogue, controller overhead.
-% State what each measures and how.
+
+We evaluate system performance across three primary dimensions using metrics computed directly from execution logs:
+
+\subsubsection{Quality and Accuracy}
+\begin{itemize}
+    \item \textbf{Answer Correctness ($\text{answer\_correct}$):} The primary accuracy metric, evaluated via an automated LLM judge (\texttt{gpt-4o} via Azure OpenAI, temperature $0.0$). The judge evaluates whether the generated dialogue turn is factually accurate relative to the ground truth reference, independent of whether retrieval was invoked (i.e., a correct closed-book response is marked correct). The judge prompt was empirically validated to ensure fine-grained detail verification (e.g., verifying exact names and times).
+    \item \textbf{Retrieval Hit Rate ($\text{Hit@3}$):} A secondary retrieval-quality metric measuring the proportion of retrieval executions in which the ground-truth reference passage is contained within the top-3 retrieved document chunks.
+\end{itemize}
+
+\subsubsection{Latency}
+\begin{itemize}
+    \item \textbf{Time to First Audio ($\text{TTFA}$):} The total wall-clock duration between the end of the user's spoken utterance and the arrival of the first audio chunk from the text-to-speech engine ($\text{tts\_first\_audio} - \text{user\_end}$). We report both median ($\text{TTFA}_{p50}$) and tail ($\text{TTFA}_{p95}$) distributions.
+    \item \textbf{Dead Air:} The duration of silent gap between user utterance completion and system spoken response initiation. We report the mean and 95th percentile ($\text{p95}$) alongside bootstrapped 95\% confidence intervals.
+\end{itemize}
+
+\subsubsection{Compute}
+\begin{itemize}
+    \item \textbf{Retrievals per Dialogue:} The average number of retrieval calls executed per dialogue turn. Each retrieval execution incurs $1.0$ unit of compute cost, serving as the compute axis along trade-off frontiers.
+\end{itemize}
 
 \subsection{Statistical Analysis}
 \label{subsec:statistical_analysis}
