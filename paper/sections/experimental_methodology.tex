@@ -27,6 +27,18 @@
 % Note b4 is degenerate (retrieves 0%, identical to b0) - flag it, do not present as distinct.
 % Do NOT list B1/B2/B3/B5/B7 as run if they were not. State equal tuning budgets.
 
+We compare the proposed controller, referred to as Ours, with the baselines that were actually evaluated in the final E3 experiments. The evaluated baselines are B0, B4, B6, B8, and B9. The E3 implementation defines B0, B4, B6, and B8 as the unpriced baselines, while B9 and Ours are evaluated under the latency/compute price settings.
+
+All evaluated methods use the same baseline interface and are evaluated on the same scenarios and seeds, receiving the same decision context for each evaluation.
+
+B0 represents the no-retrieval case. It therefore provides a reference point for the cost and performance of answering without accessing the retrieval system.
+
+B4 is included because it was part of the final evaluated configuration, but its behavior is degenerate: it retrieves on 0 percent of cases, making its retrieval behavior effectively identical to B0. We therefore treat B4 as a degenerate comparison rather than interpreting it as a substantively different retrieval strategy.
+
+B6 is the DRAGIN entropy baseline, which triggers retrieval when the model's entropy exceeds a configured threshold. B8 is the independent-best baseline, which combines a separately tuned retrieval trigger with a separately tuned timing policy without using pricing information. B9 is the price-aware baseline, while Ours is the proposed controller.
+
+All evaluated baselines are given equal tuning budgets so that differences in performance are not caused by giving one method more tuning effort than another.
+
 \subsection{Metrics}
 \label{subsec:metrics}
 % TODO (Renya): accuracy via Azure gpt-4o judge (temp 0, reproducible),
