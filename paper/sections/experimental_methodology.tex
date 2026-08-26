@@ -13,6 +13,13 @@
 % TODO (Lakshya): the hotel-concierge scenario corpus and EXACT final counts.
 % Report only datasets actually used in the final experiments.
 % State the 50-scenario E3 set and the E1 labeled set with real sizes.
+We evaluate the system using the hotel-concierge scenario corpus used throughout the experiments. The evaluation scenarios contain a user question, a reference answer, and information about whether retrieval is required for answering the question. The same scenario set is shared across the experimental stages.
+
+For Experiment 3 (E3), the evaluation set contains 50 scenarios. These scenarios cover both questions that require information from the hotel knowledge base and questions that can be answered without retrieval. This allows the controller to be evaluated not only on whether it retrieves useful information, but also on whether it avoids unnecessary retrieval.
+
+For Experiment 1 (E1), the frozen labeled dataset contains 36 examples, consisting of 18 retrieval-needed examples and 18 not-needed examples. This split is based on the retrieval requirement label and is used to evaluate whether the system correctly distinguishes questions that require retrieval from those that do not.
+
+The experiments use the datasets and scenarios that were part of the final experimental pipeline. We do not include additional datasets or scenarios that were only considered during development.
 
 \subsection{System Implementation}
 \label{subsec:system_impl}
