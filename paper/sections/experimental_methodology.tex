@@ -17,7 +17,7 @@ We evaluate the system using the hotel-concierge scenario corpus used throughout
 
 For Experiment 3 (E3), the evaluation set contains 50 scenarios. These scenarios cover both questions that require information from the hotel knowledge base and questions that can be answered without retrieval. This allows the controller to be evaluated not only on whether it retrieves useful information, but also on whether it avoids unnecessary retrieval.
 
-For Experiment 1 (E1), the frozen labeled dataset contains 36 examples, including 18 hotel-domain questions. The hotel questions represent the deployment domain, while the remaining examples provide negative cases for distinguishing questions that require retrieval from those that do not.
+For Experiment 1 (E1), the frozen labeled dataset contains 36 examples, consisting of 18 retrieval-needed examples and 18 not-needed examples. This split is based on the retrieval requirement label and is used to evaluate whether the system correctly distinguishes questions that require retrieval from those that do not.
 
 The experiments use the datasets and scenarios that were part of the final experimental pipeline. We do not include additional datasets or scenarios that were only considered during development.
 
