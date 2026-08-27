@@ -1,2 +1,41 @@
 \section{Results}
 % TODO: draft this section. No AI-generated text per team policy.
+%
+% SECTION-WIDE HONESTY RULES (read before writing anything here):
+%   1. Report ONLY experiments that were actually run. E1, E2, E3 and the
+%      ablations below are the complete set.
+%   2. There is NO E4 / memory-scheduling result. E4 was formally CUT from the
+%      evaluation - no experiment ran. Memory appears only as future work in the
+%      hypotheses (see subsec:research_questions), never as a result. Do not add
+%      an E4 subsection, table, or figure.
+%   3. Report ties as ties and misses as misses. Do not upgrade a secondary
+%      outcome into a headline, and do not describe a not-met pre-registered
+%      criterion as a partial success.
+%   4. All numbers land from the real sweep on main and from results.md.
+%      Do not estimate, round optimistically, or invent.
+
+\subsection{E1: Validity of Retrieval-Need Signals}
+\label{subsec:e1_signal_validity}
+% TODO (Yashmita): E1 PASSED. Report AUC (best signal max_entropy_nats, mean
+% 0.9784), per-seed AUCs, calibration. Adapt from results.md. State the honest
+% caveat: gate won by max_entropy_nats but system runs on mean_entropy_nats,
+% both clear 0.70.
+
+\subsection{E2: Value of Retrieval Timing}
+\label{subsec:e2_timing}
+% TODO (Yashmita): E2 NOT MET on pre-registered primary (p95 TTFA:
+% fixed_early_proxy 7090ms vs sentence_end 7052ms, not lower). Report the
+% secondary honestly (paired median -479ms vs sentence_end, CI excludes zero).
+% Primary not met, secondary qualified. Adapt from results.md.
+
+\subsection{E3: Unified Versus Decomposed Control}
+\label{subsec:e3_unified_vs_decomposed}
+% TODO (Renya): HEADLINE. E3 NOT MET - Ours does NOT dominate B9 (0/5 seeds,
+% 0 dominated points). Report as a tie with a mechanism, not a null. Report ties
+% as ties. Numbers land from the real sweep on main.
+
+\subsection{Ablation and Failure Analysis}
+\label{subsec:ablation_failure}
+% TODO (Shubhankit): report ONLY ablations/failures actually run. Do not invent
+% ablations. Real material: b4 degenerate (0% retrieval), the known-fact false
+% positives (water/RAM/leap year) as compute cost not accuracy loss.
