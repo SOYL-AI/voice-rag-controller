@@ -16,10 +16,12 @@
 
 \subsection{E1: Validity of Retrieval-Need Signals}
 \label{subsec:e1_signal_validity}
-% TODO (Yashmita): E1 PASSED. Report AUC (best signal max_entropy_nats, mean
-% 0.9784), per-seed AUCs, calibration. Adapt from results.md. State the honest
-% caveat: gate won by max_entropy_nats but system runs on mean_entropy_nats,
-% both clear 0.70.
+In E1, the main question was whether the model's uncertainty signals could predict whether retrieval was needed. Performance was measured using AUC (Area Under the Receiver Operating Characteristic Curve), with a pre-registered success threshold of \( \geq 0.70 \). The results showed that \texttt{max\_entropy\_nats} was the best-performing uncertainty signal, achieving a mean AUC of 0.9784 across five seeds. Therefore, E1 met its pre-registered success criterion.
+
+The seed-level AUC values were 0.9907, 0.9784, 0.9815, 0.9630, and 0.9784 for seeds 11, 23, 37, 53, and 71, respectively. \texttt{max\_entropy\_nats} was the strongest E1 gate signal, whereas \texttt{mean\_entropy\_nats} is the signal used by the downstream controller. Both signals exceeded the frozen AUC threshold of 0.70.
+
+For calibration, \texttt{max\_entropy\_nats} was mapped to the probability that retrieval was needed using a one-dimensional logistic regression model. The fitted mapping was \(P(\text{retrieval needed}) = \sigma(11.7691x - 16.0030)\), which places the 0.5 probability decision boundary at approximately 1.3598 nats. At this threshold, the in-sample classification accuracy was 90.6\%. The calibrated probabilities also produced an AUC of 0.9784; however, because the calibration was fitted in-sample, this value is not treated as additional held-out evidence. The five-seed E1 result remains the evidence used to assess generalization.
+
 
 \subsection{E2: Value of Retrieval Timing}
 \label{subsec:e2_timing}
