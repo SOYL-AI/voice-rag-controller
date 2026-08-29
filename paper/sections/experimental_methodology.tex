@@ -16,10 +16,51 @@
 
 \subsection{System Implementation}
 \label{subsec:system_impl}
-% TODO (Adithi + Ryan for backend): exact versions of the FINAL stack used.
-% Audio: VAD, ASR, TTS. Backend: LLM (Mistral-7B-Instruct-v0.3, NOT Llama),
-% embedding/retriever, FAISS index, hardware (Modal endpoint).
-% Report the configuration actually run, not the planned one.
+
+The system's components and their respective configuration are listed below in the Table~\ref{tab:system_impl}.
+\begin{table*}[t]
+\centering
+\small
+\setlength{\tabcolsep}{4pt}
+\renewcommand{\arraystretch}{1.15}
+\begin{tabularx}{\textwidth}{@{}p{2.2cm} X p{2.2cm} X@{}}
+\hline
+\textbf{Components} & \textbf{Final Implementation / Actual Experimental Configuration} & \textbf{Components} & \textbf{Final Implementation / Actual Experimental Configuration} \\
+\hline
+\textbf{Audio} & 
+  Configured STT: \texttt{faster-whisper} 1.2.0 (\texttt{small} model, $\sim$244M params, CPU, INT8, English). \newline
+  Configured VAD: Silero VAD (32\,ms frame, 0.5 threshold, 2 consecutive frames, 800\,ms silence-hang). \newline
+  Configured TTS: \texttt{piper-tts} (\texttt{en\_US-lessac-medium.onnx}, 22.05\,kHz, 20\,ms block). \newline
+  \textbf{Actual Run Note}: STT/VAD were \emph{not} exercised in reported E1--E3. Piper was not installed on run host; E2/E3 used synthetic tone generation instead. &
+\textbf{Retrieval} & 
+  Embedding model: \texttt{BAAI/bge-small-en-v1.5} via \texttt{sentence-transformers} 5.7.0 (384-d). \newline
+  Vector store: \texttt{faiss-cpu} 1.15.0 (\texttt{IndexFlatL2}, top-$k=5$). \newline
+  Execution: Local CPU. \newline
+  \textbf{Actual Run Note}: E2 used precomputed/frozen queries. \\
+\hline
+\textbf{LLM / Serving} & 
+  Model: \texttt{mistralai/Mistral-7B-Instruct-v0.3} (rev \texttt{c170c708}). \emph{Pre-registered Llama-3.1-8B-Instruct was NOT used in reported experiments.} \newline
+  Precision / Quantization: BF16, unquantized. \newline
+  Serving: vLLM 0.21.0 on Modal serverless (OpenAI API, max model len 8192, GPU memory util 0.90, max logprobs 20). \newline
+  Serving Defaults: TP=1, KV-cache=auto, max-num-seqs=vLLM default. &
+\textbf{Hardware / Topology} & 
+  Local Host: Windows 11 Home 64-bit x86-64, Intel Core Ultra 7 155H (16c/22t), 16\,GB RAM (RTX 4060 Laptop 8\,GB \& Arc GPU present but unused). \newline
+  Remote Host: Modal serverless NVIDIA A10G (24\,GB VRAM, 1 GPU, 4 CPU, 16\,GiB RAM, scaledown 300\,s, startup timeout 1200\,s, timeout 24\,h). \newline
+  Topology: LLM remote only; controller, retrieval, and driver local. Deployed once 2026-08-11 (\texttt{llm/modal\_vllm.py}, commit \texttt{9149692}). \\
+\hline
+\textbf{Controller} & 
+  Interface: \texttt{Ctx}, \texttt{Decision}, \texttt{BaselineController}. \newline
+  Timing Policies: \texttt{sentence\_end}, \texttt{immediate}, \texttt{fixed\_early\_proxy}. \newline
+  Memory: \texttt{memory\_op} exists in interface but memory scheduling is NOT implemented (\texttt{decide\_memory()} always returns \texttt{None}). &
+\textbf{Experiments} & 
+  E1: Direct LLM calls (36 examples $\times$ 5 seeds); no pipeline, audio, 150-wpm speech simulation, timing policy, or latency/TTFA measurement. \newline
+  E2: Text-input path, 150-wpm speech duration (actual wall-clock sleep), frozen queries, synthetic TTS; no mic, recorded speech, STT, or VAD. \newline
+  E3: Text-input simulation, 150-wpm speech model; Phase A Modal LLM calls (cached cell outcomes), Phase B offline baseline evaluation. \\
+\hline
+\end{tabularx}
+\caption{System implementation details and actual experimental configurations evaluated in Experiments 1--3.}
+\label{tab:system_impl}
+\end{table*}
 
 \subsection{Baselines}
 \label{subsec:baselines}
