@@ -25,9 +25,9 @@ For calibration, \texttt{max\_entropy\_nats} was mapped to the probability that 
 
 \subsection{E2: Value of Retrieval Timing}
 \label{subsec:e2_timing}
-In E2, we evaluated whether earlier retrieval timing could reduce time-to-first-audio (TTFA) while maintaining retrieval accuracy. The pre-registered primary criterion required the forecast-timed condition, implemented as \texttt{fixed\_early\_proxy}, to achieve a lower p95 TTFA at matched accuracy. Hit@3 accuracy was 100\% across all three timing policies. However, \texttt{fixed\_early\_proxy} recorded a p95 TTFA of 7090 ms compared with 7052 ms for \texttt{sentence\_end}. Since the p95 TTFA was higher rather than lower, E2 did not meet its pre-registered primary criterion.
+In E2, we evaluated whether earlier retrieval timing could reduce time-to-first-audio (TTFA) at matched accuracy. Hit@3 was 100\% across all timing policies. The pre-registered primary criterion was not met: \texttt{fixed\_early\_proxy} had a p95 TTFA of 7090 ms compared with 7052 ms for \texttt{sentence\_end}, so the early condition did not achieve a lower p95 TTFA.
 
-In the secondary paired-scenario analysis, \texttt{fixed\_early\_proxy} showed a median TTFA difference of approximately -479 ms relative to \texttt{sentence\_end}, with the paired-bootstrap 95\% confidence interval excluding zero. This provides qualified evidence that earlier retrieval placement can reduce latency, but it does not override the primary p95 result. \texttt{fixed\_early\_proxy} was also a fixed early dispatch point in the modeled speech timeline rather than a live VAD/VAP-based forecasting policy.
+In the secondary paired analysis, \texttt{fixed\_early\_proxy} showed a median TTFA difference of approximately -479 ms relative to \texttt{sentence\_end}, with the paired-bootstrap 95\% confidence interval excluding zero. This is reported as a secondary finding and does not override the primary p95 result. \texttt{fixed\_early\_proxy} was a fixed early-dispatch proxy rather than a live forecasting policy.
 \subsection{E3: Unified Versus Decomposed Control}
 \label{subsec:e3_unified_vs_decomposed}
 % TODO (Renya): HEADLINE. E3 NOT MET - Ours does NOT dominate B9 (0/5 seeds,
