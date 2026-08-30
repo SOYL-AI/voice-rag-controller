@@ -25,11 +25,9 @@ For calibration, \texttt{max\_entropy\_nats} was mapped to the probability that 
 
 \subsection{E2: Value of Retrieval Timing}
 \label{subsec:e2_timing}
-% TODO (Yashmita): E2 NOT MET on pre-registered primary (p95 TTFA:
-% fixed_early_proxy 7090ms vs sentence_end 7052ms, not lower). Report the
-% secondary honestly (paired median -479ms vs sentence_end, CI excludes zero).
-% Primary not met, secondary qualified. Adapt from results.md.
+In E2, we evaluated whether earlier retrieval timing could reduce time-to-first-audio (TTFA) while maintaining retrieval accuracy. The pre-registered primary criterion required the forecast-timed condition, implemented as \texttt{fixed\_early\_proxy}, to achieve a lower p95 TTFA at matched accuracy. Hit@3 accuracy was 100\% across all three timing policies. However, \texttt{fixed\_early\_proxy} recorded a p95 TTFA of 7090 ms compared with 7052 ms for \texttt{sentence\_end}. Since the p95 TTFA was higher rather than lower, E2 did not meet its pre-registered primary criterion.
 
+In the secondary paired-scenario analysis, \texttt{fixed\_early\_proxy} showed a median TTFA difference of approximately -479 ms relative to \texttt{sentence\_end}, with the paired-bootstrap 95\% confidence interval excluding zero. This provides qualified evidence that earlier retrieval placement can reduce latency, but it does not override the primary p95 result. \texttt{fixed\_early\_proxy} was also a fixed early dispatch point in the modeled speech timeline rather than a live VAD/VAP-based forecasting policy.
 \subsection{E3: Unified Versus Decomposed Control}
 \label{subsec:e3_unified_vs_decomposed}
 % TODO (Renya): HEADLINE. E3 NOT MET - Ours does NOT dominate B9 (0/5 seeds,
