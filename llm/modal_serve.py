@@ -8,16 +8,16 @@ measurement instrument), max_model_len 8192, max_logprobs 20, and
 --api-key read from the VLLM_API_KEY in the `voice-rag-vllm` Modal secret.
 That secret must also carry HF_TOKEN, which gated models need.
 
-Each model is its own Modal app, so deploying a second model never touches
-an endpoint another run is using:
+The study's model is Mistral-7B-Instruct-v0.3. The live endpoint (Modal app
+`voice-rag-vllm`) was deployed before this file existed, and its source
+was not kept. This file is the reproducible recipe for serving the same
+model under the same flags. It deploys as a SEPARATE app by default, so it
+never replaces the endpoint a run is using:
 
-    # Llama-3.1-8B-Instruct (the originally pre-registered model)
-    VR_MODEL_HF_ID=meta-llama/Llama-3.1-8B-Instruct VR_APP_NAME=voice-rag-vllm-llama31 \
-        modal deploy llm/modal_serve.py
+    VR_APP_NAME=voice-rag-vllm-repro modal deploy llm/modal_serve.py
 
     # endpoint: https://<workspace>--<VR_APP_NAME>-serve.modal.run/v1
 
-The original Mistral-7B endpoint (app `voice-rag-vllm`) predates this file.
 Every run records the exact model id and vLLM version it was served with.
 """
 
@@ -26,8 +26,8 @@ import subprocess
 
 import modal
 
-MODEL_HF_ID = os.environ.get("VR_MODEL_HF_ID", "meta-llama/Llama-3.1-8B-Instruct")
-APP_NAME = os.environ.get("VR_APP_NAME", "voice-rag-vllm-llama31")
+MODEL_HF_ID = os.environ.get("VR_MODEL_HF_ID", "mistralai/Mistral-7B-Instruct-v0.3")
+APP_NAME = os.environ.get("VR_APP_NAME", "voice-rag-vllm-repro")
 VLLM_VERSION = "0.10.1.1"
 GPU = os.environ.get("VR_GPU", "A10G")
 
