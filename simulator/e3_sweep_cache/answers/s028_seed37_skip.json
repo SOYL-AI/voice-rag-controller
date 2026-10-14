@@ -1,0 +1,24 @@
+{
+  "scenario_id": 28,
+  "seed": 37,
+  "path": "skip",
+  "answer_text": " The largest planet in our solar system is Jupiter.",
+  "answer_sha256": "680ccd1cfd3f0d665c93915d568cf1f0b7f1d66d1721dff711c1a11e062f35d0",
+  "answer_correct": true,
+  "judge": {
+    "answer_correct": true,
+    "parsed_ok": true,
+    "judge_raw": "CONFLICT: none  \nVERDICT: YES",
+    "judge_key": "da47c20e7f2cda6c8fa7d21e2a95840c5707e7e5fe166cd5ffc5c20e481d7f47",
+    "judge_identity": "azure-openai/gpt-4o@2025-01-01-preview",
+    "judge_cache_version": "v4-azure-reasoned",
+    "scenario_id": 28,
+    "temperature": 0.0
+  },
+  "measured_under_timing": "sentence_end",
+  "previous_verdict": {
+    "answer_correct": true,
+    "judge_identity": "azure-openai/gpt-4o@2025-01-01-preview",
+    "judge_raw": "YES"
+  }
+}

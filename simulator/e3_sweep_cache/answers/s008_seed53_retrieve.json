@@ -1,0 +1,24 @@
+{
+  "scenario_id": 8,
+  "seed": 53,
+  "path": "retrieve",
+  "answer_text": " The Executive Room at Grand Horizon Hotel & Suites is designed for both business and leisure travelers. It features a king-size bed, an ergonomic workspace, high-speed Wi-Fi, smart TV, minibar, coffee machine, and city views. Guests also receive complimentary access to the Executive Lounge during operating hours.",
+  "answer_sha256": "85cf1c229a86a9fda2e3cc13ac4679dcfbb4eab6f160f99cd6dab53ba2c28855",
+  "answer_correct": true,
+  "judge": {
+    "answer_correct": true,
+    "parsed_ok": true,
+    "judge_raw": "CONFLICT: none  \nVERDICT: YES",
+    "judge_key": "948dfa7e5132754ace4d26225ad35b7e86c700493dea644af9fa9093025d125e",
+    "judge_identity": "azure-openai/gpt-4o@2025-01-01-preview",
+    "judge_cache_version": "v4-azure-reasoned",
+    "scenario_id": 8,
+    "temperature": 0.0
+  },
+  "measured_under_timing": "sentence_end",
+  "previous_verdict": {
+    "answer_correct": false,
+    "judge_identity": "azure-openai/gpt-4o@2025-01-01-preview",
+    "judge_raw": "NO"
+  }
+}

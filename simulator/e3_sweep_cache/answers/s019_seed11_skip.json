@@ -1,0 +1,24 @@
+{
+  "scenario_id": 19,
+  "seed": 11,
+  "path": "skip",
+  "answer_text": " The business center offers printing, copying, faxing, and computer services for guests with business needs. It's open from 7 AM to 10 PM daily.",
+  "answer_sha256": "6c8134c3c2e8039972172851519ed4551ba889057a7337d57a9f18944ff0e106",
+  "answer_correct": false,
+  "judge": {
+    "answer_correct": false,
+    "parsed_ok": true,
+    "judge_raw": "CONFLICT: reference says the Business Centre is open daily from 8:00 AM to 8:00 PM, candidate says it is open from 7 AM to 10 PM daily.  \nCONFLICT: reference says facilities include scanning, candidate does not mention scanning but instead mentions faxing, which is not listed in the reference.  \n\nVERDICT: NO",
+    "judge_key": "66a56f16c6d01a9383d869d99f5c342856493237abe49f4f59769b2819a3f4e9",
+    "judge_identity": "azure-openai/gpt-4o@2025-01-01-preview",
+    "judge_cache_version": "v4-azure-reasoned",
+    "scenario_id": 19,
+    "temperature": 0.0
+  },
+  "measured_under_timing": "sentence_end",
+  "previous_verdict": {
+    "answer_correct": false,
+    "judge_identity": "azure-openai/gpt-4o@2025-01-01-preview",
+    "judge_raw": "NO"
+  }
+}

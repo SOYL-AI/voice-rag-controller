@@ -1,0 +1,13 @@
+{
+  "scenario_id": 47,
+  "seed": 23,
+  "path": "retrieve",
+  "timing": "fixed_early_proxy",
+  "ttfa_ms": 4094.0,
+  "retrievals": 1,
+  "answer_sha256": "931b08db99264bb6331e5e9f680f928a604df038b3a40bb2a8c29605fd5c7e77",
+  "matches_canonical_answer": true,
+  "conversation_id": "e3full_s047_seed23_retrieve_fixed_early_proxy",
+  "log_path": "logs\\e3full_s047_seed23_retrieve_fixed_early_proxy.jsonl",
+  "frozen_query": "Largest mammal species in the world"
+}

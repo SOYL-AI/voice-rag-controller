@@ -1,0 +1,24 @@
+{
+  "scenario_id": 48,
+  "seed": 71,
+  "path": "retrieve",
+  "answer_text": " The standard check-in time in Grand Horizon Hotel & Suites is 2:00 PM.",
+  "answer_sha256": "c864ba57271638e24ef6f8fd2db2e88c079731993ca6baab1b1647ab8ae22af7",
+  "answer_correct": false,
+  "judge": {
+    "answer_correct": false,
+    "parsed_ok": true,
+    "judge_raw": "CONFLICT: reference says most hotels commonly have check-in around 2 PM or 3 PM, candidate says the standard check-in time in Grand Horizon Hotel & Suites is 2:00 PM.  \nVERDICT: NO",
+    "judge_key": "abad49f6cdf1ca8beeae8753597cbc52bbbf674094b8496f949bf37bd33ec970",
+    "judge_identity": "azure-openai/gpt-4o@2025-01-01-preview",
+    "judge_cache_version": "v4-azure-reasoned",
+    "scenario_id": 48,
+    "temperature": 0.0
+  },
+  "measured_under_timing": "sentence_end",
+  "previous_verdict": {
+    "answer_correct": false,
+    "judge_identity": "azure-openai/gpt-4o@2025-01-01-preview",
+    "judge_raw": "CONFLICT: reference says most hotels commonly have check-in around 2 PM or 3 PM, candidate says the standard check-in time in Grand Horizon Hotel & Suites is 2:00 PM.  \nVERDICT: NO"
+  }
+}

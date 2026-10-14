@@ -1,0 +1,24 @@
+{
+  "scenario_id": 33,
+  "seed": 11,
+  "path": "retrieve",
+  "answer_text": " I'm sorry, I don't have that information. I can help you with hotel-related questions such as room service hours or indoor games room availability.",
+  "answer_sha256": "532a1f3b57afd7c3479bd5944931c148dc2c261846bf611dd7c840c78acc66b1",
+  "answer_correct": false,
+  "judge": {
+    "answer_correct": false,
+    "parsed_ok": true,
+    "judge_raw": "CONFLICT: reference says 126, candidate says \"I don't have that information.\"\nVERDICT: NO",
+    "judge_key": "7db82d901b5b76805d26b0dc4120b284d79645f36523fac54bc9c6076f4e3dcc",
+    "judge_identity": "azure-openai/gpt-4o@2025-01-01-preview",
+    "judge_cache_version": "v4-azure-reasoned",
+    "scenario_id": 33,
+    "temperature": 0.0
+  },
+  "measured_under_timing": "sentence_end",
+  "previous_verdict": {
+    "answer_correct": false,
+    "judge_identity": "azure-openai/gpt-4o@2025-01-01-preview",
+    "judge_raw": "NO"
+  }
+}

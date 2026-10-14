@@ -1,0 +1,24 @@
+{
+  "scenario_id": 20,
+  "seed": 53,
+  "path": "skip",
+  "answer_text": " According to the information provided, cancellations must be made 48 hours prior to the scheduled arrival to avoid a cancellation fee.",
+  "answer_sha256": "94d3388c5c7bdcdfa1a5457f808f3fb7a483a8e63cbed1e2e576beafdc05aca8",
+  "answer_correct": true,
+  "judge": {
+    "answer_correct": true,
+    "parsed_ok": true,
+    "judge_raw": "CONFLICT: reference says cancellations made within 48 hours of arrival may incur a one-night room charge, candidate says nothing about this.\nCONFLICT: reference says special promotional and non-refundable bookings are not eligible for cancellation, candidate says nothing about this.\nCONFLICT: reference says refund processing timelines depend on the original payment method, candidate says nothing about this.\n\nVERDICT: YES",
+    "judge_key": "0ed1f3ef694b1b3820f933a1df77a24602df4f174bdde9351e2d6770fca44767",
+    "judge_identity": "azure-openai/gpt-4o@2025-01-01-preview",
+    "judge_cache_version": "v4-azure-reasoned",
+    "scenario_id": 20,
+    "temperature": 0.0
+  },
+  "measured_under_timing": "sentence_end",
+  "previous_verdict": {
+    "answer_correct": true,
+    "judge_identity": "azure-openai/gpt-4o@2025-01-01-preview",
+    "judge_raw": "YES"
+  }
+}

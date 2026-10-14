@@ -1,0 +1,24 @@
+{
+  "scenario_id": 3,
+  "seed": 53,
+  "path": "retrieve",
+  "answer_text": " The Deluxe Room at Grand Horizon Hotel & Suites offers a comfortable stay with a king-size bed, smart TV, Wi-Fi, tea and coffee-making facilities, and a work desk. It includes an attached bathroom with premium toiletries and a hairdryer. The room accommodates up to two adults and one child, and daily housekeeping is included.",
+  "answer_sha256": "be47dfe17c9992a491c1b90c47aa4c0a5e5b3b62437a401848c1f41b6d7e0382",
+  "answer_correct": true,
+  "judge": {
+    "answer_correct": true,
+    "parsed_ok": true,
+    "judge_raw": "CONFLICT: none  \nVERDICT: YES",
+    "judge_key": "508f1736bf7866df50697264217c8ec6cfefe0d871cea98ddfc53edc7b53a231",
+    "judge_identity": "azure-openai/gpt-4o@2025-01-01-preview",
+    "judge_cache_version": "v4-azure-reasoned",
+    "scenario_id": 3,
+    "temperature": 0.0
+  },
+  "measured_under_timing": "sentence_end",
+  "previous_verdict": {
+    "answer_correct": false,
+    "judge_identity": "azure-openai/gpt-4o@2025-01-01-preview",
+    "judge_raw": "NO"
+  }
+}

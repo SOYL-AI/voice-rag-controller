@@ -1,0 +1,24 @@
+{
+  "scenario_id": 35,
+  "seed": 71,
+  "path": "skip",
+  "answer_text": " Python is a high-level, interpreted programming language used for various purposes, including web development, data analysis, artificial intelligence, and more.",
+  "answer_sha256": "8c4e9592e2c94aa3788ee63b5dc6bfa6a978771d47130212354c9faeee752877",
+  "answer_correct": false,
+  "judge": {
+    "answer_correct": false,
+    "parsed_ok": true,
+    "judge_raw": "CONFLICT: reference says Python is a general-purpose programming language, candidate says Python is an interpreted programming language.  \nVERDICT: NO",
+    "judge_key": "32d83f405533702b021692ae8459c4f5f5921a92eb7a54cdf370a5ef9aefd27b",
+    "judge_identity": "azure-openai/gpt-4o@2025-01-01-preview",
+    "judge_cache_version": "v4-azure-reasoned",
+    "scenario_id": 35,
+    "temperature": 0.0
+  },
+  "measured_under_timing": "sentence_end",
+  "previous_verdict": {
+    "answer_correct": false,
+    "judge_identity": "azure-openai/gpt-4o@2025-01-01-preview",
+    "judge_raw": "CONFLICT: reference says Python is a general-purpose programming language, candidate says Python is an interpreted programming language.  \nVERDICT: NO"
+  }
+}

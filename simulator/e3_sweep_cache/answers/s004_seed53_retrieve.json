@@ -1,0 +1,24 @@
+{
+  "scenario_id": 4,
+  "seed": 53,
+  "path": "retrieve",
+  "answer_text": " Visitors are allowed between 8:00 AM and 10:00 PM, but they must register at the Front Desk with a valid photo ID. Overnight visitors are not allowed unless officially added to the room reservation. Security concerns may lead to entry denial.",
+  "answer_sha256": "c913c21fda3fae5c03ca2651e5408224c996dc2401e029c60dbb0081b95fd945",
+  "answer_correct": true,
+  "judge": {
+    "answer_correct": true,
+    "parsed_ok": true,
+    "judge_raw": "CONFLICT: none  \nVERDICT: YES",
+    "judge_key": "1c96fd6ec340be54c29cefdc3218ff3938d56f0db82d2ff70a657a3a99d7e201",
+    "judge_identity": "azure-openai/gpt-4o@2025-01-01-preview",
+    "judge_cache_version": "v4-azure-reasoned",
+    "scenario_id": 4,
+    "temperature": 0.0
+  },
+  "measured_under_timing": "sentence_end",
+  "previous_verdict": {
+    "answer_correct": true,
+    "judge_identity": "azure-openai/gpt-4o@2025-01-01-preview",
+    "judge_raw": "YES"
+  }
+}

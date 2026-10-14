@@ -1,0 +1,10 @@
+{
+  "answer_correct": false,
+  "parsed_ok": true,
+  "judge_raw": "CONFLICT: reference says guests under 16 years of age must be supervised by an adult, candidate does not mention this and implies no such restriction.  \nCONFLICT: reference says guests are required to wear appropriate workout attire and athletic footwear, candidate does not mention this and implies no such requirement.  \nCONFLICT: reference says equipment should be cleaned after use with sanitizing wipes provided, candidate does not mention this and implies no such requirement.  \n\nVERDICT: NO",
+  "judge_key": "5279f57a3e570b49022c27c25eb7e4467e687244ce849d7ed4243683614660bc",
+  "judge_identity": "azure-openai/gpt-4o@2025-01-01-preview",
+  "judge_cache_version": "v4-azure-reasoned",
+  "scenario_id": 16,
+  "temperature": 0.0
+}

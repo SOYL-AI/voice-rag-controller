@@ -1,0 +1,10 @@
+{
+  "answer_correct": false,
+  "parsed_ok": true,
+  "judge_raw": "CONFLICT: reference says CPU stands for Central Processing Unit, candidate says the provided documents do not contain the answer to that question.\nVERDICT: NO",
+  "judge_key": "eca8b9abe050cddca8a3787681142d6bd5802fea134e727c39f3e613cbc5831b",
+  "judge_identity": "azure-openai/gpt-4o@2025-01-01-preview",
+  "judge_cache_version": "v4-azure-reasoned",
+  "scenario_id": 38,
+  "temperature": 0.0
+}

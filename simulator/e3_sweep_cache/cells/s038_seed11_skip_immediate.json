@@ -1,0 +1,13 @@
+{
+  "scenario_id": 38,
+  "seed": 11,
+  "path": "skip",
+  "timing": "immediate",
+  "ttfa_ms": 1250.0,
+  "retrievals": 0,
+  "answer_sha256": "cd6a761f036c2403e48c3c3a5d3dd8d490755ce7f6053874e6fcd46f79988dc7",
+  "matches_canonical_answer": true,
+  "conversation_id": "e3full_s038_seed11_skip_immediate",
+  "log_path": "logs\\e3full_s038_seed11_skip_immediate.jsonl",
+  "frozen_query": "What is the meaning of CPU?"
+}

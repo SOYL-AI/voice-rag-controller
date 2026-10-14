@@ -1,0 +1,13 @@
+{
+  "scenario_id": 2,
+  "seed": 23,
+  "path": "skip",
+  "timing": "immediate",
+  "ttfa_ms": 2000.0,
+  "retrievals": 0,
+  "answer_sha256": "b18e6634e445462083e0dc87d89bcbe5ba351158aee648c22f0a75716a6c7681",
+  "matches_canonical_answer": true,
+  "conversation_id": "e3full_s002_seed23_skip_immediate",
+  "log_path": "logs\\e3full_s002_seed23_skip_immediate.jsonl",
+  "frozen_query": "\"What is a spa?\""
+}

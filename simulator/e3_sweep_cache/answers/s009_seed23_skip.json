@@ -1,0 +1,24 @@
+{
+  "scenario_id": 9,
+  "seed": 23,
+  "path": "skip",
+  "answer_text": " I'm sorry for your inconvenience, sir. Please contact our front desk immediately, and they will assist you with reporting a lost item. Thank you.",
+  "answer_sha256": "ce20ce911965d0250f7f552b0a61144c13eb527b3974becc6614bfce1e613600",
+  "answer_correct": true,
+  "judge": {
+    "answer_correct": true,
+    "parsed_ok": true,
+    "judge_raw": "CONFLICT: reference says items are recorded and securely stored by the housekeeping department, candidate does not mention this.  \nCONFLICT: reference says unclaimed items are retained for 90 days before disposal, candidate does not mention this.  \nVERDICT: YES",
+    "judge_key": "39ea2cbf3524884698f393cb4489e155b6036794338bb948466d2e8d49935251",
+    "judge_identity": "azure-openai/gpt-4o@2025-01-01-preview",
+    "judge_cache_version": "v4-azure-reasoned",
+    "scenario_id": 9,
+    "temperature": 0.0
+  },
+  "measured_under_timing": "sentence_end",
+  "previous_verdict": {
+    "answer_correct": false,
+    "judge_identity": "azure-openai/gpt-4o@2025-01-01-preview",
+    "judge_raw": "NO"
+  }
+}

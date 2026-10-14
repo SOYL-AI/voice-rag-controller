@@ -1,0 +1,13 @@
+{
+  "scenario_id": 5,
+  "seed": 53,
+  "path": "retrieve",
+  "timing": "immediate",
+  "ttfa_ms": 5422.0,
+  "retrievals": 1,
+  "answer_sha256": "b7c8a45e74e8cc0239de6a27f456387d20f7ef32f884d0ccefc6198d4cbf0d98",
+  "matches_canonical_answer": true,
+  "conversation_id": "e3full_s005_seed53_retrieve_immediate",
+  "log_path": "logs\\e3full_s005_seed53_retrieve_immediate.jsonl",
+  "frozen_query": "Vegan menu recipes"
+}

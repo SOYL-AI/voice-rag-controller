@@ -1,0 +1,13 @@
+{
+  "scenario_id": 15,
+  "seed": 53,
+  "path": "retrieve",
+  "timing": "fixed_early_proxy",
+  "ttfa_ms": 2766.0,
+  "retrievals": 1,
+  "answer_sha256": "3a4e639b35db713aed64f28ff55e5b9d7ab267c8be769412bd0c61421e0a5d25",
+  "matches_canonical_answer": true,
+  "conversation_id": "e3full_s015_seed53_retrieve_fixed_early_proxy",
+  "log_path": "logs\\e3full_s015_seed53_retrieve_fixed_early_proxy.jsonl",
+  "frozen_query": "\"Taxi booking services\""
+}

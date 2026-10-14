@@ -1,0 +1,13 @@
+{
+  "scenario_id": 42,
+  "seed": 53,
+  "path": "retrieve",
+  "timing": "immediate",
+  "ttfa_ms": 2079.0,
+  "retrievals": 1,
+  "answer_sha256": "a6652483ae4e387fa0fb5e3fb6687c17c8ec8cd04c18e60bf42633bf2ba2b070",
+  "matches_canonical_answer": true,
+  "conversation_id": "e3full_s042_seed53_retrieve_immediate",
+  "log_path": "logs\\e3full_s042_seed53_retrieve_immediate.jsonl",
+  "frozen_query": "\"India independence date\""
+}

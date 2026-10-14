@@ -1,0 +1,24 @@
+{
+  "scenario_id": 17,
+  "seed": 71,
+  "path": "retrieve",
+  "answer_text": " Yes, the hotel provides airport pickup service upon prior reservation.",
+  "answer_sha256": "a4381add200b0afe6de4458a178bb863aa15bedc51ee6e43cc86eccb68b67e77",
+  "answer_correct": true,
+  "judge": {
+    "answer_correct": true,
+    "parsed_ok": true,
+    "judge_raw": "CONFLICT: none  \nVERDICT: YES",
+    "judge_key": "50b3ae8e356e6adbf436ea8a7c04476118cc8fd5a0447c4f425e61a0f8996b15",
+    "judge_identity": "azure-openai/gpt-4o@2025-01-01-preview",
+    "judge_cache_version": "v4-azure-reasoned",
+    "scenario_id": 17,
+    "temperature": 0.0
+  },
+  "measured_under_timing": "sentence_end",
+  "previous_verdict": {
+    "answer_correct": true,
+    "judge_identity": "azure-openai/gpt-4o@2025-01-01-preview",
+    "judge_raw": "YES"
+  }
+}

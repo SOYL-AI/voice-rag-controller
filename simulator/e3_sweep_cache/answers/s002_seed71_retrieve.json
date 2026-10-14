@@ -1,0 +1,24 @@
+{
+  "scenario_id": 2,
+  "seed": 71,
+  "path": "retrieve",
+  "answer_text": " The Serenity Spa at Grand Horizon Hotel & Suites offers massages, facials, body treatments, and wellness therapies. It operates daily from 10:00 AM to 9:00 PM, and advance appointments are recommended. Guests should arrive at least 15 minutes before their scheduled treatment.",
+  "answer_sha256": "c985274c6fc9f5ae76e04e51b9dd72780b18b25336711627205b0c5fa91b566f",
+  "answer_correct": true,
+  "judge": {
+    "answer_correct": true,
+    "parsed_ok": true,
+    "judge_raw": "CONFLICT: none  \nVERDICT: YES",
+    "judge_key": "86979cc3ffdcf51c9188160bdf43e668a63e0ae653125ec72ef22d056d791fcd",
+    "judge_identity": "azure-openai/gpt-4o@2025-01-01-preview",
+    "judge_cache_version": "v4-azure-reasoned",
+    "scenario_id": 2,
+    "temperature": 0.0
+  },
+  "measured_under_timing": "sentence_end",
+  "previous_verdict": {
+    "answer_correct": true,
+    "judge_identity": "azure-openai/gpt-4o@2025-01-01-preview",
+    "judge_raw": "YES"
+  }
+}

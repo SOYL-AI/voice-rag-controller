@@ -1,0 +1,24 @@
+{
+  "scenario_id": 31,
+  "seed": 53,
+  "path": "retrieve",
+  "answer_text": " I'm sorry for any confusion, but the provided passages do not contain information about the temperature at which water boils at sea level. The normal boiling point of water at sea level is 100 degrees Celsius (212 degrees Fahrenheit).",
+  "answer_sha256": "926381cde13be00fb21dac4701fc4b9f2c6274aef37a92450edb70c82dcb39d1",
+  "answer_correct": true,
+  "judge": {
+    "answer_correct": true,
+    "parsed_ok": true,
+    "judge_raw": "CONFLICT: none  \nVERDICT: YES",
+    "judge_key": "66bf0f582fd0be8f649165328f839f0efb37bc316a2fbec616402c8d81d29ab8",
+    "judge_identity": "azure-openai/gpt-4o@2025-01-01-preview",
+    "judge_cache_version": "v4-azure-reasoned",
+    "scenario_id": 31,
+    "temperature": 0.0
+  },
+  "measured_under_timing": "sentence_end",
+  "previous_verdict": {
+    "answer_correct": true,
+    "judge_identity": "azure-openai/gpt-4o@2025-01-01-preview",
+    "judge_raw": "YES"
+  }
+}

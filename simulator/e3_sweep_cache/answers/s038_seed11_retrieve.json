@@ -1,0 +1,24 @@
+{
+  "scenario_id": 38,
+  "seed": 11,
+  "path": "retrieve",
+  "answer_text": " I'm sorry, but the provided documents do not contain the information you're asking for. CPU stands for Central Processing Unit. It's a key component of a computer that performs most of the processing inside a computer.",
+  "answer_sha256": "55b03687dd3b7b15a02719b2de87990f92fc63d29fd3758afd7890fb70662382",
+  "answer_correct": false,
+  "judge": {
+    "answer_correct": false,
+    "parsed_ok": true,
+    "judge_raw": "CONFLICT: reference says CPU stands for Central Processing Unit, candidate says the provided documents do not contain the information.\nVERDICT: NO",
+    "judge_key": "41801800831fac1c1d4356a1ceace89e3ae5de7331ecce829f495f5c97143878",
+    "judge_identity": "azure-openai/gpt-4o@2025-01-01-preview",
+    "judge_cache_version": "v4-azure-reasoned",
+    "scenario_id": 38,
+    "temperature": 0.0
+  },
+  "measured_under_timing": "sentence_end",
+  "previous_verdict": {
+    "answer_correct": false,
+    "judge_identity": "azure-openai/gpt-4o@2025-01-01-preview",
+    "judge_raw": "CONFLICT: reference says CPU stands for Central Processing Unit, candidate says the provided documents do not contain the information.\nVERDICT: NO"
+  }
+}

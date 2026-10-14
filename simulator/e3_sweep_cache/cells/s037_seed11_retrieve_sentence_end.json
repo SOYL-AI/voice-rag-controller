@@ -1,0 +1,13 @@
+{
+  "scenario_id": 37,
+  "seed": 11,
+  "path": "retrieve",
+  "timing": "sentence_end",
+  "ttfa_ms": 3313.0,
+  "retrievals": 1,
+  "answer_sha256": "d1edef767a1cda02c18734856df05a351c90469b421fe49a0a68be6be055a652",
+  "matches_canonical_answer": true,
+  "conversation_id": "e3full_s037_seed11_retrieve_sentence_end",
+  "log_path": "logs\\e3full_s037_seed11_retrieve_sentence_end.jsonl",
+  "frozen_query": "\"Define programming loop\""
+}

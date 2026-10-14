@@ -1,0 +1,24 @@
+{
+  "scenario_id": 8,
+  "seed": 11,
+  "path": "skip",
+  "answer_text": " The executive room offers a spacious layout, a work desk, and complimentary breakfast. It's designed for business travelers seeking comfort and productivity.",
+  "answer_sha256": "fb215151bbba44623408e1dabdc5460990f04b66f7df608c9f9c149eb13a5d85",
+  "answer_correct": false,
+  "judge": {
+    "answer_correct": false,
+    "parsed_ok": true,
+    "judge_raw": "CONFLICT: reference says the room features a king-size bed, candidate does not mention it and instead states \"spacious layout\" without specifying the bed type.  \nCONFLICT: reference says the room includes high-speed Wi-Fi, smart TV, minibar, coffee machine, and city views, candidate does not mention these features and instead states \"complimentary breakfast,\" which is not mentioned in the reference.  \nCONFLICT: reference says guests receive complimentary access to the Executive Lounge, candidate does not mention this.  \n\nVERDICT: NO",
+    "judge_key": "442f14b2719744d48097757308f2f354bf4965426d42a6e55b0debb4d1b7cb43",
+    "judge_identity": "azure-openai/gpt-4o@2025-01-01-preview",
+    "judge_cache_version": "v4-azure-reasoned",
+    "scenario_id": 8,
+    "temperature": 0.0
+  },
+  "measured_under_timing": "sentence_end",
+  "previous_verdict": {
+    "answer_correct": false,
+    "judge_identity": "azure-openai/gpt-4o@2025-01-01-preview",
+    "judge_raw": "NO"
+  }
+}

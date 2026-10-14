@@ -1,0 +1,13 @@
+{
+  "scenario_id": 20,
+  "seed": 11,
+  "path": "retrieve",
+  "timing": "immediate",
+  "ttfa_ms": 4562.0,
+  "retrievals": 1,
+  "answer_sha256": "3b7d2dbccd0d8fd0cbce2887cfd2868d0f6f48578772af37277954f24a497edb",
+  "matches_canonical_answer": true,
+  "conversation_id": "e3full_s020_seed11_retrieve_immediate",
+  "log_path": "logs\\e3full_s020_seed11_retrieve_immediate.jsonl",
+  "frozen_query": "Cancellation policies or procedures"
+}

@@ -1,0 +1,24 @@
+{
+  "scenario_id": 4,
+  "seed": 11,
+  "path": "skip",
+  "answer_text": " According to the information provided, guests are allowed to bring up to two visitors to their room between 7:00 AM and 10:00 PM. Visitors must sign in at the front desk and provide a valid ID.",
+  "answer_sha256": "bddfc4fbe7745ffb3e276bbff30fe34cb22750f54f9b31f031ce67a88ff8edbe",
+  "answer_correct": false,
+  "judge": {
+    "answer_correct": false,
+    "parsed_ok": true,
+    "judge_raw": "CONFLICT: reference says visitors are permitted between 8:00 AM and 10:00 PM, candidate says visitors are allowed between 7:00 AM and 10:00 PM.  \nCONFLICT: reference does not specify a limit on the number of visitors, candidate says guests can bring up to two visitors.  \n\nVERDICT: NO",
+    "judge_key": "f18b73f66768f3a8e7c3d0437353855c106f4a0f0eff5f806cccb09ad710aad8",
+    "judge_identity": "azure-openai/gpt-4o@2025-01-01-preview",
+    "judge_cache_version": "v4-azure-reasoned",
+    "scenario_id": 4,
+    "temperature": 0.0
+  },
+  "measured_under_timing": "sentence_end",
+  "previous_verdict": {
+    "answer_correct": false,
+    "judge_identity": "azure-openai/gpt-4o@2025-01-01-preview",
+    "judge_raw": "NO"
+  }
+}

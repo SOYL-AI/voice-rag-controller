@@ -1,0 +1,24 @@
+{
+  "scenario_id": 18,
+  "seed": 37,
+  "path": "skip",
+  "answer_text": " The check-out time at our hotel is 11:00 AM.",
+  "answer_sha256": "3c0f3fe290a60aca671a99a1aca56ab7cceca9b7efc21f127a752f9e071e05fd",
+  "answer_correct": true,
+  "judge": {
+    "answer_correct": true,
+    "parsed_ok": true,
+    "judge_raw": "CONFLICT: none  \nVERDICT: YES",
+    "judge_key": "47ea3a7f7600edee9745e0451925adc01a83ab243c9ba9769b78a4ba211cc556",
+    "judge_identity": "azure-openai/gpt-4o@2025-01-01-preview",
+    "judge_cache_version": "v4-azure-reasoned",
+    "scenario_id": 18,
+    "temperature": 0.0
+  },
+  "measured_under_timing": "sentence_end",
+  "previous_verdict": {
+    "answer_correct": true,
+    "judge_identity": "azure-openai/gpt-4o@2025-01-01-preview",
+    "judge_raw": "YES"
+  }
+}

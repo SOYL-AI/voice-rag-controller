@@ -1,0 +1,24 @@
+{
+  "scenario_id": 40,
+  "seed": 37,
+  "path": "retrieve",
+  "answer_text": " I'm sorry, the provided documents do not contain the information about who wrote Hamlet. That would be William Shakespeare.",
+  "answer_sha256": "eb43fed7b027fdf9edba02ed57a2359642e7ca707ea1c566f13fc0f7010fc9e5",
+  "answer_correct": false,
+  "judge": {
+    "answer_correct": false,
+    "parsed_ok": true,
+    "judge_raw": "CONFLICT: reference says William Shakespeare wrote Hamlet, candidate says the provided documents do not contain the information about who wrote Hamlet.\nVERDICT: NO",
+    "judge_key": "c455398b4017ed62bf4eeb957e2b2f617511846d40892c3a04f059f850a81ca5",
+    "judge_identity": "azure-openai/gpt-4o@2025-01-01-preview",
+    "judge_cache_version": "v4-azure-reasoned",
+    "scenario_id": 40,
+    "temperature": 0.0
+  },
+  "measured_under_timing": "sentence_end",
+  "previous_verdict": {
+    "answer_correct": false,
+    "judge_identity": "azure-openai/gpt-4o@2025-01-01-preview",
+    "judge_raw": "CONFLICT: reference says William Shakespeare wrote Hamlet, candidate says the provided documents do not contain the information about who wrote Hamlet.\nVERDICT: NO"
+  }
+}

@@ -1,0 +1,13 @@
+{
+  "scenario_id": 20,
+  "seed": 53,
+  "path": "skip",
+  "timing": "sentence_end",
+  "ttfa_ms": 1609.0,
+  "retrievals": 0,
+  "answer_sha256": "94d3388c5c7bdcdfa1a5457f808f3fb7a483a8e63cbed1e2e576beafdc05aca8",
+  "matches_canonical_answer": true,
+  "conversation_id": "e3full_s020_seed53_skip_sentence_end",
+  "log_path": "logs\\e3full_s020_seed53_skip_sentence_end.jsonl",
+  "frozen_query": "Cancellation policies or procedures"
+}

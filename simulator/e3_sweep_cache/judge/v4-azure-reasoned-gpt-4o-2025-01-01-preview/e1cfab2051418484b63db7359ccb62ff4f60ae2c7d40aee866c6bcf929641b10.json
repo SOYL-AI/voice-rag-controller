@@ -1,0 +1,10 @@
+{
+  "answer_correct": false,
+  "parsed_ok": true,
+  "judge_raw": "CONFLICT: reference says 126, candidate says 1708.  \nVERDICT: NO",
+  "judge_key": "e1cfab2051418484b63db7359ccb62ff4f60ae2c7d40aee866c6bcf929641b10",
+  "judge_identity": "azure-openai/gpt-4o@2025-01-01-preview",
+  "judge_cache_version": "v4-azure-reasoned",
+  "scenario_id": 33,
+  "temperature": 0.0
+}

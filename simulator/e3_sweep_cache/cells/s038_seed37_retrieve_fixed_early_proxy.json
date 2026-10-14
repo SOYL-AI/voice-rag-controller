@@ -1,0 +1,13 @@
+{
+  "scenario_id": 38,
+  "seed": 37,
+  "path": "retrieve",
+  "timing": "fixed_early_proxy",
+  "ttfa_ms": 2312.0,
+  "retrievals": 1,
+  "answer_sha256": "69c924eed6d379a55b98497d7c60a3ae2fe9362e81b19bd513035b8cf48df912",
+  "matches_canonical_answer": true,
+  "conversation_id": "e3full_s038_seed37_retrieve_fixed_early_proxy",
+  "log_path": "logs\\e3full_s038_seed37_retrieve_fixed_early_proxy.jsonl",
+  "frozen_query": "What is the meaning of CPU?"
+}

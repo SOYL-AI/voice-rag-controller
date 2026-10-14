@@ -1,0 +1,10 @@
+{
+  "answer_correct": false,
+  "parsed_ok": true,
+  "judge_raw": "CONFLICT: reference says every guest room has a minibar, candidate says a mini-fridge is available upon request.  \nCONFLICT: reference says every guest room has air conditioning, candidate does not mention it.  \nCONFLICT: reference says every guest room has an electronic safe, candidate does not mention it.  \nCONFLICT: reference says every guest room has a telephone, candidate does not mention it.  \nCONFLICT: reference says every guest room has bottled drinking water, candidate does not mention it.  \nCONFLICT: reference says every guest room has premium toiletries, candidate does not mention it.  \nCONFLICT: reference says every guest room has fresh towels, candidate does not mention it.  \nCONFLICT: reference says every guest room has a hairdryer, candidate does not mention it.  \nCONFLICT: reference says additional amenities such as an iron, ironing board, or extra pillows can be requested through housekeeping, candidate does not mention it.  \n\nVERDICT: NO",
+  "judge_key": "8e90e48fb252dd23c7003e86bf44b06e163fd6315877626a74d4a8cbfd71dfbd",
+  "judge_identity": "azure-openai/gpt-4o@2025-01-01-preview",
+  "judge_cache_version": "v4-azure-reasoned",
+  "scenario_id": 14,
+  "temperature": 0.0
+}

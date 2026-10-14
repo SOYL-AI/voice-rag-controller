@@ -1,0 +1,13 @@
+{
+  "scenario_id": 11,
+  "seed": 11,
+  "path": "skip",
+  "timing": "fixed_early_proxy",
+  "ttfa_ms": 2000.0,
+  "retrievals": 0,
+  "answer_sha256": "4cd498145f1ca084e37c10efaa271b22118304fcd3817b94acf0f61ac4a95a74",
+  "matches_canonical_answer": true,
+  "conversation_id": "e3full_s011_seed11_skip_fixed_early_proxy",
+  "log_path": "logs\\e3full_s011_seed11_skip_fixed_early_proxy.jsonl",
+  "frozen_query": "\"Restaurants near me\""
+}

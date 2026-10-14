@@ -1,0 +1,13 @@
+{
+  "scenario_id": 16,
+  "seed": 71,
+  "path": "skip",
+  "timing": "fixed_early_proxy",
+  "ttfa_ms": 1781.0,
+  "retrievals": 0,
+  "answer_sha256": "d8d38d6b76c41e36524b0afd36e3cc258f31822b7176a1b6ff4a9523406c97a0",
+  "matches_canonical_answer": true,
+  "conversation_id": "e3full_s016_seed71_skip_fixed_early_proxy",
+  "log_path": "logs\\e3full_s016_seed71_skip_fixed_early_proxy.jsonl",
+  "frozen_query": "gym information"
+}

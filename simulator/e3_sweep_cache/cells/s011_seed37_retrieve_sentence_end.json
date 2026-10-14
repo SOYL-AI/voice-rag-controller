@@ -1,0 +1,13 @@
+{
+  "scenario_id": 11,
+  "seed": 37,
+  "path": "retrieve",
+  "timing": "sentence_end",
+  "ttfa_ms": 4422.0,
+  "retrievals": 1,
+  "answer_sha256": "373fb779a7b0e8a34b526f126559212c1edd078e10536c6126212e630e6126b3",
+  "matches_canonical_answer": true,
+  "conversation_id": "e3full_s011_seed37_retrieve_sentence_end",
+  "log_path": "logs\\e3full_s011_seed37_retrieve_sentence_end.jsonl",
+  "frozen_query": "\"Restaurants near me\""
+}

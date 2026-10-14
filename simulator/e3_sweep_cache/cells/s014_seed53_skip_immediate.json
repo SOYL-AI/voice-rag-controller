@@ -1,0 +1,13 @@
+{
+  "scenario_id": 14,
+  "seed": 53,
+  "path": "skip",
+  "timing": "immediate",
+  "ttfa_ms": 2047.0,
+  "retrievals": 0,
+  "answer_sha256": "fc9763dfae168469a508fe034eaa24a45a78d1bc3ebaf8478a02d665956f5fd0",
+  "matches_canonical_answer": true,
+  "conversation_id": "e3full_s014_seed53_skip_immediate",
+  "log_path": "logs\\e3full_s014_seed53_skip_immediate.jsonl",
+  "frozen_query": "\"Room amenities information\""
+}

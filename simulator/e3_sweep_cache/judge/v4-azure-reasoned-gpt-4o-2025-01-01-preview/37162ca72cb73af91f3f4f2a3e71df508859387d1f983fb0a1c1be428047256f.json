@@ -1,0 +1,10 @@
+{
+  "answer_correct": true,
+  "parsed_ok": true,
+  "judge_raw": "CONFLICT: reference says \"Refund processing timelines depend on the original payment method,\" candidate does not mention this.\n\nVERDICT: YES",
+  "judge_key": "37162ca72cb73af91f3f4f2a3e71df508859387d1f983fb0a1c1be428047256f",
+  "judge_identity": "azure-openai/gpt-4o@2025-01-01-preview",
+  "judge_cache_version": "v4-azure-reasoned",
+  "scenario_id": 20,
+  "temperature": 0.0
+}

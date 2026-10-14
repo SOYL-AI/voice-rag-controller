@@ -1,0 +1,10 @@
+{
+  "answer_correct": false,
+  "parsed_ok": true,
+  "judge_raw": "CONFLICT: reference says William Shakespeare wrote Hamlet, candidate says the provided documents do not contain the information about who wrote Hamlet.\nVERDICT: NO",
+  "judge_key": "c455398b4017ed62bf4eeb957e2b2f617511846d40892c3a04f059f850a81ca5",
+  "judge_identity": "azure-openai/gpt-4o@2025-01-01-preview",
+  "judge_cache_version": "v4-azure-reasoned",
+  "scenario_id": 40,
+  "temperature": 0.0
+}

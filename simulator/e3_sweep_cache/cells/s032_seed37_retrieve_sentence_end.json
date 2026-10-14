@@ -1,0 +1,13 @@
+{
+  "scenario_id": 32,
+  "seed": 37,
+  "path": "retrieve",
+  "timing": "sentence_end",
+  "ttfa_ms": 2719.0,
+  "retrievals": 1,
+  "answer_sha256": "9cb0577c38a5ec1a445dbb0ac57cb0d99e9678fe46de93bca916beffb8f58bac",
+  "matches_canonical_answer": true,
+  "conversation_id": "e3full_s032_seed37_retrieve_sentence_end",
+  "log_path": "logs\\e3full_s032_seed37_retrieve_sentence_end.jsonl",
+  "frozen_query": "square root of 64"
+}

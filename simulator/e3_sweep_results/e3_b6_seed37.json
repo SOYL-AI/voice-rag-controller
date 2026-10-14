@@ -1,0 +1,902 @@
+[
+  {
+    "baseline": "b6",
+    "seed": 37,
+    "scenario_id": 1,
+    "prices": null,
+    "outcome": {
+      "answer_correct": true,
+      "ttfa_ms": 3453.0,
+      "retrievals": 1
+    },
+    "decision": {
+      "retrieve": true,
+      "timing": "sentence_end",
+      "memory_op": null,
+      "reason": "entropy above threshold"
+    },
+    "source_cell": "e3full_s001_seed37_retrieve_sentence_end"
+  },
+  {
+    "baseline": "b6",
+    "seed": 37,
+    "scenario_id": 2,
+    "prices": null,
+    "outcome": {
+      "answer_correct": true,
+      "ttfa_ms": 5719.0,
+      "retrievals": 1
+    },
+    "decision": {
+      "retrieve": true,
+      "timing": "sentence_end",
+      "memory_op": null,
+      "reason": "entropy above threshold"
+    },
+    "source_cell": "e3full_s002_seed37_retrieve_sentence_end"
+  },
+  {
+    "baseline": "b6",
+    "seed": 37,
+    "scenario_id": 3,
+    "prices": null,
+    "outcome": {
+      "answer_correct": true,
+      "ttfa_ms": 5265.0,
+      "retrievals": 1
+    },
+    "decision": {
+      "retrieve": true,
+      "timing": "sentence_end",
+      "memory_op": null,
+      "reason": "entropy above threshold"
+    },
+    "source_cell": "e3full_s003_seed37_retrieve_sentence_end"
+  },
+  {
+    "baseline": "b6",
+    "seed": 37,
+    "scenario_id": 4,
+    "prices": null,
+    "outcome": {
+      "answer_correct": true,
+      "ttfa_ms": 3672.0,
+      "retrievals": 1
+    },
+    "decision": {
+      "retrieve": true,
+      "timing": "sentence_end",
+      "memory_op": null,
+      "reason": "entropy above threshold"
+    },
+    "source_cell": "e3full_s004_seed37_retrieve_sentence_end"
+  },
+  {
+    "baseline": "b6",
+    "seed": 37,
+    "scenario_id": 5,
+    "prices": null,
+    "outcome": {
+      "answer_correct": true,
+      "ttfa_ms": 4891.0,
+      "retrievals": 1
+    },
+    "decision": {
+      "retrieve": true,
+      "timing": "sentence_end",
+      "memory_op": null,
+      "reason": "entropy above threshold"
+    },
+    "source_cell": "e3full_s005_seed37_retrieve_sentence_end"
+  },
+  {
+    "baseline": "b6",
+    "seed": 37,
+    "scenario_id": 6,
+    "prices": null,
+    "outcome": {
+      "answer_correct": true,
+      "ttfa_ms": 3094.0,
+      "retrievals": 1
+    },
+    "decision": {
+      "retrieve": true,
+      "timing": "sentence_end",
+      "memory_op": null,
+      "reason": "entropy above threshold"
+    },
+    "source_cell": "e3full_s006_seed37_retrieve_sentence_end"
+  },
+  {
+    "baseline": "b6",
+    "seed": 37,
+    "scenario_id": 7,
+    "prices": null,
+    "outcome": {
+      "answer_correct": true,
+      "ttfa_ms": 4656.0,
+      "retrievals": 1
+    },
+    "decision": {
+      "retrieve": true,
+      "timing": "sentence_end",
+      "memory_op": null,
+      "reason": "entropy above threshold"
+    },
+    "source_cell": "e3full_s007_seed37_retrieve_sentence_end"
+  },
+  {
+    "baseline": "b6",
+    "seed": 37,
+    "scenario_id": 8,
+    "prices": null,
+    "outcome": {
+      "answer_correct": true,
+      "ttfa_ms": 4750.0,
+      "retrievals": 1
+    },
+    "decision": {
+      "retrieve": true,
+      "timing": "sentence_end",
+      "memory_op": null,
+      "reason": "entropy above threshold"
+    },
+    "source_cell": "e3full_s008_seed37_retrieve_sentence_end"
+  },
+  {
+    "baseline": "b6",
+    "seed": 37,
+    "scenario_id": 9,
+    "prices": null,
+    "outcome": {
+      "answer_correct": true,
+      "ttfa_ms": 1984.0,
+      "retrievals": 1
+    },
+    "decision": {
+      "retrieve": true,
+      "timing": "sentence_end",
+      "memory_op": null,
+      "reason": "entropy above threshold"
+    },
+    "source_cell": "e3full_s009_seed37_retrieve_sentence_end"
+  },
+  {
+    "baseline": "b6",
+    "seed": 37,
+    "scenario_id": 10,
+    "prices": null,
+    "outcome": {
+      "answer_correct": true,
+      "ttfa_ms": 4985.0,
+      "retrievals": 1
+    },
+    "decision": {
+      "retrieve": true,
+      "timing": "sentence_end",
+      "memory_op": null,
+      "reason": "entropy above threshold"
+    },
+    "source_cell": "e3full_s010_seed37_retrieve_sentence_end"
+  },
+  {
+    "baseline": "b6",
+    "seed": 37,
+    "scenario_id": 11,
+    "prices": null,
+    "outcome": {
+      "answer_correct": false,
+      "ttfa_ms": 4422.0,
+      "retrievals": 1
+    },
+    "decision": {
+      "retrieve": true,
+      "timing": "sentence_end",
+      "memory_op": null,
+      "reason": "entropy above threshold"
+    },
+    "source_cell": "e3full_s011_seed37_retrieve_sentence_end"
+  },
+  {
+    "baseline": "b6",
+    "seed": 37,
+    "scenario_id": 12,
+    "prices": null,
+    "outcome": {
+      "answer_correct": true,
+      "ttfa_ms": 2985.0,
+      "retrievals": 1
+    },
+    "decision": {
+      "retrieve": true,
+      "timing": "sentence_end",
+      "memory_op": null,
+      "reason": "entropy above threshold"
+    },
+    "source_cell": "e3full_s012_seed37_retrieve_sentence_end"
+  },
+  {
+    "baseline": "b6",
+    "seed": 37,
+    "scenario_id": 13,
+    "prices": null,
+    "outcome": {
+      "answer_correct": true,
+      "ttfa_ms": 3219.0,
+      "retrievals": 1
+    },
+    "decision": {
+      "retrieve": true,
+      "timing": "sentence_end",
+      "memory_op": null,
+      "reason": "entropy above threshold"
+    },
+    "source_cell": "e3full_s013_seed37_retrieve_sentence_end"
+  },
+  {
+    "baseline": "b6",
+    "seed": 37,
+    "scenario_id": 14,
+    "prices": null,
+    "outcome": {
+      "answer_correct": true,
+      "ttfa_ms": 4484.0,
+      "retrievals": 1
+    },
+    "decision": {
+      "retrieve": true,
+      "timing": "sentence_end",
+      "memory_op": null,
+      "reason": "entropy above threshold"
+    },
+    "source_cell": "e3full_s014_seed37_retrieve_sentence_end"
+  },
+  {
+    "baseline": "b6",
+    "seed": 37,
+    "scenario_id": 15,
+    "prices": null,
+    "outcome": {
+      "answer_correct": true,
+      "ttfa_ms": 3281.0,
+      "retrievals": 1
+    },
+    "decision": {
+      "retrieve": true,
+      "timing": "sentence_end",
+      "memory_op": null,
+      "reason": "entropy above threshold"
+    },
+    "source_cell": "e3full_s015_seed37_retrieve_sentence_end"
+  },
+  {
+    "baseline": "b6",
+    "seed": 37,
+    "scenario_id": 16,
+    "prices": null,
+    "outcome": {
+      "answer_correct": true,
+      "ttfa_ms": 3359.0,
+      "retrievals": 1
+    },
+    "decision": {
+      "retrieve": true,
+      "timing": "sentence_end",
+      "memory_op": null,
+      "reason": "entropy above threshold"
+    },
+    "source_cell": "e3full_s016_seed37_retrieve_sentence_end"
+  },
+  {
+    "baseline": "b6",
+    "seed": 37,
+    "scenario_id": 17,
+    "prices": null,
+    "outcome": {
+      "answer_correct": true,
+      "ttfa_ms": 2078.0,
+      "retrievals": 1
+    },
+    "decision": {
+      "retrieve": true,
+      "timing": "sentence_end",
+      "memory_op": null,
+      "reason": "entropy above threshold"
+    },
+    "source_cell": "e3full_s017_seed37_retrieve_sentence_end"
+  },
+  {
+    "baseline": "b6",
+    "seed": 37,
+    "scenario_id": 18,
+    "prices": null,
+    "outcome": {
+      "answer_correct": false,
+      "ttfa_ms": 4219.0,
+      "retrievals": 1
+    },
+    "decision": {
+      "retrieve": true,
+      "timing": "sentence_end",
+      "memory_op": null,
+      "reason": "entropy above threshold"
+    },
+    "source_cell": "e3full_s018_seed37_retrieve_sentence_end"
+  },
+  {
+    "baseline": "b6",
+    "seed": 37,
+    "scenario_id": 19,
+    "prices": null,
+    "outcome": {
+      "answer_correct": true,
+      "ttfa_ms": 5594.0,
+      "retrievals": 1
+    },
+    "decision": {
+      "retrieve": true,
+      "timing": "sentence_end",
+      "memory_op": null,
+      "reason": "entropy above threshold"
+    },
+    "source_cell": "e3full_s019_seed37_retrieve_sentence_end"
+  },
+  {
+    "baseline": "b6",
+    "seed": 37,
+    "scenario_id": 20,
+    "prices": null,
+    "outcome": {
+      "answer_correct": true,
+      "ttfa_ms": 4000.0,
+      "retrievals": 1
+    },
+    "decision": {
+      "retrieve": true,
+      "timing": "sentence_end",
+      "memory_op": null,
+      "reason": "entropy above threshold"
+    },
+    "source_cell": "e3full_s020_seed37_retrieve_sentence_end"
+  },
+  {
+    "baseline": "b6",
+    "seed": 37,
+    "scenario_id": 21,
+    "prices": null,
+    "outcome": {
+      "answer_correct": false,
+      "ttfa_ms": 3109.0,
+      "retrievals": 1
+    },
+    "decision": {
+      "retrieve": true,
+      "timing": "sentence_end",
+      "memory_op": null,
+      "reason": "entropy above threshold"
+    },
+    "source_cell": "e3full_s021_seed37_retrieve_sentence_end"
+  },
+  {
+    "baseline": "b6",
+    "seed": 37,
+    "scenario_id": 22,
+    "prices": null,
+    "outcome": {
+      "answer_correct": true,
+      "ttfa_ms": 5828.0,
+      "retrievals": 1
+    },
+    "decision": {
+      "retrieve": true,
+      "timing": "sentence_end",
+      "memory_op": null,
+      "reason": "entropy above threshold"
+    },
+    "source_cell": "e3full_s022_seed37_retrieve_sentence_end"
+  },
+  {
+    "baseline": "b6",
+    "seed": 37,
+    "scenario_id": 23,
+    "prices": null,
+    "outcome": {
+      "answer_correct": true,
+      "ttfa_ms": 3250.0,
+      "retrievals": 1
+    },
+    "decision": {
+      "retrieve": true,
+      "timing": "sentence_end",
+      "memory_op": null,
+      "reason": "entropy above threshold"
+    },
+    "source_cell": "e3full_s023_seed37_retrieve_sentence_end"
+  },
+  {
+    "baseline": "b6",
+    "seed": 37,
+    "scenario_id": 24,
+    "prices": null,
+    "outcome": {
+      "answer_correct": true,
+      "ttfa_ms": 3453.0,
+      "retrievals": 1
+    },
+    "decision": {
+      "retrieve": true,
+      "timing": "sentence_end",
+      "memory_op": null,
+      "reason": "entropy above threshold"
+    },
+    "source_cell": "e3full_s024_seed37_retrieve_sentence_end"
+  },
+  {
+    "baseline": "b6",
+    "seed": 37,
+    "scenario_id": 25,
+    "prices": null,
+    "outcome": {
+      "answer_correct": true,
+      "ttfa_ms": 3187.0,
+      "retrievals": 1
+    },
+    "decision": {
+      "retrieve": true,
+      "timing": "sentence_end",
+      "memory_op": null,
+      "reason": "entropy above threshold"
+    },
+    "source_cell": "e3full_s025_seed37_retrieve_sentence_end"
+  },
+  {
+    "baseline": "b6",
+    "seed": 37,
+    "scenario_id": 26,
+    "prices": null,
+    "outcome": {
+      "answer_correct": true,
+      "ttfa_ms": 1203.0,
+      "retrievals": 0
+    },
+    "decision": {
+      "retrieve": false,
+      "timing": "sentence_end",
+      "memory_op": null,
+      "reason": "entropy below threshold"
+    },
+    "source_cell": "e3full_s026_seed37_skip_sentence_end"
+  },
+  {
+    "baseline": "b6",
+    "seed": 37,
+    "scenario_id": 27,
+    "prices": null,
+    "outcome": {
+      "answer_correct": true,
+      "ttfa_ms": 1032.0,
+      "retrievals": 0
+    },
+    "decision": {
+      "retrieve": false,
+      "timing": "sentence_end",
+      "memory_op": null,
+      "reason": "entropy below threshold"
+    },
+    "source_cell": "e3full_s027_seed37_skip_sentence_end"
+  },
+  {
+    "baseline": "b6",
+    "seed": 37,
+    "scenario_id": 28,
+    "prices": null,
+    "outcome": {
+      "answer_correct": true,
+      "ttfa_ms": 1156.0,
+      "retrievals": 0
+    },
+    "decision": {
+      "retrieve": false,
+      "timing": "sentence_end",
+      "memory_op": null,
+      "reason": "entropy below threshold"
+    },
+    "source_cell": "e3full_s028_seed37_skip_sentence_end"
+  },
+  {
+    "baseline": "b6",
+    "seed": 37,
+    "scenario_id": 29,
+    "prices": null,
+    "outcome": {
+      "answer_correct": false,
+      "ttfa_ms": 1734.0,
+      "retrievals": 1
+    },
+    "decision": {
+      "retrieve": true,
+      "timing": "sentence_end",
+      "memory_op": null,
+      "reason": "entropy above threshold"
+    },
+    "source_cell": "e3full_s029_seed37_retrieve_sentence_end"
+  },
+  {
+    "baseline": "b6",
+    "seed": 37,
+    "scenario_id": 30,
+    "prices": null,
+    "outcome": {
+      "answer_correct": false,
+      "ttfa_ms": 1922.0,
+      "retrievals": 1
+    },
+    "decision": {
+      "retrieve": true,
+      "timing": "sentence_end",
+      "memory_op": null,
+      "reason": "entropy above threshold"
+    },
+    "source_cell": "e3full_s030_seed37_retrieve_sentence_end"
+  },
+  {
+    "baseline": "b6",
+    "seed": 37,
+    "scenario_id": 31,
+    "prices": null,
+    "outcome": {
+      "answer_correct": true,
+      "ttfa_ms": 1453.0,
+      "retrievals": 0
+    },
+    "decision": {
+      "retrieve": false,
+      "timing": "sentence_end",
+      "memory_op": null,
+      "reason": "entropy below threshold"
+    },
+    "source_cell": "e3full_s031_seed37_skip_sentence_end"
+  },
+  {
+    "baseline": "b6",
+    "seed": 37,
+    "scenario_id": 32,
+    "prices": null,
+    "outcome": {
+      "answer_correct": true,
+      "ttfa_ms": 1125.0,
+      "retrievals": 0
+    },
+    "decision": {
+      "retrieve": false,
+      "timing": "sentence_end",
+      "memory_op": null,
+      "reason": "entropy below threshold"
+    },
+    "source_cell": "e3full_s032_seed37_skip_sentence_end"
+  },
+  {
+    "baseline": "b6",
+    "seed": 37,
+    "scenario_id": 33,
+    "prices": null,
+    "outcome": {
+      "answer_correct": true,
+      "ttfa_ms": 1344.0,
+      "retrievals": 0
+    },
+    "decision": {
+      "retrieve": false,
+      "timing": "sentence_end",
+      "memory_op": null,
+      "reason": "entropy below threshold"
+    },
+    "source_cell": "e3full_s033_seed37_skip_sentence_end"
+  },
+  {
+    "baseline": "b6",
+    "seed": 37,
+    "scenario_id": 34,
+    "prices": null,
+    "outcome": {
+      "answer_correct": false,
+      "ttfa_ms": 3984.0,
+      "retrievals": 0
+    },
+    "decision": {
+      "retrieve": false,
+      "timing": "sentence_end",
+      "memory_op": null,
+      "reason": "entropy below threshold"
+    },
+    "source_cell": "e3full_s034_seed37_skip_sentence_end"
+  },
+  {
+    "baseline": "b6",
+    "seed": 37,
+    "scenario_id": 35,
+    "prices": null,
+    "outcome": {
+      "answer_correct": false,
+      "ttfa_ms": 3078.0,
+      "retrievals": 1
+    },
+    "decision": {
+      "retrieve": true,
+      "timing": "sentence_end",
+      "memory_op": null,
+      "reason": "entropy above threshold"
+    },
+    "source_cell": "e3full_s035_seed37_retrieve_sentence_end"
+  },
+  {
+    "baseline": "b6",
+    "seed": 37,
+    "scenario_id": 36,
+    "prices": null,
+    "outcome": {
+      "answer_correct": false,
+      "ttfa_ms": 2204.0,
+      "retrievals": 1
+    },
+    "decision": {
+      "retrieve": true,
+      "timing": "sentence_end",
+      "memory_op": null,
+      "reason": "entropy above threshold"
+    },
+    "source_cell": "e3full_s036_seed37_retrieve_sentence_end"
+  },
+  {
+    "baseline": "b6",
+    "seed": 37,
+    "scenario_id": 37,
+    "prices": null,
+    "outcome": {
+      "answer_correct": false,
+      "ttfa_ms": 2890.0,
+      "retrievals": 1
+    },
+    "decision": {
+      "retrieve": true,
+      "timing": "sentence_end",
+      "memory_op": null,
+      "reason": "entropy above threshold"
+    },
+    "source_cell": "e3full_s037_seed37_retrieve_sentence_end"
+  },
+  {
+    "baseline": "b6",
+    "seed": 37,
+    "scenario_id": 38,
+    "prices": null,
+    "outcome": {
+      "answer_correct": false,
+      "ttfa_ms": 2032.0,
+      "retrievals": 1
+    },
+    "decision": {
+      "retrieve": true,
+      "timing": "sentence_end",
+      "memory_op": null,
+      "reason": "entropy above threshold"
+    },
+    "source_cell": "e3full_s038_seed37_retrieve_sentence_end"
+  },
+  {
+    "baseline": "b6",
+    "seed": 37,
+    "scenario_id": 39,
+    "prices": null,
+    "outcome": {
+      "answer_correct": false,
+      "ttfa_ms": 2250.0,
+      "retrievals": 1
+    },
+    "decision": {
+      "retrieve": true,
+      "timing": "sentence_end",
+      "memory_op": null,
+      "reason": "entropy above threshold"
+    },
+    "source_cell": "e3full_s039_seed37_retrieve_sentence_end"
+  },
+  {
+    "baseline": "b6",
+    "seed": 37,
+    "scenario_id": 40,
+    "prices": null,
+    "outcome": {
+      "answer_correct": true,
+      "ttfa_ms": 1188.0,
+      "retrievals": 0
+    },
+    "decision": {
+      "retrieve": false,
+      "timing": "sentence_end",
+      "memory_op": null,
+      "reason": "entropy below threshold"
+    },
+    "source_cell": "e3full_s040_seed37_skip_sentence_end"
+  },
+  {
+    "baseline": "b6",
+    "seed": 37,
+    "scenario_id": 41,
+    "prices": null,
+    "outcome": {
+      "answer_correct": true,
+      "ttfa_ms": 1250.0,
+      "retrievals": 0
+    },
+    "decision": {
+      "retrieve": false,
+      "timing": "sentence_end",
+      "memory_op": null,
+      "reason": "entropy below threshold"
+    },
+    "source_cell": "e3full_s041_seed37_skip_sentence_end"
+  },
+  {
+    "baseline": "b6",
+    "seed": 37,
+    "scenario_id": 42,
+    "prices": null,
+    "outcome": {
+      "answer_correct": true,
+      "ttfa_ms": 1359.0,
+      "retrievals": 0
+    },
+    "decision": {
+      "retrieve": false,
+      "timing": "sentence_end",
+      "memory_op": null,
+      "reason": "entropy below threshold"
+    },
+    "source_cell": "e3full_s042_seed37_skip_sentence_end"
+  },
+  {
+    "baseline": "b6",
+    "seed": 37,
+    "scenario_id": 43,
+    "prices": null,
+    "outcome": {
+      "answer_correct": false,
+      "ttfa_ms": 1453.0,
+      "retrievals": 0
+    },
+    "decision": {
+      "retrieve": false,
+      "timing": "sentence_end",
+      "memory_op": null,
+      "reason": "entropy below threshold"
+    },
+    "source_cell": "e3full_s043_seed37_skip_sentence_end"
+  },
+  {
+    "baseline": "b6",
+    "seed": 37,
+    "scenario_id": 44,
+    "prices": null,
+    "outcome": {
+      "answer_correct": false,
+      "ttfa_ms": 1937.0,
+      "retrievals": 1
+    },
+    "decision": {
+      "retrieve": true,
+      "timing": "sentence_end",
+      "memory_op": null,
+      "reason": "entropy above threshold"
+    },
+    "source_cell": "e3full_s044_seed37_retrieve_sentence_end"
+  },
+  {
+    "baseline": "b6",
+    "seed": 37,
+    "scenario_id": 45,
+    "prices": null,
+    "outcome": {
+      "answer_correct": true,
+      "ttfa_ms": 1078.0,
+      "retrievals": 0
+    },
+    "decision": {
+      "retrieve": false,
+      "timing": "sentence_end",
+      "memory_op": null,
+      "reason": "entropy below threshold"
+    },
+    "source_cell": "e3full_s045_seed37_skip_sentence_end"
+  },
+  {
+    "baseline": "b6",
+    "seed": 37,
+    "scenario_id": 46,
+    "prices": null,
+    "outcome": {
+      "answer_correct": false,
+      "ttfa_ms": 3454.0,
+      "retrievals": 1
+    },
+    "decision": {
+      "retrieve": true,
+      "timing": "sentence_end",
+      "memory_op": null,
+      "reason": "entropy above threshold"
+    },
+    "source_cell": "e3full_s046_seed37_retrieve_sentence_end"
+  },
+  {
+    "baseline": "b6",
+    "seed": 37,
+    "scenario_id": 47,
+    "prices": null,
+    "outcome": {
+      "answer_correct": false,
+      "ttfa_ms": 3109.0,
+      "retrievals": 1
+    },
+    "decision": {
+      "retrieve": true,
+      "timing": "sentence_end",
+      "memory_op": null,
+      "reason": "entropy above threshold"
+    },
+    "source_cell": "e3full_s047_seed37_retrieve_sentence_end"
+  },
+  {
+    "baseline": "b6",
+    "seed": 37,
+    "scenario_id": 48,
+    "prices": null,
+    "outcome": {
+      "answer_correct": false,
+      "ttfa_ms": 2750.0,
+      "retrievals": 1
+    },
+    "decision": {
+      "retrieve": true,
+      "timing": "sentence_end",
+      "memory_op": null,
+      "reason": "entropy above threshold"
+    },
+    "source_cell": "e3full_s048_seed37_retrieve_sentence_end"
+  },
+  {
+    "baseline": "b6",
+    "seed": 37,
+    "scenario_id": 49,
+    "prices": null,
+    "outcome": {
+      "answer_correct": true,
+      "ttfa_ms": 4891.0,
+      "retrievals": 1
+    },
+    "decision": {
+      "retrieve": true,
+      "timing": "sentence_end",
+      "memory_op": null,
+      "reason": "entropy above threshold"
+    },
+    "source_cell": "e3full_s049_seed37_retrieve_sentence_end"
+  },
+  {
+    "baseline": "b6",
+    "seed": 37,
+    "scenario_id": 50,
+    "prices": null,
+    "outcome": {
+      "answer_correct": false,
+      "ttfa_ms": 3125.0,
+      "retrievals": 1
+    },
+    "decision": {
+      "retrieve": true,
+      "timing": "sentence_end",
+      "memory_op": null,
+      "reason": "entropy above threshold"
+    },
+    "source_cell": "e3full_s050_seed37_retrieve_sentence_end"
+  }
+]

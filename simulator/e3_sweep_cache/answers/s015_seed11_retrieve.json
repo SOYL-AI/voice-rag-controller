@@ -1,0 +1,24 @@
+{
+  "scenario_id": 15,
+  "seed": 11,
+  "path": "retrieve",
+  "answer_text": " The Concierge Desk can arrange taxis for you, including airport transfers and local sightseeing transportation. Please book in advance during weekends and holidays, and fare estimates will be provided before confirming the reservation. Payment can be made directly or added to your room bill.",
+  "answer_sha256": "24b725b6c9396a869ec6f855ef472cb375d6abc6b28f53afa202c13a3897744c",
+  "answer_correct": true,
+  "judge": {
+    "answer_correct": true,
+    "parsed_ok": true,
+    "judge_raw": "CONFLICT: none  \nVERDICT: YES",
+    "judge_key": "1a65ed054bea7fd997df42b411dc8119cf6fd315a7172bd1e57be1e886d3d01e",
+    "judge_identity": "azure-openai/gpt-4o@2025-01-01-preview",
+    "judge_cache_version": "v4-azure-reasoned",
+    "scenario_id": 15,
+    "temperature": 0.0
+  },
+  "measured_under_timing": "sentence_end",
+  "previous_verdict": {
+    "answer_correct": true,
+    "judge_identity": "azure-openai/gpt-4o@2025-01-01-preview",
+    "judge_raw": "YES"
+  }
+}

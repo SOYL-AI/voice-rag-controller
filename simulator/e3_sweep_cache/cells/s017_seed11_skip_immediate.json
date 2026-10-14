@@ -1,0 +1,13 @@
+{
+  "scenario_id": 17,
+  "seed": 11,
+  "path": "skip",
+  "timing": "immediate",
+  "ttfa_ms": 1453.0,
+  "retrievals": 0,
+  "answer_sha256": "aba79612ff03677e4300abb18d26f4829dbdfd0ca33916cfe9d9e54d02bc296e",
+  "matches_canonical_answer": true,
+  "conversation_id": "e3full_s017_seed11_skip_immediate",
+  "log_path": "logs\\e3full_s017_seed11_skip_immediate.jsonl",
+  "frozen_query": "\"Hotel airport pickup service availability\""
+}

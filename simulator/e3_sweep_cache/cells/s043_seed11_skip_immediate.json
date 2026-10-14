@@ -1,0 +1,13 @@
+{
+  "scenario_id": 43,
+  "seed": 11,
+  "path": "skip",
+  "timing": "immediate",
+  "ttfa_ms": 1500.0,
+  "retrievals": 0,
+  "answer_sha256": "b07eb6a4672febee4ed868486278663f807b2b83031d32ba28cbf83b9817fda3",
+  "matches_canonical_answer": true,
+  "conversation_id": "e3full_s043_seed11_skip_immediate",
+  "log_path": "logs\\e3full_s043_seed11_skip_immediate.jsonl",
+  "frozen_query": "Number of continents in the world"
+}

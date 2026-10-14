@@ -1,0 +1,24 @@
+{
+  "scenario_id": 3,
+  "seed": 53,
+  "path": "skip",
+  "answer_text": " The deluxe room offers a spacious layout with a king-sized bed, a seating area, and a private balcony with city views.",
+  "answer_sha256": "985e6284373286dabedadbced37d18b5f7b785db09930fa7123675da87de6fa1",
+  "answer_correct": false,
+  "judge": {
+    "answer_correct": false,
+    "parsed_ok": true,
+    "judge_raw": "CONFLICT: reference says the deluxe room includes air conditioning, candidate does not mention it.  \nCONFLICT: reference says the deluxe room includes a smart TV, candidate does not mention it.  \nCONFLICT: reference says the deluxe room includes complimentary Wi-Fi, candidate does not mention it.  \nCONFLICT: reference says the deluxe room includes tea and coffee-making facilities, candidate does not mention it.  \nCONFLICT: reference says the deluxe room includes a work desk, candidate does not mention it.  \nCONFLICT: reference says the deluxe room includes an attached bathroom with premium toiletries and a hairdryer, candidate does not mention it.  \nCONFLICT: reference says the deluxe room accommodates up to two adults and one child, candidate does not mention it.  \nCONFLICT: reference says daily housekeeping is included in the room rate, candidate does not mention it.  \nCONFLICT: reference does not mention a seating area, candidate says the deluxe room includes a seating area.  \nCONFLICT: reference does not mention a private balcony with city views, candidate says the deluxe room includes a private balcony with city views.  \n\nVERDICT: NO",
+    "judge_key": "597aead8b49b61f9fcaa3c34d9a6b9d44d4217abcb1e39a4e24d14d8e0b73c0e",
+    "judge_identity": "azure-openai/gpt-4o@2025-01-01-preview",
+    "judge_cache_version": "v4-azure-reasoned",
+    "scenario_id": 3,
+    "temperature": 0.0
+  },
+  "measured_under_timing": "sentence_end",
+  "previous_verdict": {
+    "answer_correct": false,
+    "judge_identity": "azure-openai/gpt-4o@2025-01-01-preview",
+    "judge_raw": "NO"
+  }
+}

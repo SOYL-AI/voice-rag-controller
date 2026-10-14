@@ -1,0 +1,13 @@
+{
+  "scenario_id": 36,
+  "seed": 71,
+  "path": "retrieve",
+  "timing": "immediate",
+  "ttfa_ms": 1890.0,
+  "retrievals": 1,
+  "answer_sha256": "8854ad1fba4d280f1b1dada7891bbebba7c1f910aa57de7c0b0d08551cf8c740",
+  "matches_canonical_answer": true,
+  "conversation_id": "e3full_s036_seed71_retrieve_immediate",
+  "log_path": "logs\\e3full_s036_seed71_retrieve_immediate.jsonl",
+  "frozen_query": "\"Definition of variable in programming\""
+}

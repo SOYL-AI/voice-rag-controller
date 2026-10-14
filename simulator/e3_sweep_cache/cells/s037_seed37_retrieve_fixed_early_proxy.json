@@ -1,0 +1,13 @@
+{
+  "scenario_id": 37,
+  "seed": 37,
+  "path": "retrieve",
+  "timing": "fixed_early_proxy",
+  "ttfa_ms": 2735.0,
+  "retrievals": 1,
+  "answer_sha256": "f9cf2133635d19a79386c19e49719442b6435a807f116ad6ca982c063ebba3db",
+  "matches_canonical_answer": true,
+  "conversation_id": "e3full_s037_seed37_retrieve_fixed_early_proxy",
+  "log_path": "logs\\e3full_s037_seed37_retrieve_fixed_early_proxy.jsonl",
+  "frozen_query": "\"Define programming loop\""
+}

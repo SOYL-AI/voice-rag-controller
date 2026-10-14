@@ -1,0 +1,24 @@
+{
+  "scenario_id": 45,
+  "seed": 11,
+  "path": "skip",
+  "answer_text": " The Pacific Ocean is the largest ocean on Earth.",
+  "answer_sha256": "139da475eb8de952c0d45f8a46bd76d74ede088c0dd93844ffb8964ce08c0a3e",
+  "answer_correct": true,
+  "judge": {
+    "answer_correct": true,
+    "parsed_ok": true,
+    "judge_raw": "CONFLICT: none  \nVERDICT: YES",
+    "judge_key": "6eaaaf44b07656a6932bd11c7a59d976af727398a5d6fa1a5ead4fc807212f98",
+    "judge_identity": "azure-openai/gpt-4o@2025-01-01-preview",
+    "judge_cache_version": "v4-azure-reasoned",
+    "scenario_id": 45,
+    "temperature": 0.0
+  },
+  "measured_under_timing": "sentence_end",
+  "previous_verdict": {
+    "answer_correct": true,
+    "judge_identity": "azure-openai/gpt-4o@2025-01-01-preview",
+    "judge_raw": "CONFLICT: none  \nVERDICT: YES"
+  }
+}

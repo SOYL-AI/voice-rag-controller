@@ -1,0 +1,24 @@
+{
+  "scenario_id": 30,
+  "seed": 37,
+  "path": "retrieve",
+  "answer_text": " I'm sorry for any confusion, but the provided documents do not contain the chemical formula of water. I don't have that information.",
+  "answer_sha256": "dda818ec7fef08beb14fa49c9e22a3d50af44a778b56a92fd8bf4fd625927eae",
+  "answer_correct": false,
+  "judge": {
+    "answer_correct": false,
+    "parsed_ok": true,
+    "judge_raw": "CONFLICT: reference says H2O, candidate says it does not have that information.\nVERDICT: NO",
+    "judge_key": "45b58d3bb6071dd854e9553ca4bf38239089f98ec808feb165ca76904694826f",
+    "judge_identity": "azure-openai/gpt-4o@2025-01-01-preview",
+    "judge_cache_version": "v4-azure-reasoned",
+    "scenario_id": 30,
+    "temperature": 0.0
+  },
+  "measured_under_timing": "sentence_end",
+  "previous_verdict": {
+    "answer_correct": false,
+    "judge_identity": "azure-openai/gpt-4o@2025-01-01-preview",
+    "judge_raw": "NO"
+  }
+}

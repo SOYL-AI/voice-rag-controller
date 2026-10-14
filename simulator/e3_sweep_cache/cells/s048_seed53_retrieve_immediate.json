@@ -1,0 +1,13 @@
+{
+  "scenario_id": 48,
+  "seed": 53,
+  "path": "retrieve",
+  "timing": "immediate",
+  "ttfa_ms": 1657.0,
+  "retrievals": 1,
+  "answer_sha256": "be3a7089323ba4e66b0ed5b317eb0351748fbc66f23a8520efab8d40f2999ce2",
+  "matches_canonical_answer": true,
+  "conversation_id": "e3full_s048_seed53_retrieve_immediate",
+  "log_path": "logs\\e3full_s048_seed53_retrieve_immediate.jsonl",
+  "frozen_query": "Standard hotel check-in times in various hotels"
+}

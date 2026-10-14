@@ -1,0 +1,13 @@
+{
+  "scenario_id": 46,
+  "seed": 11,
+  "path": "skip",
+  "timing": "fixed_early_proxy",
+  "ttfa_ms": 1546.0,
+  "retrievals": 0,
+  "answer_sha256": "ed36f97f094aa647fbda13bdc6bbcd8b9dc55fe93d044d1faa2827b83d094c16",
+  "matches_canonical_answer": true,
+  "conversation_id": "e3full_s046_seed11_skip_fixed_early_proxy",
+  "log_path": "logs\\e3full_s046_seed11_skip_fixed_early_proxy.jsonl",
+  "frozen_query": "Fastest land animal species"
+}

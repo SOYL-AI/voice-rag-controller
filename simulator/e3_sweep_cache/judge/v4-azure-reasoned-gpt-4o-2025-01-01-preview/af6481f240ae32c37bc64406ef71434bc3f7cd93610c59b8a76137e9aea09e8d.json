@@ -1,0 +1,10 @@
+{
+  "answer_correct": false,
+  "parsed_ok": true,
+  "judge_raw": "CONFLICT: reference says nothing about dry cleaning, candidate says dry cleaning is available for delicate garments with items collected before 10:00 AM usually returned by the following evening.\nCONFLICT: reference says nothing about charges varying depending on garment type, candidate says charges vary depending on the garment type.\n\nVERDICT: NO",
+  "judge_key": "af6481f240ae32c37bc64406ef71434bc3f7cd93610c59b8a76137e9aea09e8d",
+  "judge_identity": "azure-openai/gpt-4o@2025-01-01-preview",
+  "judge_cache_version": "v4-azure-reasoned",
+  "scenario_id": 25,
+  "temperature": 0.0
+}

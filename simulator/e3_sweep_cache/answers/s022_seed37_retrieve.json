@@ -1,0 +1,24 @@
+{
+  "scenario_id": 22,
+  "seed": 37,
+  "path": "retrieve",
+  "answer_text": " The Grand Horizon Hotel & Suites offers electric vehicle charging stations in the parking area. You can use them based on availability, and the fees are calculated according to electricity consumption, payable during check-out. If you need to reserve a charging slot, please contact the Front Desk.",
+  "answer_sha256": "45dac661ad4f8566a7becd0165198aa36bccf5cddf595b5158a77b40702c7eea",
+  "answer_correct": true,
+  "judge": {
+    "answer_correct": true,
+    "parsed_ok": true,
+    "judge_raw": "CONFLICT: none  \nVERDICT: YES",
+    "judge_key": "ab48a8a8584d3061b86f61c826d453b59d69d347d02bd207214098394e5b5a69",
+    "judge_identity": "azure-openai/gpt-4o@2025-01-01-preview",
+    "judge_cache_version": "v4-azure-reasoned",
+    "scenario_id": 22,
+    "temperature": 0.0
+  },
+  "measured_under_timing": "sentence_end",
+  "previous_verdict": {
+    "answer_correct": true,
+    "judge_identity": "azure-openai/gpt-4o@2025-01-01-preview",
+    "judge_raw": "YES"
+  }
+}

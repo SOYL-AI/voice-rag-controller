@@ -1,0 +1,13 @@
+{
+  "scenario_id": 24,
+  "seed": 23,
+  "path": "skip",
+  "timing": "sentence_end",
+  "ttfa_ms": 1657.0,
+  "retrievals": 0,
+  "answer_sha256": "78c9d2a2c7968e14355df32118787cb99577fd13ede554a6bda48466f1aad25b",
+  "matches_canonical_answer": true,
+  "conversation_id": "e3full_s024_seed23_skip_sentence_end",
+  "log_path": "logs\\e3full_s024_seed23_skip_sentence_end.jsonl",
+  "frozen_query": "Room service information"
+}

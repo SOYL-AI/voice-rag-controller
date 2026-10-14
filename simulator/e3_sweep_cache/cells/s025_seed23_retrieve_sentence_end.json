@@ -1,0 +1,13 @@
+{
+  "scenario_id": 25,
+  "seed": 23,
+  "path": "retrieve",
+  "timing": "sentence_end",
+  "ttfa_ms": 2672.0,
+  "retrievals": 1,
+  "answer_sha256": "41d4559bcda6bdf1279a7f7c94933c810fe3fa652dc0ea11c42352c49f29ec4d",
+  "matches_canonical_answer": true,
+  "conversation_id": "e3full_s025_seed23_retrieve_sentence_end",
+  "log_path": "logs\\e3full_s025_seed23_retrieve_sentence_end.jsonl",
+  "frozen_query": "\"Laundry techniques and processes\""
+}

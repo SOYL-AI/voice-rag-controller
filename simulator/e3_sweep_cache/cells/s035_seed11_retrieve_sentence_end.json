@@ -1,0 +1,13 @@
+{
+  "scenario_id": 35,
+  "seed": 11,
+  "path": "retrieve",
+  "timing": "sentence_end",
+  "ttfa_ms": 2375.0,
+  "retrievals": 1,
+  "answer_sha256": "6c2ffdd413ab476fe2bc2eed33d0a4db62bcb3e051ec9bb1ce5024dc558fec01",
+  "matches_canonical_answer": true,
+  "conversation_id": "e3full_s035_seed11_retrieve_sentence_end",
+  "log_path": "logs\\e3full_s035_seed11_retrieve_sentence_end.jsonl",
+  "frozen_query": "\"What is Python programming language?\""
+}

@@ -1,0 +1,10 @@
+{
+  "answer_correct": false,
+  "parsed_ok": true,
+  "judge_raw": "CONFLICT: reference says the cheetah is the fastest land animal, candidate says the cheetah is one of the fastest land animals.  \nVERDICT: NO",
+  "judge_key": "c553d39b06167cd67ae19e249a68d7461eab853520b71d094be784d998998686",
+  "judge_identity": "azure-openai/gpt-4o@2025-01-01-preview",
+  "judge_cache_version": "v4-azure-reasoned",
+  "scenario_id": 46,
+  "temperature": 0.0
+}

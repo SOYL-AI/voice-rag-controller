@@ -1,0 +1,10 @@
+{
+  "answer_correct": false,
+  "parsed_ok": true,
+  "judge_raw": "CONFLICT: reference says 366, candidate says the reference does not contain information about the number of days in a leap year.  \nVERDICT: NO",
+  "judge_key": "ffe80e6c7df4bd328da347f72de520a64ad90bd5ab6f7fa27cfd0c5e7ef706ec",
+  "judge_identity": "azure-openai/gpt-4o@2025-01-01-preview",
+  "judge_cache_version": "v4-azure-reasoned",
+  "scenario_id": 44,
+  "temperature": 0.0
+}

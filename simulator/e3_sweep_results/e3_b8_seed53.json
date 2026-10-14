@@ -1,0 +1,902 @@
+[
+  {
+    "baseline": "b8",
+    "seed": 53,
+    "scenario_id": 1,
+    "prices": null,
+    "outcome": {
+      "answer_correct": true,
+      "ttfa_ms": 4609.0,
+      "retrievals": 1
+    },
+    "decision": {
+      "retrieve": true,
+      "timing": "fixed_early_proxy",
+      "memory_op": null,
+      "reason": "B8(independent): trigger[max_entropy_nats=1.575 >= 1.2] | timing[fixed_early_proxy, tuned separately] | no pricing"
+    },
+    "source_cell": "e3full_s001_seed53_retrieve_fixed_early_proxy"
+  },
+  {
+    "baseline": "b8",
+    "seed": 53,
+    "scenario_id": 2,
+    "prices": null,
+    "outcome": {
+      "answer_correct": true,
+      "ttfa_ms": 4016.0,
+      "retrievals": 1
+    },
+    "decision": {
+      "retrieve": true,
+      "timing": "fixed_early_proxy",
+      "memory_op": null,
+      "reason": "B8(independent): trigger[max_entropy_nats=1.691 >= 1.2] | timing[fixed_early_proxy, tuned separately] | no pricing"
+    },
+    "source_cell": "e3full_s002_seed53_retrieve_fixed_early_proxy"
+  },
+  {
+    "baseline": "b8",
+    "seed": 53,
+    "scenario_id": 3,
+    "prices": null,
+    "outcome": {
+      "answer_correct": true,
+      "ttfa_ms": 4485.0,
+      "retrievals": 1
+    },
+    "decision": {
+      "retrieve": true,
+      "timing": "fixed_early_proxy",
+      "memory_op": null,
+      "reason": "B8(independent): trigger[max_entropy_nats=1.683 >= 1.2] | timing[fixed_early_proxy, tuned separately] | no pricing"
+    },
+    "source_cell": "e3full_s003_seed53_retrieve_fixed_early_proxy"
+  },
+  {
+    "baseline": "b8",
+    "seed": 53,
+    "scenario_id": 4,
+    "prices": null,
+    "outcome": {
+      "answer_correct": true,
+      "ttfa_ms": 4672.0,
+      "retrievals": 1
+    },
+    "decision": {
+      "retrieve": true,
+      "timing": "fixed_early_proxy",
+      "memory_op": null,
+      "reason": "B8(independent): trigger[max_entropy_nats=1.657 >= 1.2] | timing[fixed_early_proxy, tuned separately] | no pricing"
+    },
+    "source_cell": "e3full_s004_seed53_retrieve_fixed_early_proxy"
+  },
+  {
+    "baseline": "b8",
+    "seed": 53,
+    "scenario_id": 5,
+    "prices": null,
+    "outcome": {
+      "answer_correct": true,
+      "ttfa_ms": 4469.0,
+      "retrievals": 1
+    },
+    "decision": {
+      "retrieve": true,
+      "timing": "fixed_early_proxy",
+      "memory_op": null,
+      "reason": "B8(independent): trigger[max_entropy_nats=1.726 >= 1.2] | timing[fixed_early_proxy, tuned separately] | no pricing"
+    },
+    "source_cell": "e3full_s005_seed53_retrieve_fixed_early_proxy"
+  },
+  {
+    "baseline": "b8",
+    "seed": 53,
+    "scenario_id": 6,
+    "prices": null,
+    "outcome": {
+      "answer_correct": true,
+      "ttfa_ms": 2235.0,
+      "retrievals": 1
+    },
+    "decision": {
+      "retrieve": true,
+      "timing": "fixed_early_proxy",
+      "memory_op": null,
+      "reason": "B8(independent): trigger[max_entropy_nats=1.615 >= 1.2] | timing[fixed_early_proxy, tuned separately] | no pricing"
+    },
+    "source_cell": "e3full_s006_seed53_retrieve_fixed_early_proxy"
+  },
+  {
+    "baseline": "b8",
+    "seed": 53,
+    "scenario_id": 7,
+    "prices": null,
+    "outcome": {
+      "answer_correct": true,
+      "ttfa_ms": 2500.0,
+      "retrievals": 1
+    },
+    "decision": {
+      "retrieve": true,
+      "timing": "fixed_early_proxy",
+      "memory_op": null,
+      "reason": "B8(independent): trigger[max_entropy_nats=1.739 >= 1.2] | timing[fixed_early_proxy, tuned separately] | no pricing"
+    },
+    "source_cell": "e3full_s007_seed53_retrieve_fixed_early_proxy"
+  },
+  {
+    "baseline": "b8",
+    "seed": 53,
+    "scenario_id": 8,
+    "prices": null,
+    "outcome": {
+      "answer_correct": true,
+      "ttfa_ms": 5000.0,
+      "retrievals": 1
+    },
+    "decision": {
+      "retrieve": true,
+      "timing": "fixed_early_proxy",
+      "memory_op": null,
+      "reason": "B8(independent): trigger[max_entropy_nats=1.652 >= 1.2] | timing[fixed_early_proxy, tuned separately] | no pricing"
+    },
+    "source_cell": "e3full_s008_seed53_retrieve_fixed_early_proxy"
+  },
+  {
+    "baseline": "b8",
+    "seed": 53,
+    "scenario_id": 9,
+    "prices": null,
+    "outcome": {
+      "answer_correct": true,
+      "ttfa_ms": 1359.0,
+      "retrievals": 1
+    },
+    "decision": {
+      "retrieve": true,
+      "timing": "fixed_early_proxy",
+      "memory_op": null,
+      "reason": "B8(independent): trigger[max_entropy_nats=1.693 >= 1.2] | timing[fixed_early_proxy, tuned separately] | no pricing"
+    },
+    "source_cell": "e3full_s009_seed53_retrieve_fixed_early_proxy"
+  },
+  {
+    "baseline": "b8",
+    "seed": 53,
+    "scenario_id": 10,
+    "prices": null,
+    "outcome": {
+      "answer_correct": true,
+      "ttfa_ms": 3969.0,
+      "retrievals": 1
+    },
+    "decision": {
+      "retrieve": true,
+      "timing": "fixed_early_proxy",
+      "memory_op": null,
+      "reason": "B8(independent): trigger[max_entropy_nats=1.608 >= 1.2] | timing[fixed_early_proxy, tuned separately] | no pricing"
+    },
+    "source_cell": "e3full_s010_seed53_retrieve_fixed_early_proxy"
+  },
+  {
+    "baseline": "b8",
+    "seed": 53,
+    "scenario_id": 11,
+    "prices": null,
+    "outcome": {
+      "answer_correct": false,
+      "ttfa_ms": 5500.0,
+      "retrievals": 1
+    },
+    "decision": {
+      "retrieve": true,
+      "timing": "fixed_early_proxy",
+      "memory_op": null,
+      "reason": "B8(independent): trigger[max_entropy_nats=1.687 >= 1.2] | timing[fixed_early_proxy, tuned separately] | no pricing"
+    },
+    "source_cell": "e3full_s011_seed53_retrieve_fixed_early_proxy"
+  },
+  {
+    "baseline": "b8",
+    "seed": 53,
+    "scenario_id": 12,
+    "prices": null,
+    "outcome": {
+      "answer_correct": true,
+      "ttfa_ms": 3375.0,
+      "retrievals": 1
+    },
+    "decision": {
+      "retrieve": true,
+      "timing": "fixed_early_proxy",
+      "memory_op": null,
+      "reason": "B8(independent): trigger[max_entropy_nats=1.624 >= 1.2] | timing[fixed_early_proxy, tuned separately] | no pricing"
+    },
+    "source_cell": "e3full_s012_seed53_retrieve_fixed_early_proxy"
+  },
+  {
+    "baseline": "b8",
+    "seed": 53,
+    "scenario_id": 13,
+    "prices": null,
+    "outcome": {
+      "answer_correct": true,
+      "ttfa_ms": 2579.0,
+      "retrievals": 1
+    },
+    "decision": {
+      "retrieve": true,
+      "timing": "fixed_early_proxy",
+      "memory_op": null,
+      "reason": "B8(independent): trigger[max_entropy_nats=1.706 >= 1.2] | timing[fixed_early_proxy, tuned separately] | no pricing"
+    },
+    "source_cell": "e3full_s013_seed53_retrieve_fixed_early_proxy"
+  },
+  {
+    "baseline": "b8",
+    "seed": 53,
+    "scenario_id": 14,
+    "prices": null,
+    "outcome": {
+      "answer_correct": true,
+      "ttfa_ms": 3578.0,
+      "retrievals": 1
+    },
+    "decision": {
+      "retrieve": true,
+      "timing": "fixed_early_proxy",
+      "memory_op": null,
+      "reason": "B8(independent): trigger[max_entropy_nats=1.663 >= 1.2] | timing[fixed_early_proxy, tuned separately] | no pricing"
+    },
+    "source_cell": "e3full_s014_seed53_retrieve_fixed_early_proxy"
+  },
+  {
+    "baseline": "b8",
+    "seed": 53,
+    "scenario_id": 15,
+    "prices": null,
+    "outcome": {
+      "answer_correct": false,
+      "ttfa_ms": 2766.0,
+      "retrievals": 1
+    },
+    "decision": {
+      "retrieve": true,
+      "timing": "fixed_early_proxy",
+      "memory_op": null,
+      "reason": "B8(independent): trigger[max_entropy_nats=1.723 >= 1.2] | timing[fixed_early_proxy, tuned separately] | no pricing"
+    },
+    "source_cell": "e3full_s015_seed53_retrieve_fixed_early_proxy"
+  },
+  {
+    "baseline": "b8",
+    "seed": 53,
+    "scenario_id": 16,
+    "prices": null,
+    "outcome": {
+      "answer_correct": true,
+      "ttfa_ms": 3203.0,
+      "retrievals": 1
+    },
+    "decision": {
+      "retrieve": true,
+      "timing": "fixed_early_proxy",
+      "memory_op": null,
+      "reason": "B8(independent): trigger[max_entropy_nats=1.700 >= 1.2] | timing[fixed_early_proxy, tuned separately] | no pricing"
+    },
+    "source_cell": "e3full_s016_seed53_retrieve_fixed_early_proxy"
+  },
+  {
+    "baseline": "b8",
+    "seed": 53,
+    "scenario_id": 17,
+    "prices": null,
+    "outcome": {
+      "answer_correct": true,
+      "ttfa_ms": 1234.0,
+      "retrievals": 1
+    },
+    "decision": {
+      "retrieve": true,
+      "timing": "fixed_early_proxy",
+      "memory_op": null,
+      "reason": "B8(independent): trigger[max_entropy_nats=1.570 >= 1.2] | timing[fixed_early_proxy, tuned separately] | no pricing"
+    },
+    "source_cell": "e3full_s017_seed53_retrieve_fixed_early_proxy"
+  },
+  {
+    "baseline": "b8",
+    "seed": 53,
+    "scenario_id": 18,
+    "prices": null,
+    "outcome": {
+      "answer_correct": false,
+      "ttfa_ms": 4000.0,
+      "retrievals": 1
+    },
+    "decision": {
+      "retrieve": true,
+      "timing": "fixed_early_proxy",
+      "memory_op": null,
+      "reason": "B8(independent): trigger[max_entropy_nats=1.608 >= 1.2] | timing[fixed_early_proxy, tuned separately] | no pricing"
+    },
+    "source_cell": "e3full_s018_seed53_retrieve_fixed_early_proxy"
+  },
+  {
+    "baseline": "b8",
+    "seed": 53,
+    "scenario_id": 19,
+    "prices": null,
+    "outcome": {
+      "answer_correct": true,
+      "ttfa_ms": 4563.0,
+      "retrievals": 1
+    },
+    "decision": {
+      "retrieve": true,
+      "timing": "fixed_early_proxy",
+      "memory_op": null,
+      "reason": "B8(independent): trigger[max_entropy_nats=1.720 >= 1.2] | timing[fixed_early_proxy, tuned separately] | no pricing"
+    },
+    "source_cell": "e3full_s019_seed53_retrieve_fixed_early_proxy"
+  },
+  {
+    "baseline": "b8",
+    "seed": 53,
+    "scenario_id": 20,
+    "prices": null,
+    "outcome": {
+      "answer_correct": true,
+      "ttfa_ms": 4547.0,
+      "retrievals": 1
+    },
+    "decision": {
+      "retrieve": true,
+      "timing": "fixed_early_proxy",
+      "memory_op": null,
+      "reason": "B8(independent): trigger[max_entropy_nats=1.708 >= 1.2] | timing[fixed_early_proxy, tuned separately] | no pricing"
+    },
+    "source_cell": "e3full_s020_seed53_retrieve_fixed_early_proxy"
+  },
+  {
+    "baseline": "b8",
+    "seed": 53,
+    "scenario_id": 21,
+    "prices": null,
+    "outcome": {
+      "answer_correct": false,
+      "ttfa_ms": 5407.0,
+      "retrievals": 1
+    },
+    "decision": {
+      "retrieve": true,
+      "timing": "fixed_early_proxy",
+      "memory_op": null,
+      "reason": "B8(independent): trigger[max_entropy_nats=1.706 >= 1.2] | timing[fixed_early_proxy, tuned separately] | no pricing"
+    },
+    "source_cell": "e3full_s021_seed53_retrieve_fixed_early_proxy"
+  },
+  {
+    "baseline": "b8",
+    "seed": 53,
+    "scenario_id": 22,
+    "prices": null,
+    "outcome": {
+      "answer_correct": true,
+      "ttfa_ms": 2750.0,
+      "retrievals": 1
+    },
+    "decision": {
+      "retrieve": true,
+      "timing": "fixed_early_proxy",
+      "memory_op": null,
+      "reason": "B8(independent): trigger[max_entropy_nats=1.630 >= 1.2] | timing[fixed_early_proxy, tuned separately] | no pricing"
+    },
+    "source_cell": "e3full_s022_seed53_retrieve_fixed_early_proxy"
+  },
+  {
+    "baseline": "b8",
+    "seed": 53,
+    "scenario_id": 23,
+    "prices": null,
+    "outcome": {
+      "answer_correct": true,
+      "ttfa_ms": 2953.0,
+      "retrievals": 1
+    },
+    "decision": {
+      "retrieve": true,
+      "timing": "fixed_early_proxy",
+      "memory_op": null,
+      "reason": "B8(independent): trigger[max_entropy_nats=1.731 >= 1.2] | timing[fixed_early_proxy, tuned separately] | no pricing"
+    },
+    "source_cell": "e3full_s023_seed53_retrieve_fixed_early_proxy"
+  },
+  {
+    "baseline": "b8",
+    "seed": 53,
+    "scenario_id": 24,
+    "prices": null,
+    "outcome": {
+      "answer_correct": true,
+      "ttfa_ms": 2656.0,
+      "retrievals": 1
+    },
+    "decision": {
+      "retrieve": true,
+      "timing": "fixed_early_proxy",
+      "memory_op": null,
+      "reason": "B8(independent): trigger[max_entropy_nats=1.673 >= 1.2] | timing[fixed_early_proxy, tuned separately] | no pricing"
+    },
+    "source_cell": "e3full_s024_seed53_retrieve_fixed_early_proxy"
+  },
+  {
+    "baseline": "b8",
+    "seed": 53,
+    "scenario_id": 25,
+    "prices": null,
+    "outcome": {
+      "answer_correct": true,
+      "ttfa_ms": 3016.0,
+      "retrievals": 1
+    },
+    "decision": {
+      "retrieve": true,
+      "timing": "fixed_early_proxy",
+      "memory_op": null,
+      "reason": "B8(independent): trigger[max_entropy_nats=1.682 >= 1.2] | timing[fixed_early_proxy, tuned separately] | no pricing"
+    },
+    "source_cell": "e3full_s025_seed53_retrieve_fixed_early_proxy"
+  },
+  {
+    "baseline": "b8",
+    "seed": 53,
+    "scenario_id": 26,
+    "prices": null,
+    "outcome": {
+      "answer_correct": true,
+      "ttfa_ms": 1047.0,
+      "retrievals": 0
+    },
+    "decision": {
+      "retrieve": false,
+      "timing": "fixed_early_proxy",
+      "memory_op": null,
+      "reason": "B8(independent): trigger[max_entropy_nats=0.133 < 1.2] | timing[fixed_early_proxy, tuned separately] | no pricing"
+    },
+    "source_cell": "e3full_s026_seed53_skip_fixed_early_proxy"
+  },
+  {
+    "baseline": "b8",
+    "seed": 53,
+    "scenario_id": 27,
+    "prices": null,
+    "outcome": {
+      "answer_correct": true,
+      "ttfa_ms": 562.0,
+      "retrievals": 0
+    },
+    "decision": {
+      "retrieve": false,
+      "timing": "fixed_early_proxy",
+      "memory_op": null,
+      "reason": "B8(independent): trigger[max_entropy_nats=0.041 < 1.2] | timing[fixed_early_proxy, tuned separately] | no pricing"
+    },
+    "source_cell": "e3full_s027_seed53_skip_fixed_early_proxy"
+  },
+  {
+    "baseline": "b8",
+    "seed": 53,
+    "scenario_id": 28,
+    "prices": null,
+    "outcome": {
+      "answer_correct": true,
+      "ttfa_ms": 1156.0,
+      "retrievals": 0
+    },
+    "decision": {
+      "retrieve": false,
+      "timing": "fixed_early_proxy",
+      "memory_op": null,
+      "reason": "B8(independent): trigger[max_entropy_nats=0.692 < 1.2] | timing[fixed_early_proxy, tuned separately] | no pricing"
+    },
+    "source_cell": "e3full_s028_seed53_skip_fixed_early_proxy"
+  },
+  {
+    "baseline": "b8",
+    "seed": 53,
+    "scenario_id": 29,
+    "prices": null,
+    "outcome": {
+      "answer_correct": true,
+      "ttfa_ms": 1047.0,
+      "retrievals": 0
+    },
+    "decision": {
+      "retrieve": false,
+      "timing": "fixed_early_proxy",
+      "memory_op": null,
+      "reason": "B8(independent): trigger[max_entropy_nats=1.117 < 1.2] | timing[fixed_early_proxy, tuned separately] | no pricing"
+    },
+    "source_cell": "e3full_s029_seed53_skip_fixed_early_proxy"
+  },
+  {
+    "baseline": "b8",
+    "seed": 53,
+    "scenario_id": 30,
+    "prices": null,
+    "outcome": {
+      "answer_correct": false,
+      "ttfa_ms": 1406.0,
+      "retrievals": 1
+    },
+    "decision": {
+      "retrieve": true,
+      "timing": "fixed_early_proxy",
+      "memory_op": null,
+      "reason": "B8(independent): trigger[max_entropy_nats=1.443 >= 1.2] | timing[fixed_early_proxy, tuned separately] | no pricing"
+    },
+    "source_cell": "e3full_s030_seed53_retrieve_fixed_early_proxy"
+  },
+  {
+    "baseline": "b8",
+    "seed": 53,
+    "scenario_id": 31,
+    "prices": null,
+    "outcome": {
+      "answer_correct": true,
+      "ttfa_ms": 1656.0,
+      "retrievals": 0
+    },
+    "decision": {
+      "retrieve": false,
+      "timing": "fixed_early_proxy",
+      "memory_op": null,
+      "reason": "B8(independent): trigger[max_entropy_nats=0.677 < 1.2] | timing[fixed_early_proxy, tuned separately] | no pricing"
+    },
+    "source_cell": "e3full_s031_seed53_skip_fixed_early_proxy"
+  },
+  {
+    "baseline": "b8",
+    "seed": 53,
+    "scenario_id": 32,
+    "prices": null,
+    "outcome": {
+      "answer_correct": true,
+      "ttfa_ms": 1156.0,
+      "retrievals": 0
+    },
+    "decision": {
+      "retrieve": false,
+      "timing": "fixed_early_proxy",
+      "memory_op": null,
+      "reason": "B8(independent): trigger[max_entropy_nats=0.130 < 1.2] | timing[fixed_early_proxy, tuned separately] | no pricing"
+    },
+    "source_cell": "e3full_s032_seed53_skip_fixed_early_proxy"
+  },
+  {
+    "baseline": "b8",
+    "seed": 53,
+    "scenario_id": 33,
+    "prices": null,
+    "outcome": {
+      "answer_correct": false,
+      "ttfa_ms": 609.0,
+      "retrievals": 0
+    },
+    "decision": {
+      "retrieve": false,
+      "timing": "fixed_early_proxy",
+      "memory_op": null,
+      "reason": "B8(independent): trigger[max_entropy_nats=0.559 < 1.2] | timing[fixed_early_proxy, tuned separately] | no pricing"
+    },
+    "source_cell": "e3full_s033_seed53_skip_fixed_early_proxy"
+  },
+  {
+    "baseline": "b8",
+    "seed": 53,
+    "scenario_id": 34,
+    "prices": null,
+    "outcome": {
+      "answer_correct": false,
+      "ttfa_ms": 3844.0,
+      "retrievals": 0
+    },
+    "decision": {
+      "retrieve": false,
+      "timing": "fixed_early_proxy",
+      "memory_op": null,
+      "reason": "B8(independent): trigger[max_entropy_nats=0.925 < 1.2] | timing[fixed_early_proxy, tuned separately] | no pricing"
+    },
+    "source_cell": "e3full_s034_seed53_skip_fixed_early_proxy"
+  },
+  {
+    "baseline": "b8",
+    "seed": 53,
+    "scenario_id": 35,
+    "prices": null,
+    "outcome": {
+      "answer_correct": false,
+      "ttfa_ms": 3297.0,
+      "retrievals": 1
+    },
+    "decision": {
+      "retrieve": true,
+      "timing": "fixed_early_proxy",
+      "memory_op": null,
+      "reason": "B8(independent): trigger[max_entropy_nats=1.714 >= 1.2] | timing[fixed_early_proxy, tuned separately] | no pricing"
+    },
+    "source_cell": "e3full_s035_seed53_retrieve_fixed_early_proxy"
+  },
+  {
+    "baseline": "b8",
+    "seed": 53,
+    "scenario_id": 36,
+    "prices": null,
+    "outcome": {
+      "answer_correct": false,
+      "ttfa_ms": 2031.0,
+      "retrievals": 1
+    },
+    "decision": {
+      "retrieve": true,
+      "timing": "fixed_early_proxy",
+      "memory_op": null,
+      "reason": "B8(independent): trigger[max_entropy_nats=1.688 >= 1.2] | timing[fixed_early_proxy, tuned separately] | no pricing"
+    },
+    "source_cell": "e3full_s036_seed53_retrieve_fixed_early_proxy"
+  },
+  {
+    "baseline": "b8",
+    "seed": 53,
+    "scenario_id": 37,
+    "prices": null,
+    "outcome": {
+      "answer_correct": false,
+      "ttfa_ms": 2547.0,
+      "retrievals": 1
+    },
+    "decision": {
+      "retrieve": true,
+      "timing": "fixed_early_proxy",
+      "memory_op": null,
+      "reason": "B8(independent): trigger[max_entropy_nats=1.749 >= 1.2] | timing[fixed_early_proxy, tuned separately] | no pricing"
+    },
+    "source_cell": "e3full_s037_seed53_retrieve_fixed_early_proxy"
+  },
+  {
+    "baseline": "b8",
+    "seed": 53,
+    "scenario_id": 38,
+    "prices": null,
+    "outcome": {
+      "answer_correct": true,
+      "ttfa_ms": 641.0,
+      "retrievals": 0
+    },
+    "decision": {
+      "retrieve": false,
+      "timing": "fixed_early_proxy",
+      "memory_op": null,
+      "reason": "B8(independent): trigger[max_entropy_nats=1.095 < 1.2] | timing[fixed_early_proxy, tuned separately] | no pricing"
+    },
+    "source_cell": "e3full_s038_seed53_skip_fixed_early_proxy"
+  },
+  {
+    "baseline": "b8",
+    "seed": 53,
+    "scenario_id": 39,
+    "prices": null,
+    "outcome": {
+      "answer_correct": false,
+      "ttfa_ms": 1703.0,
+      "retrievals": 1
+    },
+    "decision": {
+      "retrieve": true,
+      "timing": "fixed_early_proxy",
+      "memory_op": null,
+      "reason": "B8(independent): trigger[max_entropy_nats=1.483 >= 1.2] | timing[fixed_early_proxy, tuned separately] | no pricing"
+    },
+    "source_cell": "e3full_s039_seed53_retrieve_fixed_early_proxy"
+  },
+  {
+    "baseline": "b8",
+    "seed": 53,
+    "scenario_id": 40,
+    "prices": null,
+    "outcome": {
+      "answer_correct": true,
+      "ttfa_ms": 657.0,
+      "retrievals": 0
+    },
+    "decision": {
+      "retrieve": false,
+      "timing": "fixed_early_proxy",
+      "memory_op": null,
+      "reason": "B8(independent): trigger[max_entropy_nats=0.134 < 1.2] | timing[fixed_early_proxy, tuned separately] | no pricing"
+    },
+    "source_cell": "e3full_s040_seed53_skip_fixed_early_proxy"
+  },
+  {
+    "baseline": "b8",
+    "seed": 53,
+    "scenario_id": 41,
+    "prices": null,
+    "outcome": {
+      "answer_correct": true,
+      "ttfa_ms": 1203.0,
+      "retrievals": 0
+    },
+    "decision": {
+      "retrieve": false,
+      "timing": "fixed_early_proxy",
+      "memory_op": null,
+      "reason": "B8(independent): trigger[max_entropy_nats=0.564 < 1.2] | timing[fixed_early_proxy, tuned separately] | no pricing"
+    },
+    "source_cell": "e3full_s041_seed53_skip_fixed_early_proxy"
+  },
+  {
+    "baseline": "b8",
+    "seed": 53,
+    "scenario_id": 42,
+    "prices": null,
+    "outcome": {
+      "answer_correct": true,
+      "ttfa_ms": 812.0,
+      "retrievals": 0
+    },
+    "decision": {
+      "retrieve": false,
+      "timing": "fixed_early_proxy",
+      "memory_op": null,
+      "reason": "B8(independent): trigger[max_entropy_nats=0.143 < 1.2] | timing[fixed_early_proxy, tuned separately] | no pricing"
+    },
+    "source_cell": "e3full_s042_seed53_skip_fixed_early_proxy"
+  },
+  {
+    "baseline": "b8",
+    "seed": 53,
+    "scenario_id": 43,
+    "prices": null,
+    "outcome": {
+      "answer_correct": false,
+      "ttfa_ms": 1469.0,
+      "retrievals": 0
+    },
+    "decision": {
+      "retrieve": false,
+      "timing": "fixed_early_proxy",
+      "memory_op": null,
+      "reason": "B8(independent): trigger[max_entropy_nats=0.775 < 1.2] | timing[fixed_early_proxy, tuned separately] | no pricing"
+    },
+    "source_cell": "e3full_s043_seed53_skip_fixed_early_proxy"
+  },
+  {
+    "baseline": "b8",
+    "seed": 53,
+    "scenario_id": 44,
+    "prices": null,
+    "outcome": {
+      "answer_correct": false,
+      "ttfa_ms": 1703.0,
+      "retrievals": 1
+    },
+    "decision": {
+      "retrieve": true,
+      "timing": "fixed_early_proxy",
+      "memory_op": null,
+      "reason": "B8(independent): trigger[max_entropy_nats=1.464 >= 1.2] | timing[fixed_early_proxy, tuned separately] | no pricing"
+    },
+    "source_cell": "e3full_s044_seed53_retrieve_fixed_early_proxy"
+  },
+  {
+    "baseline": "b8",
+    "seed": 53,
+    "scenario_id": 45,
+    "prices": null,
+    "outcome": {
+      "answer_correct": true,
+      "ttfa_ms": 1062.0,
+      "retrievals": 0
+    },
+    "decision": {
+      "retrieve": false,
+      "timing": "fixed_early_proxy",
+      "memory_op": null,
+      "reason": "B8(independent): trigger[max_entropy_nats=0.584 < 1.2] | timing[fixed_early_proxy, tuned separately] | no pricing"
+    },
+    "source_cell": "e3full_s045_seed53_skip_fixed_early_proxy"
+  },
+  {
+    "baseline": "b8",
+    "seed": 53,
+    "scenario_id": 46,
+    "prices": null,
+    "outcome": {
+      "answer_correct": true,
+      "ttfa_ms": 1515.0,
+      "retrievals": 0
+    },
+    "decision": {
+      "retrieve": false,
+      "timing": "fixed_early_proxy",
+      "memory_op": null,
+      "reason": "B8(independent): trigger[max_entropy_nats=1.144 < 1.2] | timing[fixed_early_proxy, tuned separately] | no pricing"
+    },
+    "source_cell": "e3full_s046_seed53_skip_fixed_early_proxy"
+  },
+  {
+    "baseline": "b8",
+    "seed": 53,
+    "scenario_id": 47,
+    "prices": null,
+    "outcome": {
+      "answer_correct": true,
+      "ttfa_ms": 1250.0,
+      "retrievals": 0
+    },
+    "decision": {
+      "retrieve": false,
+      "timing": "fixed_early_proxy",
+      "memory_op": null,
+      "reason": "B8(independent): trigger[max_entropy_nats=1.060 < 1.2] | timing[fixed_early_proxy, tuned separately] | no pricing"
+    },
+    "source_cell": "e3full_s047_seed53_skip_fixed_early_proxy"
+  },
+  {
+    "baseline": "b8",
+    "seed": 53,
+    "scenario_id": 48,
+    "prices": null,
+    "outcome": {
+      "answer_correct": false,
+      "ttfa_ms": 1610.0,
+      "retrievals": 1
+    },
+    "decision": {
+      "retrieve": true,
+      "timing": "fixed_early_proxy",
+      "memory_op": null,
+      "reason": "B8(independent): trigger[max_entropy_nats=1.569 >= 1.2] | timing[fixed_early_proxy, tuned separately] | no pricing"
+    },
+    "source_cell": "e3full_s048_seed53_retrieve_fixed_early_proxy"
+  },
+  {
+    "baseline": "b8",
+    "seed": 53,
+    "scenario_id": 49,
+    "prices": null,
+    "outcome": {
+      "answer_correct": false,
+      "ttfa_ms": 3500.0,
+      "retrievals": 1
+    },
+    "decision": {
+      "retrieve": true,
+      "timing": "fixed_early_proxy",
+      "memory_op": null,
+      "reason": "B8(independent): trigger[max_entropy_nats=1.680 >= 1.2] | timing[fixed_early_proxy, tuned separately] | no pricing"
+    },
+    "source_cell": "e3full_s049_seed53_retrieve_fixed_early_proxy"
+  },
+  {
+    "baseline": "b8",
+    "seed": 53,
+    "scenario_id": 50,
+    "prices": null,
+    "outcome": {
+      "answer_correct": false,
+      "ttfa_ms": 1484.0,
+      "retrievals": 1
+    },
+    "decision": {
+      "retrieve": true,
+      "timing": "fixed_early_proxy",
+      "memory_op": null,
+      "reason": "B8(independent): trigger[max_entropy_nats=1.611 >= 1.2] | timing[fixed_early_proxy, tuned separately] | no pricing"
+    },
+    "source_cell": "e3full_s050_seed53_retrieve_fixed_early_proxy"
+  }
+]

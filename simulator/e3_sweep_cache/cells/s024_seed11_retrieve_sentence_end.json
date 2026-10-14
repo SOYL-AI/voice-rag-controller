@@ -1,0 +1,13 @@
+{
+  "scenario_id": 24,
+  "seed": 11,
+  "path": "retrieve",
+  "timing": "sentence_end",
+  "ttfa_ms": 2921.0,
+  "retrievals": 1,
+  "answer_sha256": "bf354625fe5fa380efa4bafcb5d77df48f699a4ff37799fb62bbcb329574704b",
+  "matches_canonical_answer": true,
+  "conversation_id": "e3full_s024_seed11_retrieve_sentence_end",
+  "log_path": "logs\\e3full_s024_seed11_retrieve_sentence_end.jsonl",
+  "frozen_query": "Room service information"
+}

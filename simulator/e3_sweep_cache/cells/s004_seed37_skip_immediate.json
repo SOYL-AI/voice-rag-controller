@@ -1,0 +1,13 @@
+{
+  "scenario_id": 4,
+  "seed": 37,
+  "path": "skip",
+  "timing": "immediate",
+  "ttfa_ms": 1875.0,
+  "retrievals": 0,
+  "answer_sha256": "a926e69bbcc2d7f3b0c2db82843c333a53857d429b17cd24ca4062cfa00ccb69",
+  "matches_canonical_answer": true,
+  "conversation_id": "e3full_s004_seed37_skip_immediate",
+  "log_path": "logs\\e3full_s004_seed37_skip_immediate.jsonl",
+  "frozen_query": "\"Visitor policy information\""
+}

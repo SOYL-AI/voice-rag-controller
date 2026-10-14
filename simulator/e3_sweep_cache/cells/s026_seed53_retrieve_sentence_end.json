@@ -1,0 +1,13 @@
+{
+  "scenario_id": 26,
+  "seed": 53,
+  "path": "retrieve",
+  "timing": "sentence_end",
+  "ttfa_ms": 1625.0,
+  "retrievals": 1,
+  "answer_sha256": "b541961e7c8c9ce6deeb0e1ca75a0fedc3875bfc4fbfe5e97666b14bab5eaa02",
+  "matches_canonical_answer": true,
+  "conversation_id": "e3full_s026_seed53_retrieve_sentence_end",
+  "log_path": "logs\\e3full_s026_seed53_retrieve_sentence_end.jsonl",
+  "frozen_query": "Capital of India"
+}

@@ -1,0 +1,13 @@
+{
+  "scenario_id": 33,
+  "seed": 11,
+  "path": "skip",
+  "timing": "immediate",
+  "ttfa_ms": 1297.0,
+  "retrievals": 0,
+  "answer_sha256": "88e6779e00cad6ee2f6125ab761773b0d5f219cc04266ce43d740caa9fd1ccae",
+  "matches_canonical_answer": true,
+  "conversation_id": "e3full_s033_seed11_skip_immediate",
+  "log_path": "logs\\e3full_s033_seed11_skip_immediate.jsonl",
+  "frozen_query": "Multiply 18 by 7"
+}

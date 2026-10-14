@@ -1,0 +1,24 @@
+{
+  "scenario_id": 33,
+  "seed": 11,
+  "path": "skip",
+  "answer_text": " The product of 18 and 7 is 126.",
+  "answer_sha256": "88e6779e00cad6ee2f6125ab761773b0d5f219cc04266ce43d740caa9fd1ccae",
+  "answer_correct": true,
+  "judge": {
+    "answer_correct": true,
+    "parsed_ok": true,
+    "judge_raw": "CONFLICT: none  \nVERDICT: YES",
+    "judge_key": "0d37dfb57f8cdfdb0d039508a92a3abb28fb92c253ad877eef571f27e7938f23",
+    "judge_identity": "azure-openai/gpt-4o@2025-01-01-preview",
+    "judge_cache_version": "v4-azure-reasoned",
+    "scenario_id": 33,
+    "temperature": 0.0
+  },
+  "measured_under_timing": "sentence_end",
+  "previous_verdict": {
+    "answer_correct": true,
+    "judge_identity": "azure-openai/gpt-4o@2025-01-01-preview",
+    "judge_raw": "YES"
+  }
+}

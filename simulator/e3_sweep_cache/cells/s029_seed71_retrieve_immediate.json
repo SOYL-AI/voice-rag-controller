@@ -1,0 +1,13 @@
+{
+  "scenario_id": 29,
+  "seed": 71,
+  "path": "retrieve",
+  "timing": "immediate",
+  "ttfa_ms": 1859.0,
+  "retrievals": 1,
+  "answer_sha256": "3230ee63d3a4acd9c2d6c401cc87406e22637609b88b69b2d6f7e5d3dfe9826f",
+  "matches_canonical_answer": true,
+  "conversation_id": "e3full_s029_seed71_retrieve_immediate",
+  "log_path": "logs\\e3full_s029_seed71_retrieve_immediate.jsonl",
+  "frozen_query": "Mars is the Red Planet. Identify the planet known as the Red Planet."
+}

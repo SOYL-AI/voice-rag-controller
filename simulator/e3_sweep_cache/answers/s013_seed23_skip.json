@@ -1,0 +1,24 @@
+{
+  "scenario_id": 13,
+  "seed": 23,
+  "path": "skip",
+  "answer_text": " I'm sorry for any concerns, but I don't have information about medical assistance on-site. However, I can arrange for an ambulance if needed. Please hold while I connect you with our front desk for further assistance.",
+  "answer_sha256": "0bfc9cd85414e5f1ac0993d612e628e778eb7812f8d2c1d5c18ad1dc7237fa2a",
+  "answer_correct": false,
+  "judge": {
+    "answer_correct": false,
+    "parsed_ok": true,
+    "judge_raw": "CONFLICT: reference says basic first aid assistance is available at the Front Desk at all times, candidate says they don't have information about medical assistance on-site.  \nCONFLICT: reference says the hotel can arrange immediate transportation to the nearest hospital or contact an on-call doctor, candidate says they can arrange for an ambulance if needed.  \n\nVERDICT: NO",
+    "judge_key": "bfb8237e1d6e0106a58e28fa5d59ba2636496b9d61c94d5e03234f697d84ca06",
+    "judge_identity": "azure-openai/gpt-4o@2025-01-01-preview",
+    "judge_cache_version": "v4-azure-reasoned",
+    "scenario_id": 13,
+    "temperature": 0.0
+  },
+  "measured_under_timing": "sentence_end",
+  "previous_verdict": {
+    "answer_correct": false,
+    "judge_identity": "azure-openai/gpt-4o@2025-01-01-preview",
+    "judge_raw": "NO"
+  }
+}

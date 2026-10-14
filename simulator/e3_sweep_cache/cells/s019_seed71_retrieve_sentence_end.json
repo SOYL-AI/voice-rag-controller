@@ -1,0 +1,13 @@
+{
+  "scenario_id": 19,
+  "seed": 71,
+  "path": "retrieve",
+  "timing": "sentence_end",
+  "ttfa_ms": 6359.0,
+  "retrievals": 1,
+  "answer_sha256": "55ddd54bc91fd54bc5a6c49c88176a67024233e07def142f13c478d317a4be72",
+  "matches_canonical_answer": true,
+  "conversation_id": "e3full_s019_seed71_retrieve_sentence_end",
+  "log_path": "logs\\e3full_s019_seed71_retrieve_sentence_end.jsonl",
+  "frozen_query": "\"Business center information\""
+}

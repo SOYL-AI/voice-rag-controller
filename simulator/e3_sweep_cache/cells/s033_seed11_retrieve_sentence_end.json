@@ -1,0 +1,13 @@
+{
+  "scenario_id": 33,
+  "seed": 11,
+  "path": "retrieve",
+  "timing": "sentence_end",
+  "ttfa_ms": 2297.0,
+  "retrievals": 1,
+  "answer_sha256": "532a1f3b57afd7c3479bd5944931c148dc2c261846bf611dd7c840c78acc66b1",
+  "matches_canonical_answer": true,
+  "conversation_id": "e3full_s033_seed11_retrieve_sentence_end",
+  "log_path": "logs\\e3full_s033_seed11_retrieve_sentence_end.jsonl",
+  "frozen_query": "Multiply 18 by 7"
+}

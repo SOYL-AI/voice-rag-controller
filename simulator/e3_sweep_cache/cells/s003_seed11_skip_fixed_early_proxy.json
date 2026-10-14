@@ -1,0 +1,13 @@
+{
+  "scenario_id": 3,
+  "seed": 11,
+  "path": "skip",
+  "timing": "fixed_early_proxy",
+  "ttfa_ms": 2594.0,
+  "retrievals": 0,
+  "answer_sha256": "e9c10f58f6af39b04276f9ddef4400752a2cfac03063fc61ccc971c9008ff7a3",
+  "matches_canonical_answer": true,
+  "conversation_id": "e3full_s003_seed11_skip_fixed_early_proxy",
+  "log_path": "logs\\e3full_s003_seed11_skip_fixed_early_proxy.jsonl",
+  "frozen_query": "\"Deluxe room information\""
+}

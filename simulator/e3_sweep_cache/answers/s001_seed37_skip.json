@@ -1,0 +1,24 @@
+{
+  "scenario_id": 1,
+  "seed": 37,
+  "path": "skip",
+  "answer_text": " Our hotel offers complimentary Wi-Fi service, available in all guest rooms and public areas. The network name is \"HotelWiFi\" with no password required. If you encounter any issues, please contact our front desk for assistance.",
+  "answer_sha256": "24b5e33f5dbc0be883da30bef7616d78fbd16f280b5147d2851d8f34ad49cf24",
+  "answer_correct": false,
+  "judge": {
+    "answer_correct": false,
+    "parsed_ok": true,
+    "judge_raw": "CONFLICT: reference says the network name is GrandHorizon_Guest, candidate says the network name is HotelWiFi.  \nCONFLICT: reference says access credentials are provided during check-in, candidate says no password is required.  \nVERDICT: NO",
+    "judge_key": "ce29f8e89afa650f7d2fc586361367dc66555fb4267e7958f6d87c53617c155a",
+    "judge_identity": "azure-openai/gpt-4o@2025-01-01-preview",
+    "judge_cache_version": "v4-azure-reasoned",
+    "scenario_id": 1,
+    "temperature": 0.0
+  },
+  "measured_under_timing": "sentence_end",
+  "previous_verdict": {
+    "answer_correct": false,
+    "judge_identity": "azure-openai/gpt-4o@2025-01-01-preview",
+    "judge_raw": "NO"
+  }
+}

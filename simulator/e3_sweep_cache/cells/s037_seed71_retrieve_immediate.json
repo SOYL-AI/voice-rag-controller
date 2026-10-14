@@ -1,0 +1,13 @@
+{
+  "scenario_id": 37,
+  "seed": 71,
+  "path": "retrieve",
+  "timing": "immediate",
+  "ttfa_ms": 2610.0,
+  "retrievals": 1,
+  "answer_sha256": "4fcf796b13718d040429d69aa7e3d496414a0ab975e5c95096450629372c1e1e",
+  "matches_canonical_answer": true,
+  "conversation_id": "e3full_s037_seed71_retrieve_immediate",
+  "log_path": "logs\\e3full_s037_seed71_retrieve_immediate.jsonl",
+  "frozen_query": "\"Define programming loop\""
+}

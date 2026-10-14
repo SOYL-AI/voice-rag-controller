@@ -247,18 +247,58 @@ JUDGE_SYSTEM_PROMPT = (
     "and judge FACTUAL CORRECTNESS only."
 )
 
+# The judge REASONS before it answers, and the omission rule binds the
+# conflict LIST rather than only the verdict.
+#
+# Both of those are measured choices, not style. Scored against the 19
+# hand labels in simulator/judge_validation/labels.json (run
+# `python -m simulator.judge_validation.score_judges`):
+#
+#     terse, answer unstripped   14/19   74%   <- what the first sweep used
+#     terse, answer stripped     15/19   79%
+#     reasoned, stripped         18/19   95%   <- this
+#
+# The terse form got 8 tokens and no room to think, which left it deciding
+# borderline cases on surface form: an answer identical to the reference
+# except for the words "The Grand Horizon Hotel & Suites offers" at the
+# front scored NO five times out of five, and YES five out of five with
+# that phrase removed. Reasoning first removes that sensitivity.
+#
+# The omission rule has to constrain the list. Told only that omission is
+# correct, the model still WROTE "CONFLICT: the reference says menu items
+# may contain allergens, but the candidate does not mention this" and then
+# voted NO on its own list. So the instruction is placed on what may be
+# listed as a conflict at all.
+#
+# Every error made by every variant was in one direction — marking a
+# correct answer incorrect, never the reverse. That direction matters: it
+# under-credits retrieval, and so penalises whichever baseline retrieves
+# most. The remaining miss at 18/19 is s018/retrieve, which is labelled
+# BORDERLINE in labels.json by the person who labelled it.
 JUDGE_INSTRUCTIONS = (
-    "Judge whether the candidate answer is factually correct with respect "
+    "Decide whether the candidate answer is factually correct with respect "
     "to the reference answer.\n"
-    "- Correct means: it states the facts the reference states, or a "
-    "subset of them, without contradicting the reference.\n"
-    "- Wording, length, style and politeness do not matter.\n"
-    "- A candidate that omits detail but contradicts nothing is correct.\n"
-    "- A candidate that invents a fact the reference contradicts, or that "
-    "declines to answer, or that answers a different question, is "
-    "incorrect.\n"
-    "Reply with exactly one word: YES if correct, NO if incorrect."
+    "Only FACTUAL CONFLICT counts. Specifically:\n"
+    "- Wording, length, style, politeness, and naming the hotel do NOT "
+    "matter.\n"
+    "- Restating the reference in different words is CORRECT.\n"
+    "- Omitting some of the reference's details is CORRECT.\n"
+    "- Adding detail the reference does not mention is CORRECT, unless it "
+    "states a specific figure, time, name, price or location that the "
+    "reference gives differently.\n"
+    "- It is INCORRECT only if it contradicts a specific fact in the "
+    "reference, declines to answer, or answers a different question.\n\n"
+    "List every DIRECT CONFLICT, one per line, as "
+    "'CONFLICT: reference says X, candidate says Y'.\n"
+    "A missing detail is NOT a conflict — do not list it. A conflict "
+    "requires the candidate to STATE something incompatible with the "
+    "reference. If there are none, write 'CONFLICT: none'.\n"
+    "Then on the final line write exactly 'VERDICT: YES' or 'VERDICT: NO'."
 )
+
+# Enough room to list conflicts and still reach the verdict line. The terse
+# judge ran at 8, which is what made reasoning impossible.
+JUDGE_MAX_TOKENS = 300
 
 
 # ---------------------------------------------------------------------------
@@ -597,7 +637,7 @@ AZURE_ENV_VARS = (
 # Bumped whenever the judge changes in a way that invalidates verdicts.
 # Part of the cache key, so old verdicts cannot be read back. v1 was the
 # Mistral/mock era.
-JUDGE_CACHE_VERSION = "v2-azure"
+JUDGE_CACHE_VERSION = "v4-azure-reasoned"
 
 
 def _slugify(text: str) -> str:
@@ -715,7 +755,7 @@ class AzureOpenaiJudge:
         raise JudgeCallError("The Azure judge call did not settle after retries.")
 
     def _call(self, messages) -> str:
-        kwargs = {self._token_param: 8}
+        kwargs = {self._token_param: JUDGE_MAX_TOKENS}
         if self.temperature_supported:
             kwargs["temperature"] = 0
         if self._sdk is not None:
@@ -858,6 +898,28 @@ def judge_answer(
     absorbed: a run with a nonzero parse-failure count needs looking at
     before its accuracy numbers are believed.
     """
+    # Strip before BOTH the key and the prompt, never one or the other:
+    # the cache key has to describe the text the judge was actually shown.
+    #
+    # Not cosmetic. The generator's answers begin with a leading space, and
+    # on a borderline answer that single character decides the verdict. On
+    # s003 ("Tell me about deluxe room.") the retrieved answer reproduces
+    # the reference and omits one list item, "air conditioning" — which
+    # JUDGE_INSTRUCTIONS explicitly calls correct ("omits detail but
+    # contradicts nothing"). Graded with the leading space it returned NO
+    # five times out of five; graded stripped, YES five out of five, same
+    # deployment at temperature 0. That flipped all 15 of s003's retrieve
+    # cells to incorrect, and 5 of the 12 retrieve-path failures in the
+    # first 360 cells of the first full sweep were this artifact.
+    #
+    # The judge is deterministic (10/10 identical on repeat calls); it is
+    # the whitespace that moved it, so the fix is to stop varying it.
+    # Leading/trailing whitespace is not content and must not reach a
+    # grader. NOTE this does not make borderline grading robust in
+    # general — it removes one known perturbation. See the omission rule
+    # in JUDGE_INSTRUCTIONS.
+    answer = (answer or "").strip()
+
     key = judge_cache_key(judge, scenario, answer)
     path = judge_path(cache_dir, judge.slug, key)
     if path.exists():
@@ -867,8 +929,7 @@ def judge_answer(
         f"{JUDGE_INSTRUCTIONS}\n\n"
         f"Question:\n{scenario['question']}\n\n"
         f"Reference answer:\n{scenario['expected_answer']}\n\n"
-        f"Candidate answer:\n{answer}\n\n"
-        "Verdict (YES or NO):"
+        f"Candidate answer:\n{answer}\n"
     )
     raw = judge.complete(JUDGE_SYSTEM_PROMPT, user_prompt)
     verdict = _judge_record(judge, raw, key, scenario["id"])
@@ -877,10 +938,27 @@ def judge_answer(
 
 
 def parse_verdict(raw: str) -> tuple:
-    """(answer_correct, parsed_ok) from the judge's raw reply. Unchanged
-    from the Mistral era on purpose — only the model call and the cache
-    key move."""
-    token = (raw or "").strip().upper().lstrip("*\"' \n\t.:-")[:3]
+    """(answer_correct, parsed_ok) from the judge's raw reply.
+
+    The judge now reasons before it answers, so the verdict is the LAST
+    line containing "VERDICT:" rather than the first token. Last, not
+    first: the conflict list above it quotes the reference and the
+    candidate, and either can contain the word "verdict" or a stray YES.
+
+    The bare-token form is still accepted as a fallback so a verdict cached
+    under the pre-reasoning prompt stays readable.
+    """
+    text = (raw or "").strip()
+    lines = [line for line in text.splitlines() if "VERDICT" in line.upper()]
+    if lines:
+        tail = lines[-1].upper().split("VERDICT:")[-1].strip().lstrip("*\"' \n\t.:-")
+        if tail.startswith("YES"):
+            return True, True
+        if tail.startswith("NO"):
+            return False, True
+        return False, False
+
+    token = text.upper().lstrip("*\"' \n\t.:-")[:3]
     if token.startswith("YES"):
         return True, True
     if token.startswith("NO"):
@@ -970,8 +1048,7 @@ def run_judge_selftest() -> int:
             f"{JUDGE_INSTRUCTIONS}\n\n"
             f"Question:\n{case['question']}\n\n"
             f"Reference answer:\n{case['expected_answer']}\n\n"
-            f"Candidate answer:\n{case['answer']}\n\n"
-            "Verdict (YES or NO):"
+            f"Candidate answer:\n{case['answer']}\n"
         )
         raw = judge.complete(JUDGE_SYSTEM_PROMPT, user_prompt)
         correct, parsed_ok = parse_verdict(raw)
