@@ -257,3 +257,7 @@ simulator/e3_sweep_cache_superseded_*/
 
 # research v2: rendered speech audio is never committed
 datasets/v2/*/speech/audio/
+
+# energy/: worktree-local venv and model cache are never committed
+.venv-energy/
+.energy-cache/
