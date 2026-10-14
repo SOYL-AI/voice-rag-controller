@@ -254,3 +254,6 @@ paper/*.synctex.gz
 
 # Superseded E3 sweep caches kept on disk for recovery, never committed.
 simulator/e3_sweep_cache_superseded_*/
+
+# research v2: rendered speech audio is never committed
+datasets/v2/*/speech/audio/
