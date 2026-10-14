@@ -1,0 +1,13 @@
+{
+ "piper-en_US-lessac-medium": {
+  "engine_version": "piper-tts 1.8.0",
+  "n_sentences": 20,
+  "natural_wpm": 249.7,
+  "rates": {
+   "150": {
+    "length_scale": 1.9399,
+    "measured_wpm": 153.0
+   }
+  }
+ }
+}

@@ -1,0 +1,587 @@
+{
+ "model": "Jzuluaga/accent-id-commonaccent_ecapa",
+ "n_sentences": 20,
+ "classes": [
+  "england",
+  "us",
+  "canada",
+  "australia",
+  "indian",
+  "scotland",
+  "ireland",
+  "african",
+  "malaysia",
+  "newzealand",
+  "southatlandtic",
+  "bermuda",
+  "philippines",
+  "hongkong",
+  "wales",
+  "singapore"
+ ],
+ "voices": {
+  "piper-en_US-lessac-medium": {
+   "accent_label": "en-US",
+   "gender": "F",
+   "status": "active",
+   "expected_class": "us",
+   "mean_score_expected": 0.39260584115982056,
+   "top1_share_expected": 0.6,
+   "top_classes": [
+    [
+     "us",
+     0.393
+    ],
+    [
+     "canada",
+     0.341
+    ],
+    [
+     "scotland",
+     0.251
+    ],
+    [
+     "england",
+     0.246
+    ]
+   ],
+   "top1_counts": {
+    "canada": 4,
+    "england": 3,
+    "newzealand": 1,
+    "us": 12
+   }
+  },
+  "piper-en_US-hfc_male-medium": {
+   "accent_label": "en-US",
+   "gender": "M",
+   "status": "active",
+   "expected_class": "us",
+   "mean_score_expected": 0.609510600566864,
+   "top1_share_expected": 0.7,
+   "top_classes": [
+    [
+     "us",
+     0.61
+    ],
+    [
+     "canada",
+     0.464
+    ],
+    [
+     "newzealand",
+     0.416
+    ],
+    [
+     "australia",
+     0.265
+    ]
+   ],
+   "top1_counts": {
+    "canada": 4,
+    "newzealand": 2,
+    "us": 14
+   }
+  },
+  "piper-en_GB-cori-medium": {
+   "accent_label": "en-GB",
+   "gender": "F",
+   "status": "active",
+   "expected_class": "england",
+   "mean_score_expected": 0.3335493206977844,
+   "top1_share_expected": 0.85,
+   "top_classes": [
+    [
+     "england",
+     0.334
+    ],
+    [
+     "indian",
+     0.199
+    ],
+    [
+     "scotland",
+     0.123
+    ],
+    [
+     "malaysia",
+     0.11
+    ]
+   ],
+   "top1_counts": {
+    "australia": 1,
+    "england": 17,
+    "scotland": 2
+   }
+  },
+  "piper-en_GB-northern_english_male-medium": {
+   "accent_label": "en-GB",
+   "gender": "M",
+   "status": "active",
+   "expected_class": "england",
+   "mean_score_expected": 0.5774247646331787,
+   "top1_share_expected": 1.0,
+   "top_classes": [
+    [
+     "england",
+     0.577
+    ],
+    [
+     "wales",
+     0.215
+    ],
+    [
+     "australia",
+     0.139
+    ],
+    [
+     "us",
+     0.137
+    ]
+   ],
+   "top1_counts": {
+    "england": 20
+   }
+  },
+  "piper-en_US-l2arctic-medium-spk_RRBI": {
+   "accent_label": "en-IN",
+   "gender": "M",
+   "status": "active",
+   "expected_class": "indian",
+   "mean_score_expected": 0.4071817398071289,
+   "top1_share_expected": 0.5,
+   "top_classes": [
+    [
+     "indian",
+     0.407
+    ],
+    [
+     "us",
+     0.378
+    ],
+    [
+     "england",
+     0.303
+    ],
+    [
+     "hongkong",
+     0.262
+    ]
+   ],
+   "top1_counts": {
+    "england": 3,
+    "indian": 10,
+    "us": 7
+   }
+  },
+  "piper-en_US-arctic-medium-spk_ksp": {
+   "accent_label": "en-IN",
+   "gender": "M",
+   "status": "active",
+   "expected_class": "indian",
+   "mean_score_expected": 0.491245836019516,
+   "top1_share_expected": 0.75,
+   "top_classes": [
+    [
+     "indian",
+     0.491
+    ],
+    [
+     "england",
+     0.304
+    ],
+    [
+     "african",
+     0.242
+    ],
+    [
+     "us",
+     0.21
+    ]
+   ],
+   "top1_counts": {
+    "african": 1,
+    "england": 3,
+    "indian": 15,
+    "us": 1
+   }
+  },
+  "piper-en_US-l2arctic-medium-spk_ASI": {
+   "accent_label": "en-IN",
+   "gender": "M",
+   "status": "screen",
+   "expected_class": "indian",
+   "mean_score_expected": 0.3062855899333954,
+   "top1_share_expected": 0.15,
+   "top_classes": [
+    [
+     "england",
+     0.475
+    ],
+    [
+     "indian",
+     0.306
+    ],
+    [
+     "african",
+     0.274
+    ],
+    [
+     "hongkong",
+     0.228
+    ]
+   ],
+   "top1_counts": {
+    "african": 1,
+    "england": 16,
+    "indian": 3
+   }
+  },
+  "piper-en_US-l2arctic-medium-spk_SVBI": {
+   "accent_label": "en-IN",
+   "gender": "F",
+   "status": "screen",
+   "expected_class": "indian",
+   "mean_score_expected": 0.44420403242111206,
+   "top1_share_expected": 0.7,
+   "top_classes": [
+    [
+     "indian",
+     0.444
+    ],
+    [
+     "england",
+     0.386
+    ],
+    [
+     "wales",
+     0.234
+    ],
+    [
+     "us",
+     0.196
+    ]
+   ],
+   "top1_counts": {
+    "england": 6,
+    "indian": 14
+   }
+  },
+  "piper-en_US-l2arctic-medium-spk_TNI": {
+   "accent_label": "en-IN",
+   "gender": "F",
+   "status": "screen",
+   "expected_class": "indian",
+   "mean_score_expected": 0.37020888924598694,
+   "top1_share_expected": 0.35,
+   "top_classes": [
+    [
+     "england",
+     0.405
+    ],
+    [
+     "indian",
+     0.37
+    ],
+    [
+     "singapore",
+     0.218
+    ],
+    [
+     "wales",
+     0.142
+    ]
+   ],
+   "top1_counts": {
+    "england": 13,
+    "indian": 7
+   }
+  },
+  "piper-en_US-arctic-medium-spk_aup": {
+   "accent_label": "en-IN",
+   "gender": "M",
+   "status": "screen",
+   "expected_class": "indian",
+   "mean_score_expected": 0.48825764656066895,
+   "top1_share_expected": 0.7,
+   "top_classes": [
+    [
+     "indian",
+     0.488
+    ],
+    [
+     "us",
+     0.281
+    ],
+    [
+     "england",
+     0.224
+    ],
+    [
+     "singapore",
+     0.204
+    ]
+   ],
+   "top1_counts": {
+    "african": 1,
+    "england": 4,
+    "indian": 14,
+    "us": 1
+   }
+  },
+  "piper-en_US-arctic-medium-spk_gka": {
+   "accent_label": "en-IN",
+   "gender": "M",
+   "status": "screen",
+   "expected_class": "indian",
+   "mean_score_expected": 0.5041349530220032,
+   "top1_share_expected": 0.75,
+   "top_classes": [
+    [
+     "indian",
+     0.504
+    ],
+    [
+     "us",
+     0.344
+    ],
+    [
+     "australia",
+     0.268
+    ],
+    [
+     "england",
+     0.256
+    ]
+   ],
+   "top1_counts": {
+    "indian": 15,
+    "us": 5
+   }
+  },
+  "piper-en_US-arctic-medium-spk_axb": {
+   "accent_label": "en-IN",
+   "gender": "F",
+   "status": "screen",
+   "expected_class": "indian",
+   "mean_score_expected": 0.3182969391345978,
+   "top1_share_expected": 0.45,
+   "top_classes": [
+    [
+     "indian",
+     0.318
+    ],
+    [
+     "england",
+     0.309
+    ],
+    [
+     "us",
+     0.188
+    ],
+    [
+     "singapore",
+     0.172
+    ]
+   ],
+   "top1_counts": {
+    "england": 8,
+    "indian": 9,
+    "us": 3
+   }
+  },
+  "piper-en_US-arctic-medium-spk_slp": {
+   "accent_label": "en-IN",
+   "gender": "F",
+   "status": "screen",
+   "expected_class": "indian",
+   "mean_score_expected": 0.45193052291870117,
+   "top1_share_expected": 0.75,
+   "top_classes": [
+    [
+     "indian",
+     0.452
+    ],
+    [
+     "england",
+     0.362
+    ],
+    [
+     "singapore",
+     0.282
+    ],
+    [
+     "us",
+     0.222
+    ]
+   ],
+   "top1_counts": {
+    "england": 5,
+    "indian": 15
+   }
+  },
+  "piper-en_GB-vctk-medium-spk_p248": {
+   "accent_label": "en-IN",
+   "gender": "F",
+   "status": "screen",
+   "expected_class": "indian",
+   "mean_score_expected": 0.12875333428382874,
+   "top1_share_expected": 0.05,
+   "top_classes": [
+    [
+     "england",
+     0.304
+    ],
+    [
+     "singapore",
+     0.304
+    ],
+    [
+     "us",
+     0.22
+    ],
+    [
+     "african",
+     0.185
+    ]
+   ],
+   "top1_counts": {
+    "african": 1,
+    "australia": 1,
+    "england": 11,
+    "indian": 1,
+    "scotland": 1,
+    "singapore": 3,
+    "us": 2
+   }
+  },
+  "piper-en_GB-vctk-medium-spk_p251": {
+   "accent_label": "en-IN",
+   "gender": "M",
+   "status": "screen",
+   "expected_class": "indian",
+   "mean_score_expected": 0.12652179598808289,
+   "top1_share_expected": 0.1,
+   "top_classes": [
+    [
+     "us",
+     0.272
+    ],
+    [
+     "newzealand",
+     0.265
+    ],
+    [
+     "african",
+     0.248
+    ],
+    [
+     "england",
+     0.21
+    ]
+   ],
+   "top1_counts": {
+    "african": 4,
+    "canada": 2,
+    "england": 4,
+    "indian": 2,
+    "ireland": 1,
+    "newzealand": 3,
+    "scotland": 1,
+    "us": 3
+   }
+  },
+  "piper-en_GB-vctk-medium-spk_p376": {
+   "accent_label": "en-IN",
+   "gender": "M",
+   "status": "screen",
+   "expected_class": "indian",
+   "mean_score_expected": 0.23053017258644104,
+   "top1_share_expected": 0.0,
+   "top_classes": [
+    [
+     "us",
+     0.515
+    ],
+    [
+     "england",
+     0.396
+    ],
+    [
+     "canada",
+     0.331
+    ],
+    [
+     "african",
+     0.274
+    ]
+   ],
+   "top1_counts": {
+    "canada": 1,
+    "england": 7,
+    "us": 12
+   }
+  },
+  "piper-en_US-arctic-medium-spk_bdl": {
+   "accent_label": "en-US",
+   "gender": "M",
+   "status": "screen",
+   "expected_class": "us",
+   "mean_score_expected": 0.5230993628501892,
+   "top1_share_expected": 0.8,
+   "top_classes": [
+    [
+     "us",
+     0.523
+    ],
+    [
+     "canada",
+     0.337
+    ],
+    [
+     "newzealand",
+     0.334
+    ],
+    [
+     "australia",
+     0.292
+    ]
+   ],
+   "top1_counts": {
+    "canada": 1,
+    "newzealand": 3,
+    "us": 16
+   }
+  },
+  "piper-en_GB-vctk-medium-spk_p225": {
+   "accent_label": "en-GB",
+   "gender": "F",
+   "status": "screen",
+   "expected_class": "england",
+   "mean_score_expected": 0.5751885175704956,
+   "top1_share_expected": 0.95,
+   "top_classes": [
+    [
+     "england",
+     0.575
+    ],
+    [
+     "newzealand",
+     0.214
+    ],
+    [
+     "scotland",
+     0.21
+    ],
+    [
+     "wales",
+     0.21
+    ]
+   ],
+   "top1_counts": {
+    "england": 19,
+    "scotland": 1
+   }
+  }
+ }
+}

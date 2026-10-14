@@ -6,9 +6,9 @@ an independent accent-identification model over the renders:
 Jzuluaga/accent-id-commonaccent_ecapa (SpeechBrain ECAPA-TDNN trained on
 Common Voice accent labels, 16 English accents incl. "indian", MIT licence).
 
-The score per voice is the mean posterior of each accent class and the share of
-sentences whose top-1 accent is the label we would assign (en-IN -> indian,
-en-US -> us, en-GB -> england). This is a sanity screen, not a perception
+The score per voice is the share of sentences whose top-1 accent class is the
+label we would assign (en-IN -> indian, en-US -> us, en-GB -> england), plus the
+mean (unnormalised) classifier score per class. This is a sanity screen, not a perception
 study: a classifier trained on read Common Voice speech is a proxy for what a
 listener would hear.
 
@@ -73,7 +73,7 @@ def main():
             sr = chunks[0].sample_rate
             wav = torchaudio.functional.resample(torch.from_numpy(x), sr, 16000).unsqueeze(0)
             out_prob, _, idx, lab = clf.classify_batch(wav)
-            p = torch.softmax(out_prob[0], dim=-1).numpy() if out_prob[0].min() < 0 else out_prob[0].numpy()
+            p = out_prob[0].numpy()  # classifier scores (not normalised); top-1 is the decision
             probs.append(p)
             top.append(lab[0])
         mp = np.mean(probs, axis=0)
@@ -82,13 +82,13 @@ def main():
         results[vid] = {
             "accent_label": v["accent"], "gender": v["gender"], "status": v["status"],
             "expected_class": want,
-            "mean_p_expected": float(mp[labels.index(want)]) if want in labels else None,
+            "mean_score_expected": float(mp[labels.index(want)]) if want in labels else None,
             "top1_share_expected": float(np.mean([t == want for t in top])),
             "top_classes": [[k, round(p, 3)] for k, p in ranking],
             "top1_counts": {k: top.count(k) for k in sorted(set(top))},
         }
         r = results[vid]
-        print(f"{vid:45s} {v['accent']}  P({want})={r['mean_p_expected']:.2f}  "
+        print(f"{vid:45s} {v['accent']}  score({want})={r['mean_score_expected']:.2f}  "
               f"top1={r['top1_share_expected']:.2f}  {ranking[:3]}", flush=True)
 
     out = _REPO_ROOT / a.out
