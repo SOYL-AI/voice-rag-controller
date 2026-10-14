@@ -514,6 +514,7 @@ def e2_numbers():
     stages = ("retrieval_launched", "retrieval_result", "llm_first_token", "llm_final", "tts_first_audio")
     tl = defaultdict(lambda: defaultdict(list))
     ntok = defaultdict(list)
+    runs = defaultdict(list)
     for f in sorted(E2_LOGS.glob("conv_*.jsonl")):
         pol = next((p for p in ("fixed_early_proxy", "sentence_end", "immediate") if f.name.startswith(f"conv_{p}_s")), None)
         if pol is None:
@@ -528,6 +529,36 @@ def e2_numbers():
             if ev[st]:
                 tl[pol][st].append(ev[st][-1]["t_ms"] - ue)
         ntok[pol].append(ev["llm_final"][-1]["payload"].get("n_tokens"))
+        runs[pol].append((
+            ev["tts_first_audio"][-1]["t_ms"] - ue,
+            ev["llm_final"][-1]["t_ms"] - ev["llm_first_token"][-1]["t_ms"],
+            ev["llm_first_token"][-1]["t_ms"] - ue,
+            float(ev["llm_final"][-1]["payload"].get("n_tokens") or float("nan")),
+            float(ev["retrieval_launched"][-1]["payload"].get("launch_offset_ms_vs_user_end", float("nan"))),
+            ev["retrieval_result"][-1]["t_ms"] - ue,
+        ))
+    # Tail composition: what distinguishes the slowest 5% of runs per policy.
+    tail = {}
+    for pol, v in runs.items():
+        a = np.array(v, dtype=float)
+        thr = np.percentile(a[:, 0], 95)
+        top = a[a[:, 0] >= thr]
+        tail[pol] = {
+            "p95_ms": float(thr), "n_tail_runs": int(len(top)),
+            "median_generation_ms_all": float(np.median(a[:, 1])),
+            "median_generation_ms_tail": float(np.median(top[:, 1])),
+            "median_user_end_to_first_token_ms_all": float(np.median(a[:, 2])),
+            "median_user_end_to_first_token_ms_tail": float(np.median(top[:, 2])),
+            "median_answer_tokens_all": float(np.nanmedian(a[:, 3])),
+            "median_answer_tokens_tail": float(np.nanmedian(top[:, 3])),
+            "median_user_end_to_retrieval_result_ms_all": float(np.median(a[:, 5])),
+            "median_user_end_to_retrieval_result_ms_tail": float(np.median(top[:, 5])),
+            "median_retrieval_result_to_first_token_ms_all": float(np.median(a[:, 2] - a[:, 5])),
+            "median_retrieval_result_to_first_token_ms_tail": float(np.median(top[:, 2] - top[:, 5])),
+            "pearson_ttfa_generation_ms": float(np.corrcoef(a[:, 0], a[:, 1])[0, 1]),
+            "runs_launched_over_1000ms_after_user_end": int(np.sum(a[:, 4] > 1000)),
+        }
+    out["tail_analysis"] = tail
     out["stage_medians_ms_vs_user_end"] = {
         pol: {st: float(np.median(v)) for st, v in d.items()} for pol, d in tl.items()}
     out["median_answer_tokens"] = {pol: float(np.median([x for x in v if x is not None])) for pol, v in ntok.items()}

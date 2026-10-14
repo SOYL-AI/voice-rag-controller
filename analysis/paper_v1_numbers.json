@@ -4477,6 +4477,56 @@
    }
   },
   "bootstrap_note": "rng = numpy default_rng(42) consumed in the order of harness/e2_bootstrap.py main(); paired CIs reproduce that script's output",
+  "tail_analysis": {
+   "fixed_early_proxy": {
+    "p95_ms": 7089.899999999999,
+    "n_tail_runs": 13,
+    "median_generation_ms_all": 2031.0,
+    "median_generation_ms_tail": 2031.0,
+    "median_user_end_to_first_token_ms_all": 1336.0,
+    "median_user_end_to_first_token_ms_tail": 5641.0,
+    "median_answer_tokens_all": 62.0,
+    "median_answer_tokens_tail": 65.0,
+    "median_user_end_to_retrieval_result_ms_all": 304.5,
+    "median_user_end_to_retrieval_result_ms_tail": 4547.0,
+    "median_retrieval_result_to_first_token_ms_all": 1101.5,
+    "median_retrieval_result_to_first_token_ms_tail": 1110.0,
+    "pearson_ttfa_generation_ms": 0.46820132833860645,
+    "runs_launched_over_1000ms_after_user_end": 1
+   },
+   "immediate": {
+    "p95_ms": 6915.25,
+    "n_tail_runs": 13,
+    "median_generation_ms_all": 2000.0,
+    "median_generation_ms_tail": 2031.0,
+    "median_user_end_to_first_token_ms_all": 1758.5,
+    "median_user_end_to_first_token_ms_tail": 5563.0,
+    "median_answer_tokens_all": 62.0,
+    "median_answer_tokens_tail": 63.0,
+    "median_user_end_to_retrieval_result_ms_all": 726.5,
+    "median_user_end_to_retrieval_result_ms_tail": 4469.0,
+    "median_retrieval_result_to_first_token_ms_all": 1047.0,
+    "median_retrieval_result_to_first_token_ms_tail": 1047.0,
+    "pearson_ttfa_generation_ms": 0.47783062822075734,
+    "runs_launched_over_1000ms_after_user_end": 3
+   },
+   "sentence_end": {
+    "p95_ms": 7051.699999999998,
+    "n_tail_runs": 13,
+    "median_generation_ms_all": 2047.0,
+    "median_generation_ms_tail": 2766.0,
+    "median_user_end_to_first_token_ms_all": 1664.5,
+    "median_user_end_to_first_token_ms_tail": 5234.0,
+    "median_answer_tokens_all": 63.0,
+    "median_answer_tokens_tail": 85.0,
+    "median_user_end_to_retrieval_result_ms_all": 657.0,
+    "median_user_end_to_retrieval_result_ms_tail": 4203.0,
+    "median_retrieval_result_to_first_token_ms_all": 1047.0,
+    "median_retrieval_result_to_first_token_ms_tail": 1047.0,
+    "pearson_ttfa_generation_ms": 0.5041404212462405,
+    "runs_launched_over_1000ms_after_user_end": 2
+   }
+  },
   "stage_medians_ms_vs_user_end": {
    "fixed_early_proxy": {
     "retrieval_launched": -391.0,
