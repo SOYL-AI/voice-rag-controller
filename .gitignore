@@ -257,3 +257,9 @@ simulator/e3_sweep_cache_superseded_*/
 
 # research v2: rendered speech audio is never committed
 datasets/v2/*/speech/audio/
+
+# research v2 speech: local tool venvs, scratch and downloaded TTS/ASR models
+.venv-speech/
+.venv-parler/
+.scratch/
+audio/v2/models/
