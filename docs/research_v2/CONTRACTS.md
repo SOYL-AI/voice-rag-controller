@@ -143,6 +143,49 @@ signals["retrieval"] = {"latency_profile": "faiss|faiss_rerank|remote_api",
 A controller must treat any missing key as "signal not available" (the v1
 `Ctx` contract).
 
+Optional, additive keys read by the v2 controllers (`v2/controllers`):
+
+```python
+signals["timing"]["user_end_ms"]          # VAD end (alias: vad_user_end_ms)
+signals["timing"]["asr_final"]            # {"t_ms": ..., "text": ...}
+signals["timing"]["partial_interval_ms"]  # ASR partial cadence
+# per uncertainty_by_prefix entry (all optional):
+#   "available_ms"    when the prefix signal is usable (default t_ms + config lag)
+#   "kind": "full"    marks the full-transcript entry (or word_frac >= 1)
+#   "min_token_prob" | "min_token_logprob" | "token_probs" | "token_logprobs"
+#                     token-probability signals for the FLARE baseline (B4)
+#   "max_entropy_nats" for the DRAGIN baseline (B6)
+```
+
+Causality: controllers see a step's data only if stamped at or before that
+step's time; `word_frac` (reference-transcript fraction) is never used at
+decision time, only the causal estimate e/(e+R) (see
+`controller/sequential_v2.py`).
+
+## 9. Controller-side artifacts (v2/controllers)
+
+- **E1-v2 calibration artifact** (`controller.e3v2.calibration.from_artifact`):
+  `{"calibration": {"signal", "kind": "logistic", "intercept", "slope",
+  "frac_slope"?, "interaction"?, "calibrated", "source", "auc"?}}` —
+  P(needed) = sigmoid(intercept + slope·x + frac_slope·f + interaction·x·f).
+- **E1-v2 empirical labels** (for `oracle_v2`, `tune_v2`): JSON
+  `{item_id: closed_book_wrong_bool}`.
+- **Belief transitions** (`controller/fit_belief_transitions.py`):
+  `{"bin_edges", "phase_edges", "next": {phase: {bin: {"probs","values","n"}}},
+  "final": {...}, "provenance"}`.
+- **Phase A cell store** (`simulator/e3v2_decide.py` docstring): JSONL of
+  `{"kind": "retrieval", item_id, condition, partial_index|null,
+  retrieved_doc_ids}` and `{"kind": "cell", item_id, seed, condition,
+  path, query_variant, answer_correct, n_prompt_tokens?, ...}`;
+  `query_variant = "qv-" + sha256(ordered doc ids)[:16]`, `"none"` for skip.
+- **Latency model**: `harness/latency_model_v2.LatencyModel.sample_ttfa(path,
+  dispatch_ms, user_end_ms, profile, n_prompt_tokens, rng) -> dict` with at
+  least `ttfa_ms` and `exposed_retrieval_ms` (stub:
+  `harness/latency_model_v2_stub.py`).
+- **v2 result records**: v1 frontier schema plus `dispatch_t_ms`,
+  `condition`, `latency_profile`, `exposed_latency_ms`
+  (`analysis/e3_frontier.validate_v2_records`).
+
 ## 7. Splits and sealing (pre-registration hygiene)
 
 - 30% dev / 70% test. Deterministic: sha256(`id`) mod 1000 < 300 → dev.

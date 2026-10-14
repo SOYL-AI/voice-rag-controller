@@ -269,6 +269,89 @@ def validate_records(records):
 
 
 # ==========================================================================
+# v2 schema extension (simulator/e3v2_decide.py)
+# ==========================================================================
+
+# Extra fields every v2 record carries on top of the v1 schema above. The
+# v1 validator tolerates extras, so v2 records pass it unchanged; this adds
+# the v2-specific checks.
+V2_RECORD_FIELDS = {
+    "dispatch_t_ms",       # int ms on the speech-onset clock, or null (skip)
+    "condition",           # voice/noise condition of the speech trace
+    "latency_profile",     # faiss | faiss_rerank | remote_api
+    "exposed_latency_ms",  # retrieval latency the user waited for (0 on skip)
+}
+
+
+def is_v2_records(records):
+    return bool(records) and all(
+        isinstance(row, dict) and "latency_profile" in row
+        for row in records
+    )
+
+
+def validate_v2_records(records):
+    """
+    v1 validation plus the v2 fields. A retrieving record must carry a
+    dispatch time; a skipping one must not, and its exposed latency is 0.
+    """
+
+    validate_records(records)
+
+    for index, row in enumerate(records):
+
+        missing = V2_RECORD_FIELDS - row.keys()
+
+        if missing:
+            raise ValueError(
+                f"v2 record {index} is missing fields: "
+                f"{sorted(missing)}"
+            )
+
+        retrieved = int(row["outcome"]["retrievals"]) > 0
+
+        if retrieved and row["dispatch_t_ms"] is None:
+            raise ValueError(
+                f"v2 record {index} retrieved but has no dispatch_t_ms."
+            )
+
+        if not retrieved and row["dispatch_t_ms"] is not None:
+            raise ValueError(
+                f"v2 record {index} skipped but has a dispatch_t_ms."
+            )
+
+        if float(row["exposed_latency_ms"]) < 0:
+            raise ValueError(
+                f"v2 record {index} has negative exposed_latency_ms."
+            )
+
+
+def select_v2_stratum(records, latency_profile=None, condition=None):
+    """
+    The v1 aggregation groups by (baseline, seed, prices) only, so v2
+    records must be fed ONE latency profile (and optionally one condition)
+    at a time — pooling profiles would average operating points that live
+    on different latency scales. Raises if several profiles remain.
+    """
+
+    rows = [
+        row for row in records
+        if (latency_profile is None or row["latency_profile"] == latency_profile)
+        and (condition is None or row["condition"] == condition)
+    ]
+
+    profiles = sorted({row["latency_profile"] for row in rows})
+
+    if len(profiles) > 1:
+        raise ValueError(
+            f"v2 records span latency profiles {profiles}; "
+            f"pass --v2-profile to analyse one at a time."
+        )
+
+    return rows
+
+
+# ==========================================================================
 # Bootstrap helper
 # ==========================================================================
 
@@ -1723,6 +1806,18 @@ def main():
         ),
     )
 
+    parser.add_argument(
+        "--v2-profile",
+        default=None,
+        help="v2 records only: the latency profile to analyse.",
+    )
+
+    parser.add_argument(
+        "--v2-condition",
+        default=None,
+        help="v2 records only: restrict to one speech condition.",
+    )
+
     args = parser.parse_args()
 
     # ------------------------------------------------------------------
@@ -1741,9 +1836,16 @@ def main():
     # Validate
     # ------------------------------------------------------------------
 
-    validate_records(
-        records
-    )
+    if is_v2_records(records):
+        validate_v2_records(records)
+        records = select_v2_stratum(
+            records, args.v2_profile, args.v2_condition
+        )
+        print(f"v2 stratum: {len(records)} records")
+    else:
+        validate_records(
+            records
+        )
 
     print(
         "Schema validation: OK"
