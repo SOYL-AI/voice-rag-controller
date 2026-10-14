@@ -10,8 +10,11 @@ voice_id naming
     parler-indic-spk_Rohit                  a named speaker of Indic Parler-TTS
     azure-en-IN-NeerjaNeural                cloud voice (adapter only, never called here)
 
+    human-<code>                            a team member's recordings (record_prompts.py)
+
 A rendered *condition* adds the speaking rate and the noise:
     <voice_id>__<wpm>wpm__<noise>           e.g. piper-en_US-lessac-medium__150wpm__babble_10dB
+    <voice_id>__natural__<noise>            uncontrolled rate (human recordings)
 which is the trace file stem (datasets/v2/<name>/speech/traces/<condition>.jsonl).
 
 `status` says whether a voice can be rendered on this machine:
@@ -139,13 +142,18 @@ def get_voice(voice_id: str) -> dict:
     return VOICES[voice_id]
 
 
-def condition_id(voice_id: str, wpm: int, noise: str) -> str:
-    return f"{voice_id}__{int(wpm)}wpm__{noise}"
+def rate_token(wpm) -> str:
+    """130 -> "130wpm"; "natural" (uncontrolled rate, e.g. human recordings) -> "natural"."""
+    return "natural" if wpm in (None, "natural") else f"{int(wpm)}wpm"
 
 
-def parse_condition(cond: str) -> tuple[str, int, str]:
+def condition_id(voice_id: str, wpm, noise: str) -> str:
+    return f"{voice_id}__{rate_token(wpm)}__{noise}"
+
+
+def parse_condition(cond: str):
     voice_id, rate, noise = cond.split("__")
-    return voice_id, int(rate.replace("wpm", "")), noise
+    return voice_id, ("natural" if rate == "natural" else int(rate.replace("wpm", ""))), noise
 
 
 def piper_model_path(model: str) -> Path:

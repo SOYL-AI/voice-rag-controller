@@ -44,7 +44,7 @@ if str(_REPO_ROOT) not in sys.path:
 
 from audio.v2.items import speech_root  # noqa: E402
 from audio.v2.textnorm import NORMALISER, edit_ops, norm_words  # noqa: E402
-from audio.v2.voices import parse_condition  # noqa: E402
+from audio.v2.voices import parse_condition, rate_token  # noqa: E402
 
 
 def _q(v, q):
@@ -183,7 +183,7 @@ def main(argv=None):
         if recs:
             rows[p.stem] = condition_metrics(recs)
     by_noise = group_rows(rows, lambda c: parse_condition(c)[2])
-    by_rate = group_rows(rows, lambda c: f"{parse_condition(c)[1]}wpm")
+    by_rate = group_rows(rows, lambda c: rate_token(parse_condition(c)[1]))
     by_voice = group_rows(rows, lambda c: parse_condition(c)[0])
     md = ["# Speech trace quality", "",
           f"Traces: `{tdir.relative_to(_REPO_ROOT).as_posix() if tdir.is_absolute() else tdir}`; "

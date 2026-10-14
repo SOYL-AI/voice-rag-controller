@@ -129,7 +129,7 @@ def seed_of(*parts) -> int:
 
 
 def audio_dir(name: str, voice_id: str, wpm: int, noise: str) -> Path:
-    return speech_root(name) / "audio" / voice_id / f"{wpm}wpm" / noise
+    return speech_root(name) / "audio" / voice_id / V.rate_token(wpm) / noise
 
 
 # ---------------------------------------------------------------------------- calibration
