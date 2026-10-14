@@ -125,6 +125,7 @@ def records_from_result(unit, result, cfg, model, model_key, backend, split, mis
         "served_model": result.served_model,
         "attempts": result.attempts,
         "timing_synthetic": result.timing_synthetic,
+        "in_flight_at_send": getattr(result, "in_flight_at_send", None),
     }
     if unit.condition == "retrieval":
         payload["grounded_answer"] = gen.text
@@ -156,8 +157,8 @@ def _expand(unit, payload, model, model_key, backend, split, missing, reused) ->
 
 def records_from_existing(unit, existing, model, model_key, backend, split, missing) -> list:
     keep = ("signals", "ttft_ms", "gen_ms", "n_tokens", "t_first_k_ms", "finish_reason",
-            "served_model", "attempts", "timing_synthetic", "closed_book_answer",
-            "grounded_answer", "retrieval")
+            "served_model", "attempts", "timing_synthetic", "in_flight_at_send",
+            "closed_book_answer", "grounded_answer", "retrieval")
     payload = {k: existing[k] for k in keep if k in existing}
     return _expand(unit, payload, model, model_key, backend, split, missing, reused=True)
 
@@ -209,19 +210,30 @@ async def execute(units, backend, writer, cfg, *, model, model_key, split, done_
     started = time.perf_counter()
     progress_every = max(progress_every, total // 20)
 
+    in_flight = [0]
+
     async def one(unit, missing):
         async with semaphore:
+            # Requests in flight when this one is sent (itself included). TTFT
+            # measured under load includes server queueing; analyze.py only
+            # treats in_flight_at_send == 1 (or a --latency-probe run) as the
+            # latency of obtaining the belief.
+            in_flight[0] += 1
+            at_send = in_flight[0]
             try:
                 result = await backend.generate(
                     unit.messages, seed=unit.seed, temperature=gen_cfg["temperature"],
                     top_p=gen_cfg["top_p"], max_tokens=gen_cfg["max_tokens"],
                     mock_hint={"item": unit.item, "grounded": unit.condition == "retrieval"},
                 )
+                result.in_flight_at_send = at_send
                 return unit, missing, result, None
             except GenerationError as error:
                 return unit, missing, None, str(error)
             except Exception as error:  # noqa: BLE001 -- recorded, run continues
                 return unit, missing, None, backend.redact(f"{type(error).__name__}: {error}")[:600]
+            finally:
+                in_flight[0] -= 1
 
     tasks = [asyncio.create_task(one(u, m)) for u, m in todo]
     finished = 0
@@ -305,6 +317,11 @@ def parse_args(argv=None):
     p.add_argument("--assume-efficiency", type=float, default=0.6,
                    help="batching efficiency for --dry-run estimates")
     p.add_argument("--skip-health-check", action="store_true")
+    p.add_argument("--latency-probe", action="store_true",
+                   help="measure the latency of obtaining the belief: concurrency 1, text "
+                   "conditions only, first seed only unless --seeds, after --warmup discarded "
+                   "calls; writes latency_<split>.jsonl")
+    p.add_argument("--warmup", type=int, default=3, help="discarded calls before a latency probe")
     return p.parse_args(argv)
 
 
@@ -340,6 +357,13 @@ def main(argv=None) -> int:
     if args.timeout:
         run_cfg["request_timeout_s"] = args.timeout
     concurrency = args.concurrency or run_cfg["concurrency"]
+    if args.latency_probe:
+        # One request at a time on a warm server: TTFT and token arrival
+        # times then measure the model, not the queue in front of it.
+        concurrency = 1
+        seeds = common.parse_csv_list(args.seeds, int) or seeds[:1]
+        args.no_asr = True
+        args.with_retrieval = args.retrieval_only = False
 
     use_asr = not args.no_asr
     noise = common.parse_csv_list(args.trace_noise) if args.trace_noise else cfg["traces"]["noise"]
@@ -354,7 +378,8 @@ def main(argv=None) -> int:
         return 1
 
     out_dir = args.out_dir or common.results_dir(dataset, model_key, backend_kind == "mock")
-    signals_path = out_dir / f"signals_{args.split}.jsonl"
+    signals_path = out_dir / (f"latency_{args.split}.jsonl" if args.latency_probe
+                              else f"signals_{args.split}.jsonl")
     retrieval_path = out_dir / f"retrieval_{args.split}.jsonl"
     errors_path = out_dir / f"errors_{args.split}.jsonl"
 
@@ -420,6 +445,18 @@ async def _run_async(args, cfg, backend, units, r_units, model, model_key, concu
                 print(f"[e1v2] server serves {served}, not {model}. Set --model / "
                       "VOICE_RAG_MODEL to the served model.", file=sys.stderr)
                 return 1
+        if args.latency_probe and units and args.warmup > 0:
+            gen_cfg = cfg["protocol"]["generation"]
+            print(f"[e1v2] latency probe: {args.warmup} warm-up call(s), discarded", flush=True)
+            for i in range(args.warmup):
+                try:
+                    await backend.generate(
+                        units[i % len(units)].messages, seed=seeds[0],
+                        temperature=gen_cfg["temperature"], top_p=gen_cfg["top_p"],
+                        max_tokens=gen_cfg["max_tokens"])
+                except GenerationError as error:
+                    print(f"[e1v2] warm-up failed: {error}", file=sys.stderr)
+                    return 1
         started = common.now_utc()
         t0 = time.perf_counter()
         stats = {}
@@ -463,6 +500,8 @@ async def _run_async(args, cfg, backend, units, r_units, model, model_key, concu
         "traces": {"n_traces": sum(len(v) for v in traces.values()), "noise": noise,
                    "voices": voices},
         "concurrency": concurrency,
+        "latency_probe": bool(args.latency_probe),
+        "output": signals_path.name,
         "inputs": {
             "items": common.rel(paths["items"]),
             "items_sha256": common.sha256_file(paths["items"]),

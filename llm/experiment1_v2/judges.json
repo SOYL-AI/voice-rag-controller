@@ -1,10 +1,11 @@
 {
-  "_comment": "Judge registry for E1-v2. Identity (deployment, model id, API version) and credentials come from the environment ONLY; this file names the variables, never their values. Request parameters are per judge because reasoning-model deployments reject a temperature override and take max_completion_tokens instead of max_tokens. Every request parameter here can be overridden by the matching *_TEMPERATURE / *_TOKEN_PARAM / *_MAX_TOKENS / *_REASONING_EFFORT environment variable (value 'none' omits the parameter). The exact parameters sent are recorded on every verdict.",
+  "_comment": "Judge registry for E1-v2. Identity (deployment, model id, API version) and credentials come from the environment ONLY; this file names the variables, never their values. Request parameters are per judge because reasoning-model deployments reject a temperature override and take max_completion_tokens instead of max_tokens. Every request parameter here can be overridden by the matching *_TEMPERATURE / *_TOKEN_PARAM / *_MAX_TOKENS / *_REASONING_EFFORT / *_SEED / *_SAMPLES environment variable (value 'none' omits the parameter). The exact parameters sent are recorded on every verdict.",
   "prompt_version": "e1v2-reasoned-strip-r1",
   "judges": {
     "primary": {
       "label": "gpt6",
       "provider": "azure_openai",
+      "_note": "GPT-6.1-sol on Azure (deployment and api version from env; 2025-04-01-preview verified). It is a reasoning model: max_tokens and any non-default temperature are rejected, so temperature is never sent and sampling is stochastic. reasoning_effort and seed are pinned and each answer is graded by `samples` independent draws (seed, seed+1, ...) with a majority vote; every draw is recorded so self-consistency can be reported. The completion budget covers reasoning tokens.",
       "env": {
         "deployment": ["VOICE_RAG_JUDGE_DEPLOYMENT"],
         "api_version": ["VOICE_RAG_JUDGE_API_VERSION"],
@@ -16,8 +17,10 @@
       "request": {
         "temperature": null,
         "token_param": "max_completion_tokens",
-        "max_output_tokens": 4000,
-        "reasoning_effort": null
+        "max_output_tokens": 2000,
+        "reasoning_effort": "medium",
+        "seed": 20261015,
+        "samples": 3
       }
     },
     "secondary": {
@@ -37,7 +40,9 @@
         "temperature": 0,
         "token_param": "max_tokens",
         "max_output_tokens": 300,
-        "reasoning_effort": null
+        "reasoning_effort": null,
+        "seed": null,
+        "samples": 1
       }
     }
   }

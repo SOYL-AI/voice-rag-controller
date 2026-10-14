@@ -66,8 +66,44 @@ def load_model_inputs(rdir: Path, split: str) -> dict:
     labels = common.load_json(labels_path) if labels_path.exists() else None
     for record in records:
         record["_flat"] = flatten_signals(record["signals"])
+    probe = common.read_jsonl(rdir / f"latency_{split}.jsonl")
     return {"records": records, "labels": labels, "signals_path": signals_path,
-            "labels_path": labels_path if labels else None}
+            "labels_path": labels_path if labels else None,
+            "latency": latency_model(probe, records)}
+
+
+def latency_model(probe_records, run_records) -> dict:
+    """How long the belief takes to obtain, from calls that were NOT queued.
+
+    Preference: a --latency-probe run (concurrency 1, warm server); else the
+    main run's calls sent with nothing else in flight; else every call, which
+    includes server queueing and is flagged as not a latency estimate.
+    Latency of token k is modelled as ttft + (k - 1) * per-token interval,
+    with medians over calls, so it can be applied to any record's length."""
+    def calls(records):
+        return list({r["call_key"]: r for r in records if r.get("ttft_ms") is not None}.values())
+
+    probe = calls(probe_records)
+    solo = [r for r in calls(run_records) if r.get("in_flight_at_send") == 1]
+    if probe:
+        chosen, source, valid = probe, "latency probe (concurrency 1, warm)", True
+    elif len(solo) >= 5:
+        chosen, source, valid = solo, "main run, calls with in_flight_at_send == 1", True
+    else:
+        chosen, source = calls(run_records), "main run, ALL calls (includes server queueing)"
+        valid = False
+    if not chosen:
+        return None
+    ttft = [r["ttft_ms"] for r in chosen]
+    per_token = [(r["gen_ms"] - r["ttft_ms"]) / (r["n_tokens"] - 1) for r in chosen
+                 if r.get("gen_ms") is not None and (r.get("n_tokens") or 0) > 1]
+    return {
+        "source": source, "valid_latency_estimate": valid, "n_calls": len(chosen),
+        "timing_synthetic": any(r.get("timing_synthetic") for r in chosen),
+        "ttft_ms_median": float(np.median(ttft)), "ttft_ms_p90": float(np.percentile(ttft, 90)),
+        "per_token_ms_median": float(np.median(per_token)) if per_token else 0.0,
+        "gen_ms_median": float(np.median([r["gen_ms"] for r in chosen])),
+    }
 
 
 def label_maps(items, labels) -> dict:
@@ -133,16 +169,24 @@ def per_seed_auc(records, signal, label_map) -> dict:
 # ---------------------------------------------------------------------------
 # Belief-at-dispatch on speech traces
 # ---------------------------------------------------------------------------
-def signal_latency_ms(record, signal):
-    """Time from request start until `signal` can be computed."""
+def signal_latency_ms(record, signal, lat=None):
+    """Time from request start until `signal` can be computed for this
+    record: token min(k, n) for first-k entropy, the last token otherwise.
+    With a latency model the time is predicted from unqueued calls; without
+    one it is the record's own (possibly queued) measurement."""
+    n = record.get("n_tokens") or 0
     if signal.startswith("first_k_mean_entropy_nats@"):
-        k = signal.split("@", 1)[1]
-        value = (record.get("t_first_k_ms") or {}).get(k)
+        k = int(signal.split("@", 1)[1])
+        if lat:
+            return lat["ttft_ms_median"] + (max(1, min(k, n)) - 1) * lat["per_token_ms_median"]
+        value = (record.get("t_first_k_ms") or {}).get(str(k))
         return value if value is not None else record.get("gen_ms")
+    if lat:
+        return lat["ttft_ms_median"] + max(0, n - 1) * lat["per_token_ms_median"]
     return record.get("gen_ms")
 
 
-def asr_curves(records, signal, label_maps_, clusters, grid_ms, rel_grid, n_boot) -> dict:
+def asr_curves(records, signal, label_maps_, clusters, grid_ms, rel_grid, n_boot, lat=None) -> dict:
     """AUC of the belief available at time t, per trace condition."""
     out = {}
     asr = [r for r in records if r["prefix"]["source"] == "asr" and r["prefix"]["kind"] == "partial"]
@@ -160,7 +204,7 @@ def asr_curves(records, signal, label_maps_, clusters, grid_ms, rel_grid, n_boot
                 continue
             avail = r["prefix"].get("available_ms")
             avail = r["prefix"].get("t_ms") if avail is None else avail
-            latency = signal_latency_ms(r, signal) or 0.0
+            latency = signal_latency_ms(r, signal, lat) or 0.0
             series.setdefault((r["item_id"], r["draw_seed"]), []).append(
                 (avail, avail + latency, value))
             if r["prefix"].get("vad_user_end_ms") is not None:
@@ -578,6 +622,14 @@ def analyze_model(inp, items, cfg_a, headline, n_boot) -> dict:
         "timing_synthetic": any(r.get("timing_synthetic") for r in records),
         "auc_full": {}, "prefix_curve_text": {}, "asr_curves": {}, "first_k": [],
     }
+    lat_model = inp.get("latency")
+    # Only an unqueued estimate may stand in for "time to obtain the belief";
+    # otherwise each record's own measurement is used and flagged.
+    result["latency_model"] = lat_model
+    if lat_model and not lat_model["valid_latency_estimate"]:
+        print(f"[analyze] WARNING {result['model_key']}: no latency probe and too few unqueued "
+              "calls; belief-ready timings include server queueing. Run run.py --latency-probe.")
+        lat_model = None
     if "empirical" in lmaps:
         both = [i for i in lmaps["empirical"] if i in lmaps["authored"]]
         from simulator.judge_validation.score_judges import agreement  # noqa: PLC0415
@@ -608,19 +660,17 @@ def analyze_model(inp, items, cfg_a, headline, n_boot) -> dict:
         result["prefix_curve_text"][signal] = curve
         result["asr_curves"][signal] = asr_curves(
             records, signal, lmaps, clusters, cfg_a["asr_time_grid_ms"],
-            cfg_a["asr_relative_grid"], n_boot)
+            cfg_a["asr_relative_grid"], n_boot, lat_model)
 
     ks = sorted({int(k.split("@")[1]) for k in all_signals if k.startswith("first_k_mean_entropy_nats@")})
     for k in ks + ["all"]:
         signal = "mean_entropy_nats" if k == "all" else f"first_k_mean_entropy_nats@{k}"
-        lat = [signal_latency_ms(r, signal) for r in full]
+        lat = [signal_latency_ms(r, signal, lat_model) for r in full]
         lat = [x for x in lat if x is not None]
         row = {"k": k, "signal": signal,
                "latency_ms": {"median": float(np.median(lat)) if lat else None,
                               "p90": float(np.percentile(lat, 90)) if lat else None},
-               "ttft_ms_median": float(np.median([r["ttft_ms"] for r in full
-                                                  if r.get("ttft_ms") is not None]))
-               if any(r.get("ttft_ms") is not None for r in full) else None}
+               "latency_source": (lat_model or {}).get("source")}
         for name, lm in lmaps.items():
             row[name] = item_auc(item_scores(full, signal), lm, clusters, n_boot)
         result["first_k"].append(row)

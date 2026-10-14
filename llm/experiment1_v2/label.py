@@ -116,11 +116,20 @@ def grade_draws(records, items_by_id, judges, cfg, cache_dir, workers) -> list:
             row["judges"][role] = {
                 "answer_correct": verdict["answer_correct"] if verdict["parsed_ok"] else None,
                 "parsed_ok": verdict["parsed_ok"],
+                "n_samples": verdict["n_samples"],
+                "self_consistency": verdict["self_consistency"],
+                "unanimous": verdict["unanimous"],
                 "judge_key": verdict["judge_key"],
                 "judge": verdict["judge"],
+                "request_config": verdict["request_config"],
                 "response_model": verdict.get("response_model"),
-                "sent_params": verdict.get("sent_params"),
                 "cache_hit": verdict.get("cache_hit"),
+                "samples": [
+                    {k: s.get(k) for k in ("sample_index", "seed", "answer_correct", "parsed_ok",
+                                           "judge_raw", "response_model", "sent_params", "usage",
+                                           "sample_key")}
+                    for s in verdict["samples"]
+                ],
             }
         return row
 
@@ -192,7 +201,46 @@ def agreement_report(rows, roles) -> dict:
     report["parse_failures"] = {
         role: sum(1 for r in rows if not r["judges"][role]["parsed_ok"]) for role in roles
     }
+    report["self_consistency"] = {role: self_consistency(rows, role) for role in roles}
     return report
+
+
+def self_consistency(rows, role) -> dict:
+    """How often a stochastic judge agrees with itself across its k samples
+    on the same answer: mean share agreeing with the majority, fraction
+    unanimous, and pairwise percent agreement / kappa between sample i and j.
+    Also the reasoning-token usage the samples reported."""
+    judged = [r["judges"][role] for r in rows]
+    k = max((j["n_samples"] for j in judged), default=0)
+    out = {"n_answers": len(judged), "k": k}
+    if k <= 1:
+        out["note"] = "single-sample judge; self-consistency not measured"
+    else:
+        shares = [j["self_consistency"] for j in judged if j["self_consistency"] is not None]
+        out["mean_majority_share"] = sum(shares) / len(shares) if shares else None
+        out["fraction_unanimous"] = sum(1 for j in judged if j["unanimous"]) / len(judged) if judged else None
+        pairs = {}
+        for a in range(k):
+            for b in range(a + 1, k):
+                pairs[f"{a}-{b}"] = agreement(
+                    [j["samples"][a]["answer_correct"] if len(j["samples"]) > a else None for j in judged],
+                    [j["samples"][b]["answer_correct"] if len(j["samples"]) > b else None for j in judged])
+        out["pairwise_samples"] = pairs
+    reasoning, completion = [], []
+    for j in judged:
+        for s in j["samples"]:
+            usage = s.get("usage") or {}
+            completion.append(usage.get("completion_tokens"))
+            reasoning.append((usage.get("completion_tokens_details") or {}).get("reasoning_tokens"))
+    reasoning = [v for v in reasoning if v is not None]
+    completion = [v for v in completion if v is not None]
+    out["usage"] = {
+        "samples_with_usage": len(completion),
+        "completion_tokens_total": sum(completion) if completion else None,
+        "reasoning_tokens_total": sum(reasoning) if reasoning else None,
+        "reasoning_tokens_max": max(reasoning) if reasoning else None,
+    }
+    return out
 
 
 def parse_args(argv=None):
@@ -330,8 +378,14 @@ def main(argv=None) -> int:
           f"authored need {sum(authored)}/{len(authored)}")
     print(f"[label] authored vs empirical: {agreement(authored, need)}")
     for name, stats in output["agreement"]["closed_book"].items():
-        if name != "parse_failures":
+        if name not in ("parse_failures", "self_consistency"):
             print(f"[label] {name}: {stats['agree']}/{stats['n']} kappa={stats['cohen_kappa']}")
+    print(f"[label] parse failures: {output['agreement']['closed_book']['parse_failures']}")
+    for role, sc in output["agreement"]["closed_book"]["self_consistency"].items():
+        if sc["k"] > 1:
+            print(f"[label] {role} self-consistency (k={sc['k']}): mean majority share "
+                  f"{sc['mean_majority_share']}, unanimous {sc['fraction_unanimous']}, "
+                  f"reasoning tokens {sc['usage']['reasoning_tokens_total']}")
     print(f"[label] wrote {common.rel(out_path)}")
     return 0
 

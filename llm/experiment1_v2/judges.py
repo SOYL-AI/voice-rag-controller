@@ -21,12 +21,19 @@ in v2 and is what judge validation against the team's human labels has to
 confirm. The prompt version string (judges.json) changes whenever any of
 this does.
 
-Request parameters are per judge (judges.json, overridable by env), because
-reasoning-model deployments reject `temperature` and take
-`max_completion_tokens` rather than `max_tokens`. If a deployment rejects a
-parameter anyway, the judge adapts once (as v4 does) and every verdict
-records the parameters ACTUALLY sent, plus the model version the server
-reported.
+Request parameters are per judge (judges.json, overridable by env). The
+primary (gpt-6.1-sol, api-version 2025-04-01-preview) is a reasoning model:
+it rejects `max_tokens` and any temperature but the default, so it is sent
+max_completion_tokens (a budget that also covers reasoning tokens), a pinned
+reasoning_effort and a seed, and never a temperature. Because it therefore
+samples stochastically, each answer is graded by k samples (seeds seed,
+seed+1, ...; k=3 by default) and the verdict is their majority; every sample
+is kept so self-consistency can be reported. The secondary keeps v4's
+temperature 0, max_tokens 300, one sample. If a deployment still rejects a
+parameter the judge adapts once (as v4 does). Every verdict records the
+parameters ACTUALLY sent, the model version the server reported, and the
+token usage (including reasoning tokens); the request config (effort, seed,
+k) is part of the cache key.
 
 Credentials and endpoints are read from the environment only and never
 written to a verdict, a cache file or a log line.
@@ -179,10 +186,14 @@ def resolve_spec(role: str, judges_cfg: dict, env=None) -> JudgeSpec:
     if prefix:
         for key, suffix in (("temperature", "TEMPERATURE"), ("token_param", "TOKEN_PARAM"),
                             ("max_output_tokens", "MAX_TOKENS"),
-                            ("reasoning_effort", "REASONING_EFFORT")):
+                            ("reasoning_effort", "REASONING_EFFORT"), ("seed", "SEED"),
+                            ("samples", "SAMPLES")):
             raw = env.get(f"{prefix}_{suffix}")
             if raw is not None:
                 request[key] = _override(raw.strip())
+    request["samples"] = int(request.get("samples") or 1)
+    if request["samples"] < 1:
+        raise JudgeConfigError(f"{role} judge samples must be >= 1")
     if request.get("token_param") not in ("max_tokens", "max_completion_tokens"):
         raise JudgeConfigError(f"{role} judge token_param must be max_tokens or "
                                f"max_completion_tokens, got {request.get('token_param')!r}")
@@ -205,11 +216,13 @@ def _sdk_transport(spec: JudgeSpec, timeout_s: float = 120.0):
 
     def call(messages, params):
         # All sampling/limit parameters go through extra_body so the exact
-        # JSON sent is `params`, whatever this SDK version knows about.
+        # JSON sent is `params`, whatever this SDK version knows about
+        # (openai 1.52 has no reasoning_effort argument, for instance).
         response = client.chat.completions.create(
             model=spec.deployment, messages=messages, extra_body=params
         )
-        return (response.choices[0].message.content or ""), getattr(response, "model", None)
+        usage = response.usage.model_dump() if getattr(response, "usage", None) else None
+        return (response.choices[0].message.content or ""), getattr(response, "model", None), usage
 
     return call
 
@@ -228,12 +241,14 @@ class AzureChatJudge:
     def identity(self) -> dict:
         return self.spec.identity()
 
-    def _params(self) -> dict:
+    def _params(self, seed=None) -> dict:
         params = {self._token_param: int(self.spec.request.get("max_output_tokens") or 300)}
         if self._temperature is not None:
             params["temperature"] = self._temperature
         if self.spec.request.get("reasoning_effort"):
             params["reasoning_effort"] = self.spec.request["reasoning_effort"]
+        if seed is not None:
+            params["seed"] = int(seed)
         return params
 
     def _redact(self, text) -> str:
@@ -264,15 +279,18 @@ class AzureChatJudge:
         print(f"[judge:{self.spec.label}] request adapted: {self.adaptations[-1]}")
         return True
 
-    def complete(self, system: str, user: str) -> dict:
+    def complete(self, system: str, user: str, seed=None) -> dict:
         messages = [{"role": "system", "content": system}, {"role": "user", "content": user}]
         transient = adapted = 0
         while True:
-            params = self._params()
+            params = self._params(seed)
             try:
-                text, served = self._transport(messages, params)
+                reply = self._transport(messages, params)
+                text, served = reply[0], reply[1]
+                usage = reply[2] if len(reply) > 2 else None
                 return {"text": (text or "").strip(), "sent_params": params,
-                        "response_model": served, "attempts": transient + adapted + 1}
+                        "response_model": served, "usage": usage,
+                        "attempts": transient + adapted + 1}
             except Exception as error:  # noqa: BLE001 -- classified below
                 if adapted < 3 and self._adapt(error):
                     adapted += 1
@@ -289,19 +307,22 @@ class MockJudge:
     """Deterministic stand-in for tests and --judge-backend mock. NOT DATA.
     Says YES when the reference (or an alias, or any key fact) appears in
     the answer; `flip_rate` flips a deterministic fraction so two mock
-    judges can disagree."""
+    judges can disagree; the flip depends on the sample seed, so a k-sample
+    mock judge is not perfectly self-consistent either."""
 
-    def __init__(self, role: str, label: str, prompt_version: str, flip_rate: float = 0.0):
+    def __init__(self, role: str, label: str, prompt_version: str, flip_rate: float = 0.0,
+                 samples: int = 1, seed=None):
         self.spec = JudgeSpec(role=role, label=label, provider="mock", deployment=f"mock-{label}",
                               model_id=f"mock-{label}", api_version="none",
-                              prompt_version=prompt_version, request={"mock": True})
+                              prompt_version=prompt_version,
+                              request={"mock": True, "samples": int(samples), "seed": seed})
         self.flip_rate = float(flip_rate)
 
     @property
     def identity(self) -> dict:
         return self.spec.identity()
 
-    def complete(self, system: str, user: str) -> dict:
+    def complete(self, system: str, user: str, seed=None) -> dict:
         def block(name):
             if f"{name}:\n" not in user:
                 return ""
@@ -312,13 +333,14 @@ class MockJudge:
         targets += [line[2:] for line in block("Equivalent forms of the reference answer").splitlines()]
         targets += [line[2:] for line in block("Key facts").splitlines()]
         ok = any(_norm(t) and _norm(t) in answer for t in targets)
-        material = f"{self.spec.label}|{block('Question')}|{answer}"
+        material = f"{self.spec.label}|{block('Question')}|{answer}|{seed}"
         u = int(hashlib.sha256(material.encode()).hexdigest()[:8], 16) / 0xFFFFFFFF
         if u < self.flip_rate:
             ok = not ok
         text = "CONFLICT: none\nVERDICT: YES" if ok else \
             "CONFLICT: reference says X, candidate says Y\nVERDICT: NO"
-        return {"text": text, "sent_params": {"mock": True}, "response_model": "mock", "attempts": 1}
+        return {"text": text, "sent_params": {"mock": True, "seed": seed}, "response_model": "mock",
+                "usage": None, "attempts": 1}
 
 
 def _norm(text: str) -> str:
@@ -333,8 +355,10 @@ def make_judges(roles, backend: str, judges_cfg: dict = None, env=None) -> dict:
     for role in roles:
         if backend == "mock":
             entry = judges_cfg["judges"][role]
+            request = entry["request"]
             out[role] = MockJudge(role, entry["label"], judges_cfg["prompt_version"],
-                                  flip_rate=0.0 if role == "primary" else 0.1)
+                                  flip_rate=0.05 if role == "primary" else 0.1,
+                                  samples=int(request.get("samples") or 1), seed=request.get("seed"))
         elif backend == "azure":
             out[role] = AzureChatJudge(resolve_spec(role, judges_cfg, env))
         else:
@@ -378,32 +402,80 @@ def _key_lock(key: str) -> threading.Lock:
         return _LOCKS.setdefault(key, threading.Lock())
 
 
+def sample_seeds(request: dict) -> list:
+    """Seeds for the k samples: seed, seed+1, ... (None when no seed is
+    pinned, as for the temperature-0 v4 judge)."""
+    k = int(request.get("samples") or 1)
+    base = request.get("seed")
+    return [None if base is None else int(base) + i for i in range(k)]
+
+
+def majority(votes) -> tuple:
+    """(verdict, parsed_ok, self_consistency) over parsed sample verdicts.
+    A tie (possible only with parse failures or an even k) is unresolved:
+    verdict False, parsed_ok False, so it is counted, never silently scored."""
+    parsed = [v for v in votes if v is not None]
+    if not parsed:
+        return False, False, None
+    yes = sum(parsed)
+    no = len(parsed) - yes
+    if yes == no:
+        return False, False, 0.5
+    verdict = yes > no
+    return verdict, True, max(yes, no) / len(parsed)
+
+
 def _grade_locked(judge, key, item_id, question, reference, answer, key_facts, aliases, context,
                   cache_dir) -> dict:
-    path = None
-    if cache_dir is not None:
-        path = Path(cache_dir) / judge.spec.slug() / f"{key[:40]}.json"
-        if path.exists():
-            cached = common.load_json(path)
-            cached["cache_hit"] = True
-            return cached
-    reply = judge.complete(system_prompt(context),
-                           user_prompt(question, reference, answer, key_facts, aliases))
-    correct, parsed_ok = parse_verdict(reply["text"])
-    verdict = {
-        "answer_correct": correct,
+    """k independent samples (each cached under its own key, which includes
+    its seed), then a majority vote. Every sample is kept on the record."""
+    system, user = system_prompt(context), user_prompt(question, reference, answer, key_facts, aliases)
+    samples = []
+    for index, seed in enumerate(sample_seeds(judge.spec.request)):
+        sample_key = common.sha256_text(key, index, seed)
+        path = None
+        if cache_dir is not None:
+            path = Path(cache_dir) / judge.spec.slug() / f"{sample_key[:40]}.json"
+            if path.exists():
+                sample = common.load_json(path)
+                sample["cache_hit"] = True
+                samples.append(sample)
+                continue
+        reply = judge.complete(system, user, seed=seed)
+        correct, parsed_ok = parse_verdict(reply["text"])
+        sample = {
+            "sample_index": index,
+            "seed": seed,
+            "answer_correct": correct if parsed_ok else None,
+            "parsed_ok": parsed_ok,
+            "judge_raw": reply["text"],
+            "sample_key": sample_key,
+            "response_model": reply.get("response_model"),
+            "sent_params": reply.get("sent_params"),
+            "usage": reply.get("usage"),
+            "graded_at_utc": common.now_utc(),
+        }
+        if path is not None:
+            common.atomic_write_json(path, sample)
+        sample["cache_hit"] = False
+        samples.append(sample)
+    verdict, parsed_ok, consistency = majority([s["answer_correct"] for s in samples])
+    record = {
+        "answer_correct": verdict,
         "parsed_ok": parsed_ok,
-        "judge_raw": reply["text"],
+        "n_samples": len(samples),
+        "self_consistency": consistency,
+        "unanimous": consistency == 1.0 and len(samples) > 1,
         "judge_key": key,
         "judge": judge.identity,
-        "response_model": reply.get("response_model"),
-        "sent_params": reply.get("sent_params"),
+        "request_config": judge.spec.request,
+        "response_model": samples[0].get("response_model"),
+        "sent_params": samples[0].get("sent_params"),
         "item_id": item_id,
-        "graded_at_utc": common.now_utc(),
+        "samples": samples,
+        "cache_hit": all(s["cache_hit"] for s in samples),
+        "judge_raw": samples[0]["judge_raw"],
     }
     if isinstance(judge, MockJudge):
-        verdict["judge_note"] = "MOCK JUDGE: deterministic plumbing verdict. Not data."
-    if path is not None:
-        common.atomic_write_json(path, verdict)
-    verdict["cache_hit"] = False
-    return verdict
+        record["judge_note"] = "MOCK JUDGE: deterministic plumbing verdict. Not data."
+    return record

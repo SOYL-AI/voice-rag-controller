@@ -281,17 +281,21 @@ class AgreementTests(unittest.TestCase):
 class JudgeTests(unittest.TestCase):
     CFG = judges.load_judges_config()
     ENV = {
-        "VOICE_RAG_JUDGE_DEPLOYMENT": "gpt6-sol", "VOICE_RAG_JUDGE_API_VERSION": "2026-09-01",
-        "VOICE_RAG_JUDGE_MODEL": "gpt-6-sol-2026-08", "AZURE_OPENAI_ENDPOINT": SENTINEL_URL,
+        "VOICE_RAG_JUDGE_DEPLOYMENT": "gpt-6.1-sol", "VOICE_RAG_JUDGE_API_VERSION": "2025-04-01-preview",
+        "VOICE_RAG_JUDGE_MODEL": "gpt-6.1-sol-2026-09-29", "AZURE_OPENAI_ENDPOINT": SENTINEL_URL,
         "AZURE_OPENAI_API_KEY": SENTINEL_KEY, "AZURE_OPENAI_DEPLOYMENT": "gpt-4o",
         "AZURE_OPENAI_API_VERSION": "2025-01-01-preview",
     }
 
     def test_resolution_and_missing_env(self):
         primary = judges.resolve_spec("primary", self.CFG, self.ENV)
-        self.assertEqual(primary.deployment, "gpt6-sol")
+        self.assertEqual(primary.deployment, "gpt-6.1-sol")
         self.assertIsNone(primary.request["temperature"])
         self.assertEqual(primary.request["token_param"], "max_completion_tokens")
+        self.assertEqual((primary.request["reasoning_effort"], primary.request["samples"]), ("medium", 3))
+        params = judges.AzureChatJudge(primary, transport=lambda m, p: None)._params(seed=1)
+        self.assertNotIn("temperature", params)
+        self.assertNotIn("max_tokens", params)
         secondary = judges.resolve_spec("secondary", self.CFG, self.ENV)
         self.assertEqual((secondary.deployment, secondary.model_id), ("gpt-4o", "gpt-4o"))
         self.assertEqual(secondary.request["temperature"], 0)
@@ -332,9 +336,13 @@ class JudgeTests(unittest.TestCase):
             verdict = judges.grade(judge, item_id="i", question="q", reference="r", answer="  a  ",
                                    cache_dir=Path(tmp))
             self.assertTrue(verdict["answer_correct"])
-            self.assertEqual(verdict["sent_params"], {"max_completion_tokens": 4000})
+            self.assertEqual(verdict["sent_params"], {"max_completion_tokens": 2000,
+                                                      "reasoning_effort": "medium",
+                                                      "seed": 20261015})
+            self.assertEqual([s["sent_params"]["seed"] for s in verdict["samples"]],
+                             [20261015, 20261016, 20261017])
             self.assertEqual(verdict["response_model"], "gpt-6-sol-2026-08")
-            self.assertEqual(verdict["judge"]["model_id"], "gpt-6-sol-2026-08")
+            self.assertEqual(verdict["judge"]["model_id"], "gpt-6.1-sol-2026-09-29")
             self.assertEqual(len(judge.adaptations), 2)
             on_disk = "".join(p.read_text(encoding="utf-8") for p in Path(tmp).rglob("*.json"))
             self.assertNotIn(SENTINEL_KEY, on_disk)
@@ -344,6 +352,52 @@ class JudgeTests(unittest.TestCase):
             self.assertTrue(judges.grade(judge, item_id="i", question="q", reference="r", answer="a",
                                          cache_dir=Path(tmp))["cache_hit"])
             self.assertEqual(len(sent), n)
+
+    def test_k_sample_majority_records_every_sample_and_usage(self):
+        replies = iter(["VERDICT: YES", "VERDICT: NO", "reasoning...\nVERDICT: YES"])
+        usage = {"completion_tokens": 50, "completion_tokens_details": {"reasoning_tokens": 40}}
+
+        def transport(messages, params):
+            return next(replies), "gpt-6.1-sol-2026-09-29", usage
+
+        judge = judges.AzureChatJudge(judges.resolve_spec("primary", self.CFG, self.ENV), transport=transport)
+        with tempfile.TemporaryDirectory() as tmp:
+            verdict = judges.grade(judge, item_id="i", question="q", reference="r", answer="a",
+                                   cache_dir=Path(tmp))
+            self.assertTrue(verdict["answer_correct"])
+            self.assertEqual(verdict["n_samples"], 3)
+            self.assertAlmostEqual(verdict["self_consistency"], 2 / 3)
+            self.assertFalse(verdict["unanimous"])
+            self.assertEqual([s["answer_correct"] for s in verdict["samples"]], [True, False, True])
+            self.assertEqual(verdict["samples"][0]["usage"]["completion_tokens_details"]["reasoning_tokens"], 40)
+            self.assertEqual(len(list(Path(tmp).rglob("*.json"))), 3)  # one cache file per sample
+        rows = [{"judges": {"primary": {**verdict, "samples": verdict["samples"]}}}]
+        sc = label.self_consistency(rows, "primary")
+        self.assertEqual(sc["k"], 3)
+        self.assertEqual(sc["usage"]["reasoning_tokens_total"], 120)
+        self.assertEqual(sc["pairwise_samples"]["0-2"]["percent_agreement"], 1.0)
+
+    def test_majority_ties_are_unresolved(self):
+        self.assertEqual(judges.majority([True, None, False]), (False, False, 0.5))
+        self.assertEqual(judges.majority([None, None]), (False, False, None))
+        self.assertEqual(judges.majority([False, False, True])[:2], (False, True))
+
+    def test_seed_and_effort_change_the_cache_key(self):
+        kw = dict(item_id="i", question="q", reference="r", answer="a", key_facts=[], aliases=[],
+                  context="general")
+        base = judges.AzureChatJudge(judges.resolve_spec("primary", self.CFG, self.ENV),
+                                     transport=lambda m, p: ("", ""))
+        for override in ({"VOICE_RAG_JUDGE_SEED": "7"}, {"VOICE_RAG_JUDGE_REASONING_EFFORT": "high"},
+                         {"VOICE_RAG_JUDGE_SAMPLES": "5"}):
+            other = judges.AzureChatJudge(judges.resolve_spec("primary", self.CFG, dict(self.ENV, **override)),
+                                          transport=lambda m, p: ("", ""))
+            self.assertNotEqual(judges.cache_key(base, **kw), judges.cache_key(other, **kw))
+
+    def test_secondary_keeps_v4_settings(self):
+        spec = judges.resolve_spec("secondary", self.CFG, self.ENV)
+        self.assertEqual(judges.AzureChatJudge(spec, transport=lambda m, p: None)._params(),
+                         {"max_tokens": 300, "temperature": 0})
+        self.assertEqual(judges.sample_seeds(spec.request), [None])
 
     def test_errors_are_redacted(self):
         def transport(messages, params):
@@ -386,6 +440,26 @@ class StatsTests(unittest.TestCase):
         slope, intercept, info = stats.fit_logistic_safe([0, 1, 2, 3], [0, 0, 1, 1])
         self.assertGreater(slope, 0)
         self.assertIn("separable", info["method"])
+
+    def test_latency_model_prefers_unqueued_calls(self):
+        def rec(key, ttft, gen, n, in_flight):
+            return {"call_key": key, "ttft_ms": ttft, "gen_ms": gen, "n_tokens": n,
+                    "in_flight_at_send": in_flight}
+
+        queued = [rec(f"q{i}", 20000.0, 22000.0, 41, 16) for i in range(10)]
+        solo = [rec(f"s{i}", 300.0, 1500.0, 41, 1) for i in range(5)]
+        model = analyze.latency_model([], queued + solo)
+        self.assertTrue(model["valid_latency_estimate"])
+        self.assertEqual(model["ttft_ms_median"], 300.0)
+        self.assertAlmostEqual(model["per_token_ms_median"], 30.0)
+        probe = analyze.latency_model([rec("p", 250.0, 1450.0, 41, 1)], queued)
+        self.assertIn("probe", probe["source"])
+        self.assertFalse(analyze.latency_model([], queued)["valid_latency_estimate"])
+        r = {"n_tokens": 20, "t_first_k_ms": {"8": 999.0}, "gen_ms": 5000.0}
+        self.assertAlmostEqual(analyze.signal_latency_ms(r, "first_k_mean_entropy_nats@8", model),
+                               300.0 + 7 * 30.0)
+        self.assertAlmostEqual(analyze.signal_latency_ms(r, "mean_entropy_nats", model), 300.0 + 19 * 30.0)
+        self.assertEqual(analyze.signal_latency_ms(r, "first_k_mean_entropy_nats@8"), 999.0)
 
     def test_artifact_loads_in_controller(self):
         from controller.baselines._objective import load_voi_calibration
