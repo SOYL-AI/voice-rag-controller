@@ -61,7 +61,7 @@ Dataset names: `d1_open` (public open-domain QA, popularity-stratified) and
   "expected_answer": "₹150, charged 7 days after the due date.",
   "answer_aliases": ["150 rupees", "Rs 150"],
   "gold_doc_ids": ["d2-telecom-northwind-billing-03"],
-  "item_type": "org_specific | general | counter_prior | ambiguous | popqa",
+  "item_type": "org_specific | general | counter_prior | ambiguous | popqa | multihop",
   "retrieval_needed_authored": true,
   "pair_id": "d2-pair-0061",
   "popularity": null,
@@ -77,13 +77,25 @@ Dataset names: `d1_open` (public open-domain QA, popularity-stratified) and
 - `pair_id` links matched pairs: same domain, same question template, and
   similar length, where one item needs retrieval and the other does not.
   Required for `d2_support`, optional for `d1_open`.
+- `item_type: "multihop"` marks multi-hop open-domain questions (D1 uses
+  HotpotQA bridge and comparison questions).
+- **D1 (`d1_open`) has no authored retrieval label.** For every D1 item
+  `retrieval_needed_authored` is `null`: whether a public-knowledge question
+  needs retrieval depends on what the model memorised, so D1 relies only on
+  the empirical label (closed-book correctness computed by E1-v2).
+  `popularity` (PopQA `s_pop`, the subject's Wikipedia page views) is the
+  covariate; it is `null` for `multihop` items.
 
 ## 3. Corpus schema (`corpus.jsonl`)
 
 ```json
 {"doc_id": "...", "dataset": "...", "domain": "...", "org": "...|null",
- "title": "...", "text": "...", "source": "authored|wikipedia|...", "licence": "..."}
+ "title": "...", "text": "...", "source": "authored|wikipedia|...", "licence": "...",
+ "meta": {}}
 ```
+
+`meta` is optional and free-form (e.g. Wikipedia `pageid`/`revid`/section);
+consumers must not depend on it.
 
 Passages should be ≤ ~350 words so they fit the existing bge-small + FAISS
 chunking.

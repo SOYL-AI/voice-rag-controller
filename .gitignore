@@ -257,3 +257,8 @@ simulator/e3_sweep_cache_superseded_*/
 
 # research v2: rendered speech audio is never committed
 datasets/v2/*/speech/audio/
+
+# research v2: raw download caches and built FAISS indexes are reproducible, never committed
+datasets/v2/*/.cache/
+datasets/v2/*/index/
+.venv-*/
