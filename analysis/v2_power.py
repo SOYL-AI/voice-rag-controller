@@ -444,6 +444,13 @@ def main() -> int:
            "cells_C1": cells, "pooled_primary_C1": pooled, "sensitivity_C1_d2_remote_api": sens,
            "cells_C1C2_commit": c2, "C2_prefix_noise_sensitivity_d2_remote_api": c2_noise,
            "C1C2_selected_price_summary": c2_summary, "C1C2_pooled_by_profile": c2_pooled,
+           "MDE_table": {
+               "N_test": [1344, 2000, 3000, 4000, 6000, 8000],
+               "C1C2_pooled": {r["profile"]: [mde(r["sd"], n, alpha, power) for n in (1344, 2000, 3000, 4000, 6000, 8000)]
+                               for r in c2_pooled},
+               "C1_pooled_remote_api": [mde(pooled["sd"], n, alpha, power) for n in (1344, 2000, 3000, 4000, 6000, 8000)],
+               "multiplier_z_alpha_plus_z_power": Z[alpha] + Z[power],
+           },
            "v1_quality_effects": {"g_plus": float(Q[True].mean()), "g_minus": float(-Q[False].mean()),
                                   "sd_item_effect_needed": float(Q[True].std(ddof=1)),
                                   "sd_item_effect_not_needed": float(Q[False].std(ddof=1))}}
