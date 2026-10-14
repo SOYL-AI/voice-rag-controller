@@ -1,0 +1,70 @@
+{
+  "experiment_id": "e1-v2-signal-validity",
+  "_protocol_note": "Seeds, generation parameters and the low-confidence threshold are read from protocol_source at run time so E1-v2 cannot drift from v1 E1. logprobs top_k comes from configs/config.yaml llm.logprobs.top_k, exactly as v1 E1 did.",
+  "protocol_source": "llm/experiment1/config.json",
+  "eligible_models": ["mistral7b_v03"],
+  "word_fracs": [0.25, 0.5, 0.75],
+  "first_k": [4, 8, 16],
+  "prompts": {
+    "_note": "System prompt per dataset; {org} and {domain} are filled from the item. 'default' is used for any dataset without its own entry.",
+    "d1_open": {
+      "system": "You are a helpful voice assistant. Answer the user's question briefly."
+    },
+    "d2_support": {
+      "system": "You are a customer support voice agent for {org}, a {domain} company. Answer the caller briefly."
+    },
+    "v1_e1": {
+      "system": "You are a customer support voice agent for {org}, a {domain} company. Answer the caller briefly."
+    },
+    "default": {
+      "system": "You are a helpful voice assistant. Answer the user's question briefly."
+    },
+    "grounded_system_suffix": " Use the reference passages below when they are relevant.",
+    "grounded_user_template": "Reference passages:\n{passages}\n\n{question}",
+    "passage_template": "- {text}"
+  },
+  "history": {
+    "_note": "History turns become chat turns. Consecutive same-role turns are merged and a leading assistant turn is folded into the system prompt, because Mistral's chat template rejects anything but strict user/assistant alternation starting with user.",
+    "mode": "turns",
+    "leading_assistant_template": "\n\nEarlier in this call you said: \"{text}\""
+  },
+  "traces": {
+    "noise": ["clean"],
+    "voices": "all",
+    "include_asr_final": true
+  },
+  "run": {
+    "concurrency": 16,
+    "request_timeout_s": 120,
+    "max_attempts": 6,
+    "base_delay_s": 1.0,
+    "max_delay_s": 30.0
+  },
+  "retrieval": {
+    "k": 5,
+    "index_dir_template": "datasets/v2/{dataset}/index"
+  },
+  "labels": {
+    "need_threshold_p_wrong": 0.5,
+    "correctness_source": {
+      "d1_open": "alias",
+      "d2_support": "judge:primary",
+      "default": "judge:primary"
+    },
+    "judge_context": {
+      "d1_open": "open-domain",
+      "d2_support": "customer-support",
+      "default": "general"
+    }
+  },
+  "analysis": {
+    "headline_signals": ["mean_entropy_nats", "max_entropy_nats", "first_k_mean_entropy_nats@8"],
+    "calibration_signal": "mean_entropy_nats",
+    "calibration_label": "empirical",
+    "cv_folds": 5,
+    "ece_bins": 10,
+    "bootstrap": 2000,
+    "asr_time_grid_ms": 250,
+    "asr_relative_grid": [0.2, 0.4, 0.6, 0.8, 1.0]
+  }
+}
