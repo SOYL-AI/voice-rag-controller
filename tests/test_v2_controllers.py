@@ -302,6 +302,9 @@ def test_fit_belief_transitions_from_e1v2_records():
     cal = load_belief_calibration(load_e3v2_config())
     seqs = belief_sequences(records, cal, keep={f"it-{i}" for i in range(30)})
     assert len(seqs) == 60 and all(len(s) == 3 for s in seqs)
+    # records from any model other than the project's single model are dropped
+    assert belief_sequences(records, cal, keep={f"it-{i}" for i in range(30)},
+                            model="mistralai/Mistral-7B-Instruct-v0.3") == []
     model = fit_belief_transitions(seqs, n_bins=5)
     for table in (model.next_table, model.final_table):
         for row in (r for ph in table.values() for r in ph.values()):

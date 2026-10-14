@@ -48,13 +48,19 @@ from controller.baselines._objective_v2 import (  # noqa: E402
 )
 
 PREREG_FROZEN = _REPO_ROOT / "docs" / "research_v2" / "PREREG_FROZEN"
+# Project-wide decision: Mistral-7B-Instruct-v0.3 is the only model; the
+# transition model must describe that model's beliefs and nothing else.
+DEFAULT_MODEL = "mistralai/Mistral-7B-Instruct-v0.3"
 
 
 def belief_sequences(records: Iterable[dict], calibration: BeliefCalibration,
-                     keep: Optional[set] = None) -> List[List[Tuple[float, float]]]:
+                     keep: Optional[set] = None,
+                     model: Optional[str] = None) -> List[List[Tuple[float, float]]]:
     groups: Dict[Tuple, List[dict]] = {}
     for rec in records:
         if keep is not None and str(rec["item_id"]) not in keep:
+            continue
+        if model is not None and rec.get("model") != model:
             continue
         prefix = rec.get("prefix") or {}
         key = (str(rec["item_id"]), rec.get("model"), rec.get("draw_seed"),
@@ -96,6 +102,7 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
     ap.add_argument("--bins", type=int, default=10)
     ap.add_argument("--phase-edges", default="0,0.34,0.67,1.0")
     ap.add_argument("--alpha", type=float, default=1.0)
+    ap.add_argument("--model", default=DEFAULT_MODEL, help="only records from this model are used")
     ap.add_argument("--out", type=Path, default=_REPO_ROOT / "controller" / "baselines" / "belief_transitions_v2.json")
     ap.add_argument("--i-know", action="store_true", help=argparse.SUPPRESS)
     args = ap.parse_args(argv)
@@ -125,7 +132,7 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
 
     cfg = load_e3v2_config()
     calibration = load_belief_calibration(cfg)
-    seqs = belief_sequences(records, calibration, keep)
+    seqs = belief_sequences(records, calibration, keep, args.model)
     if not seqs:
         raise SystemExit("no usable belief sequences (need >= 2 prefixes per item/draw)")
     model = fit_belief_transitions(
@@ -138,6 +145,7 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
             "split": args.split,
             "n_sequences": len(seqs),
             "n_records": len(records),
+            "model": args.model,
             "calibration": calibration.source,
             "signal": calibration.signal,
             "alpha": args.alpha,
