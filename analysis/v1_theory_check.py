@@ -298,9 +298,46 @@ def main() -> int:
                     "measured TTFA. This is run-to-run noise in a no-retrieval cell."},
     }
 
+    # ---- 7.1b timing regions of t*(lambda) and the timing-mismatch interval of the map
+    # t*(lam) = argmax_t [lam*o_t - lam_c*w_t] (identical for Ours's argmin of cut and B9's
+    # timing optimizer when rho is timing-invariant). Breakpoints are pairwise ties.
+    def t_star_of(lam_l):
+        return max(timings, key=lambda t: lam_l * o[t] - lam_c * w[t])  # first max = TIMING_ORDER tie-break
+
+    breaks = sorted({lam_c * (w[s] - w[t]) / (o[s] - o[t])
+                     for t in timings for s in timings if o[s] > o[t] and w[s] >= w[t]})
+    regions = []
+    probe = [0.0] + [(a + bb) / 2 for a, bb in zip(breaks, breaks[1:])] + [breaks[-1] * 2 + 1.0]
+    for p in probe:
+        regions.append({"probe_lambda": p, "t_star": t_star_of(p)})
+
+    def lam_map(lam_l):
+        band = obj.divergence_band(obj.Prices(lam_l, lam_c), cfg)
+        return (band.ours_cut - lam_c * obj.retrieval_compute_units("sentence_end", cfg)) / L
+
+    # bisection for the lambda whose image is the lower edge of the t_star region
+    lo_edge = max(breaks)  # lower edge of the last (fixed_early_proxy) region
+    a_, b_ = lo_edge, 1.0
+    for _ in range(200):
+        mid = (a_ + b_) / 2
+        if lam_map(mid) < lo_edge:
+            a_ = mid
+        else:
+            b_ = mid
+    out["timing_regions"] = {
+        "breakpoints_lambda_l": breaks,
+        "regions": regions,
+        "t_star_region_lower_edge": lo_edge,
+        "map_timing_mismatch_interval": [lo_edge, b_],
+        "grid_lambda0_minus_lower_edge": lam[0] - lo_edge,
+        "note": "For lambda in the mismatch interval Ours uses t*(lambda) but B9 at lambda'(lambda) "
+                "falls below the region edge and uses a different timing.",
+    }
+
     # ---- 7.2 Prop 1 off the grid (dense prices, exact and approximate map)
     dense = np.geomspace(0.005, 3.0, 200)
     exact_agree = approx_agree = total = 0
+    exact_t_agree = exact_t_n = 0
     approx_fail_prices = []
     for lam_l in dense:
         band = obj.divergence_band(obj.Prices(lam_l, lam_c), cfg)
@@ -308,23 +345,29 @@ def main() -> int:
         lam_approx = lam_l * (L - o_star) / L
         fails = 0
         for sid in sids:
-            ro, _ = decide(ours, sid, float(lam_l))
+            ro, to = decide(ours, sid, float(lam_l))
             if lam_exact >= 0:
-                rb, _ = decide(b9, sid, float(lam_exact))
+                rb, tb = decide(b9, sid, float(lam_exact))
                 exact_agree += int(ro == rb)
+                if ro and rb:
+                    exact_t_n += 1
+                    exact_t_agree += int(to == tb)
             ra, _ = decide(b9, sid, float(lam_approx))
             approx_agree += int(ro == ra)
             fails += int(ro != ra)
             total += 1
         if fails:
             approx_fail_prices.append({"lambda_l": float(lam_l), "disagreements": fails})
-    # minimum price above which the exact map is non-negative (Ours cut >= B9's floor)
     out["prop1_dense"] = {
         "n_prices": len(dense), "price_range": [float(dense[0]), float(dense[-1])],
         "decisions": total,
         "exact_map_agreement": exact_agree,
+        "exact_map_timing_agreement_given_both_retrieve": exact_t_agree,
+        "exact_map_both_retrieve": exact_t_n,
         "approx_map_agreement": approx_agree,
         "approx_map_disagreement_prices": approx_fail_prices[:20],
+        "approx_map_fail_price_range": ([approx_fail_prices[0]["lambda_l"], approx_fail_prices[-1]["lambda_l"]]
+                                        if approx_fail_prices else None),
         "n_prices_where_approx_map_fails": len(approx_fail_prices),
         "exact_map": "lambda' = [lambda*(L-o*) + lambda_c*w*]/L  (= lambda*(L-o*)/L + lambda_c*w*/L)",
     }

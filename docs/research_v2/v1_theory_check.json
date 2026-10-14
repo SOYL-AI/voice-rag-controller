@@ -207,6 +207,38 @@
    "note": "B9 logs its timing-optimizer choice on skipped turns, Ours logs sentence_end; the sweep reads a separately measured skip cell per timing label, so identical retrieve decisions can carry different measured TTFA. This is run-to-run noise in a no-retrieval cell."
   }
  },
+ "timing_regions": {
+  "breakpoints_lambda_l": [
+   0.02,
+   0.02127659574468085,
+   0.021739130434782608
+  ],
+  "regions": [
+   {
+    "probe_lambda": 0.0,
+    "t_star": "sentence_end"
+   },
+   {
+    "probe_lambda": 0.020638297872340425,
+    "t_star": "immediate"
+   },
+   {
+    "probe_lambda": 0.02150786308973173,
+    "t_star": "immediate"
+   },
+   {
+    "probe_lambda": 1.0434782608695652,
+    "t_star": "fixed_early_proxy"
+   }
+  ],
+  "t_star_region_lower_edge": 0.021739130434782608,
+  "map_timing_mismatch_interval": [
+   0.021739130434782608,
+   0.021918792669780796
+  ],
+  "grid_lambda0_minus_lower_edge": 4.04922859131851e-10,
+  "note": "For lambda in the mismatch interval Ours uses t*(lambda) but B9 at lambda'(lambda) falls below the region edge and uses a different timing."
+ },
  "prop1_dense": {
   "n_prices": 200,
   "price_range": [
@@ -215,6 +247,8 @@
   ],
   "decisions": 10000,
   "exact_map_agreement": 10000,
+  "exact_map_timing_agreement_given_both_retrieve": 6973,
+  "exact_map_both_retrieve": 6973,
   "approx_map_agreement": 9938,
   "approx_map_disagreement_prices": [
    {
@@ -297,6 +331,10 @@
     "lambda_l": 0.023392510796915813,
     "disagreements": 2
    }
+  ],
+  "approx_map_fail_price_range": [
+   0.01270065785637379,
+   1.9128170228105248
   ],
   "n_prices_where_approx_map_fails": 46,
   "exact_map": "lambda' = [lambda*(L-o*) + lambda_c*w*]/L  (= lambda*(L-o*)/L + lambda_c*w*/L)"
