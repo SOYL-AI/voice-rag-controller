@@ -272,10 +272,16 @@ def load_existing(path: Path):
     return done, by_call
 
 
-def estimate(n_calls: int, concurrency: int, call_s: float, efficiency: float) -> float:
-    """Wall seconds for n calls at a concurrency, given single-stream seconds
-    per call and the fraction of linear speed-up batching delivers."""
-    effective = max(1.0, concurrency * efficiency)
+def estimate(n_calls: int, concurrency: int, call_s: float, parallel_streams: float) -> float:
+    """Wall seconds for n calls: each takes call_s on its own, and the
+    endpoint actually serves min(concurrency, parallel_streams) at once.
+
+    Measured 2026-10-15 on the Modal Mistral-7B endpoint: 2.9 s per call and
+    0.35 calls/s at client concurrency 1 vs 0.38 at concurrency 4, i.e. the
+    endpoint serves ONE request at a time (extra requests queue, inflating
+    TTFT). Raise --assume-parallel-streams only after the serving side
+    allows concurrent inputs or more replicas."""
+    effective = max(1.0, min(float(concurrency), float(parallel_streams)))
     return n_calls * call_s / effective
 
 
@@ -312,10 +318,11 @@ def parse_args(argv=None):
     p.add_argument("--corpus", type=Path, help="corpus.jsonl for --retriever lexical")
     p.add_argument("--k", type=int)
     p.add_argument("--dry-run", action="store_true", help="count calls, estimate time, call nothing")
-    p.add_argument("--assume-call-s", type=float, default=2.6,
-                   help="single-stream seconds per call for --dry-run estimates")
-    p.add_argument("--assume-efficiency", type=float, default=0.6,
-                   help="batching efficiency for --dry-run estimates")
+    p.add_argument("--assume-call-s", type=float, default=2.9,
+                   help="seconds per call on an idle endpoint (measured: 2.9 s, Mistral-7B, "
+                   "max_tokens 80)")
+    p.add_argument("--assume-parallel-streams", type=float, default=1.0,
+                   help="requests the endpoint truly serves at once (measured: 1)")
     p.add_argument("--skip-health-check", action="store_true")
     p.add_argument("--latency-probe", action="store_true",
                    help="measure the latency of obtaining the belief: concurrency 1, text "
@@ -415,10 +422,10 @@ def main(argv=None) -> int:
           f"closed-book conditions={n_cond} distinct calls={len(units)}; "
           f"retrieval calls={len(r_units)}")
     print(f"[e1v2] to do: {n_calls} calls ({len(units) + len(r_units) - n_calls} already on disk)")
-    wall = estimate(n_calls, concurrency, args.assume_call_s, args.assume_efficiency)
-    print(f"[e1v2] estimate at concurrency {concurrency}: ~{wall / 60:.1f} min "
-          f"(assumes {args.assume_call_s}s/call single-stream, {args.assume_efficiency:.0%} "
-          "batching efficiency)")
+    wall = estimate(n_calls, concurrency, args.assume_call_s, args.assume_parallel_streams)
+    print(f"[e1v2] estimate: ~{wall / 3600:.2f} h at client concurrency {concurrency} "
+          f"(assumes {args.assume_call_s}s/call and {args.assume_parallel_streams:g} request(s) "
+          "served at once by the endpoint)")
     if args.dry_run:
         return 0
 

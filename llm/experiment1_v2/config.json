@@ -34,7 +34,7 @@
     "include_asr_final": true
   },
   "run": {
-    "concurrency": 16,
+    "concurrency": 4,
     "request_timeout_s": 120,
     "max_attempts": 6,
     "base_delay_s": 1.0,
