@@ -344,19 +344,25 @@ def main(argv=None):
             return
         cache: dict = {}
         for wpm in a.rates:
+            # clean first (all voices), so babble sources exist and get the alignment check
             for vid in a.voices:
-                t0, n = time.perf_counter(), 0
+                t0 = time.perf_counter()
                 for it in todo:
                     chk = (seed_of("check", it["item_id"], vid, wpm) % 10000) < a.align_check_frac * 10000
-                    # the clean render is always made: it is the source of every noisy one
                     render_clean(name, it, vid, wpm, align_check=chk)
-                    for nz in a.noises:
-                        if nz != "clean":
-                            render_noisy(name, it, vid, wpm, nz, items_all, V.DEFAULT_VOICES, cache)
-                    n += 1
                 dt = time.perf_counter() - t0
-                print(f"  {vid} {wpm}wpm: {n} items in {dt:.1f}s ({dt / max(n, 1):.2f} s/item, "
-                      f"all noises)", flush=True)
+                print(f"  {vid} {wpm}wpm clean: {len(todo)} items in {dt:.1f}s "
+                      f"({dt / max(len(todo), 1):.2f} s/item)", flush=True)
+            for vid in a.voices:
+                for nz in a.noises:
+                    if nz == "clean":
+                        continue
+                    t0 = time.perf_counter()
+                    for it in todo:
+                        render_noisy(name, it, vid, wpm, nz, items_all, V.DEFAULT_VOICES, cache)
+                    dt = time.perf_counter() - t0
+                    print(f"  {vid} {wpm}wpm {nz}: {len(todo)} items in {dt:.1f}s "
+                          f"({dt / max(len(todo), 1):.2f} s/item)", flush=True)
     finally:
         close_all()
 

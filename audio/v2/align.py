@@ -8,15 +8,16 @@ English CTC acoustic model (facebook/wav2vec2-base-960h, Apache-2.0, 20 ms
 frames). Each reference word becomes a letters-only token sequence
 (textnorm.align_chars, digits spelled out); a Viterbi pass through the CTC
 trellis assigns every character a frame span; a word spans its first to its
-last character frame. Because the alignment is *forced*, every reference word
+last character frame, then boundaries are extended through contiguous
+high-energy 10 ms frames (refine_with_energy) because CTC posteriors are
+peaky and cut word ends short. Because the alignment is *forced*, every reference word
 gets a time even if a recogniser would mis-hear it.
 
 Accuracy check (cross_check)
 ----------------------------
 The same clean audio is decoded by faster-whisper with word_timestamps=True.
 For words where Whisper's normalised word equals the reference word (matched
-in order by edit alignment), we report |start difference| and |end
-difference|. Whisper's DTW timestamps are themselves only ~tens of ms
+in order), we report the signed start and end differences (whisper - forced). Whisper's DTW timestamps are themselves only ~tens of ms
 accurate, so agreement within ~60 ms median means both are tracking the same
 boundaries. We also check the first word start / last word end against an
 energy-based speech-activity estimate.
@@ -91,7 +92,7 @@ def _viterbi(em: np.ndarray, tokens: list[int], blank: int):
     return spans
 
 
-def force_align(audio16k: np.ndarray, text: str) -> list[dict]:
+def force_align(audio16k: np.ndarray, text: str, refine: bool = True) -> list[dict]:
     """[{"w": surface word, "start_ms", "end_ms"}] relative to the start of `audio16k`."""
     proc, _ = _model()
     vocab = proc.tokenizer.get_vocab()
@@ -129,6 +130,35 @@ def force_align(audio16k: np.ndarray, text: str) -> list[dict]:
         else:  # word with no alignable letters: zero-length at the previous end
             t = out[-1]["end_ms"] if out else 0
             out.append({"w": w, "start_ms": t, "end_ms": t})
+    return refine_with_energy(audio16k, out) if refine else out
+
+
+def refine_with_energy(audio16k: np.ndarray, words: list[dict], rel_db: float = -35.0,
+                       max_ext_ms: int = 300, win_ms: int = 10) -> list[dict]:
+    """CTC posteriors are peaky: the last frame of a word's final character tends to
+    fall before the acoustic end of the word (and similarly for starts). Extend each
+    word's end forward (and start backward) through contiguous 10 ms frames whose
+    energy is within rel_db of the utterance peak, never crossing the neighbouring
+    word and by at most max_ext_ms."""
+    n = int(SR * win_ms / 1000)
+    fr = audio16k[: len(audio16k) // n * n].reshape(-1, n)
+    e = 10 * np.log10(np.mean(fr ** 2, axis=1) + 1e-12)
+    voiced = e > e.max() + rel_db
+    nf = len(voiced)
+    out = [dict(w) for w in words]
+    for i, w in enumerate(out):
+        if w["end_ms"] <= w["start_ms"]:
+            continue
+        nxt = out[i + 1]["start_ms"] if i + 1 < len(out) else nf * win_ms
+        f, lim = w["end_ms"] // win_ms, min(nxt, w["end_ms"] + max_ext_ms) // win_ms
+        while f < min(lim, nf) and voiced[f]:
+            f += 1
+        w["end_ms"] = max(w["end_ms"], f * win_ms)
+        prv = out[i - 1]["end_ms"] if i > 0 else 0
+        f, lim = w["start_ms"] // win_ms - 1, max(prv, w["start_ms"] - max_ext_ms) // win_ms
+        while f >= max(lim, 0) and voiced[f]:
+            f -= 1
+        w["start_ms"] = min(w["start_ms"], (f + 1) * win_ms)
     return out
 
 
@@ -154,14 +184,14 @@ def cross_check(audio16k: np.ndarray, words: list[dict], whisper_model) -> dict:
     for rn, w in ref:
         for k in range(j, min(j + 3, len(hyp))):
             if hyp[k][0] == rn and rn:
-                ds.append(abs(hyp[k][1] - w["start_ms"]))
-                de.append(abs(hyp[k][2] - w["end_ms"]))
+                ds.append(round(hyp[k][1] - w["start_ms"]))  # signed: whisper - forced
+                de.append(round(hyp[k][2] - w["end_ms"]))
                 j = k + 1
                 break
     on, off = energy_bounds(audio16k)
     return {
         "n_matched": len(ds), "n_words": len(words),
-        "abs_start_diff_ms": ds, "abs_end_diff_ms": de,
+        "start_diff_ms": ds, "end_diff_ms": de,
         "onset_vs_energy_ms": words[0]["start_ms"] - on if words else None,
         "offset_vs_energy_ms": words[-1]["end_ms"] - off if words else None,
     }
