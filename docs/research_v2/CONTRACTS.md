@@ -76,7 +76,18 @@ Dataset names: `d1_open` (public open-domain QA, popularity-stratified) and
   lives in E1-v2 outputs keyed by `id`.
 - `pair_id` links matched pairs: same domain, same question template, and
   similar length, where one item needs retrieval and the other does not.
-  Required for `d2_support`, optional for `d1_open`.
+  Required for `d2_support`, optional for `d1_open`. In `d2_support` a
+  `pair_id` names a **pair group**:
+  - exactly one `general` item
+  - one or two retrieval-needed items from the same organisation, each within
+    ±3 words of the general item's question
+
+  The whole group always shares a split.
+- `history` is a list of prior turns that the question depends on. Each
+  turn is `{"role": "user" | "assistant", "content": "..."}`, and the list
+  ends with an assistant turn. An empty list means a single-turn item. The
+  D2 builder also accepts `{"role": "caller" | "agent", "text": ...}` in raw
+  files and normalises it to this shape.
 
 ## 3. Corpus schema (`corpus.jsonl`)
 

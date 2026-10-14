@@ -135,6 +135,7 @@ GENERIC_NAME_WORDS = {
     "software", "cloud", "systems", "foods", "food", "kitchen", "eats",
     "university", "college", "institute", "school", "academy", "motors",
     "auto", "automotive", "cars", "department", "office", "council", "digital",
+    "county", "municipal", "books", "polytechnic", "distribution", "eats", "water",
 }
 
 STOPWORDS = {
@@ -284,6 +285,24 @@ def org_name_tokens(org: str) -> list:
 
 def contains_word(text: str, word: str) -> bool:
     return re.search(r"(?<![A-Za-z0-9])" + re.escape(word) + r"(?![A-Za-z0-9])", text, re.IGNORECASE) is not None
+
+
+HISTORY_ROLE_MAP = {"user": "user", "caller": "user", "assistant": "assistant", "agent": "assistant"}
+
+
+def normalise_turn(t):
+    """Return the canonical {"role": "user"|"assistant", "content": str} turn, or None if malformed.
+
+    Raw files may use either {"role": "caller"|"agent", "text"} (part A authoring)
+    or the canonical {"role": "user"|"assistant", "content"} shape (CONTRACTS §2).
+    """
+    if not isinstance(t, dict):
+        return None
+    role = HISTORY_ROLE_MAP.get(t.get("role"))
+    content = t.get("content", t.get("text"))
+    if role is None or not isinstance(content, str) or not content.strip():
+        return None
+    return {"role": role, "content": content}
 
 
 # --------------------------------------------------------------------------- #
@@ -443,15 +462,18 @@ def validate_items(b: OrgBundle, report: Report, all_org_names: list) -> None:
         if not isinstance(hist, list):
             report.error(where, "history must be a list")
             hist = []
+        norm_hist = []
         for t in hist:
-            if not isinstance(t, dict) or t.get("role") not in ("caller", "agent") or not str(t.get("text", "")).strip():
-                report.error(where, f"bad history turn {t!r} (need {{role: caller|agent, text}})")
+            nt = normalise_turn(t)
+            if nt is None:
+                report.error(where, f"bad history turn {t!r} (need {{role: user|assistant, content}})")
             else:
-                hist_text += " " + t["text"]
+                norm_hist.append(nt)
+                hist_text += " " + nt["content"]
         if hist:
             n_hist += 1
-            if hist[-1].get("role") != "agent":
-                report.warn(where, "history should end with an agent turn")
+            if norm_hist and norm_hist[-1]["role"] != "assistant":
+                report.warn(where, "history should end with an assistant (agent) turn")
 
         # Organisation name must not be spoken by the caller (or the agent in history)
         spoken = q + " " + hist_text
@@ -474,10 +496,11 @@ def validate_items(b: OrgBundle, report: Report, all_org_names: list) -> None:
         if not isinstance(kf, list) or not kf or not all(isinstance(k, str) and k.strip() for k in kf):
             report.error(where, "meta.key_facts must be a non-empty list of strings")
             kf = []
-        if itype == "counter_prior" and not str(meta.get("common_prior", "")).strip():
-            report.error(where, "counter_prior needs meta.common_prior")
-        if itype == "ambiguous" and not str(meta.get("plausible_wrong_answer", "")).strip():
-            report.error(where, "ambiguous needs meta.plausible_wrong_answer")
+        note = str(meta.get("note", "")).strip()
+        if itype == "counter_prior" and not (str(meta.get("common_prior", "")).strip() or note):
+            report.error(where, "counter_prior needs meta.common_prior (or meta.note)")
+        if itype == "ambiguous" and not (str(meta.get("plausible_wrong_answer", "")).strip() or note):
+            report.error(where, "ambiguous needs meta.plausible_wrong_answer (or meta.note)")
 
         gold = it.get("gold_doc_ids")
         if not isinstance(gold, list):
@@ -597,7 +620,7 @@ def validate_pairs(b: OrgBundle, report: Report) -> None:
             report.error(where, "pair group has no retrieval-needed item")
             continue
         if len(gens) > 1:
-            report.warn(where, f"{len(gens)} general items in one pair group")
+            report.error(where, f"{len(gens)} general items in one pair group (must be exactly one)")
         if len(rets) > 2:
             report.warn(where, f"{len(rets)} retrieval-needed items in one pair group (spec: 1-2)")
         glens = [n_words(g.get("question", "")) for g in gens]
@@ -711,7 +734,7 @@ def assign_ids(bundles: list) -> list:
                     "retrieval_needed_authored": it.get("retrieval_needed_authored"),
                     "pair_id": pmap.get(it.get("pair_id")),
                     "popularity": None,
-                    "history": it.get("history", []),
+                    "history": [normalise_turn(t) for t in it.get("history", [])],
                     "split": None,
                     "meta": meta,
                 }
@@ -784,7 +807,10 @@ def build_corpus(bundles: list) -> list:
     docs = []
     for b in sorted(bundles, key=lambda b: (didx[b.domain], b.org_slug)):
         for d in sorted(b.docs, key=lambda d: natural_key(d.get("doc_id", ""))):
-            docs.append({k: d.get(k) for k in ["doc_id", "dataset", "domain", "org", "title", "text", "source", "licence"]})
+            rec = {k: d.get(k) for k in ["doc_id", "dataset", "domain", "org", "title", "text", "source", "licence"]}
+            if str(rec["licence"]).replace("-", " ").strip().upper() == "CC BY 4.0":
+                rec["licence"] = "CC BY 4.0"
+            docs.append(rec)
     return docs
 
 
@@ -868,12 +894,12 @@ def write_verification_sample(items: list, corpus: list, path: Path, frac: float
         w.writerow(cols)
         for it in chosen:
             m = it["meta"]
-            hist = " | ".join(f"{t['role']}: {t['text']}" for t in it["history"])
+            hist = " | ".join(f"{t['role']}: {t['content']}" for t in it["history"])
             w.writerow([
                 it["id"], it["split"], it["domain"], it["org"], it["item_type"],
                 it["retrieval_needed_authored"], it["pair_id"] or "", hist, it["question"],
                 it["expected_answer"], " ; ".join(m.get("key_facts", [])),
-                m.get("common_prior") or m.get("plausible_wrong_answer") or "",
+                m.get("common_prior") or m.get("plausible_wrong_answer") or m.get("note") or "",
                 " ".join(it["gold_doc_ids"]), gold_excerpt(it, docs_by_id), "", "", "",
             ])
     return len(chosen)

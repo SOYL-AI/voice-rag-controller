@@ -80,7 +80,7 @@ def load_items(args) -> list:
 def text_of(it: dict, with_history: bool) -> str:
     q = it["question"]
     if with_history and it.get("history"):
-        q = " ".join(t["text"] for t in it["history"]) + " || " + q
+        q = " ".join(t.get("content", t.get("text", "")) for t in it["history"]) + " || " + q
     return q
 
 

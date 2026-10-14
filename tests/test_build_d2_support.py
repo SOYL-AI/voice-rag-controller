@@ -116,3 +116,25 @@ def test_validator_catches_errors(tmp_path):
     assert "names the organisation" in msgs
     assert "'99' not found" in msgs
     assert "length mismatch" in msgs
+
+
+def test_history_shapes_normalised_and_one_general_per_group(tmp_path):
+    raw = tmp_path / "raw"
+    docs, items = make_org(raw, "telecom", "alpha_tel", "Alpha Telco")
+    items[0]["history"] = [{"role": "caller", "text": "I'm on the prepaid plan."},
+                           {"role": "agent", "text": "Sure, what can I help with?"}]
+    items[2]["history"] = [{"role": "user", "content": "I'm travelling next week."},
+                           {"role": "assistant", "content": "Okay, go ahead."}]
+    path = raw / "telecom" / "alpha_tel" / "items.jsonl"
+    path.write_text("".join(json.dumps(r) + "\n" for r in items), encoding="utf-8")
+    out = tmp_path / "out"
+    assert b2.main(["--raw-dir", str(raw), "--out-dir", str(out)]) == 0
+    built = [json.loads(l) for l in (out / "items.jsonl").open(encoding="utf-8")]
+    turns = [t for it in built for t in it["history"]]
+    assert turns and all(set(t) == {"role", "content"} and t["role"] in ("user", "assistant") for t in turns)
+    # a second general item in one pair group is an error
+    items[2]["pair_id"] = items[0]["pair_id"]  # move p02's general item into p01
+    path.write_text("".join(json.dumps(r) + "\n" for r in items), encoding="utf-8")
+    rep = b2.Report()
+    b2.validate(b2.load_raw(raw, None, rep), rep)
+    assert any("must be exactly one" in str(e) for e in rep.errors)
