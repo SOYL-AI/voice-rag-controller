@@ -257,3 +257,6 @@ simulator/e3_sweep_cache_superseded_*/
 
 # research v2: rendered speech audio is never committed
 datasets/v2/*/speech/audio/
+
+# local agent worktrees
+.claude/
