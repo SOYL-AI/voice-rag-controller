@@ -4,7 +4,7 @@ together, as an optimal-stopping problem over the turn's partial stream.
 
 At each step k the controller compares
 
-    U_ret(k)  = b_k g+ (1 - rho_k) - (1 - b_k) g- - lambda_l E[max(0, L - W_k)]
+    U_ret(k)  = b_k g+ (1 - rho_k) - (1 - b_k) g- - lambda_l (E[max(0, L - W_k)] + pi)
                 - lambda_c (1 + waste_k)                         (retrieve now)
     V_wait(k) = E_{b_{k+1}, R_{k+1}} [ max( U_ret(k+1), C(k+1) ) ]  (wait)
 
@@ -37,7 +37,13 @@ Early SKIP is not taken by default (allow_early_skip=False): skip is worth 0
 and waiting is worth >= 0 under the model, so committing to skip early can
 only forfeit later information.
 
-SPECULATIVE DISPATCH (documented hook, not implemented): dispatching early
+ARCHITECTURE. Ours-v2 is the joint COMMIT controller: whatever
+controller.e3v2.architecture says, a retrieval it dispatches is used. Under
+the speculative architecture its rival is b10_speculative_v2 (SPEC,
+THEORY.md Prop. 4'), which beats joint-commit when compute is cheap; the
+joint optimum exceeds SPEC by at most lambda_c (1 + w_1) per turn.
+
+SPECULATIVE DISPATCH BY OURS (documented hook, not implemented): dispatching early
 and cancelling if the end-of-turn belief turns the retrieval negative would
 add an action "speculate" with value E[max(U_hidden(b_end), -lambda_c*1)].
 Scoring it needs Phase A to cache the speculative passage set separately
@@ -64,6 +70,7 @@ from controller.baselines._objective_v2 import (  # noqa: E402
     latency_dist_for,
     load_belief_calibration,
     load_belief_transitions,
+    priced_latency_ms,
     quality_model,
     read_prices_v2,
     rho_at,
@@ -108,14 +115,14 @@ class OursV2(SequentialController):
 
     # -- the objective at a hypothetical future step ------------------------
     def _u_final(self, b: float) -> float:
-        return utility_retrieve(b, 0.0, expected_exposed_ms(self.lat, 0.0, True, self.cfg), 0.0,
-                                self.prices, self.quality)
+        cost = priced_latency_ms(self.lat, expected_exposed_ms(self.lat, 0.0, True, self.cfg))
+        return utility_retrieve(b, 0.0, cost, 0.0, self.prices, self.quality)
 
     def _u_partial(self, b: float, remaining: float, elapsed: float) -> float:
         frac = estimated_frac(elapsed, remaining, False)
         return utility_retrieve(
             b, rho_at(frac, True, self.cfg),
-            expected_exposed_ms(self.lat, remaining, False, self.cfg),
+            priced_latency_ms(self.lat, expected_exposed_ms(self.lat, remaining, False, self.cfg)),
             waste_at(frac, False, self.cfg), self.prices, self.quality)
 
     def _v_end(self, b: float, frac: Optional[float]) -> float:
@@ -145,7 +152,7 @@ class OursV2(SequentialController):
     # -- the step --------------------------------------------------------------
     def step(self, obs: StepObs, memory: dict) -> Tuple[str, StepTrace]:
         terms = step_terms(obs, self.cfg, self.calibration, self.lat)
-        u = utility_retrieve(terms.belief, terms.rho, terms.exposed_ms, terms.waste,
+        u = utility_retrieve(terms.belief, terms.rho, terms.cost_ms, terms.waste,
                              self.prices, self.quality)
         record = StepTrace(k=obs.k, available_ms=obs.available_ms, action=WAIT,
                            belief=terms.belief, remaining_ms=obs.remaining_ms,
@@ -174,11 +181,12 @@ class OursV2(SequentialController):
 
     def _note(self, obs, terms, u, v, action) -> str:
         note = (f"b={terms.belief:.3f}({terms.belief_source}) rho={terms.rho:.2f} "
-                f"exp={terms.exposed_ms:.0f}ms w={terms.waste:.3f} U={u:+.3f} V_wait={v:+.3f} "
+                f"exp={terms.exposed_ms:.0f}ms+pi={self.lat.nonhideable_ms:.0f}ms w={terms.waste:.3f} U={u:+.3f} V_wait={v:+.3f} "
                 f"n={self.lookahead} -> {action}")
         if action == RETRIEVE:
             # Diagnostic only: would a full-latency pricer (B9) take this?
-            band = divergence_band_v2(self.prices, self.quality, terms.exposed_ms, self.lat.mean_ms,
+            band = divergence_band_v2(self.prices, self.quality, terms.cost_ms,
+                                      priced_latency_ms(self.lat, self.lat.mean_ms),
                                       terms.rho, terms.waste, terms.waste)
             if band.contains(terms.belief) and band.width > 0:
                 note += f" | DIVERGENCE_V2[ours-takes] {band.describe()}"

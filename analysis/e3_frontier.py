@@ -280,6 +280,7 @@ V2_RECORD_FIELDS = {
     "condition",           # voice/noise condition of the speech trace
     "latency_profile",     # faiss | faiss_rerank | remote_api
     "exposed_latency_ms",  # retrieval latency the user waited for (0 on skip)
+    "architecture",        # commit | speculative (a speculative dispatch may be discarded)
 }
 
 
@@ -320,13 +321,26 @@ def validate_v2_records(records):
                 f"v2 record {index} skipped but has a dispatch_t_ms."
             )
 
+        if row["architecture"] not in ("commit", "speculative"):
+            raise ValueError(
+                f"v2 record {index} has unknown architecture "
+                f"{row['architecture']!r}."
+            )
+
+        if row.get("used") is False and row["architecture"] != "speculative":
+            raise ValueError(
+                f"v2 record {index} discarded a retrieval under "
+                f"the commit architecture."
+            )
+
         if float(row["exposed_latency_ms"]) < 0:
             raise ValueError(
                 f"v2 record {index} has negative exposed_latency_ms."
             )
 
 
-def select_v2_stratum(records, latency_profile=None, condition=None):
+def select_v2_stratum(records, latency_profile=None, condition=None,
+                      architecture=None):
     """
     The v1 aggregation groups by (baseline, seed, prices) only, so v2
     records must be fed ONE latency profile (and optionally one condition)
@@ -338,6 +352,10 @@ def select_v2_stratum(records, latency_profile=None, condition=None):
         row for row in records
         if (latency_profile is None or row["latency_profile"] == latency_profile)
         and (condition is None or row["condition"] == condition)
+        and (
+            architecture is None
+            or row.get("architecture", "commit") == architecture
+        )
     ]
 
     profiles = sorted({row["latency_profile"] for row in rows})
@@ -346,6 +364,14 @@ def select_v2_stratum(records, latency_profile=None, condition=None):
         raise ValueError(
             f"v2 records span latency profiles {profiles}; "
             f"pass --v2-profile to analyse one at a time."
+        )
+
+    architectures = sorted({row.get("architecture", "commit") for row in rows})
+
+    if len(architectures) > 1:
+        raise ValueError(
+            f"v2 records span architectures {architectures}; "
+            f"pass --v2-architecture to analyse one at a time."
         )
 
     return rows
@@ -847,6 +873,7 @@ def print_summary(aggregated):
 def generate_frontier_plots(
     aggregated,
     output_dir="analysis",
+    baselines=None,
 ):
     """
     Generate:
@@ -874,7 +901,7 @@ def generate_frontier_plots(
         figsize=(11, 7)
     )
 
-    for baseline in FRONTIER_BASELINES:
+    for baseline in (baselines or FRONTIER_BASELINES):
 
         rows = [
             row
@@ -1090,7 +1117,7 @@ def generate_frontier_plots(
         figsize=(11, 7)
     )
 
-    for baseline in FRONTIER_BASELINES:
+    for baseline in (baselines or FRONTIER_BASELINES):
 
         rows = [
             row
@@ -1425,8 +1452,16 @@ def longest_contiguous_run(indices):
 def dominance_test(
     aggregated,
     output_dir="analysis",
+    ours="ours",
+    rival="b9",
 ):
     """
+    Pre-registered dominance test of `ours` against `rival` (default: the
+    v1 pair Ours vs B9; v2 compares ours_v2 against b9plus_v2,
+    b10_speculative_v2 or b9_v2). The output keeps the key "ours" for the
+    challenger and uses the rival's baseline name as its key, so the
+    default v1 output is unchanged.
+
     Pre-registered Ours vs B9 dominance test.
 
     For each seed:
@@ -1456,7 +1491,7 @@ def dominance_test(
             row["seed"]
             for row in aggregated
             if row["baseline"]
-            in {"b9", "ours"}
+            in {rival, ours}
         )
     )
 
@@ -1464,7 +1499,7 @@ def dominance_test(
 
     print()
     print("=" * 70)
-    print("E3 DOMINANCE TEST: OURS vs B9")
+    print(f"E3 DOMINANCE TEST: {ours} vs {rival}")
     print("=" * 70)
 
     for seed in seeds:
@@ -1475,7 +1510,7 @@ def dominance_test(
                 for row in aggregated
                 if (
                     row["baseline"]
-                    == "ours"
+                    == ours
                     and row["seed"]
                     == seed
                 )
@@ -1491,7 +1526,7 @@ def dominance_test(
             for row in aggregated
             if (
                 row["baseline"]
-                == "b9"
+                == rival
                 and row["seed"]
                 == seed
             )
@@ -1563,7 +1598,7 @@ def dominance_test(
                             "compute_ci_high"
                         ],
                     },
-                    "b9": {
+                    rival: {
                         "accuracy": matching_b9[
                             "accuracy"
                         ],
@@ -1674,7 +1709,7 @@ def dominance_test(
     ):
 
         overall_verdict = (
-            "Ours strictly dominates B9 "
+            f"{ours} strictly dominates {rival} "
             f"over a contiguous region in "
             f"{dominance_count}/{total_expected_seeds} "
             f"seeds — PREREGISTERED CRITERION MET."
@@ -1683,7 +1718,7 @@ def dominance_test(
     else:
 
         overall_verdict = (
-            "Ours does NOT meet the "
+            f"{ours} does NOT meet the "
             "preregistered dominance criterion: "
             f"{dominance_count}/{total_expected_seeds} "
             f"seeds satisfy contiguous strict dominance "
@@ -1727,12 +1762,14 @@ def dominance_test(
                 "Ours must have a strictly higher "
                 "accuracy with non-overlapping 95% "
                 "bootstrap bands while having no "
-                "higher p95 TTFA or compute than B9 "
+                f"higher p95 TTFA or compute than {rival} "
                 "at matched price operating points, "
                 "over a contiguous region, in at "
                 "least 3 of 5 seeds."
             ),
         },
+
+        "compared": {"ours": ours, "rival": rival},
 
         "seeds_with_strict_dominance":
             dominance_count,
@@ -1750,7 +1787,11 @@ def dominance_test(
 
     dominance_path = (
         output_dir
-        / "e3_dominance.json"
+        / (
+            "e3_dominance.json"
+            if (ours, rival) == ("ours", "b9")
+            else f"e3_dominance_{ours}_vs_{rival}.json"
+        )
     )
 
     with open(
@@ -1807,6 +1848,33 @@ def main():
     )
 
     parser.add_argument(
+        "--ours",
+        default="ours",
+        help="challenger baseline for the dominance test (v2: ours_v2).",
+    )
+
+    parser.add_argument(
+        "--rival",
+        default="b9",
+        help=(
+            "rival baseline for the dominance test "
+            "(v2: b9plus_v2, b10_speculative_v2 or b9_v2)."
+        ),
+    )
+
+    parser.add_argument(
+        "--baselines",
+        default=None,
+        help="comma-separated baselines to plot (default: FRONTIER_BASELINES).",
+    )
+
+    parser.add_argument(
+        "--v2-architecture",
+        default=None,
+        help="v2 records only: commit | speculative.",
+    )
+
+    parser.add_argument(
         "--v2-profile",
         default=None,
         help="v2 records only: the latency profile to analyse.",
@@ -1839,7 +1907,8 @@ def main():
     if is_v2_records(records):
         validate_v2_records(records)
         records = select_v2_stratum(
-            records, args.v2_profile, args.v2_condition
+            records, args.v2_profile, args.v2_condition,
+            args.v2_architecture,
         )
         print(f"v2 stratum: {len(records)} records")
     else:
@@ -1874,6 +1943,11 @@ def main():
     generate_frontier_plots(
         aggregated,
         output_dir=args.output_dir,
+        baselines=(
+            args.baselines.split(",")
+            if args.baselines
+            else None
+        ),
     )
 
     # ------------------------------------------------------------------
@@ -1883,6 +1957,8 @@ def main():
     dominance_test(
         aggregated,
         output_dir=args.output_dir,
+        ours=args.ours,
+        rival=args.rival,
     )
 
 

@@ -30,9 +30,16 @@ THE CORRECTED OBJECTIVE (retrieval helps where needed and hurts where not):
 
     U(retrieve at t) = b_t * g+ * (1 - rho(t))
                        - (1 - b_t) * g-
-                       - lambda_l * exposed(t) [seconds]
+                       - lambda_l * (exposed(t) + pi) [seconds]
                        - lambda_c * (1 + waste(t))
     U(skip)          = 0
+
+pi is the NON-HIDEABLE TTFA increment of using retrieved passages (longer
+prompt: extra prefill and generation). v1 measured retrieval adding
+1.27-1.57 s of TTFA of which only the 0.3-0.7 s retrieval call can overlap
+speech. pi comes from signals["retrieval"]["nonhideable_increment_ms"] or
+the config default, and priced_latency_ms() adds it for every priced
+controller identically (THEORY.md: X_k = E[pi + max(0, L - R_k)]).
 
 g+ and g- are config (fitted on dev by E1-v2; defaults are the v1 E3
 measurement +0.72 / -0.59).
@@ -73,6 +80,10 @@ _DEFAULT_CONFIG_PATH = _REPO_ROOT / "configs" / "config.yaml"
 # conservative policy (same convention as v1's TIMING_ORDER).
 POLICIES_V2 = ("sentence_end", "immediate", "fixed_early_proxy", "forecast")
 
+# commit: a dispatched retrieval is always used. speculative: it may be
+# discarded at end of turn (THEORY.md §6.2, Prop. 4').
+ARCHITECTURES = ("commit", "speculative")
+
 # Mirrors configs/config.yaml's controller.e3v2 block. Kept in sync the same
 # way v1's _DEFAULT_E3_CFG mirrors controller.e3, so every v2 controller stays
 # unit-testable without the config file.
@@ -101,6 +112,16 @@ _DEFAULT_E3V2_CFG: dict = {
     },
     "default_latency_profile": "faiss",
     "latency_points": 41,
+    # PLACEHOLDER from v1 (paired, mean): retrieving added 1.27-1.57 s of
+    # TTFA, of which only the retrieval call (0.3-0.7 s) can overlap speech;
+    # 900 ms ~ the midpoint increment (1.42 s) minus the midpoint call
+    # (0.5 s). Replace with the v2 latency model's measured pi.
+    "nonhideable_increment_ms": 900.0,
+    # Pipeline architecture. commit: a dispatched retrieval's passages are
+    # always used. speculative: a dispatched retrieval may be discarded at
+    # end of turn (compute is still spent); enables b10_speculative_v2.
+    "architecture": "commit",
+    "b10": {"timing": "immediate"},
     "rho": {"kind": "power", "scale": 1.0, "power": 2.0, "not_ready": 1.0, "table": None},
     "waste": {"coef": 0.1},
     "ours": {
@@ -171,6 +192,9 @@ def load_e3v2_config(path: Optional[str] = None, overrides: Optional[dict] = Non
     if float(q["g_plus"]) < 0 or float(q["g_minus"]) < 0:
         raise ValueError("controller.e3v2.quality g_plus/g_minus must be >= 0 "
                          "(g_minus is the MAGNITUDE of the harm on not-needed items)")
+    if cfg.get("architecture") not in ARCHITECTURES:
+        raise ValueError(f"controller.e3v2.architecture must be one of {ARCHITECTURES}, "
+                         f"got {cfg.get('architecture')!r}")
     return cfg
 
 
@@ -341,6 +365,11 @@ class LatencyDist:
 
     profile: str
     points_ms: Tuple[float, ...]
+    #: pi, the NON-HIDEABLE TTFA increment of a used retrieval (longer
+    #: prompt -> extra prefill, longer generation). It is paid after the end
+    #: of turn whatever the dispatch time, so no timing can hide it. See
+    #: priced_latency_ms().
+    nonhideable_ms: float = 0.0
 
     @property
     def mean_ms(self) -> float:
@@ -393,9 +422,37 @@ def latency_dist_for(retrieval_block: Optional[dict], cfg: dict) -> LatencyDist:
     block = retrieval_block or {}
     profile = block.get("latency_profile") or cfg["default_latency_profile"]
     qdict = block.get("latency_quantiles_ms") or cfg["latency_profiles"].get(profile) or {}
-    return latency_dist_from_quantiles(
+    dist = latency_dist_from_quantiles(
         qdict, int(cfg["latency_points"]), profile, block.get("expected_latency_ms")
     )
+    return LatencyDist(profile=dist.profile, points_ms=dist.points_ms,
+                       nonhideable_ms=nonhideable_ms(block, cfg))
+
+
+def nonhideable_ms(retrieval_block: Optional[dict], cfg: dict) -> float:
+    """pi for this turn: signals["retrieval"]["nonhideable_increment_ms"] if
+    present, else controller.e3v2.nonhideable_increment_ms (a PLACEHOLDER
+    from the v1 measurement — see the config comment)."""
+    value = (retrieval_block or {}).get("nonhideable_increment_ms")
+    if value is None:
+        value = cfg.get("nonhideable_increment_ms", 0.0)
+    return max(0.0, float(value))
+
+
+def priced_latency_ms(lat: LatencyDist, retrieval_exposed_ms: float) -> float:
+    """
+    THE latency every priced controller charges for a retrieval whose
+    passages are USED: the exposed part of the retrieval call plus the
+    non-hideable increment pi,
+
+        X = E[max(0, L - W)] + pi.
+
+    Ours-v2 passes its per-step exposure, B9-v2 the full E[L], B9+ its
+    policy's dev-mean exposure, B10 the realised exposure of its speculative
+    dispatch — but pi is added here, once, for all of them, so it shifts
+    every controller's thresholds identically and cannot be a confound.
+    """
+    return float(retrieval_exposed_ms) + lat.nonhideable_ms
 
 
 def hiding_window_ms(remaining_ms: Optional[float], is_final: bool, cfg: dict) -> float:
@@ -496,6 +553,24 @@ def utility_retrieve(
     )
 
 
+def speculative_use_utility(belief_end: float, rho_dispatch: float, lat: "LatencyDist",
+                            realised_window_ms: float, prices: Prices, quality: QualityModel) -> float:
+    """
+    Speculative architecture, end of turn: the value of USING passages that
+    were dispatched realised_window_ms before generation could start, judged
+    with the end-of-turn belief b_K (compute is sunk and NOT included):
+
+        A(b_K) - lambda_l X = b_K g+ (1 - rho_d) - (1 - b_K) g-
+                              - lambda_l (E[max(0, L - window)] + pi)
+
+    Discarding is worth 0 (no quality change, no pi). THEORY.md Prop. 4'.
+    """
+    cost = priced_latency_ms(lat, lat.expected_exposed_ms(max(0.0, float(realised_window_ms))))
+    b = min(1.0, max(0.0, float(belief_end)))
+    return (b * quality.g_plus * (1.0 - rho_dispatch) - (1.0 - b) * quality.g_minus
+            - prices.lambda_l * cost / 1000.0)
+
+
 def belief_cut(rho: float, priced_latency_ms: float, waste: float, prices: Prices, quality: QualityModel) -> float:
     """
     The belief above which retrieving beats skipping:
@@ -565,9 +640,10 @@ class StepTerms:
     frac: Optional[float]
     rho: float
     waste: float
-    exposed_ms: float
+    exposed_ms: float   # exposed part of the retrieval call, E[max(0, L - W)]
     hidden_ms: float
     belief_source: str
+    cost_ms: float = 0.0  # priced latency: exposed_ms + pi (priced_latency_ms)
 
 
 def belief_from_obs(obs, cfg: dict, calibration: BeliefCalibration, prior: Optional[float] = None) -> Tuple[float, str]:
@@ -596,14 +672,16 @@ def belief_from_obs(obs, cfg: dict, calibration: BeliefCalibration, prior: Optio
 def step_terms(obs, cfg: dict, calibration: BeliefCalibration, lat: LatencyDist, prior: Optional[float] = None) -> StepTerms:
     belief, source = belief_from_obs(obs, cfg, calibration, prior)
     frac = estimated_frac(obs.speech_elapsed_ms, obs.remaining_ms, obs.is_final)
+    exposed = expected_exposed_ms(lat, obs.remaining_ms, obs.is_final, cfg)
     return StepTerms(
         belief=belief,
         frac=frac,
         rho=rho_at(frac, obs.query_ready, cfg),
         waste=waste_at(frac, obs.is_final, cfg),
-        exposed_ms=expected_exposed_ms(lat, obs.remaining_ms, obs.is_final, cfg),
+        exposed_ms=exposed,
         hidden_ms=expected_hidden_ms(lat, obs.remaining_ms, obs.is_final, cfg),
         belief_source=source,
+        cost_ms=priced_latency_ms(lat, exposed),
     )
 
 

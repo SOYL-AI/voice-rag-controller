@@ -19,7 +19,7 @@ share prices and the v2 cost model (_objective_v2) but no state.
      policy's trigger with the belief available THEN, priced at the FULL
      expected retrieval latency E[L] — it has no timing to condition on:
 
-         U = b g+ (1 - rho) - (1 - b) g- - lambda_l E[L] - lambda_c (1 + waste)
+         U = b g+ (1 - rho) - (1 - b) g- - lambda_l (E[L] + pi) - lambda_c (1 + waste)
 
      retrieve iff U > 0, else skip (final). It never sees the policy name.
 
@@ -48,6 +48,7 @@ from controller.baselines._objective_v2 import (  # noqa: E402
     latency_dist_for,
     load_belief_calibration,
     policy_fires,
+    priced_latency_ms,
     quality_model,
     read_prices_v2,
     resolve_policy_constants,
@@ -134,8 +135,9 @@ class B9V2(SequentialController):
         self.priced_latency_ms = self._priced_latency_ms()
 
     def _priced_latency_ms(self) -> float:
-        # B9: the full expected retrieval latency, whatever the policy.
-        return self.lat.mean_ms
+        # B9: the full expected retrieval latency, whatever the policy (+ pi,
+        # added for every priced controller by priced_latency_ms).
+        return priced_latency_ms(self.lat, self.lat.mean_ms)
 
     def step(self, obs: StepObs, memory: dict) -> Tuple[str, StepTrace]:
         record = StepTrace(k=obs.k, available_ms=obs.available_ms, action=WAIT,
@@ -152,7 +154,8 @@ class B9V2(SequentialController):
         record.belief, record.rho, record.waste, record.u_retrieve = belief, rho, waste, u
         record.exposed_ms = self.priced_latency_ms
         # ---- diagnostic only: both sub-optimizers have returned ----
-        ours_exp = expected_exposed_ms(self.lat, obs.remaining_ms, obs.is_final, self.cfg)
+        ours_exp = priced_latency_ms(
+            self.lat, expected_exposed_ms(self.lat, obs.remaining_ms, obs.is_final, self.cfg))
         band = divergence_band_v2(self.prices, self.quality, ours_exp, self.priced_latency_ms,
                                   rho, waste, waste)
         tag = ""

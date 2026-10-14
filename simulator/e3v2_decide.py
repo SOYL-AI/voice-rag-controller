@@ -51,10 +51,17 @@ profile), so controllers making the same decision get the same latency draw.
 ---------------------------------------------------------------------------
 OUTPUT
 ---------------------------------------------------------------------------
-<out>/e3_v2_<controller>_seed<seed>.json (matching analysis/e3_frontier.py's e3_*.json glob), lists of records compatible with
+<out>/e3_v2_<architecture>_<controller>_seed<seed>.json (matching analysis/e3_frontier.py's e3_*.json glob), lists of records compatible with
 analysis/e3_frontier.py's validate_records (required keys present) plus the
 v2 fields checked by its validate_v2_records: dispatch_t_ms, condition,
-latency_profile, exposed_latency_ms.
+latency_profile, exposed_latency_ms, architecture.
+
+ARCHITECTURE (controller.e3v2.architecture, --architectures): under
+"commit" a dispatched retrieval is always used; under "speculative" a
+controller may discard it at end of turn (b10_speculative_v2). A discarded
+dispatch is scored on the skip cell and skip-path TTFA with its compute
+counted (retrievals = 1, used = false). Results are written and analysed
+per architecture.
 
 SEALING: --split test is refused unless docs/research_v2/PREREG_FROZEN exists.
 """
@@ -76,6 +83,7 @@ if str(_REPO_ROOT) not in sys.path:
 from controller.baselines._objective_v2 import latency_dist_from_quantiles, load_e3v2_config  # noqa: E402
 from controller.sequential_v2 import (  # noqa: E402
     PRICED_V2,
+    SPECULATIVE_ONLY_V2,
     SequentialController,
     TurnCtx,
     get_controller_v2,
@@ -178,8 +186,12 @@ def with_profile(turn: TurnCtx, profile: str, cfg: dict, prices: Optional[dict] 
     q = cfg["latency_profiles"][profile]
     dist = latency_dist_from_quantiles(q, int(cfg["latency_points"]), profile)
     signals = dict(turn.signals or {})
+    previous = (turn.signals or {}).get("retrieval") or {}
     signals["retrieval"] = {"latency_profile": profile, "latency_quantiles_ms": dict(q),
                             "expected_latency_ms": dist.mean_ms}
+    if previous.get("nonhideable_increment_ms") is not None:
+        # a per-turn measured pi survives the profile substitution
+        signals["retrieval"]["nonhideable_increment_ms"] = previous["nonhideable_increment_ms"]
     return TurnCtx(item_id=turn.item_id, signals=signals, prices=dict(prices or {}),
                    condition=turn.condition, transcript_final=turn.transcript_final,
                    turn_id=turn.turn_id, conversation_id=turn.conversation_id,
@@ -192,17 +204,26 @@ def _rng_for(item_id: str, seed: int, condition: str, profile: str) -> random.Ra
 
 
 def outcome_record(name: str, decision, turn: TurnCtx, seed: int, profile: str, prices: Optional[dict],
-                   store: CellStore, latency_model, split: str) -> dict:
+                   store: CellStore, latency_model, split: str, architecture: str = "commit") -> dict:
+    """
+    One scored record. A DISCARDED speculative dispatch (decision.used is
+    False) is scored on the skip cell and the skip-path TTFA (the answer was
+    generated without the passages and did not wait for them), but its
+    compute is counted (retrievals = 1) and its passages are logged.
+    """
     item, cond = turn.item_id, turn.condition
+    retr = None
     if decision.retrieve:
         retr = store.retrieval_for(item, cond, decision.dispatch_partial_index)
+    if decision.uses_passages:
         variant, path = retr["query_variant"], "retrieve"
     else:
-        retr, variant, path = None, "none", "skip"
+        variant, path = "none", "skip"
     cell = store.cell(item, seed, cond, path, variant)
     ue = user_end_ms(turn)
-    comps = latency_model.sample_ttfa(path, decision.dispatch_t_ms, ue, profile,
-                                      cell.get("n_prompt_tokens", 0), _rng_for(item, seed, cond, profile))
+    comps = latency_model.sample_ttfa(path, decision.dispatch_t_ms if path == "retrieve" else None,
+                                      ue, profile, cell.get("n_prompt_tokens", 0),
+                                      _rng_for(item, seed, cond, profile))
     exposed = comps.get("exposed_retrieval_ms")
     return {
         "baseline": name,
@@ -210,6 +231,7 @@ def outcome_record(name: str, decision, turn: TurnCtx, seed: int, profile: str, 
         "scenario_id": item,
         "item_id": item,
         "split": split,
+        "architecture": architecture,
         "prices": prices,
         "condition": cond,
         "latency_profile": profile,
@@ -217,6 +239,7 @@ def outcome_record(name: str, decision, turn: TurnCtx, seed: int, profile: str, 
         "exposed_latency_ms": 0.0 if exposed is None else float(exposed),
         "timing_label": decision.timing_label,
         "query_variant": variant,
+        "used": decision.uses_passages if decision.retrieve else None,
         "outcome": {
             "answer_correct": bool(cell["answer_correct"]),
             "ttfa_ms": float(comps["ttfa_ms"]),
@@ -225,6 +248,10 @@ def outcome_record(name: str, decision, turn: TurnCtx, seed: int, profile: str, 
         "ttfa_components": comps,
         "decision": {
             "retrieve": decision.retrieve,
+            "used": decision.used,
+            "decided_t_ms": decision.decided_t_ms,
+            "discarded_query_variant": (retr["query_variant"]
+                                        if retr is not None and not decision.uses_passages else None),
             "timing_label": decision.timing_label,
             "dispatch_partial_index": decision.dispatch_partial_index,
             "query_text": decision.query_text,
@@ -248,11 +275,19 @@ def run_phase_b(
     labels: Optional[Dict[str, bool]] = None,
     gold: Optional[Dict[str, List[str]]] = None,
 ) -> List[dict]:
-    """Every controller x price (priced only) x profile x turn x seed. The
-    decision is computed once per (controller, price, profile, turn) and the
-    seed varies only the measured outcome."""
+    """Every controller x price (priced only) x profile x turn x seed, under
+    the architecture of `cfg` (controller.e3v2.architecture). The decision
+    is computed once per (controller, price, profile, turn) and the seed
+    varies only the measured outcome. A speculative-only controller under
+    the commit architecture is an error (run_architectures() leaves it out)."""
+    architecture = cfg["architecture"]
     records: List[dict] = []
     for name, ctrl in controllers.items():
+        if name in SPECULATIVE_ONLY_V2 and architecture != "speculative":
+            raise ValueError(f"{name} needs architecture: speculative (got {architecture!r})")
+        if ctrl.cfg.get("architecture") != architecture:
+            raise ValueError(f"{name} was built for architecture {ctrl.cfg.get('architecture')!r}, "
+                             f"evaluating under {architecture!r}")
         priced = name in PRICED_V2
         for prices in (price_points if priced else [None]):
             for profile in profiles:
@@ -269,7 +304,39 @@ def run_phase_b(
                     decision = ctrl.decide_turn(ctx)
                     for seed in seeds:
                         records.append(outcome_record(name, decision, ctx, seed, profile, prices,
-                                                      store, latency_model, split))
+                                                      store, latency_model, split, architecture))
+    return records
+
+
+def run_architectures(
+    turns: Sequence[TurnCtx],
+    store: CellStore,
+    names: Sequence[str],
+    price_points: Sequence[dict],
+    seeds: Sequence[int],
+    profiles: Sequence[str],
+    cfg: dict,
+    latency_model,
+    architectures: Sequence[str] = ("commit", "speculative"),
+    split: str = "dev",
+    labels: Optional[Dict[str, bool]] = None,
+    gold: Optional[Dict[str, List[str]]] = None,
+    controller_params: Optional[Dict[str, dict]] = None,
+) -> List[dict]:
+    """
+    Phase B once per pipeline architecture, controllers rebuilt for each.
+    Under commit, speculative-only controllers (b10_speculative_v2) are left
+    out: a commit pipeline cannot discard a retrieval. Every other
+    controller is run under both, and every record carries its
+    architecture, so results are reported per architecture.
+    """
+    records: List[dict] = []
+    for arch in architectures:
+        arch_cfg = {**cfg, "architecture": arch}
+        ctrls = {n: get_controller_v2(n, cfg=arch_cfg, **((controller_params or {}).get(n) or {}))
+                 for n in names if arch == "speculative" or n not in SPECULATIVE_ONLY_V2}
+        records.extend(run_phase_b(turns, store, ctrls, price_points, seeds, profiles, arch_cfg,
+                                   latency_model, split, labels, gold))
     return records
 
 
@@ -347,10 +414,10 @@ def write_records(records: List[dict], out_dir: Path) -> List[Path]:
     out_dir.mkdir(parents=True, exist_ok=True)
     groups: Dict[Tuple[str, int], List[dict]] = {}
     for r in records:
-        groups.setdefault((r["baseline"], r["seed"]), []).append(r)
+        groups.setdefault((r.get("architecture", "commit"), r["baseline"], r["seed"]), []).append(r)
     paths = []
-    for (name, seed), rows in sorted(groups.items()):
-        p = out_dir / f"e3_v2_{name}_seed{seed}.json"
+    for (arch, name, seed), rows in sorted(groups.items()):
+        p = out_dir / f"e3_v2_{arch}_{name}_seed{seed}.json"
         tmp = p.with_suffix(".json.tmp")
         with open(tmp, "w", encoding="utf-8") as fh:
             json.dump(rows, fh, indent=1)
@@ -373,6 +440,8 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
     ap.add_argument("--seeds", default=",".join(str(s) for s in DEFAULT_SEEDS))
     ap.add_argument("--controllers", default=",".join(list_controllers_v2()))
     ap.add_argument("--estimates", type=Path, help="tune_v2.py artifact")
+    ap.add_argument("--architectures", default="commit,speculative",
+                    help="pipeline architectures to report (commit | speculative)")
     ap.add_argument("--out", type=Path, default=_REPO_ROOT / "simulator" / "e3v2_results")
     args = ap.parse_args(argv)
 
@@ -392,10 +461,10 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
     if "oracle_v2" in names and labels is None:
         names.remove("oracle_v2")
         print("oracle_v2 skipped: no --labels")
-    controllers = {n: get_controller_v2(n, cfg=cfg) for n in names}
-    records = run_phase_b(turns, store, controllers, load_price_points(args.grid),
-                          [int(s) for s in args.seeds.split(",")], args.profiles.split(","), cfg,
-                          load_latency_model(cfg), args.split, labels, gold)
+    records = run_architectures(turns, store, names, load_price_points(args.grid),
+                                [int(s) for s in args.seeds.split(",")], args.profiles.split(","),
+                                cfg, load_latency_model(cfg), args.architectures.split(","),
+                                args.split, labels, gold)
     for p in write_records(records, args.out):
         print(f"wrote {p}")
     return 0
