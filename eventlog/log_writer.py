@@ -59,6 +59,9 @@ ALLOWED_EVENT_TYPES = {
     "llm_final",
     "tts_first_audio",
     "barge_in",
+    # research v2 additions (see eventlog/schema.md)
+    "llm_first_clause",
+    "tts_clause_ready",
 }
 
 ALLOWED_ACTORS = {"user", "system"}

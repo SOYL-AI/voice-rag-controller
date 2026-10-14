@@ -1,0 +1,15 @@
+\begin{table*}[t]
+\centering
+\small
+\caption{TTFA decomposition along the critical path after the user stops speaking (E2 logs, n=750). Stage columns are mean ms and share of mean TTFA; stages sum to TTFA. Disp.: ASR final, controller and dispatch wait; Retr.: retrieval time exposed after user end; TTFT: LLM time to first token; Gen.: generation until TTS input (the full answer in batch TTS); TTS: synthesis to first audio.}
+\label{tab:latency_breakdown_e2}
+\begin{tabular}{lrrrrrrrr}
+\toprule
+Policy & TTFA p50 & TTFA p95 & Disp. & Retr. & Hand-off & TTFT & Gen. & TTS \\
+\midrule
+sentence-end & 4110 & 7052 & 19 (0\%) & 1311 (29\%) & 7 (0\%) & 1065 (24\%) & 1997 (45\%) & 49 (1\%) \\
+immediate & 4070 & 6915 & 6 (0\%) & 1219 (28\%) & 6 (0\%) & 1058 (25\%) & 1979 (46\%) & 17 (0\%) \\
+fixed early proxy & 3688 & 7090 & 2 (0\%) & 992 (24\%) & 8 (0\%) & 1055 (26\%) & 1979 (49\%) & 18 (0\%) \\
+\bottomrule
+\end{tabular}
+\end{table*}

@@ -36,6 +36,47 @@ def split_into_clauses(text: str) -> List[str]:
     return [c.strip() for c in chunks if c.strip()]
 
 
+_CLAUSE_BOUNDARY = re.compile(r"(?<=[.!?;\n])\s+")
+
+
+class ClauseAccumulator:
+    """
+    Incremental counterpart of split_into_clauses() for streamed LLM text.
+
+    feed(delta) returns every clause that became complete with this delta;
+    flush() returns whatever is left once the stream ends. A clause is
+    complete once a boundary character (. ! ? ; or newline) is followed by
+    whitespace, which is exactly where split_into_clauses() splits, so for
+    any way of chunking a text into deltas:
+
+        [c for d in deltas for c in acc.feed(d)] + acc.flush()
+            == split_into_clauses("".join(deltas))
+    """
+
+    def __init__(self):
+        self._buf = ""
+
+    def feed(self, delta: str) -> List[str]:
+        if not delta:
+            return []
+        self._buf += delta
+        out = []
+        while True:
+            m = _CLAUSE_BOUNDARY.search(self._buf)
+            if m is None:
+                break
+            clause = self._buf[: m.start()].strip()
+            self._buf = self._buf[m.end():]
+            if clause:
+                out.append(clause)
+        return out
+
+    def flush(self) -> List[str]:
+        rest = self._buf.strip()
+        self._buf = ""
+        return split_into_clauses(rest) if rest else []
+
+
 def get_voice_sample_rate(voice_model_path: str, default_rate: int = 22050) -> int:
     """Reads sample_rate from voice model companion .onnx.json file if available."""
     p = Path(voice_model_path)
@@ -72,6 +113,17 @@ class StreamingTTS:
 
         config_sample_rate = self.tts_cfg.get("sample_rate", 22050)
         self.sample_rate = get_voice_sample_rate(self.voice_model_path, config_sample_rate)
+
+        # piper_mode: "subprocess" (default, the original behaviour: one
+        # `python -m piper` process per clause, which reloads the voice
+        # every time) or "resident" (load the voice once in-process with
+        # piper.PiperVoice and reuse it). Measured on the dev laptop the
+        # subprocess path costs seconds per clause, resident ~0.1-1 s.
+        self.piper_mode = os.environ.get("VOICE_RAG_PIPER_MODE") or self.tts_cfg.get(
+            "piper_mode", "subprocess"
+        )
+        self._voice = None
+        self._voice_lock = threading.Lock()
 
         self._stop_requested = threading.Event()
         self._is_playing = False
@@ -120,6 +172,9 @@ class StreamingTTS:
             )
             return tone.tobytes()
 
+        if self.piper_mode == "resident":
+            return self._synthesize_resident(clause)
+
         # Run piper via python module (avoids needing piper on system PATH)
         cmd = [
             sys.executable, "-m", "piper",
@@ -135,7 +190,24 @@ class StreamingTTS:
         stdout, _ = proc.communicate(input=clause.encode("utf-8"))
         return stdout
 
-    def speak_sync(self, text: str, log_writer: LogWriter, turn_id: int, live: bool = False):
+    def _synthesize_resident(self, clause: str) -> bytes:
+        """In-process piper synthesis with the voice loaded once and reused."""
+        with self._voice_lock:
+            if self._voice is None:
+                from piper import PiperVoice
+
+                self._voice = PiperVoice.load(str(self.voice_model_path))
+            voice = self._voice
+            return b"".join(chunk.audio_int16_bytes for chunk in voice.synthesize(clause))
+
+    def speak_sync(
+        self,
+        text: str,
+        log_writer: LogWriter,
+        turn_id: int,
+        live: bool = False,
+        simulate_playback: bool = True,
+    ):
         """
         Synchronous synthesis and playback function intended to be run in a worker thread via asyncio.to_thread().
         Does NOT block the asyncio event loop thread.
@@ -212,6 +284,10 @@ class StreamingTTS:
 
                     if live and stream is not None:
                         stream.write(chunk)
+                    elif not simulate_playback:
+                        # Measurement runs: first audio is already logged;
+                        # skip sleeping through the rest of the playback.
+                        break
                     else:
                         # Simulate chunk playback sleep according to block duration
                         sleep_time = self.playback_block_ms / 1000.0
@@ -231,12 +307,21 @@ class StreamingTTS:
             print(f"\nTTS:\n  playback_active=false")
             print(f"\nTTS:\n  worker_finished\n  timestamp={time.time():.3f}")
 
-    async def speak(self, text: str, log_writer: LogWriter, turn_id: int, live: bool = False):
+    async def speak(
+        self,
+        text: str,
+        log_writer: LogWriter,
+        turn_id: int,
+        live: bool = False,
+        simulate_playback: bool = True,
+    ):
         """
         Asynchronously delegates synchronous TTS synthesis & playback to a worker thread via asyncio.to_thread.
         Keeps the asyncio event loop 100% unblocked and responsive for concurrent barge-in VAD processing.
         """
-        await asyncio.to_thread(self.speak_sync, text, log_writer, turn_id, live)
+        await asyncio.to_thread(
+            self.speak_sync, text, log_writer, turn_id, live, simulate_playback
+        )
 
 
 # ---------------------------------------------------------------------------
