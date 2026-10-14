@@ -732,22 +732,34 @@ def assign_splits(items: list) -> dict:
     """CONTRACTS §7: 30% dev / 70% test, deterministic, stratified, pairs together.
 
     Unit of assignment = pair group (global pair_id; an unpaired item is its own
-    unit). Strata = (domain, rarest retrieval-needed type in the group). Within a
-    stratum, units are ordered by sha256(unit key) and the first round(0.3 * n)
-    go to dev. Strata are per domain, so merging new domains never changes the
-    split of existing items.
+    unit), so pair partners always share a split. Allocation is done per
+    organisation: each org gets n_dev = round(0.30 * n_units) dev units, spread
+    over the type strata (rarest retrieval-needed type in the group: ambiguous >
+    counter_prior > org_specific) by largest remainder. Within a stratum, units
+    are ordered by unsalted sha256(unit key) and the lowest-hash units are dev.
+    Because allocation never looks outside an org, adding domains or orgs never
+    changes the split of existing items.
     """
     units = defaultdict(list)
     for it in items:
         units[it["pair_id"] or it["id"]].append(it)
-    strata = defaultdict(list)
+    by_org = defaultdict(lambda: defaultdict(list))
     for key, members in units.items():
-        strata[(members[0]["domain"], group_stratum(members))].append(key)
+        org_key = f"{members[0]['domain']}/{members[0]['meta']['org_slug']}"
+        by_org[org_key][group_stratum(members)].append(key)
     dev_units = set()
-    for skey, keys in sorted(strata.items()):
-        keys.sort(key=lambda k: (sha_int(k), k))
-        n_dev = int(math.floor(DEV_FRACTION * len(keys) + 0.5))
-        dev_units.update(keys[:n_dev])
+    for org_key, strata in sorted(by_org.items()):
+        n_units = sum(len(v) for v in strata.values())
+        n_dev = int(math.floor(DEV_FRACTION * n_units + 0.5))
+        quota = {s: DEV_FRACTION * len(v) for s, v in strata.items()}
+        alloc = {s: int(math.floor(q)) for s, q in quota.items()}
+        rest = n_dev - sum(alloc.values())
+        order = sorted(strata, key=lambda s: (-(quota[s] - alloc[s]), sha_int(f"{org_key}:{s}")))
+        for s in order[:max(rest, 0)]:
+            alloc[s] += 1
+        for s, keys in strata.items():
+            keys.sort(key=lambda k: (sha_int(k), k))
+            dev_units.update(keys[:alloc[s]])
     for key, members in units.items():
         for it in members:
             it["split"] = "dev" if key in dev_units else "test"
@@ -757,10 +769,11 @@ def assign_splits(items: list) -> dict:
         "seed": None,
         "method": (
             "Deterministic, stratified, pair-preserving split (CONTRACTS §7). Unit = pair group "
-            "(global pair_id; unpaired items use their own id). Strata = (domain, rarest "
-            "retrieval-needed type in the group: ambiguous > counter_prior > org_specific). Within "
-            "each stratum units are ordered by unsalted sha256(unit key) and the first "
-            "round(0.30*n) units are dev, the rest test. Pair partners always share a split."
+            "(global pair_id; unpaired items use their own id), so pair partners always share a split. "
+            "Per organisation, n_dev = round(0.30 * n_units) units are allocated to dev across type strata "
+            "(rarest retrieval-needed type in the group: ambiguous > counter_prior > org_specific) by "
+            "largest remainder; within a stratum the units with the lowest unsalted sha256(unit key) are dev. "
+            "Allocation is per organisation, so adding domains or organisations never changes existing splits."
         ),
         "dev_fraction_target": DEV_FRACTION,
     }

@@ -26,7 +26,12 @@ from __future__ import annotations
 
 import argparse
 import json
+import os
 import sys
+
+# Keep BLAS single-threaded: the test is small and the host can be short of memory.
+for _v in ("OPENBLAS_NUM_THREADS", "OMP_NUM_THREADS", "MKL_NUM_THREADS"):
+    os.environ.setdefault(_v, "1")
 from collections import defaultdict
 from pathlib import Path
 
