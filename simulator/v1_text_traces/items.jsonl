@@ -1,0 +1,50 @@
+{"id": "v1-001", "question": "Tell me about wifi.", "gold_doc_ids": ["43_wifi.txt"], "retrieval_needed_authored": true, "dataset": "v1_hotel"}
+{"id": "v1-002", "question": "Tell me about spa.", "gold_doc_ids": ["33_spa.txt"], "retrieval_needed_authored": true, "dataset": "v1_hotel"}
+{"id": "v1-003", "question": "Tell me about deluxe room.", "gold_doc_ids": ["11_deluxe_room.txt"], "retrieval_needed_authored": true, "dataset": "v1_hotel"}
+{"id": "v1-004", "question": "Tell me about visitor policy.", "gold_doc_ids": ["56_visitor_policy.txt"], "retrieval_needed_authored": true, "dataset": "v1_hotel"}
+{"id": "v1-005", "question": "Tell me about vegan menu.", "gold_doc_ids": ["29_vegan_menu.txt"], "retrieval_needed_authored": true, "dataset": "v1_hotel"}
+{"id": "v1-006", "question": "Can I store my luggage at the hotel?", "gold_doc_ids": ["06_luggage_storage.txt"], "retrieval_needed_authored": true, "dataset": "v1_hotel"}
+{"id": "v1-007", "question": "Tell me about extra bed.", "gold_doc_ids": ["17_extra_bed.txt"], "retrieval_needed_authored": true, "dataset": "v1_hotel"}
+{"id": "v1-008", "question": "Tell me about executive room.", "gold_doc_ids": ["12_executive_room.txt"], "retrieval_needed_authored": true, "dataset": "v1_hotel"}
+{"id": "v1-009", "question": "What should I do if I lose an item?", "gold_doc_ids": ["09_lost_and_found.txt"], "retrieval_needed_authored": true, "dataset": "v1_hotel"}
+{"id": "v1-010", "question": "What is the hotel's check-out policy?", "gold_doc_ids": ["04_late_checkout.txt"], "retrieval_needed_authored": true, "dataset": "v1_hotel"}
+{"id": "v1-011", "question": "Tell me about restaurant.", "gold_doc_ids": ["22_restaurant.txt"], "retrieval_needed_authored": true, "dataset": "v1_hotel"}
+{"id": "v1-012", "question": "Tell me about food allergy.", "gold_doc_ids": ["28_food_allergy.txt"], "retrieval_needed_authored": true, "dataset": "v1_hotel"}
+{"id": "v1-013", "question": "Tell me about medical assistance.", "gold_doc_ids": ["50_medical_assistance.txt"], "retrieval_needed_authored": true, "dataset": "v1_hotel"}
+{"id": "v1-014", "question": "Tell me about room amenities.", "gold_doc_ids": ["14_room_amenities.txt"], "retrieval_needed_authored": true, "dataset": "v1_hotel"}
+{"id": "v1-015", "question": "Tell me about taxi booking.", "gold_doc_ids": ["49_taxi_booking.txt"], "retrieval_needed_authored": true, "dataset": "v1_hotel"}
+{"id": "v1-016", "question": "Tell me about gym.", "gold_doc_ids": ["32_gym.txt"], "retrieval_needed_authored": true, "dataset": "v1_hotel"}
+{"id": "v1-017", "question": "Does the hotel provide airport pickup service?", "gold_doc_ids": ["07_airport_transfer.txt"], "retrieval_needed_authored": true, "dataset": "v1_hotel"}
+{"id": "v1-018", "question": "What is the hotel's check-out policy?", "gold_doc_ids": ["02_checkout_policy.txt"], "retrieval_needed_authored": true, "dataset": "v1_hotel"}
+{"id": "v1-019", "question": "Tell me about business center.", "gold_doc_ids": ["44_business_center.txt"], "retrieval_needed_authored": true, "dataset": "v1_hotel"}
+{"id": "v1-020", "question": "Tell me about cancellation.", "gold_doc_ids": ["51_cancellation.txt"], "retrieval_needed_authored": true, "dataset": "v1_hotel"}
+{"id": "v1-021", "question": "What is the hotel's check-in policy?", "gold_doc_ids": ["01_checkin_policy.txt"], "retrieval_needed_authored": true, "dataset": "v1_hotel"}
+{"id": "v1-022", "question": "Tell me about ev charging.", "gold_doc_ids": ["48_ev_charging.txt"], "retrieval_needed_authored": true, "dataset": "v1_hotel"}
+{"id": "v1-023", "question": "Tell me about baby crib.", "gold_doc_ids": ["18_baby_crib.txt"], "retrieval_needed_authored": true, "dataset": "v1_hotel"}
+{"id": "v1-024", "question": "Tell me about room service.", "gold_doc_ids": ["23_room_service.txt"], "retrieval_needed_authored": true, "dataset": "v1_hotel"}
+{"id": "v1-025", "question": "Tell me about laundry.", "gold_doc_ids": ["41_laundry.txt"], "retrieval_needed_authored": true, "dataset": "v1_hotel"}
+{"id": "v1-026", "question": "What is the capital of India?", "gold_doc_ids": [""], "retrieval_needed_authored": false, "dataset": "v1_hotel"}
+{"id": "v1-027", "question": "What is the capital of France?", "gold_doc_ids": [""], "retrieval_needed_authored": false, "dataset": "v1_hotel"}
+{"id": "v1-028", "question": "Which is the largest planet in our solar system?", "gold_doc_ids": [""], "retrieval_needed_authored": false, "dataset": "v1_hotel"}
+{"id": "v1-029", "question": "Which planet is known as the Red Planet?", "gold_doc_ids": [""], "retrieval_needed_authored": false, "dataset": "v1_hotel"}
+{"id": "v1-030", "question": "What is the chemical formula of water?", "gold_doc_ids": [""], "retrieval_needed_authored": false, "dataset": "v1_hotel"}
+{"id": "v1-031", "question": "At what temperature does water boil at sea level?", "gold_doc_ids": [""], "retrieval_needed_authored": false, "dataset": "v1_hotel"}
+{"id": "v1-032", "question": "What is the square root of 64?", "gold_doc_ids": [""], "retrieval_needed_authored": false, "dataset": "v1_hotel"}
+{"id": "v1-033", "question": "What is 18 multiplied by 7?", "gold_doc_ids": [""], "retrieval_needed_authored": false, "dataset": "v1_hotel"}
+{"id": "v1-034", "question": "Is 17 a prime number?", "gold_doc_ids": [""], "retrieval_needed_authored": false, "dataset": "v1_hotel"}
+{"id": "v1-035", "question": "What is Python?", "gold_doc_ids": [""], "retrieval_needed_authored": false, "dataset": "v1_hotel"}
+{"id": "v1-036", "question": "What is a variable in programming?", "gold_doc_ids": [""], "retrieval_needed_authored": false, "dataset": "v1_hotel"}
+{"id": "v1-037", "question": "What is a loop in programming?", "gold_doc_ids": [""], "retrieval_needed_authored": false, "dataset": "v1_hotel"}
+{"id": "v1-038", "question": "What does CPU stand for?", "gold_doc_ids": [""], "retrieval_needed_authored": false, "dataset": "v1_hotel"}
+{"id": "v1-039", "question": "What does RAM stand for?", "gold_doc_ids": [""], "retrieval_needed_authored": false, "dataset": "v1_hotel"}
+{"id": "v1-040", "question": "Who wrote Hamlet?", "gold_doc_ids": [""], "retrieval_needed_authored": false, "dataset": "v1_hotel"}
+{"id": "v1-041", "question": "Who painted the Mona Lisa?", "gold_doc_ids": [""], "retrieval_needed_authored": false, "dataset": "v1_hotel"}
+{"id": "v1-042", "question": "When did India become independent?", "gold_doc_ids": [""], "retrieval_needed_authored": false, "dataset": "v1_hotel"}
+{"id": "v1-043", "question": "How many continents are there?", "gold_doc_ids": [""], "retrieval_needed_authored": false, "dataset": "v1_hotel"}
+{"id": "v1-044", "question": "How many days are there in a leap year?", "gold_doc_ids": [""], "retrieval_needed_authored": false, "dataset": "v1_hotel"}
+{"id": "v1-045", "question": "Which is the largest ocean on Earth?", "gold_doc_ids": [""], "retrieval_needed_authored": false, "dataset": "v1_hotel"}
+{"id": "v1-046", "question": "Which is the fastest land animal?", "gold_doc_ids": [""], "retrieval_needed_authored": false, "dataset": "v1_hotel"}
+{"id": "v1-047", "question": "What is the largest mammal?", "gold_doc_ids": [""], "retrieval_needed_authored": false, "dataset": "v1_hotel"}
+{"id": "v1-048", "question": "What is the standard hotel check-in time in most hotels?", "gold_doc_ids": [""], "retrieval_needed_authored": false, "dataset": "v1_hotel"}
+{"id": "v1-049", "question": "What amenities are commonly available in a deluxe hotel room?", "gold_doc_ids": [""], "retrieval_needed_authored": false, "dataset": "v1_hotel"}
+{"id": "v1-050", "question": "Why do hotels ask guests to show identification during check-in?", "gold_doc_ids": [""], "retrieval_needed_authored": false, "dataset": "v1_hotel"}

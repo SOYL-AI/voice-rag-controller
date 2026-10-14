@@ -36,6 +36,9 @@ def split_into_clauses(text: str) -> List[str]:
     return [c.strip() for c in chunks if c.strip()]
 
 
+_RESIDENT_VOICES: dict = {}
+_RESIDENT_VOICES_LOCK = threading.Lock()
+
 _CLAUSE_BOUNDARY = re.compile(r"(?<=[.!?;\n])\s+")
 
 
@@ -191,13 +194,17 @@ class StreamingTTS:
         return stdout
 
     def _synthesize_resident(self, clause: str) -> bytes:
-        """In-process piper synthesis with the voice loaded once and reused."""
-        with self._voice_lock:
-            if self._voice is None:
+        """In-process piper synthesis with the voice loaded once per process
+        (shared across StreamingTTS instances, i.e. across conversations)."""
+        key = str(Path(self.voice_model_path).resolve())
+        with _RESIDENT_VOICES_LOCK:
+            voice = _RESIDENT_VOICES.get(key)
+            if voice is None:
                 from piper import PiperVoice
 
-                self._voice = PiperVoice.load(str(self.voice_model_path))
-            voice = self._voice
+                voice = PiperVoice.load(key)
+                _RESIDENT_VOICES[key] = voice
+        with self._voice_lock:
             return b"".join(chunk.audio_int16_bytes for chunk in voice.synthesize(clause))
 
     def speak_sync(
