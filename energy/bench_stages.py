@@ -90,12 +90,19 @@ def synth_utterance(voice) -> np.ndarray:
     """A ~4 s spoken question at 16 kHz, rendered by piper (not committed)."""
     from scipy.signal import resample_poly
 
+    # piper sampling is stochastic; render once and reuse so every run and
+    # every stage sees the identical waveform (kept in the cache, never committed)
+    cached = CACHE / "utterance_16k.npy"
+    if cached.exists():
+        return np.load(cached)
     pcm = b"".join(c.audio_int16_bytes for c in voice.synthesize(UTTERANCE_TEXT))
     sr = voice.config.sample_rate
     x = np.frombuffer(pcm, dtype=np.int16).astype(np.float32) / 32768.0
     y = resample_poly(x, SR, sr).astype(np.float32)
     # 0.8 s trailing silence = silence_hang_ms, as the live stream would carry
-    return np.concatenate([y, np.zeros(int(0.8 * SR), dtype=np.float32)])
+    out = np.concatenate([y, np.zeros(int(0.8 * SR), dtype=np.float32)])
+    np.save(cached, out)
+    return out
 
 
 def main():
