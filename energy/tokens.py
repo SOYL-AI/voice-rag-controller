@@ -40,26 +40,28 @@ K = 5
 
 def mistral_tokenizer():
     import mistral_common
-    from mistral_common.tokens.tokenizers.sentencepiece import SentencePieceTokenizer
+    from mistral_common.tokens.tokenizers.mistral import MistralTokenizer
 
     path = (Path(mistral_common.__file__).parent / "data"
             / "mistral_instruct_tokenizer_240323.model.v3")
-    return SentencePieceTokenizer(str(path))
+    return MistralTokenizer.from_file(str(path))
 
 
 def chat_prompt_tokens(tok, messages) -> int:
-    """[INST] system\\n\\nuser [/INST] with BOS, as the v0.3 chat template does."""
-    system = next((m["content"] for m in messages if m["role"] == "system"), None)
-    user = next(m["content"] for m in messages if m["role"] == "user")
-    text = f"{system}\n\n{user}" if system else user
-    ids = [tok.bos_id] + tok.encode("[INST]", bos=False, eos=False) \
-        + tok.encode(" " + text + " ", bos=False, eos=False) \
-        + tok.encode("[/INST]", bos=False, eos=False)
-    return len(ids)
+    """Token count of the instruct-encoded chat (BOS [INST] system
+
+user [/INST])."""
+    from mistral_common.protocol.instruct.messages import SystemMessage, UserMessage
+    from mistral_common.protocol.instruct.request import ChatCompletionRequest
+
+    msgs = [SystemMessage(content=m["content"]) if m["role"] == "system"
+            else UserMessage(content=m["content"]) for m in messages]
+    return len(tok.encode_chat_completion(ChatCompletionRequest(messages=msgs)).tokens)
 
 
 def text_tokens(tok, text: str) -> int:
-    return len(tok.encode(text, bos=False, eos=False)) + 1  # + EOS
+    """Generated-answer tokens, counting the EOS the model emits to stop."""
+    return len(tok.instruct_tokenizer.tokenizer.encode(text.strip(), bos=False, eos=False)) + 1
 
 
 def main():
