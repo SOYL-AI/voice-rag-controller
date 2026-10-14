@@ -230,6 +230,25 @@ def main(argv=None) -> int:
     results["worst_config_any_variant"] = worst
     results["headline"]["by_domain"] = by_dom
     results["headline"]["by_type"] = by_type
+    # Leave-one-domain-out: cues that transfer across domains (what a new domain would inherit).
+    doms = sorted({it["domain"] for it in items})
+    if len(doms) >= 3:
+        texts = [text_of(it, False) for it in items]
+        lodo_scores = np.zeros(len(items))
+        for d in doms:
+            te = np.array([i for i, it in enumerate(items) if it["domain"] == d])
+            tr = np.array([i for i, it in enumerate(items) if it["domain"] != d])
+            f = Featuriser()
+            Xtr = f.fit_transform([items[i] for i in tr], [texts[i] for i in tr])
+            Xte = f.transform([items[i] for i in te], [texts[i] for i in te])
+            clf = LogisticRegression(C=head_C, max_iter=5000, class_weight="balanced", solver="liblinear").fit(Xtr, y[tr])
+            lodo_scores[te] = clf.decision_function(Xte)
+        lodo = {"pooled_auc": round(float(roc_auc_score(y, lodo_scores)), 4),
+                "by_domain": {d: round(float(roc_auc_score(y[[i for i, it in enumerate(items) if it["domain"] == d]],
+                                                           lodo_scores[[i for i, it in enumerate(items) if it["domain"] == d]])), 4)
+                              for d in doms}}
+        results["leave_one_domain_out"] = lodo
+        print(f"leave-one-domain-out (C={head_C:g}): pooled AUC={lodo['pooled_auc']:.3f} by domain={lodo['by_domain']}")
     pos, neg = top_features(items, y, False, args.top_features)
     results["top_features_retrieval_needed"] = pos
     results["top_features_general"] = neg
