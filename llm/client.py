@@ -444,9 +444,19 @@ class MockClient:
         gen_cfg = dict(self.cfg.get("generation") or {})
         gen_cfg.update(overrides)
         lp_cfg = self.cfg.get("logprobs") or {}
+        # Simulated latency. Defaults keep the original behaviour (90 ms /
+        # 12 ms). Config llm.mock.ttft_s / per_token_s (a bulk caller such as
+        # llm/experiment1_v2 --backend mock sets them to 0 so thousands of
+        # calls stay fast); per-call mock_ttft_s / mock_token_s override both
+        # (streaming tests use realistic timing without an endpoint).
         mock_cfg = self.cfg.get("mock") or {}
-        ttft_s = float(overrides.pop("mock_ttft_s", None) or mock_cfg.get("ttft_s", 0.09))
-        token_s = float(overrides.pop("mock_token_s", None) or mock_cfg.get("token_s", 0.012))
+        o_ttft = overrides.pop("mock_ttft_s", None)
+        o_tok = overrides.pop("mock_token_s", None)
+        ttft_s = float(o_ttft if o_ttft is not None else mock_cfg.get("ttft_s", 0.09))
+        per_token_s = float(
+            o_tok if o_tok is not None
+            else mock_cfg.get("per_token_s", mock_cfg.get("token_s", 0.012))
+        )
 
         answer = overrides.pop("mock_answer", None) or self.CANNED_ANSWER
         seed_material = json.dumps(messages, sort_keys=True, default=str)
@@ -460,7 +470,8 @@ class MockClient:
 
         # Simulate the server thinking before the first token appears. Real
         # TTFT for an 8B on a single card is roughly this order of magnitude.
-        time.sleep(ttft_s)
+        if ttft_s > 0:
+            time.sleep(ttft_s)
 
         # Split on whitespace, keeping the spaces attached the way a real
         # tokenizer emits them (" pool", not "pool"), and honour max_tokens so
@@ -503,7 +514,8 @@ class MockClient:
             pieces.append(tok)
             if on_delta is not None:
                 on_delta(tok)
-            time.sleep(token_s)  # per-token decode time
+            if per_token_s > 0:
+                time.sleep(per_token_s)  # per-token decode time
 
         gen.text = "".join(pieces)
         gen.final_ms = now_ms()

@@ -448,6 +448,132 @@ controller:
       # retrieval latency inside speech (see overlap_ms above).
       timing: fixed_early_proxy
 
+  # -------------------------------------------------------------------------
+  # Research v2 (docs/research_v2/CONTRACTS.md): the shared cost model of the
+  # v2 controllers, read by controller/baselines/_objective_v2.py (which
+  # mirrors these values as defaults). The v1 `e3` block above is untouched
+  # and still drives the v1 controllers. Every priced v2 controller (ours_v2,
+  # b9_v2, b9plus_v2) reads exactly these values, so they differ only in
+  # decision structure. An explicit null here DOES override the default.
+  # -------------------------------------------------------------------------
+  e3v2:
+    default_prices:
+      lambda_l: 1.0     # quality per SECOND of exposed latency
+      lambda_c: 0.05    # quality per retrieval
+
+    # Asymmetric retrieval effect, U = b g+ (1-rho) - (1-b) g- - ...
+    # Defaults are the v1 E3 measurement (+0.72 where needed, -0.59 where
+    # not). E1-v2 refits both on dev; put its values here.
+    quality:
+      g_plus: 0.72
+      g_minus: 0.59
+
+    calibration:
+      # E1-v2's dev calibration artifact (prefix-aware logistic: intercept,
+      # slope, optional frac_slope / interaction). Until it lands, the v1
+      # full-transcript fit below is used (no prefix terms).
+      from_artifact: null
+      fallback_artifact: controller/baselines/e1_calibration_mean_entropy.json
+      signal: mean_entropy_nats
+      # Word fraction fed to the calibration: "predicted" = causal e/(e+R);
+      # "entry" = the record's reference word_frac (NOT causal; analysis only).
+      frac_source: predicted
+
+    belief:
+      prior: 0.5               # belief before any prefix signal is available
+      availability_lag_ms: 0   # prefix signal usable at t_ms + lag
+
+    timing:
+      # End-of-turn detection delay: hiding window at a partial is
+      # R_t + eot_detection_ms; the end-of-turn step happens at VAD end +
+      # eot_detection_ms (or at the final ASR transcript, if later).
+      eot_detection_ms: 0
+      default_partial_interval_ms: 300
+      fixed_early_fraction: 0.5      # fixed_early_proxy fires at est. word fraction >= this
+      forecast_lead_quantile: 0.5    # forecast fires when R_t + eot <= this latency quantile
+      query_ready:
+        min_words: 4
+        require_content_word: true
+
+    # Retrieval latency per profile (ms quantiles). signals["retrieval"]
+    # overrides these per turn. faiss = v1's measured end-to-end retrieval
+    # (median 672, p90 3187; p10 is a PLACEHOLDER); faiss_rerank and
+    # remote_api are PLACEHOLDERS until the v2 latency runs measure them.
+    latency_profiles:
+      faiss: {p10: 310, p50: 672, p90: 3187}
+      faiss_rerank: {p10: 520, p50: 1100, p90: 3900}
+      remote_api: {p10: 900, p50: 1800, p90: 5200}
+    default_latency_profile: faiss
+    latency_points: 41
+
+    # pi, the NON-HIDEABLE TTFA increment of using retrieved passages
+    # (longer prompt -> extra prefill and generation). Every priced
+    # controller pays lambda_l * (E[exposed retrieval] + pi), identically.
+    # PLACEHOLDER from v1 (paired means): retrieving added 1.27-1.57 s of
+    # TTFA, of which only the retrieval call (0.3-0.7 s) can overlap speech;
+    # 900 ~ 1.42 s - 0.5 s. signals["retrieval"]["nonhideable_increment_ms"]
+    # overrides it per turn; replace with the v2 latency model's measurement.
+    nonhideable_increment_ms: 900.0
+
+    # Pipeline architecture. commit: a dispatched retrieval's passages are
+    # always used. speculative: a dispatched retrieval may be discarded at
+    # end of turn (compute still spent) — enables b10_speculative_v2 (SPEC,
+    # THEORY.md Prop. 4'). simulator/e3v2_decide.py reports both.
+    architecture: commit
+
+    # SPEC's independently chosen dispatch timing (immediate = first
+    # query-ready partial; forecast is the other sensible choice).
+    b10:
+      timing: immediate
+
+    # Partial-query risk rho(f): fraction of retrieval's gain lost on a
+    # prefix. Default scale*(1-f)^power; tune_v2.py fits a dev table
+    # (1 - hit(f)/hit(final), isotonic) that replaces it via the estimates
+    # artifact. A partial that fails query_ready gets not_ready.
+    rho:
+      kind: power
+      scale: 1.0
+      power: 2.0
+      not_ready: 1.0
+      table: null
+
+    # PLACEHOLDER (as v1's waste_rate): expected relaunch compute of an early
+    # commit, coef * (1 - f).
+    waste:
+      coef: 0.1
+
+    ours:
+      lookahead_steps: 1
+      belief_transitions_artifact: controller/baselines/belief_transitions_v2.json
+      allow_early_skip: false
+      speculative: false     # documented hook only; true raises
+
+    b9:
+      # v1_full: lambda_l*Hbar - bbar*g+*rhobar - lambda_c*wbar;  hidden_only: lambda_l*Hbar
+      timing_objective: v1_full
+
+    # tune_v2.py output (policy constants, rho table, tuned unpriced
+    # thresholds). null until a dev tuning run exists.
+    estimates_artifact: null
+
+    policy_constants_fallback:
+      prior_belief: 0.5
+      profiles: {}
+
+    # Unpriced defaults (UN-TUNED starting points; tune_v2.py replaces them).
+    unpriced:
+      b4: {theta: 0.3}
+      b5: {threshold: 0.5, model: null}
+      b6: {threshold: 1.0}
+      b8: {trigger: b6, timing: fixed_early_proxy}
+
+    tuning:
+      budget: 21                      # grid evaluations per tuned threshold
+      equal_accuracy_tolerance: 0.02  # b8 timing: E2's equal-accuracy condition
+
+    phase_b:
+      query_variant_order_sensitive: true
+
 # ---------------------------------------------------------------------------
 # Other components: add your section here.
 # ---------------------------------------------------------------------------

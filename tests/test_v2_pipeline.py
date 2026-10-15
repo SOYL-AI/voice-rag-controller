@@ -337,12 +337,41 @@ def test_latency_model_signals_and_roundtrip(tmp_path):
     sig = m.signals_retrieval("pipeline_logged", "batch")
     assert sig["latency_profile"] == "pipeline_logged"
     assert sig["expected_latency_ms"] == sig["latency_quantiles_ms"]["p50"]
-    assert set(sig["nonhideable_increment_ms"]) >= {"mean", "quantiles", "tts_mode", "source"}
+    # _objective_v2.nonhideable_ms() does float(...) on this key
+    assert isinstance(sig["nonhideable_increment_ms"], float)
+    assert set(sig["nonhideable_increment_quantiles_ms"]) >= {"p10", "p50", "p90"}
+    assert sig["nonhideable_increment_tts_mode"] == "batch"
     m.save(tmp_path / "lm.json")
     m2 = LatencyModel.load(tmp_path / "lm.json")
     a = m.sample_ttfa("skip", None, 0.0, "pipeline_logged", 100, np.random.default_rng(1))
     b = m2.sample_ttfa("skip", None, 0.0, "pipeline_logged", 100, np.random.default_rng(1))
     assert a == b
+
+
+def test_latency_model_controller_interface():
+    """The interface simulator/e3v2_decide.py and _objective_v2.py rely on."""
+    import random as _random
+
+    from harness.latency_model_v2 import DEFAULT_FIT_PATH, LatencyModel
+
+    m = _small_model()
+    cfg = {"timing": {"eot_detection_ms": 300}}
+    m.cfg = cfg
+    a = m.sample_ttfa("retrieve", 500.0, 1000.0, "pipeline_logged", 700, _random.Random(7))
+    b = m.sample_ttfa("retrieve", 500.0, 1000.0, "pipeline_logged", 700, _random.Random(7))
+    assert a == b and a["eot_ms"] == 300.0 and a["stub"] is False
+    for k in ("ttfa_ms", "exposed_retrieval_ms", "retrieval_ms", "nonhideable_ms", "skip_ttfa_ms"):
+        assert k in a
+    # common random numbers: the skip draw with the same seed is the matched counterfactual
+    s = m.sample_ttfa("skip", None, 1000.0, "pipeline_logged", None, _random.Random(7))
+    assert s["ttfa_ms"] == pytest.approx(a["skip_ttfa_ms"])
+    assert s["nonhideable_ms"] == 0.0 and s["exposed_retrieval_ms"] == 0.0
+    # decomposition: ttfa = skip + exposed + pi (+ pre-LLM overhead difference, which is part of pi)
+    assert a["ttfa_ms"] == pytest.approx(a["skip_ttfa_ms"] + a["exposed_retrieval_ms"] + a["nonhideable_ms"])
+    if DEFAULT_FIT_PATH.exists():
+        real = LatencyModel(cfg=cfg)
+        r = real.sample_ttfa("retrieve", None, 0.0, "faiss", None, _random.Random(1))
+        assert r["ttfa_ms"] > 0 and r["nonhideable_ms"] == r["nonhideable_ms"]
 
 
 def test_paired_increments():

@@ -1,0 +1,264 @@
+% ============================================================================
+% theory_latex.tex -- propositions and proofs for the revised paper.
+% Source of truth: docs/research_v2/THEORY.md (numbers: v1_theory_check.json,
+% v2_power.json). Paste into a section, or \input{} it.
+%
+% Preamble requirements (IEEEtran-compatible). main.tex currently loads
+% amsmath/amssymb/amsfonts but NOT amsthm; add to the preamble:
+%   \usepackage{amsthm}
+% The theorem environments below are defined only if absent. If the class's
+% own proof environment clashes, replace proof with IEEEproof.
+% Not compile-tested in this checkout (no TeX installation); compile once in
+% the paper build before submission.
+% ============================================================================
+\ifdefined\proposition\else\newtheorem{proposition}{Proposition}\fi
+\ifdefined\lemma\else\newtheorem{lemma}{Lemma}\fi
+\ifdefined\corollary\else\newtheorem{corollary}{Corollary}\fi
+\ifdefined\remark\else\newtheorem{remark}{Remark}\fi
+
+\subsection{Model}
+A turn has a need indicator $N\in\{0,1\}$ and a calibrated belief
+$b=\Pr(N=1\mid\mathcal I)$. Retrieval changes correctness by
+$g^{+}=\mathbb E[Q^{r}-Q^{s}\mid N=1]$ and $-g^{-}=\mathbb E[Q^{r}-Q^{s}\mid N=0]$.
+A timing action $t\in\mathcal T$ hides overlap $o_t$ of a retrieval of latency
+$L$, so it exposes $e_t=L-o_t$. It wastes $w_t$ extra retrievals and loses a
+fraction $\rho_t$ of $g^{+}$ to a partial query. With prices
+$\lambda_l,\lambda_c\ge 0$, $U(\text{skip})=0$ and
+\begin{equation}
+U_t(b)=b\,g^{+}(1-\rho_t)-(1-b)\,g^{-}-\kappa_t,\quad
+\kappa_t=\lambda_l e_t+\lambda_c(1+w_t).
+\label{eq:U}
+\end{equation}
+The v1 objective is $g^{+}=1$, $g^{-}=\rho_t=0$. The joint controller (Ours)
+maximizes \eqref{eq:U} over skip and all $(\text{retrieve},t)$, with ties to
+skip. The decomposed controller (B9) retrieves iff
+$s b-g^{-}-\lambda_lL-\lambda_c(1+w_{\mathrm{se}})>0$, pricing the full
+latency. Its timing, chosen independently, is
+$\arg\max_t[-bg^{+}\rho_t+\lambda_lo_t-\lambda_cw_t]$. B9+ uses the same
+timing $\hat\tau$ but prices its expected exposure: it retrieves iff
+$U_{\hat\tau}(b)>0$.
+
+The policy class $\Pi_J$ allows the retrieve decision $r$ to depend on
+$(b,Z)$, where $Z$ is the turn's timing state. The decomposed class
+$\Pi_D\subset\Pi_J$ requires $r$ to be $\sigma(b)$-measurable.
+
+The v1 regime assumes:
+\textbf{(A1)} $\rho_t\equiv\bar\rho$;
+\textbf{(A2)} $e_t$ is constant across turns;
+\textbf{(A3)} one belief per turn, independent of dispatch time.
+Under (A1), every slope is $s=g^{+}(1-\bar\rho)+g^{-}$.
+
+\begin{lemma}\label{lem:J}
+For integrable $X$,
+$\mathbb E X^{+}-(\mathbb E X)^{+}=\min(\mathbb EX^{+},\mathbb EX^{-})
+=\tfrac12(\mathbb E|X|-|\mathbb EX|)\le\tfrac12\mathbb E|X-\mathbb EX|$.
+The gap is zero iff $X\ge0$ a.s.\ or $X\le0$ a.s.
+\end{lemma}
+\begin{proof}
+If $\mathbb EX\ge0$, then $\mathbb EX^{+}-\mathbb EX=\mathbb EX^{-}\le\mathbb EX^{+}$.
+The case $\mathbb EX<0$ is symmetric. Use $x^{+}=(x+|x|)/2$ and
+$|X|\le|X-\mathbb EX|+|\mathbb EX|$.
+\end{proof}
+
+\begin{lemma}\label{lem:I}
+For square-integrable $C$,
+$\int_{\mathbb R}\big(\mathbb E(u-C)^{+}-(u-\mathbb EC)^{+}\big)\,du=\tfrac12\operatorname{Var}C$.
+\end{lemma}
+\begin{proof}
+Let $m=\mathbb EC$. For large $M$,
+$\int_{-M}^{M}[(u-c)^{+}-(u-m)^{+}]du=(m-c)(M-m)+\tfrac12(m-c)^2$.
+Take expectations and let $M\to\infty$.
+\end{proof}
+
+\subsection{Equivalence and the fixed-price gap}
+Let $t^{*}=\arg\min_t\kappa_t$ and $c_O=\kappa_{t^{*}}$, and define
+$\lambda_l'=[c_O-\lambda_c(1+w_{\mathrm{se}})]/L$.
+
+\begin{proposition}[Equivalence]\label{prop:eq}
+Assume (A1)--(A3) and $w_{\mathrm{se}}=\min_tw_t$. For every $b\in[0,1]$, Ours
+at $(\lambda_l,\lambda_c)$ retrieves iff B9 at $(\lambda_l',\lambda_c)$
+retrieves. The map $\lambda_l\mapsto\lambda_l'$ is a continuous, strictly
+increasing bijection of $[0,\infty)$. When the maximal-overlap timing is optimal,
+\[
+\lambda_l'=\lambda_l\frac{L-o^{*}}{L}+\lambda_c\frac{w^{*}-w_{\mathrm{se}}}{L},
+\]
+which reduces to $\lambda_l(L-o^{*})/L$ iff $\lambda_c(w^{*}-w_{\mathrm{se}})=0$.
+Conditional on retrieving, the timings coincide unless $\lambda_l$ and
+$\lambda_l'$ lie in different linear pieces of $\lambda\mapsto\min_t\kappa_t$.
+\end{proposition}
+\begin{proof}
+Under (A1), $\max_tU_t(b)>0$ iff $sb-g^{-}>c_O$. Ties go to skip, so Ours
+retrieves iff $b>\theta_O=(c_O+g^{-})/s$. B9 retrieves iff
+$b>\theta_B(\lambda')=(\lambda'L+\lambda_c(1+w_{\mathrm{se}})+g^{-})/s$, and
+$\theta_B(\lambda_l')=\theta_O$ by construction. Both comparisons are strict.
+
+The function $\min_t\kappa_t(\lambda)$ is a minimum of affine maps with slopes
+$e_t>0$, equal to $\lambda_c(1+w_{\mathrm{se}})$ at $\lambda=0$; hence the
+bijection.
+
+Under (A1) the belief term of B9's timing objective is constant in $t$, so its
+timing is $\arg\min_t\kappa_t(\lambda')=t^{*}(\lambda')$, whereas Ours uses
+$t^{*}(\lambda)$.
+\end{proof}
+
+\begin{corollary}[Frontiers]
+If each turn's outcome depends only on (item, seed, retrieve, timing), then
+sweeping Ours and B9 over $\lambda_l\in[0,\infty)$ yields identical sets of
+operating points, except on the timing-mismatch interval of
+Proposition~\ref{prop:eq}.
+\end{corollary}
+
+\begin{proposition}[Gap at a fixed price]\label{prop:gap}
+Assume (A1)--(A3) and model correctness: $\mathbb E[N\mid b]=b$, and realized
+quality, latency and compute in expectation equal to those in \eqref{eq:U}.
+Let $c_B=\lambda_lL+\lambda_c(1+w_{\mathrm{se}})$ and
+$\mathcal B=(\theta_O,\theta_B]$. Then
+\[
+\mathbb E[U_{\mathrm{Ours}}-U_{\mathrm{B9}}]=\mathbb E[(sb-g^{-}-c_O)\mathbf 1\{b\in\mathcal B\}]
+\in\big[0,\ (c_B-c_O)\Pr(b\in\mathcal B)\big],
+\]
+and $(c_B-c_O)\Pr(b\in\mathcal B)\le\lambda_lo^{*}\Pr(b\in\mathcal B)$.
+For B9+ at the same price the difference is $0$ pointwise.
+\end{proposition}
+\begin{proof}
+At equal prices B9's timing is $t^{*}$, so whenever B9 retrieves it pays
+$c_O$. The two controllers differ only on $\mathcal B$, where Ours earns
+$sb-g^{-}-c_O\in(0,c_B-c_O]$ and B9 earns $0$. B9+ applies Ours' rule
+$U_{t^{*}}(b)>0$.
+\end{proof}
+
+\begin{remark}
+Without model correctness, the realized gap is
+$\mathbb E[(m(b)-\tilde c)\mathbf 1\{b\in\mathcal B\}]$, where
+$m(b)=\mathbb E[Q^{r}-Q^{s}\mid b]$ and $\tilde c$ is the realized cost. It may
+be negative, and it is not $O(\lambda_lo^{*})$. On the v1 sweep the
+controller model predicts a positive gap at all 11 band prices. The realized
+gap, computed with measured TTFA, is negative at 10 of 11. The prediction made
+with the corrected objective and the measured cost agrees in sign at 10 of 11
+($r=0.952$).
+\end{remark}
+
+\subsection{Channels that break the equivalence}
+\textbf{C1 (turn-dependent overlap).} Drop (A2), and let
+$e_t(Z)=\mathbb E[\pi+\max(0,L-R_t)\mid Z]$. Write $A(b)=sb-g^{-}$,
+$C(Z)=\min_t[\lambda_le_t(Z)+\lambda_c(1+w_t)]$ and $\Delta=A(b)-C(Z)$.
+
+\begin{proposition}[C1]\label{prop:c1}
+Under model correctness:
+\begin{itemize}
+\item $\sup_{\Pi_J}\mathbb EU=\mathbb E\Delta^{+}$ and
+$\sup_{\Pi_D}\mathbb EU=\mathbb E(\mathbb E[\Delta\mid b])^{+}$; if $b\perp Z$,
+the latter is attained by B9+ pricing $\mathbb EC$.
+\item The gain is
+$G=\mathbb E_b\big[\min(\mathbb E[\Delta^{+}\mid b],\mathbb E[\Delta^{-}\mid b])\big]\ge0$.
+It is strictly positive iff, with positive probability over $b$, $\Delta$
+takes both signs given $b$.
+\item If $b\perp Z$:
+$G\le\tfrac12\mathbb E|C-\mathbb EC|\,\Pr(A(b)\in(\inf C,\sup C))$.
+\item If moreover $b$ has a density $f$ that is continuous at
+$\theta^{*}=(\mathbb EC+g^{-})/s$, then
+$G=\frac{f(\theta^{*})}{2s}\operatorname{Var}C\,(1+o(1))$ as the spread of
+$C$ vanishes.
+\end{itemize}
+\end{proposition}
+\begin{proof}
+Optimize pointwise in $(b,Z)$ for $\Pi_J$. For $\Pi_D$, condition on $b$:
+$\mathbb E[r(b)\Delta]=\mathbb E[r(b)\mathbb E[\Delta\mid b]]$. Subtract the two
+values and apply Lemma~\ref{lem:J} conditionally on $b$. For the
+approximation, substitute $u=A(b)$ in
+$\int f(b)[\mathbb E(A(b)-C)^{+}-(A(b)-\mathbb EC)^{+}]db$ and apply
+Lemma~\ref{lem:I}.
+\end{proof}
+
+The gain is second order: of order $\lambda_l^{2}\operatorname{Var}e^{*}(Z)$.
+If the plug-in cost satisfies $|\hat C-C|\le\varepsilon$, the joint rule loses
+at most $\varepsilon\Pr(|\Delta|\le\varepsilon)$, so a realized advantage
+requires $G>\varepsilon\Pr(|\Delta|\le\varepsilon)$.
+
+\textbf{C2 (information vs.\ overlap).} Drop (A3). The epochs are
+$k=1,\dots,K$, and the belief $b_k=\Pr(N=1\mid\mathcal F_k)$ is a martingale.
+A retrieval dispatched at $k$ is committed. Its value is
+$D_k=s_kb_k-g^{-}-\lambda_lX_k-\lambda_c(1+w_k)$, and the problem's value is
+$V_K=D_K^{+}$, $V_k=\max(D_k,\mathbb E[V_{k+1}\mid\mathcal F_k])$. Let
+$\delta_k=\mathbb E[D_{k+1}-D_k\mid\mathcal F_k]$ and
+$I_k=\min(\mathbb E[D_{k+1}^{+}\mid\mathcal F_k],\mathbb E[D_{k+1}^{-}\mid\mathcal F_k])$.
+
+\begin{proposition}[C2]\label{prop:c2}
+The one-step value of waiting is
+$W_k=\mathbb E[D_{k+1}^{+}\mid\mathcal F_k]-D_k^{+}=I_k+(D_k+\delta_k)^{+}-D_k^{+}$.
+\begin{enumerate}
+\item If $W_k>0$, waiting strictly beats both dispatching and skipping now.
+\item If $\delta_j\le0$ for all $j\ge k$, then
+$V_k-D_k\le\mathbb E[\max_{j\ge k}D_j^{-}\mid\mathcal F_k]$. Hence dispatching
+now is optimal when $D_k>0$ and $\Pr(\min_{j\ge k}D_j<0\mid\mathcal F_k)=0$, and
+strictly optimal if in addition $\delta_k<0$.
+\item Suppose some event $E$ in the belief-free timing filtration
+$\mathcal G_k$ contains, with positive probability, both turns in the strict-wait
+set of (1) and turns in the strict-dispatch set of (2). Then every decomposed
+policy is strictly suboptimal. Here a decomposed policy dispatches at a
+$\mathcal G$-stopping time and decides with $b$ at that time.
+\end{enumerate}
+\end{proposition}
+\begin{proof}
+(1) Waiting one step and then acting myopically is feasible. Apply
+Lemma~\ref{lem:J} to $D_{k+1}$ given $\mathcal F_k$, using the martingale
+property for $\delta_k$.
+(2) $(D_j)_{j\ge k}$ is a supermartingale. A stopped payoff is at most
+$D_\sigma+\max_jD_j^{-}$; apply optional stopping.
+(3) On $E$ a decomposed policy takes the same epoch-$k$ action (commit or
+defer) for every belief. It therefore loses a strictly positive amount on one
+of the two subsets.
+\end{proof}
+
+\begin{proposition}[Speculative dispatch]\label{prop:spec}
+Suppose a dispatched retrieval may go unused, $\rho\equiv0$, and $R_k$ is
+non-increasing pathwise. Then SPEC, which always dispatches at $k=1$ and uses
+the result iff $A(b_K)-\lambda_lX_1>0$, is decomposed and optimal when
+$\lambda_c=0$. For $\lambda_c>0$ it is within $\lambda_c(1+w_1)$ per turn of
+the joint optimum.
+\end{proposition}
+\begin{proof}
+Using a retrieval dispatched at $\tau$ exposes $X_\tau\ge X_1$, and the use
+decision is best made with $b_K$. So any policy's value is at most
+$\mathbb E(A(b_K)-\lambda_lX_1)^{+}$, which SPEC attains less its compute cost.
+\end{proof}
+
+\textbf{C3 (partial-query risk).} Keep (A2) and (A3), and let $\rho_t$ vary.
+
+\begin{proposition}[C3]\label{prop:c3}
+The optimal timing given retrieval, $t^{*}(b)=\arg\max_t[-g^{+}\rho_tb-\kappa_t]$,
+is non-decreasing in $b$ when later timings have lower $\rho_t$ and higher
+$\kappa_t$. The retrieve set $\{b:\max_tU_t(b)>0\}$ is an upper interval
+$(\theta,1]$. Hence the joint optimum is $\sigma(b)$-measurable: C3 alone does
+not separate $\Pi_J$ from $\Pi_D$. It defeats only decompositions whose timing
+ignores $b$, and scalar-priced rules such as B9+.
+\end{proposition}
+\begin{proof}
+$\partial_bU_t=s_t$ increases in $t$, so $U$ has increasing differences in
+$(b,t)$, and Topkis' theorem gives monotonicity of $t^{*}$. Each $U_t$ is
+increasing in $b$, so the retrieve set is an upper interval. The pair
+$(\mathbf 1\{b>\theta\},t^{*}(b))$ is $b$-measurable and attains the optimum.
+\end{proof}
+
+\subsection{Corrected objective}
+With $\rho\equiv0$, retrieval at cost $\kappa$ pays iff
+$b>b^{*}=(\kappa+g^{-})/(g^{+}+g^{-})$. On v1,
+$\hat g^{+}=0.720\ [0.504,0.888]$ and $\hat g^{-}=0.592\ [0.408,0.768]$, so
+$b^{*}(0)=0.451$, against $0.05$ under the v1 objective. The correction leaves
+Proposition~\ref{prop:eq} intact, since the rule is still a threshold in $b$.
+It places the zero-price boundary mid-range.
+
+\subsection{Verification on the v1 sweep}
+\begin{itemize}
+\item Ours at grid price $\lambda_i$ and B9 at $\lambda_{i-1}$ agree on
+1{,}250/1{,}250 retrieve decisions and on 941/941 timings.
+\item On 200 off-grid prices, the exact map agrees on 10{,}000/10{,}000 decisions.
+The approximate map $\lambda(L-o^{*})/L$ agrees on 9{,}938/10{,}000.
+\item The band is non-empty at 11 of 26 prices. It contains 41 of the 1{,}300
+decisions (3.15\%), and the observed disagreements equal the in-band set at
+every price.
+\item B9+ reproduces Ours on all 11{,}300 decisions checked.
+\item The grid satisfies
+$(\lambda_i-\lambda_{\deg})/(\lambda_{i-1}-\lambda_{\deg})=L/(L-o^{*})=1.3884$,
+with $\lambda_{\deg}=0.02128$. This holds by construction.
+\end{itemize}

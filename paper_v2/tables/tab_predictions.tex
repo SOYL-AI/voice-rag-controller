@@ -1,0 +1,22 @@
+% Table -- pre-registered predictions (complete; predictions, not results).
+% Sources: docs/research_v2/THEORY.md Sec. 7; docs/research_v2/PREREG_V2.md
+% Sec. 3. The two-architecture rows reflect the PI decision of 2026-10-15
+% (test the boundary in both directions); PREREG_V2.md must be updated to
+% match before it is frozen.
+\begin{table}[t]
+\caption{Pre-Registered Directional Predictions for v2. $\bar D$ is the mean
+paired per-item utility difference (Sec.~\ref{sec:setup}).}
+\label{tab:predictions}
+\centering
+\footnotesize
+\setlength{\tabcolsep}{3pt}
+\begin{tabular}{@{}p{2.45cm} p{2.6cm} p{2.6cm}@{}}
+\toprule
+Channels active & Commit architecture & Speculative architecture\\
+\midrule
+none (A1--A3 enforced) & \OursV{} $\equiv$ \Bplus{}: identical decisions, $\bar D=0$ (Prop.~\ref{prop:eq}) & same \\
+C1 only & $\bar D(\OursV-\Bplus)\ge0$, second order (Prop.~\ref{prop:c1}) & same \\
+C1+C2+C3 & \textbf{primary:} $\bar D(\OursV-\Bplus)>0$ (Prop.~\ref{prop:c2}) & \textbf{primary:} $\bar D(\OursV-\Bten)\le\lamC(1+w)$, i.e.\ joint gains at most the compute bound (Prop.~\ref{prop:spec}) \\
+\bottomrule
+\end{tabular}
+\end{table}

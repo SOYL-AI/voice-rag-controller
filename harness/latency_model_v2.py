@@ -57,6 +57,7 @@ import glob
 import hashlib
 import json
 import math
+import random
 import re
 import sys
 from collections import defaultdict
@@ -74,6 +75,7 @@ from harness.latency_breakdown import _read_events, parse_turn, policy_from_name
 QUANTS = {"p10": 0.10, "p25": 0.25, "p50": 0.50, "p75": 0.75, "p90": 0.90, "p95": 0.95, "p99": 0.99}
 _BOUNDARY = re.compile(r"[.!?;\n]\s")
 DEFAULT_CHARS_PER_TOKEN = 4.0
+DEFAULT_FIT_PATH = _REPO_ROOT / "analysis" / "latency_model_v2" / "latency_model_v2_fit.json"
 SYSTEM_PROMPT_CHARS = None  # filled lazily from llm.client
 
 
@@ -236,10 +238,24 @@ def load_records(patterns: Iterable[str], source: str) -> List[dict]:
 # The model
 # ---------------------------------------------------------------------------
 class LatencyModel:
-    """See module docstring. All times in ms."""
+    """
+    See module docstring. All times in ms.
 
-    def __init__(self, params: dict):
+    LatencyModel()            loads the committed fit
+                              (analysis/latency_model_v2/latency_model_v2_fit.json)
+    LatencyModel(cfg=e3v2)    same, and takes end-of-turn detection from
+                              cfg["timing"]["eot_detection_ms"] (the
+                              controllers' config, simulator/e3v2_decide.py)
+    LatencyModel(params)      a fitted parameter dict (LatencyModel.fit)
+    """
+
+    def __init__(self, params: Optional[dict] = None, cfg: Optional[dict] = None, path=None):
+        if params is None:
+            src = Path(path) if path else DEFAULT_FIT_PATH
+            params = json.loads(src.read_text(encoding="utf-8"))
         self.p = params
+        self.cfg = cfg
+        self._sorted: Dict[str, list] = {}
 
     # -- fitting -----------------------------------------------------------
     @classmethod
@@ -365,6 +381,11 @@ class LatencyModel:
                     p["retrieval_profiles"][alias] = dict(p["retrieval_profiles"][name], alias_of=name)
 
         p["eot_samples_ms"] = [float(v) for v in (eot_samples_ms or [0.0])]
+        p["median_prompt_tokens"] = {
+            path: float(np.median([x["prompt_chars"] for x in records if x["path"] == path]) / p["chars_per_token"])
+            for path in ("retrieve", "skip") if any(x["path"] == path for x in records)
+        }
+        p["default_tts_mode"] = "streaming" if any(x["tts_mode"] == "streaming" for x in records) else "batch"
         p["default_tts_engine"] = "piper_resident" if p["tts_piper"] else "logged_v1"
         p["fit_sources"] = sorted({x.get("source", "?") for x in records})
         p["n_records"] = len(records)
@@ -380,22 +401,63 @@ class LatencyModel:
         return cls(json.loads(Path(path).read_text(encoding="utf-8")))
 
     # -- sampling ----------------------------------------------------------
-    @staticmethod
-    def _draw(pool, rng):
-        return pool[int(rng.integers(len(pool)))]
+    # Every draw consumes the same fixed vector of uniforms whatever the path,
+    # and every pool is sorted, so draws are comonotone: two calls with
+    # identically seeded rngs (common random numbers, as
+    # simulator/e3v2_decide.py seeds them per item/seed/condition/profile)
+    # see the same "fast or slow" turn on every component, and a retrieve
+    # draw is matched to its skip counterfactual rank by rank.
+    N_UNIFORMS = 8
 
-    def _tts_ms(self, words: int, engine: str, rng) -> float:
+    @staticmethod
+    def _uniforms(rng, n: int) -> List[float]:
+        if isinstance(rng, random.Random):
+            return [rng.random() for _ in range(n)]
+        return [float(x) for x in rng.random(n)]
+
+    def _pick(self, name: str, pool, u: float, key=None):
+        if name not in self._sorted:
+            self._sorted[name] = sorted(pool, key=key) if pool else []
+        sp = self._sorted[name]
+        if not sp:
+            return 0.0
+        return sp[min(int(u * len(sp)), len(sp) - 1)]
+
+    def _tts_ms(self, words: int, engine: str, u: float) -> float:
         if engine == "piper_resident":
             t = self.p.get("tts_piper")
             if not t:
                 raise ValueError("model has no piper TTS fit; use tts_engine='logged_v1'")
-            e = self._draw(t["residuals"], rng)
+            e = self._pick("tts_piper_resid", t["residuals"], u)
             return float(math.exp(t["a"] + t["b"] * math.log(max(words, 1)) + e))
         if engine == "logged_v1":
-            return float(self._draw(self.p["tts_logged_v1_ms"] or [0.0], rng))
+            return float(self._pick("tts_logged_v1", self.p.get("tts_logged_v1_ms") or [0.0], u))
         if engine == "none":
             return 0.0
         raise ValueError(f"unknown tts_engine {engine!r}")
+
+    def _default_tokens(self, path: str) -> float:
+        med = (self.p.get("median_prompt_tokens") or {}).get(path)
+        if med is not None:
+            return float(med)
+        return (_system_prompt_chars() + (60 if path == "skip" else 1500)) / self.p["chars_per_token"]
+
+    def _post_llm(self, path: str, n_tok: float, u_ttft: float, u_gen: float, u_tts: float,
+                  tts_mode: str, engine: str):
+        """(ttft, gen_to_tts_input, tts) for one path at the given uniforms."""
+        ttft = max(1.0, float(self._pick("ttft_resid", self.p["ttft_residuals_ms"], u_ttft))
+                   + self.p["ttft_slope_ms_per_token"] * n_tok)
+        g = self._pick(f"gen_{path}", self.p["generation"][path], u_gen,
+                       key=lambda r: (r["n_tokens"] - 1) * r["per_token_ms"])
+        full_gen = (g["n_tokens"] - 1) * g["per_token_ms"]
+        if tts_mode == "batch":
+            gen_ms = full_gen
+        elif tts_mode == "streaming":
+            idx = g["first_clause_token_index"]
+            gen_ms = full_gen if idx is None else idx * g["per_token_ms"]
+        else:
+            raise ValueError("tts_mode must be 'batch' or 'streaming'")
+        return ttft, gen_ms, self._tts_ms(g["first_clause_words"], engine, u_tts)
 
     def sample_ttfa(
         self,
@@ -404,8 +466,8 @@ class LatencyModel:
         user_end_ms: float,
         profile: str,
         n_prompt_tokens: Optional[float],
-        rng: np.random.Generator,
-        tts_mode: str = "batch",
+        rng,
+        tts_mode: Optional[str] = None,
         tts_engine: Optional[str] = None,
         eot_ms: Optional[float] = None,
     ) -> dict:
@@ -413,125 +475,133 @@ class LatencyModel:
         One draw of the turn's latency components.
 
         path            "retrieve" | "skip"
-        dispatch_ms     when retrieval is dispatched, on the same clock as
+        dispatch_ms     retrieval dispatch time on the same clock as
                         user_end_ms; None = at the end-of-turn decision
-        user_end_ms     TRUE end of user speech (TTFA is measured from here)
-        profile         retrieval latency profile name (see
-                        self.p["retrieval_profiles"]; "pipeline_logged" is the
-                        in-pipeline launch->result pool of the fitted logs)
-        n_prompt_tokens prompt length for prefill; None -> estimate from the
-                        path's typical prompt
-        tts_mode        "batch" (TTS waits for the full answer) | "streaming"
-                        (TTS starts on the first complete clause)
+        user_end_ms     end of the user's speech; TTFA is measured from here
+        profile         retrieval latency profile ("faiss" | "faiss_rerank" |
+                        "remote_api" | any measured variant |
+                        "pipeline_logged" = launch->result in the fitted logs)
+        n_prompt_tokens prompt length of the answering generation; None ->
+                        the path's median in the fitted runs
+        rng             random.Random or numpy Generator
+        tts_mode        "batch" | "streaming" (default: the fit's default)
+
+        Returns the components, including the split of retrieval's cost:
+            retrieval_ms          L, the HIDEABLE retrieval call
+            exposed_retrieval_ms  the part of the call (plus any dispatch
+                                  delay) after the end-of-turn decision
+            nonhideable_ms        pi for this draw: retrieve-with-the-call-
+                                  hidden minus the matched skip counterfactual
+                                  (extra prefill, generation until TTS input,
+                                  first-clause TTS); 0 on the skip path
+            skip_ttfa_ms          the matched skip counterfactual's TTFA
         """
         if path not in ("retrieve", "skip"):
             raise ValueError("path must be 'retrieve' or 'skip'")
         engine = tts_engine or self.p.get("default_tts_engine", "logged_v1")
-        eot = float(eot_ms) if eot_ms is not None else float(self._draw(self.p["eot_samples_ms"], rng))
-        t_eot = user_end_ms + eot
+        mode = tts_mode or self.p.get("default_tts_mode", "batch")
+        u_eot, u_disp, u_ret, u_pre, u_skip, u_ttft, u_gen, u_tts = self._uniforms(rng, self.N_UNIFORMS)
 
-        retrieval_ms = 0.0
-        exposed = 0.0
-        if path == "retrieve":
-            prof = self.p["retrieval_profiles"].get(profile)
-            if prof is None:
-                raise KeyError(f"unknown retrieval profile {profile!r}; have {sorted(self.p['retrieval_profiles'])}")
-            retrieval_ms = float(self._draw(prof["samples_ms"], rng)) + float(prof.get("wan_rtt_ms") or 0.0)
-            d = dispatch_ms if dispatch_ms is not None else t_eot + float(self._draw(self.p["dispatch_overhead_ms"] or [0.0], rng))
-            r_done = d + retrieval_ms
-            exposed = max(0.0, r_done - max(t_eot, d))
-            llm_req = max(t_eot, r_done) + float(self._draw(self.p["pre_llm_overhead_ms"] or [0.0], rng))
+        if eot_ms is not None:
+            eot = float(eot_ms)
+        elif self.cfg and (self.cfg.get("timing") or {}).get("eot_detection_ms") is not None:
+            eot = float(self.cfg["timing"]["eot_detection_ms"])
         else:
-            llm_req = t_eot + float(self._draw(self.p["skip_overhead_ms"], rng))
+            eot = float(self._pick("eot", self.p["eot_samples_ms"], u_eot))
+        t_eot = float(user_end_ms) + eot
 
-        if n_prompt_tokens is None:
-            n_prompt_tokens = (_system_prompt_chars() + (60 if path == "skip" else 1500)) / self.p["chars_per_token"]
-        ttft = max(1.0, float(self._draw(self.p["ttft_residuals_ms"], rng)) + self.p["ttft_slope_ms_per_token"] * n_prompt_tokens)
-        first_tok = llm_req + ttft
+        prof = self.p["retrieval_profiles"].get(profile)
+        if prof is None:
+            raise KeyError(f"unknown retrieval profile {profile!r}; have {sorted(self.p['retrieval_profiles'])}")
+        L = float(self._pick(f"ret_{profile}", prof["samples_ms"], u_ret)) + float(prof.get("wan_rtt_ms") or 0.0)
 
-        g = self._draw(self.p["generation"][path], rng)
-        full_gen = (g["n_tokens"] - 1) * g["per_token_ms"]
-        if tts_mode == "batch":
-            gen_ms = full_gen
-            # batch TTS synthesizes the first clause of the full answer
-            words = g["first_clause_words"]
-        elif tts_mode == "streaming":
-            idx = g["first_clause_token_index"]
-            gen_ms = full_gen if idx is None else idx * g["per_token_ms"]
-            words = g["first_clause_words"]
-        else:
-            raise ValueError("tts_mode must be 'batch' or 'streaming'")
-        tts = self._tts_ms(words, engine, rng)
-        first_audio = first_tok + gen_ms + tts
-        ttfa = first_audio - user_end_ms
+        # matched skip counterfactual (also the skip path's answer)
+        n_skip = n_prompt_tokens if (path == "skip" and n_prompt_tokens is not None) else self._default_tokens("skip")
+        skip_over = float(self._pick("skip_over", self.p["skip_overhead_ms"], u_skip))
+        ttft_s, gen_s, tts_s = self._post_llm("skip", n_skip, u_ttft, u_gen, u_tts, mode, engine)
+        skip_first_audio = t_eot + skip_over + ttft_s + gen_s + tts_s
+
+        if path == "skip":
+            return {
+                "ttfa_ms": skip_first_audio - user_end_ms,
+                "skip_ttfa_ms": skip_first_audio - user_end_ms,
+                "eot_ms": eot, "eot_detect_ms": eot,
+                "retrieval_ms": 0.0, "exposed_retrieval_ms": 0.0, "retrieval_exposed_ms": 0.0,
+                "nonhideable_ms": 0.0,
+                "llm_request_ms_after_eot": skip_over,
+                "ttft_ms": ttft_s, "gen_to_tts_input_ms": gen_s, "tts_first_audio_ms": tts_s,
+                "n_prompt_tokens": n_skip, "tts_mode": mode, "tts_engine": engine, "stub": False,
+            }
+
+        n_ret = n_prompt_tokens if n_prompt_tokens is not None else self._default_tokens("retrieve")
+        d = float(dispatch_ms) if dispatch_ms is not None else t_eot + float(
+            self._pick("disp_over", self.p["dispatch_overhead_ms"] or [0.0], u_disp))
+        r_done = d + L
+        exposed = max(0.0, r_done - t_eot)
+        pre = float(self._pick("pre_llm", self.p["pre_llm_overhead_ms"] or [0.0], u_pre))
+        ttft_r, gen_r, tts_r = self._post_llm("retrieve", n_ret, u_ttft, u_gen, u_tts, mode, engine)
+        first_audio = max(t_eot, r_done) + pre + ttft_r + gen_r + tts_r
+        hidden_first_audio = t_eot + pre + ttft_r + gen_r + tts_r
         return {
-            "ttfa_ms": ttfa,
-            "eot_detect_ms": eot,
-            "retrieval_ms": retrieval_ms,
-            "retrieval_exposed_ms": exposed,
-            "llm_request_ms_after_eot": llm_req - t_eot,
-            "ttft_ms": ttft,
-            "gen_to_tts_input_ms": gen_ms,
-            "tts_first_audio_ms": tts,
-            "n_prompt_tokens": n_prompt_tokens,
-            "tts_mode": tts_mode,
-            "tts_engine": engine,
+            "ttfa_ms": first_audio - user_end_ms,
+            "skip_ttfa_ms": skip_first_audio - user_end_ms,
+            "eot_ms": eot, "eot_detect_ms": eot,
+            "retrieval_ms": L,
+            "exposed_retrieval_ms": exposed, "retrieval_exposed_ms": exposed,
+            "nonhideable_ms": hidden_first_audio - skip_first_audio,
+            "llm_request_ms_after_eot": max(t_eot, r_done) + pre - t_eot,
+            "ttft_ms": ttft_r, "gen_to_tts_input_ms": gen_r, "tts_first_audio_ms": tts_r,
+            "n_prompt_tokens": n_ret, "tts_mode": mode, "tts_engine": engine, "stub": False,
         }
 
     def sample_many(self, n: int, rng, **kw) -> np.ndarray:
         return np.array([self.sample_ttfa(rng=rng, **kw)["ttfa_ms"] for _ in range(n)])
 
     # -- hideable / non-hideable decomposition ------------------------------
-    def nonhideable_increment(
-        self, tts_mode: str = "batch", tts_engine: Optional[str] = None, n: int = 4000, seed: int = 0,
-        n_prompt_tokens_retrieve: Optional[float] = None, n_prompt_tokens_skip: Optional[float] = None,
-    ) -> dict:
+    def nonhideable_increment(self, tts_mode: Optional[str] = None, tts_engine: Optional[str] = None,
+                              n: int = 4000, seed: int = 0, n_prompt_tokens_retrieve: Optional[float] = None) -> dict:
         """
-        Model-based retrieve-minus-skip TTFA with the retrieval call fully
-        hidden (dispatched long before speech end): the part of retrieval's
-        cost that no timing policy can hide. Returns mean and quantiles of
-        independent-draw differences (wider than paired differences).
+        Model distribution of pi: retrieve-minus-skip TTFA with the retrieval
+        call fully hidden, rank-matched draws (comparable to measured paired
+        increments minus the exposed call).
         """
         rng = np.random.default_rng(seed)
         prof = next(iter(self.p["retrieval_profiles"]))
-        diffs, means_r, means_s = [], [], []
-        for _ in range(n):
-            r = self.sample_ttfa("retrieve", -1e7, 0.0, prof, n_prompt_tokens_retrieve, rng, tts_mode, tts_engine, eot_ms=0.0)
-            s = self.sample_ttfa("skip", None, 0.0, prof, n_prompt_tokens_skip, rng, tts_mode, tts_engine, eot_ms=0.0)
-            diffs.append(r["ttfa_ms"] - s["ttfa_ms"])
-        d = np.asarray(diffs)
+        pis = [self.sample_ttfa("retrieve", -1e7, 0.0, prof, n_prompt_tokens_retrieve, rng,
+                                tts_mode, tts_engine, eot_ms=0.0)["nonhideable_ms"] for _ in range(n)]
+        d = np.asarray(pis)
         return {"mean_ms": float(d.mean()), "quantiles_ms": quantiles(d), "n_draws": n}
 
     def signals_retrieval(
-        self, profile: str, tts_mode: str = "streaming", expected_quantile: str = "p50",
+        self, profile: str, tts_mode: Optional[str] = None, expected_quantile: str = "p50",
         measured_increments: Optional[dict] = None,
     ) -> dict:
         """
-        signals["retrieval"] for a controller (CONTRACTS §6), extended with
-        the non-hideable increment. expected_latency_ms / latency_quantiles_ms
-        describe the HIDEABLE retrieval call; nonhideable_increment_ms the
-        retrieve-minus-skip cost after the call, for this TTS mode (measured
-        paired increments when given, else the model's estimate).
+        signals["retrieval"] for a controller (CONTRACTS §6) plus pi, in the
+        shape controller/baselines/_objective_v2.py reads:
+            expected_latency_ms, latency_quantiles_ms   the HIDEABLE call
+            nonhideable_increment_ms                    pi, a NUMBER (mean, ms)
+            nonhideable_increment_quantiles_ms          pi's distribution
+            nonhideable_increment_tts_mode / _source
+        Measured paired increments (per TTS mode) win over the model estimate.
         """
+        mode = tts_mode or self.p.get("default_tts_mode", "batch")
         prof = self.p["retrieval_profiles"][profile]
         q = quantiles(prof["samples_ms"])
-        inc = None
-        src = "latency_model_v2"
-        if measured_increments and tts_mode in measured_increments:
-            inc = measured_increments[tts_mode]
+        if measured_increments and mode in measured_increments:
+            inc = measured_increments[mode]
             src = inc.get("source", "measured_paired")
         else:
-            inc = self.nonhideable_increment(tts_mode)
+            inc = self.nonhideable_increment(mode)
+            src = "latency_model_v2"
         return {
             "latency_profile": profile,
             "expected_latency_ms": q[expected_quantile],
             "latency_quantiles_ms": q,
-            "nonhideable_increment_ms": {
-                "tts_mode": tts_mode,
-                "mean": inc.get("mean_ms"),
-                "quantiles": inc.get("quantiles_ms"),
-                "source": src,
-            },
+            "nonhideable_increment_ms": float(inc["mean_ms"]),
+            "nonhideable_increment_quantiles_ms": inc.get("quantiles_ms"),
+            "nonhideable_increment_tts_mode": mode,
+            "nonhideable_increment_source": src,
         }
 
 

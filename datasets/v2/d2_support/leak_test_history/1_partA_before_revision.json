@@ -1,0 +1,524 @@
+{
+ "n_items": 360,
+ "n_pos": 216,
+ "n_groups": 144,
+ "domains": [
+  "airline",
+  "banking",
+  "ecommerce",
+  "healthcare",
+  "insurance",
+  "telecom"
+ ],
+ "label": "before revision",
+ "target_auc_max": 0.65,
+ "configs": [
+  {
+   "variant": "question:word+char+len",
+   "C": 0.1,
+   "auc_pooled_oof_mean_over_seeds": 0.6382,
+   "auc_per_seed": [
+    0.6326,
+    0.6438,
+    0.6383
+   ]
+  },
+  {
+   "variant": "question:word+char+len",
+   "C": 1.0,
+   "auc_pooled_oof_mean_over_seeds": 0.6879,
+   "auc_per_seed": [
+    0.6791,
+    0.6988,
+    0.6857
+   ]
+  },
+  {
+   "variant": "question:word+char+len",
+   "C": 10.0,
+   "auc_pooled_oof_mean_over_seeds": 0.688,
+   "auc_per_seed": [
+    0.6786,
+    0.7022,
+    0.6831
+   ]
+  },
+  {
+   "variant": "question:word",
+   "C": 0.1,
+   "auc_pooled_oof_mean_over_seeds": 0.6665,
+   "auc_per_seed": [
+    0.6504,
+    0.6796,
+    0.6696
+   ]
+  },
+  {
+   "variant": "question:word",
+   "C": 1.0,
+   "auc_pooled_oof_mean_over_seeds": 0.67,
+   "auc_per_seed": [
+    0.653,
+    0.6861,
+    0.6709
+   ]
+  },
+  {
+   "variant": "question:word",
+   "C": 10.0,
+   "auc_pooled_oof_mean_over_seeds": 0.6721,
+   "auc_per_seed": [
+    0.6551,
+    0.6916,
+    0.6697
+   ]
+  },
+  {
+   "variant": "question:char",
+   "C": 0.1,
+   "auc_pooled_oof_mean_over_seeds": 0.6702,
+   "auc_per_seed": [
+    0.6662,
+    0.6746,
+    0.6698
+   ]
+  },
+  {
+   "variant": "question:char",
+   "C": 1.0,
+   "auc_pooled_oof_mean_over_seeds": 0.6686,
+   "auc_per_seed": [
+    0.6638,
+    0.6726,
+    0.6694
+   ]
+  },
+  {
+   "variant": "question:char",
+   "C": 10.0,
+   "auc_pooled_oof_mean_over_seeds": 0.6543,
+   "auc_per_seed": [
+    0.6462,
+    0.6635,
+    0.6533
+   ]
+  },
+  {
+   "variant": "question:len_only",
+   "C": 0.1,
+   "auc_pooled_oof_mean_over_seeds": 0.606,
+   "auc_per_seed": [
+    0.6016,
+    0.6113,
+    0.605
+   ]
+  },
+  {
+   "variant": "question:len_only",
+   "C": 1.0,
+   "auc_pooled_oof_mean_over_seeds": 0.6059,
+   "auc_per_seed": [
+    0.6019,
+    0.6103,
+    0.6054
+   ]
+  },
+  {
+   "variant": "question:len_only",
+   "C": 10.0,
+   "auc_pooled_oof_mean_over_seeds": 0.6057,
+   "auc_per_seed": [
+    0.6019,
+    0.6102,
+    0.6051
+   ]
+  },
+  {
+   "variant": "question+history:word+char+len",
+   "C": 0.1,
+   "auc_pooled_oof_mean_over_seeds": 0.6289,
+   "auc_per_seed": [
+    0.6189,
+    0.6309,
+    0.637
+   ]
+  },
+  {
+   "variant": "question+history:word+char+len",
+   "C": 1.0,
+   "auc_pooled_oof_mean_over_seeds": 0.6534,
+   "auc_per_seed": [
+    0.6408,
+    0.6644,
+    0.655
+   ]
+  },
+  {
+   "variant": "question+history:word+char+len",
+   "C": 10.0,
+   "auc_pooled_oof_mean_over_seeds": 0.6541,
+   "auc_per_seed": [
+    0.6386,
+    0.669,
+    0.6547
+   ]
+  }
+ ],
+ "headline": {
+  "variant": "question:word+char+len",
+  "C": 10.0,
+  "auc": 0.688,
+  "ci95_group_bootstrap": [
+   0.6432,
+   0.7432
+  ],
+  "pass": false,
+  "by_domain": {
+   "airline": 0.7396,
+   "banking": 0.6782,
+   "ecommerce": 0.6725,
+   "healthcare": 0.6782,
+   "insurance": 0.7118,
+   "telecom": 0.7222
+  },
+  "by_type": {
+   "org_specific_vs_general": 0.6795,
+   "counter_prior_vs_general": 0.6817,
+   "ambiguous_vs_general": 0.771
+  }
+ },
+ "worst_config_any_variant": {
+  "variant": "question:word+char+len",
+  "C": 10.0,
+  "auc_pooled_oof_mean_over_seeds": 0.688,
+  "auc_per_seed": [
+   0.6786,
+   0.7022,
+   0.6831
+  ]
+ },
+ "top_features_retrieval_needed": [
+  [
+   "w:i",
+   0.537
+  ],
+  [
+   "w:how much",
+   0.439
+  ],
+  [
+   "w:cancel",
+   0.415
+  ],
+  [
+   "w:much",
+   0.405
+  ],
+  [
+   "w:much is",
+   0.379
+  ],
+  [
+   "w:how",
+   0.373
+  ],
+  [
+   "w:time",
+   0.364
+  ],
+  [
+   "w:there a",
+   0.354
+  ],
+  [
+   "w:days",
+   0.354
+  ],
+  [
+   "w:okay",
+   0.349
+  ],
+  [
+   "w:free",
+   0.345
+  ],
+  [
+   "w:fee",
+   0.341
+  ],
+  [
+   "w:your",
+   0.341
+  ],
+  [
+   "w:to",
+   0.337
+  ],
+  [
+   "w:for the",
+   0.329
+  ],
+  [
+   "c:'anc'",
+   0.32
+  ],
+  [
+   "c:'day'",
+   0.316
+  ],
+  [
+   "w:i cancel",
+   0.316
+  ],
+  [
+   "c:'i '",
+   0.314
+  ],
+  [
+   "c:'l '",
+   0.304
+  ],
+  [
+   "w:i get",
+   0.301
+  ],
+  [
+   "c:'ance'",
+   0.298
+  ],
+  [
+   "c:'ok'",
+   0.285
+  ],
+  [
+   "w:get my",
+   0.283
+  ],
+  [
+   "c:'ni'",
+   0.282
+  ],
+  [
+   "c:'w '",
+   0.281
+  ],
+  [
+   "w:difference in",
+   0.28
+  ],
+  [
+   "w:a fee",
+   0.276
+  ],
+  [
+   "c:'nce'",
+   0.274
+  ],
+  [
+   "w:once",
+   0.273
+  ],
+  [
+   "c:'ay'",
+   0.273
+  ],
+  [
+   "c:' day'",
+   0.272
+  ],
+  [
+   "c:' ca'",
+   0.268
+  ],
+  [
+   "c:'nc'",
+   0.268
+  ],
+  [
+   "c:' i '",
+   0.267
+  ],
+  [
+   "c:'ca'",
+   0.266
+  ],
+  [
+   "w:i just",
+   0.264
+  ],
+  [
+   "w:how soon",
+   0.262
+  ],
+  [
+   "w:soon",
+   0.262
+  ],
+  [
+   "c:'uc'",
+   0.262
+  ]
+ ],
+ "top_features_general": [
+  [
+   "w:why do",
+   -0.651
+  ],
+  [
+   "w:why",
+   -0.51
+  ],
+  [
+   "w:difference between",
+   -0.445
+  ],
+  [
+   "w:mean",
+   -0.407
+  ],
+  [
+   "w:why does",
+   -0.407
+  ],
+  [
+   "w:even",
+   -0.389
+  ],
+  [
+   "w:an",
+   -0.386
+  ],
+  [
+   "w:a",
+   -0.378
+  ],
+  [
+   "w:name",
+   -0.367
+  ],
+  [
+   "w:code",
+   -0.358
+  ],
+  [
+   "w:is that",
+   -0.356
+  ],
+  [
+   "w:that",
+   -0.355
+  ],
+  [
+   "w:does",
+   -0.349
+  ],
+  [
+   "w:exactly",
+   -0.333
+  ],
+  [
+   "w:so",
+   -0.323
+  ],
+  [
+   "w:how do",
+   -0.323
+  ],
+  [
+   "w:says",
+   -0.318
+  ],
+  [
+   "w:need a",
+   -0.316
+  ],
+  [
+   "w:be",
+   -0.313
+  ],
+  [
+   "w:i keep",
+   -0.311
+  ],
+  [
+   "w:is",
+   -0.308
+  ],
+  [
+   "w:what does",
+   -0.307
+  ],
+  [
+   "w:so why",
+   -0.302
+  ],
+  [
+   "w:what's a",
+   -0.299
+  ],
+  [
+   "w:long should",
+   -0.299
+  ],
+  [
+   "c:'wh'",
+   -0.295
+  ],
+  [
+   "c:' wh'",
+   -0.295
+  ],
+  [
+   "c:'sa'",
+   -0.29
+  ],
+  [
+   "w:if the",
+   -0.288
+  ],
+  [
+   "w:many digits",
+   -0.286
+  ],
+  [
+   "w:digits is",
+   -0.286
+  ],
+  [
+   "w:digits",
+   -0.286
+  ],
+  [
+   "w:keep my",
+   -0.283
+  ],
+  [
+   "c:'ct'",
+   -0.283
+  ],
+  [
+   "c:'r?'",
+   -0.279
+  ],
+  [
+   "c:'r? '",
+   -0.279
+  ],
+  [
+   "w:is a",
+   -0.276
+  ],
+  [
+   "c:' mea'",
+   -0.272
+  ],
+  [
+   "c:'co'",
+   -0.271
+  ],
+  [
+   "w:but",
+   -0.27
+  ]
+ ]
+}
