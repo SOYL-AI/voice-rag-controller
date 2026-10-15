@@ -660,6 +660,51 @@ class StatsTests(unittest.TestCase):
         for key, value in true.items():
             self.assertAlmostEqual(fit[key], value, delta=0.35)
 
+    def _combined_records(self, n_items=120, seed=3):
+        rng = np.random.default_rng(seed)
+        labels, records = {}, []
+        for i in range(n_items):
+            need = bool(rng.random() < 0.5)
+            labels[f"i{i}"] = need
+            ent_item, sa_item = rng.normal(0.4 * need, 0.4), rng.normal(1.2 * need - 0.6, 1.0)
+            for s in (11, 23):
+                for frac in (0.3, 1.0):
+                    records.append({
+                        "item_id": f"i{i}", "draw_seed": s, "n_tokens": 40, "_sa_gen_ms": 500.0,
+                        "t_first_k_ms": {"16": 900.0}, "gen_ms": 2500.0,
+                        "prefix": {"source": "text", "kind": "full" if frac == 1.0 else "partial",
+                                   "word_frac": frac, "text": f"q{i}-{frac}"},
+                        "_flat": {"mean_entropy_nats": float(ent_item + rng.normal(0, 0.1)),
+                                  "first_k_mean_entropy_nats@16": float(ent_item + rng.normal(0, 0.3)),
+                                  "self_assessed_need": float(1 / (1 + np.exp(-(sa_item + rng.normal(0, 0.2)))))},
+                    })
+        return records, labels
+
+    def test_combined_signal_is_out_of_fold_and_helps(self):
+        records, labels = self._combined_records()
+        combiners = analyze.add_combined_signals(records, labels, {}, 5)
+        self.assertEqual(set(combiners), {"combined_v1", "combined_fast"})
+        self.assertTrue(all("combined_v1" in r["_flat"] for r in records))  # every prefix gets one
+        self.assertGreater(combiners["combined_v1"]["weights"][0], 0)
+        self.assertGreater(combiners["combined_v1"]["weights"][1], 0)
+        full = [r for r in records if r["prefix"]["kind"] == "full"]
+        auc = {s: analyze.item_auc(analyze.item_scores(full, s), labels, {}, 0)["auc"]
+               for s in ("mean_entropy_nats", "self_assessed_need", "combined_v1")}
+        self.assertGreater(auc["combined_v1"], max(auc["mean_entropy_nats"], auc["self_assessed_need"]))
+        # No leakage: flipping one item's label leaves that item's own OOF value unchanged.
+        before = next(r["_flat"]["combined_v1"] for r in records if r["item_id"] == "i0")
+        flipped = dict(labels, i0=not labels["i0"])
+        records2, _ = self._combined_records()
+        analyze.add_combined_signals(records2, flipped, {}, 5)
+        after = next(r["_flat"]["combined_v1"] for r in records2 if r["item_id"] == "i0")
+        self.assertAlmostEqual(before, after)
+        # Latency: max of the parallel inputs
+        r = full[0]
+        self.assertEqual(analyze.signal_latency_ms(r, "combined_fast"), 900.0)
+        self.assertEqual(analyze.signal_latency_ms(r, "combined_v1"), 2500.0)
+        r2 = dict(r, _sa_gen_ms=1200.0)
+        self.assertEqual(analyze.signal_latency_ms(r2, "combined_fast"), 1200.0)
+
     def test_artifact_loads_in_controller(self):
         from controller.baselines._objective import load_voi_calibration
 
@@ -943,11 +988,12 @@ class EndToEndMockSmoke(unittest.TestCase):
             self.assertEqual([p["word_frac"] for p in model["prefix_curve_text"]["mean_entropy_nats"]],
                              [0.3, 0.5, 0.7, 1.0])
             self.assertTrue(model["asr_curves"]["mean_entropy_nats"])
-            self.assertEqual([r["k"] for r in model["first_k"]], [4, 8, 16, "all", "self"])
+            self.assertEqual([r["k"] for r in model["first_k"]][:5], [4, 8, 16, "all", "self"])
             self.assertIn("self_assessed_need", model["auc_full"])
             # (the first 12 v1 items are all authored-needed, so only the empirical AUC exists)
             self.assertIsNotNone(model["auc_full"]["self_assessed_need"]["empirical"]["auc"])
-            self.assertEqual(set(model["calibrations"]), {"mean_entropy_nats", "self_assessed_need"})
+            self.assertEqual(set(model["calibrations"]),
+                             {"mean_entropy_nats", "self_assessed_need", "combined_v1", "combined_fast"})
             wf = next(iter(model["asr_word_frac_curve"]["mean_entropy_nats"].values()))
             self.assertEqual([p["word_frac"] for p in wf["curve"]], [0.3, 0.5, 0.7, 1.0])
             self.assertIn("auc_diff", wf["paired_diff"]["authored"])
