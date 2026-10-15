@@ -18,13 +18,14 @@
 % CLAIMS: (a) commit pipelines with slow retrieval (remote APIs) and an
 %   informative partial-transcript belief are where joint control is
 %   predicted to pay (Prop. 4); (b) if a retrieval can be prefetched and
-%   discarded, a decomposed speculative rule is near-optimal unless compute
-%   is expensive (Prop. 4'); (c) turn-dependent overlap alone is second order
+%   discarded, a decomposed prefetcher that gates on the belief (SPEC-theta)
+%   is predicted to match the joint controller up to a C1-sized term
+%   (Prop. 4''); always-prefetch is not enough when compute has a price; (c) turn-dependent overlap alone is second order
 %   (Prop. 3); (d) the cost model must be calibrated end to end: v1
 %   understated retrieval's TTFA cost by more than 2x [V1T measured_latency].
 %   Whether v2 confirms (a)/(b): \TBD{Sec.~\ref{sec:v2} verdicts}.
-\todo{P-VIII.2: when to build a joint controller and when a speculative
-decomposed rule suffices.}
+\todo{P-VIII.2: when to build a joint controller and when a belief-gated
+speculative decomposed rule suffices.}
 
 % ---- P-VIII.3 limitations ---------------------------------------------------------
 % PURPOSE: limitations, each stated once and plainly [PRE2 Sec. 10].
@@ -42,7 +43,9 @@ decomposed rule suffices.}
 %   (7) d2_support labels are authored and await human verification
 %       [branch v2/d2-support-a README].
 %   (8) Statistical power: C1-only cells are underpowered by design (MDE
-%       stated); the commit primary needs about 4,000 pooled test items
-%       [PRE2 Sec. 6] \TBD{realised N and power}.
+%       stated); the boundary conjunction needs about 3,400 to 6,500 pooled
+%       test items depending on the profile, and the two-epoch power
+%       simulation omits multi-epoch prefetch delay and C3 query improvement
+%       [PRE2 Sec. 6.1] \TBD{realised N and power}.
 %   (9) Experiment 4 (memory scheduling) was cut; no memory claims.
 \todo{P-VIII.3: limitations (1)--(9).}

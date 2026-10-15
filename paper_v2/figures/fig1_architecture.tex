@@ -21,9 +21,18 @@
 %    (dev constants only, no belief) that fires at a fixed trigger, and a
 %    retrieval sub-optimiser that only sees b_k at that trigger and prices
 %    L (B9) or the policy-average exposure (B9+).
-%  * Lane (c) SPECULATIVE (B10): dispatch at the first query-ready partial,
-%    decide USE at end of turn with the final belief b_K; an unused result
-%    costs compute only. Annotation: "within lambda_c(1+w) of joint (Prop. 4')".
+%  * Lane (c) SPECULATIVE decomposed rivals, B10 (SPEC) and B11 (SPEC-theta):
+%    at the first query-ready partial, B10 always prefetches and B11 prefetches
+%    only if the belief-only option value of the prefetch exceeds that of not
+%    prefetching (dev-mean exposures, no turn-level timing state); both decide
+%    USE at end of turn with the final belief b_K; an unused result costs
+%    compute only. Annotation: "B11 is within a C1-sized term of the joint
+%    optimum (Prop. 4'')". Do NOT write "within lambda_c(1+w) of joint": that
+%    bound is withdrawn (THEORY Sec. 6.2).
+%  * Lane (a) must say that the same joint controller runs under both
+%    architectures: under commit it compares the dispatch value with waiting;
+%    under speculation the dispatch value is replaced by the option value of
+%    having the passages ready.
 %  * Right side, shared by all lanes: retrieval -> LLM -> TTS -> first audio,
 %    with TTFA (Eq. 4) measured from VAD end of turn to first audio.
 % ============================================================================
@@ -64,7 +73,7 @@
 
 % ---------------- lane (a): joint ----------------------------------------
 \draw[lane, fill=blue!6] (0.2,3.15) rectangle (12.3,4.45);
-\node[anchor=north west, font=\scriptsize\bfseries] at (0.3,4.42) {(a) Joint: \OursV};
+\node[anchor=north west, font=\scriptsize\bfseries] at (0.3,4.42) {(a) Joint: \OursV{} (commit: dispatch value; speculative: option value of a prefetch)};
 \node[box, fill=white, text width=6.2cm] (joint) at (5.55,3.62)
   {at every partial $k$: \ dispatch now if $U_k(b_k,\hat R_k)>0$ and $U_k\ge\textsc{Wait}(b_k,\hat R_k)$; else wait};
 \draw[->, blue!60!black, thick] (4.6,4.6) -- (4.6,4.0);
@@ -83,14 +92,14 @@
 \node[note, anchor=west] at (10.2,2.05) {dispatch time\\ independent of $b$};
 
 % ---------------- lane (c): speculative -----------------------------------
-\draw[lane, densely dotted, fill=green!5] (0.2,0.0) rectangle (12.3,1.35);
-\node[anchor=north west, font=\scriptsize\bfseries] at (0.3,1.32) {(c) Speculative prefetch: \Bten};
-\node[box, fill=white, text width=3.4cm] (spec1) at (2.75,0.5)
-  {dispatch at the first\\ query-ready partial};
-\node[box, fill=white, text width=4.3cm] (spec2) at (7.6,0.5)
+\draw[lane, densely dotted, fill=green!5] (0.2,-0.7) rectangle (12.3,1.35);
+\node[anchor=north west, font=\scriptsize\bfseries] at (0.3,1.32) {(c) Speculative decomposed: \Bten{} (\textsc{Spec}), \Beleven{} (\SPECth)};
+\node[box, fill=white, text width=3.6cm, font=\scriptsize] (spec1) at (2.75,0.3)
+  {at the first query-ready partial: \Bten{} always prefetches; \Beleven{} only if the belief gate passes};
+\node[box, fill=white, text width=4.3cm] (spec2) at (7.6,0.3)
   {at end of turn: use the result iff $U(b_K)>0$;\\ an unused result costs compute only};
 \draw[->] (spec1) -- (spec2);
-\node[note, anchor=west] at (10.2,0.5) {within $\lamC(1+w)$\\ of joint (Prop.~4$'$)};
+\node[note, anchor=west] at (10.2,0.3) {\Beleven: within a C1-sized\\ term of joint (Prop.~\ref{prop:spectheta})};
 
 % ---------------- shared back end ----------------------------------------
 \node[box, fill=black!4, minimum width=2.3cm] (ret) at (14.1,3.62) {retrieval\\ latency $L$};
@@ -98,7 +107,7 @@
 \node[box, fill=black!4, minimum width=2.3cm] (tts) at (14.1,0.65) {TTS\\ first audio};
 \draw[->] (12.3,3.62) -- (ret.west);
 \draw[->] (12.3,2.05) -- (12.85,2.05) |- (ret.west);
-\draw[->] (12.3,0.5) -- (12.65,0.5) |- (ret.west);
+\draw[->] (12.3,0.3) -- (12.65,0.3) |- (ret.west);
 \draw[->] (ret) -- (llm);
 \draw[->] (llm) -- (tts);
 \draw[<->, thick] (15.55,6.2) -- (15.55,0.65) node[midway, right, align=left, font=\scriptsize] {TTFA,\\ Eq.~(\ref{eq:ttfa}):\\ user end\\ to first\\ audio};
@@ -111,8 +120,10 @@ $b_k$, and an end-of-turn predictor gives the remaining speech $\hat R_k$.
 (a) The joint controller decides at every partial whether to dispatch now or
 wait, using $b_k$ and $\hat R_k$ together. (b) The decomposed controllers fix
 the dispatch time without the belief and decide retrieval at that time only.
-(c) The speculative controller always prefetches early and decides at the end
-of the turn whether to use the result. All controllers share the back end and
+(c) The speculative decomposed controllers prefetch at a fixed early partial,
+always (B10) or only when a belief gate passes (B11), and decide at the end of
+the turn whether to use the result. The joint controller runs under both the
+commit and the speculative architecture. All controllers share the back end and
 are scored by time to first audio (TTFA).}
 \label{fig:arch}
 \end{figure*}

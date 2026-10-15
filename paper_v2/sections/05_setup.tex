@@ -115,11 +115,11 @@ and what this does and does not settle.}
 % PURPOSE: the two pipeline architectures under test, the latency model and
 %   the judge.
 % CLAIMS + EVIDENCE:
-%   (a) Commit: a dispatched retrieval is used in the answer. Speculative: a
-%       retrieval may be dispatched early and discarded at end of turn
-%       (B10). Both are run; PI decision 2026-10-15
-%       \PEND{PREREG_V2.md Sec. 3 still has a single COMMIT|SPECULATIVE field;
-%       update before freezing}.
+%   (a) Commit: a dispatched retrieval is always used. Speculative: it may be
+%       discarded at end of turn. Both run on the same test items, seeds,
+%       profile and price; only the architecture changes. D*[COMMIT] = B9+;
+%       D*[SPECULATIVE] = best on dev of {B9+, B10, B11}, named at freeze
+%       [PRE2 Sec. 3, PI decision 2026-10-16].
 %   (b) Latency profiles faiss, faiss_rerank, remote_api
 %       [CONTRACTS Sec. 6; PRE2 H-E2v2]; latency calibrated as the
 %       end-to-end TTFA increment on dev, not the call duration [PRE2 4.5].
@@ -132,9 +132,13 @@ and what this does and does not settle.}
 %       simulator/judge_validation/ (v2 gate run)}.
 %   (d) Statistics: item (d1) or pair-group (d2) cluster bootstrap,
 %       B = 10,000; one primary test per architecture; Holm-adjusted
-%       secondary family [PRE2 Secs. 4--5]. Power: about 4,000 pooled test
-%       items for 80% power on the commit primary [PRE2 Sec. 6] (R2:
-%       statistical power).
-% NUMBERS: 300, 0.80, 0.70, 0.90, 0.05, 10,000, 4,000.
+%       secondary family [PRE2 Secs. 4--5]. The boundary claim is an
+%       intersection-union test of P1, P2 and both halves of P3 at one-sided
+%       alpha = 0.025. Power (R2): 80% conjunction power needs about 3,417 /
+%       4,631 / 6,492 pooled test items for faiss / faiss_rerank /
+%       remote_api; plan about 10% more, because a direct bootstrap check
+%       gave 0.765 where the normal approximation gave 0.80
+%       [PRE2 Sec. 6.1; POW boundary_test].
+% NUMBERS: 300, 0.80, 0.70, 0.90, 0.05, 10,000, 3,417, 4,631, 6,492, 0.765.
 \todo{P-V.6: commit and speculative architectures, latency profiles, the
 judge and its gate, and the statistical plan with the power analysis.}

@@ -1,13 +1,14 @@
 % ============================================================================
 % IV. WHEN DOES JOINT CONTROL PAY?  (theory)
 % Formal content: sections/theory_formal.tex (from docs/research_v2/
-% theory_latex.tex, merged at 8bbe257). Source of truth: docs/research_v2/
+% theory_latex.tex, corrected version merged at 1d8900c). Source of truth: docs/research_v2/
 % THEORY.md. This file holds the author-prose outline around it and the
 % prediction table that the v2 test is built on.
 % Framing (PI decision, 2026-10-15): the paper is a boundary-condition
 % result. Equivalence under A1--A3; C1 is second order; joint control matters
 % mainly when a dispatched retrieval is COMMITTED; under SPECULATIVE prefetch
-% a decomposed rule (B10) is the strong rival. v2 tests both directions.
+% a belief-gated decomposed prefetcher (B11, SPEC-theta) is the strong rival
+% (Prop. 4''). v2 runs a pre-registered boundary test (P1, P2, P3).
 % ============================================================================
 \section{When Does Joint Control Pay?}\label{sec:theory}
 
@@ -70,17 +71,38 @@ the maximal-overlap timing.
 %       loses overlap; under COMMIT the optimal stopping region is not a
 %       product set, so every decomposed policy is strictly suboptimal when
 %       both regions have mass (Prop. 4).
-%   (c) Under SPECULATIVE prefetch the decomposed B10 is optimal at
-%       lambda_c = 0 and within lambda_c(1+w) per turn otherwise (Prop. 4').
-%       In simulation B10 (SPEC) beats joint-commit at every price above the
-%       median cut in d2_support [TH Sec. 6.2].
+%   (c) Under SPECULATIVE prefetch (Prop. 4'): the joint controller's exact
+%       gain over always-prefetch B10 is the expected positive part of the
+%       value of waiting over the prefetch option. It is bounded by the
+%       compute spent on turns where joint does not prefetch plus a C3 term,
+%       so B10 is optimal when lambda_c = 0 and Delta rho = 0. The margin
+%       lambda_c(1+w)q is NOT a bound (counterexample in the proposition);
+%       the valid two-epoch bound is m_prophet.
+%   (e) Prop. 4'' -- WHY SPEC-THETA MATTERS (outline note for the authors):
+%       the joint controller beats B10 mainly by declining to prefetch on
+%       confident-skip prefixes. That decision uses only the belief at the
+%       trigger and fixed prices, so a decomposed controller can make it.
+%       B11 makes it, and its gap to the joint optimum is bounded by
+%       lambda_l E|X_hat - X_bar|(u* + u_theta), a C1-sized term (second
+%       order in expectation). Under speculation the honest decomposed
+%       rival is therefore B11; comparing joint with B10 alone would credit
+%       joint control with a decomposable compute saving, and P2 would then
+%       be predicted false. In simulation, joint minus B11 lies in
+%       [-0.0005, +0.0009] across 24 cells, while joint minus B10 is 0.012
+%       to 0.023 above the median cut [TH Sec. 6.2; not results].
+%   (f) What can still keep joint ahead under speculation: delaying a paid
+%       prefetch across several partials, and C3 query improvement; the
+%       two-epoch simulation does not quantify either [TH Sec. 6.2].
 %   (d) C3, partial-query risk alone (drop A1): optimal timing becomes
 %       belief-dependent but stays b-measurable, so it does not separate the
 %       classes (Prop. 5).
-% NUMBERS: 20,821 [POW cells_C1 / PRE2 Sec. 6].
+% NUMBERS: 20,821 [POW cells_C1 / PRE2 Sec. 6]; [-0.0005, +0.0009] and
+%   0.012-0.023 [TH Sec. 6.2, simulation, not results].
 \todo{P-IV.4: the four channels and their sizes; joint control is predicted
-to matter when retrieval is committed, and a speculative decomposed rule is
-predicted to match it otherwise (Table~\ref{tab:predictions}).}
+to matter when retrieval is committed; under speculation a belief-gated
+decomposed prefetcher (\SPECth) is predicted to match it, which is why it is
+a required rival (Propositions~\ref{prop:spec} and~\ref{prop:spectheta},
+Table~\ref{tab:predictions}).}
 
 \input{sections/theory_formal}
 
