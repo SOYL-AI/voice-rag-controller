@@ -440,9 +440,17 @@ class MockClient:
 
         gen = Generation(text="", model=self.model, start_ms=now_ms())
 
+        # Simulated latency. Defaults keep the original behaviour; a bulk
+        # caller (llm/experiment1_v2 --backend mock) sets llm.mock.ttft_s /
+        # per_token_s to 0 so a plumbing run over thousands of calls stays fast.
+        mock_cfg = self.cfg.get("mock") or {}
+        ttft_s = float(mock_cfg.get("ttft_s", 0.09))
+        per_token_s = float(mock_cfg.get("per_token_s", 0.012))
+
         # Simulate the server thinking before the first token appears. Real
         # TTFT for an 8B on a single card is roughly this order of magnitude.
-        time.sleep(0.09)
+        if ttft_s > 0:
+            time.sleep(ttft_s)
 
         # Split on whitespace, keeping the spaces attached the way a real
         # tokenizer emits them (" pool", not "pool"), and honour max_tokens so
@@ -483,7 +491,8 @@ class MockClient:
 
             gen.tokens.append(token_info)
             pieces.append(tok)
-            time.sleep(0.012)  # per-token decode time
+            if per_token_s > 0:
+                time.sleep(per_token_s)  # per-token decode time
 
         gen.text = "".join(pieces)
         gen.final_ms = now_ms()

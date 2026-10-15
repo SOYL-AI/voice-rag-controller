@@ -25,14 +25,25 @@ $$
 
 $$
 U_k(b) = b\,g^{+}\,(1-\rho(f_k)) - (1-b)\,g^{-}
-        - \lambda_l\,\bar E_k - \lambda_c\,(1 + w(f_k)),
+        - \lambda_l\,(\bar E_k + \pi) - \lambda_c\,(1 + w(f_k)),
 \qquad U(\text{skip}) = 0 .
 $$
 
 $\rho$ is the partial-query risk ($\rho = 0$ at $K$; $\rho = \rho_{\text{nr}}$
 on a partial that fails the query-ready gate), $w$ the waste of an early
-commit ($w = 0$ at $K$). All three controllers use exactly these
-$g^{\pm}, \rho, w$, calibration and latency distribution.
+commit ($w = 0$ at $K$), and $\pi$ the non-hideable TTFA increment of using
+passages (longer prompt), which no timing hides. Every priced controller
+uses exactly these $g^{\pm}, \rho, w, \pi$, calibration and latency
+distribution.
+
+**Architectures.** Under COMMIT a dispatched retrieval is used. Under
+SPECULATIVE it may be discarded at $K$; its compute is still spent. The
+use value at $K$ of passages dispatched at $j$ (compute sunk) is
+
+$$
+A_j(b) = b\,g^{+}(1-\rho(f_j)) - (1-b)\,g^{-}
+        - \lambda_l\big(\mathbb{E}_L[\max(0, L - (t_K - t_j))] + \pi\big).
+$$
 
 ## Ours-v2 (joint, optimal stopping with $n$-step lookahead)
 
@@ -101,7 +112,7 @@ dynamic program under the transition model.
 \For{$k = 0, 1, \dots$ \textbf{as step $k$ arrives}}
   \If{\textbf{not} $\textsc{Fires}(p^\star, k)$} \State \textbf{wait}; \textbf{continue} \EndIf
   \State $u \gets b_k g^{+}(1-\rho(f_k)) - (1-b_k) g^{-}
-         - \lambda_l\,\mathbb{E}[L] - \lambda_c (1 + w(f_k))$
+         - \lambda_l\,(\mathbb{E}[L] + \pi) - \lambda_c (1 + w(f_k))$
          \Comment{FULL latency $\mathbb{E}[L]$}
   \State \Return \textsc{Retrieve}$(x_k, t_k)$ \textbf{if} $u > 0$ \textbf{else} \textsc{Skip}
 \EndFor
@@ -127,7 +138,7 @@ $W_k \le Q_L(q)$; every policy fires at $K$ at the latest.
 \For{$k = 0, 1, \dots$ \textbf{as step $k$ arrives}}
   \If{\textbf{not} $\textsc{Fires}(p^\star, k)$} \State \textbf{wait}; \textbf{continue} \EndIf
   \State $u \gets b_k g^{+}(1-\rho(f_k)) - (1-b_k) g^{-}
-         - \lambda_l\,\bar E_{p^\star} - \lambda_c (1 + w(f_k))$
+         - \lambda_l\,(\bar E_{p^\star} + \pi) - \lambda_c (1 + w(f_k))$
          \Comment{policy-average exposure, constant over turns}
   \State \Return \textsc{Retrieve}$(x_k, t_k)$ \textbf{if} $u > 0$ \textbf{else} \textsc{Skip}
 \EndFor
@@ -135,14 +146,70 @@ $W_k \le Q_L(q)$; every policy fires at $K$ at the latest.
 \end{algorithm}
 ```
 
-## What the three share and where they differ
+## SPEC / B10 (decomposed, speculative architecture)
 
-| | belief, $g^\pm$, $\rho$, $w$ | latency priced | dispatch time chosen by |
-|---|---|---|---|
-| Ours-v2 | shared | $\bar E_k$ of **this turn, this step** | optimal stopping on $(b_k, \hat R_k)$ |
-| B9-v2 | shared | $\mathbb{E}[L]$ | fixed policy $p^\star$ |
-| B9+ | shared | $\bar E_{p^\star}$ (dev mean) | fixed policy $p^\star$ |
+```latex
+\begin{algorithm}[t]
+\caption{SPEC: speculative prefetch, decided with the final belief}
+\label{alg:spec}
+\begin{algorithmic}[1]
+\Require SPECULATIVE architecture; a timing policy $p$ fixed in advance
+         (default: first query-ready partial)
+\For{$k = 0, 1, \dots$ \textbf{as step $k$ arrives}}
+  \If{\textbf{not} $\textsc{Fires}(p, k)$} \State \textbf{wait}; \textbf{continue} \EndIf
+  \If{$k = K$} \State \Return \textsc{Retrieve} \textbf{if} $U_K(b_K) > 0$ \textbf{else} \textsc{Skip} \EndIf
+  \State $j \gets k$;\; \textsc{Dispatch}$(x_j)$ \Comment{always; pays $\lambda_c(1+w(f_j))$; reads no belief}
+  \State \textbf{break}
+\EndFor
+\State \textbf{wait} for the end-of-turn step $K$; observe $b_K$
+\State \Return \textsc{Use} \textbf{if} $A_j(b_K) > 0$ \textbf{else} \textsc{Discard}
+       \Comment{reads no timing state}
+\end{algorithmic}
+\end{algorithm}
+```
+
+## Ours-v2[SPECULATIVE] (joint, option value of a dispatch)
+
+```latex
+\begin{algorithm}[t]
+\caption{Ours-v2[SPECULATIVE]: optimal stopping on the option value of prefetching}
+\label{alg:ours-spec}
+\begin{algorithmic}[1]
+\Require as Algorithm~\ref{alg:ours-v2}; SPECULATIVE architecture
+\For{$k = 0, 1, \dots$ \textbf{as step $k$ arrives}}
+  \If{$k = K$} \State \Return \textsc{Retrieve} \textbf{if} $U_K(b_K) > 0$ \textbf{else} \textsc{Skip} \EndIf
+  \State $S \gets \mathbb{E}\big[\max(A_k(b_K), 0) \mid b_k\big] - \lambda_c(1 + w(f_k))$
+         \Comment{option value; $b_K \mid b_k$ from the transition model}
+  \State $v \gets \textsc{WaitSpec}(b_k, \hat R_k, e_k, n)$ \Comment{dispatch later, or never}
+  \If{$S > 0$ \textbf{and} $S \ge v$}
+     \State $j \gets k$;\; \textsc{Dispatch}$(x_j)$;\; \textbf{break}
+  \EndIf
+\EndFor
+\State \textbf{wait} for $K$; observe $b_K$
+\State \Return \textsc{Use} \textbf{if} $A_j(b_K) > 0$ \textbf{else} \textsc{Discard}
+\end{algorithmic}
+\end{algorithm}
+```
+
+$\textsc{WaitSpec}$ is \textsc{Wait} of Algorithm~\ref{alg:ours-v2} with
+$U_{R',e'}(b')$ replaced by the option value $S$ at the next partial, and
+with "never dispatch, decide at $K$", $\mathbb{E}[\max(U_K(b_K),0)]$, as the
+truncated continuation. With $\rho \equiv 0$ and $\lambda_c = 0$ it
+coincides with SPEC (THEORY.md Prop. 4′); in general it is at least SPEC
+and at least Ours-v2[COMMIT] under the model.
+
+## What they share and where they differ
+
+| | belief, $g^\pm$, $\rho$, $w$, $\pi$ | latency priced | dispatch time chosen by | may discard |
+|---|---|---|---|---|
+| Ours-v2[COMMIT] | shared | $\bar E_k + \pi$ of **this turn, this step** | optimal stopping on $(b_k, \hat R_k)$ | no |
+| Ours-v2[SPEC] | shared | option value with realised exposure $+\,\pi$ | optimal stopping on $(b_k, \hat R_k)$ | yes |
+| B9-v2 | shared | $\mathbb{E}[L] + \pi$ | fixed policy $p^\star$ | no |
+| B9+ | shared | $\bar E_{p^\star} + \pi$ (dev mean) | fixed policy $p^\star$ | no |
+| SPEC (B10) | shared | realised exposure $+\,\pi$, at $K$ only | fixed policy $p$ (never reads $b$) | yes |
 
 Under A1–A3 ($\hat R_k \equiv o^\star$, $\rho \equiv 0$, $b_k \equiv b$,
-$g^- = 0$) Ours-v2 at $\lambda$ equals B9-v2 at $\lambda (L-o^\star)/L$
-and equals B9+ at $\lambda$ (Proposition 1; `tests/test_v2_theory.py`).
+$g^- = 0$) Ours-v2 at $\lambda$ equals B9-v2 at
+$\lambda (L+\pi-o^\star)/(L+\pi)$ and equals B9+ at $\lambda$
+(Proposition 1; `tests/test_v2_theory.py`, and with $\pi>0$
+`tests/test_v2_speculative.py`).

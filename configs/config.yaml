@@ -506,6 +506,26 @@ controller:
     default_latency_profile: faiss
     latency_points: 41
 
+    # pi, the NON-HIDEABLE TTFA increment of using retrieved passages
+    # (longer prompt -> extra prefill and generation). Every priced
+    # controller pays lambda_l * (E[exposed retrieval] + pi), identically.
+    # PLACEHOLDER from v1 (paired means): retrieving added 1.27-1.57 s of
+    # TTFA, of which only the retrieval call (0.3-0.7 s) can overlap speech;
+    # 900 ~ 1.42 s - 0.5 s. signals["retrieval"]["nonhideable_increment_ms"]
+    # overrides it per turn; replace with the v2 latency model's measurement.
+    nonhideable_increment_ms: 900.0
+
+    # Pipeline architecture. commit: a dispatched retrieval's passages are
+    # always used. speculative: a dispatched retrieval may be discarded at
+    # end of turn (compute still spent) — enables b10_speculative_v2 (SPEC,
+    # THEORY.md Prop. 4'). simulator/e3v2_decide.py reports both.
+    architecture: commit
+
+    # SPEC's independently chosen dispatch timing (immediate = first
+    # query-ready partial; forecast is the other sensible choice).
+    b10:
+      timing: immediate
+
     # Partial-query risk rho(f): fraction of retrieval's gain lost on a
     # prefix. Default scale*(1-f)^power; tune_v2.py fits a dev table
     # (1 - hit(f)/hit(final), isotonic) that replaces it via the estimates

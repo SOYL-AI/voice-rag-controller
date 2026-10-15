@@ -1,0 +1,87 @@
+% ============================================================================
+% IV. WHEN DOES JOINT CONTROL PAY?  (theory)
+% Formal content: sections/theory_formal.tex (from docs/research_v2/
+% theory_latex.tex, merged at 8bbe257). Source of truth: docs/research_v2/
+% THEORY.md. This file holds the author-prose outline around it and the
+% prediction table that the v2 test is built on.
+% Framing (PI decision, 2026-10-15): the paper is a boundary-condition
+% result. Equivalence under A1--A3; C1 is second order; joint control matters
+% mainly when a dispatched retrieval is COMMITTED; under SPECULATIVE prefetch
+% a decomposed rule (B10) is the strong rival. v2 tests both directions.
+% ============================================================================
+\section{When Does Joint Control Pay?}\label{sec:theory}
+
+% ---- P-IV.1 -----------------------------------------------------------------
+% PURPOSE: state assumptions A1--A3 in words and say that v1 satisfied all
+%   three BY DESIGN, so the v1 tie was predictable (R1.1, R2 "keep the
+%   coupling null central").
+% CLAIMS + EVIDENCE:
+%   (A1) quality independent of timing: v1 retrieved on a frozen,
+%        precomputed query, so partial-query risk was structurally zero
+%        [simulator/e2_results/RUN_MANIFEST.md; _objective.py
+%        partial_query_risk]; E3 answers were generated once per (scenario,
+%        seed, path) and reused for every timing [simulator/e3_full_sweep.py].
+%   (A2) constant overlap per policy: v1 used one overlap per policy
+%        (0, 0.050, 0.188 s) [V1T constants.overlap_s].
+%   (A3) one belief per turn computed from the full question
+%        [simulator/e3_scenario_signals.json].
+\todo{P-IV.1: the three assumptions and why v1 met each by construction.}
+
+% ---- P-IV.2 -----------------------------------------------------------------
+% PURPOSE: Prop. 1 and Cor. 1 in words; the exact price map; B9+ (R1.1:
+%   "a decomposed controller that prices expected early-dispatch latency
+%   equals Ours") -- concede the point and make it a result.
+% CLAIMS: Ours at lambda_l = B9 at lambda_l' (exact, including the waste
+%   term); B9+ = Ours at the same price (Prop. 2, last line).
+% NUMBERS: none here (they belong to Sec. VI).
+\todo{P-IV.2: Proposition~\ref{prop:eq} and its corollary in words; the
+decomposed controller that prices expected exposure (\Bplus) is the joint
+controller under (A1)--(A3).}
+
+% ---- P-IV.3 -----------------------------------------------------------------
+% PURPOSE: Prop. 2 -- the divergence band and the gap bound
+%   lambda_l * o* * P(b in band) (R1.1 "derive the divergence band").
+% CLAIMS: the band is B_lambda = (theta_O, theta_B]; outside it the two
+%   decisions coincide; the gap is bounded by lambda_l o* P(band) under model
+%   correctness; without model correctness it can be negative (Remark).
+\todo{P-IV.3: Proposition~\ref{prop:gap}, the band and the bound, and why the
+bound is a statement about the controller's model, not about outcomes.}
+
+\begin{equation}
+\mathcal B_{\lambda}=\left(\theta_O,\theta_B\right],\quad
+\theta_O=\frac{c_O+\gm}{s},\quad \theta_B=\frac{\lamL L+\lamC(1+w_{\mathrm{se}})+\gm}{s},
+\label{eq:band}
+\end{equation}
+with $c_O=\min_t[\lamL e_t+\lamC(1+w_t)]$ and $s=\gp(1-\bar\rho)+\gm$; for
+the v1 objective $\mathcal B_\lambda=(\lamL\cdot0.484+1.08\,\lamC,\ \lamL\cdot0.672+\lamC]$ at
+the maximal-overlap timing.
+
+% ---- P-IV.4 -----------------------------------------------------------------
+% PURPOSE: the boundaries -- which channel breaks the equivalence, and how
+%   much (R2: "state where joint control could help").
+% CLAIMS + EVIDENCE [TH Secs. 5--7]:
+%   (a) C1, turn-dependent overlap (drop A2): gain is a conditional Jensen gap
+%       and SECOND ORDER, about f(theta*) lambda_l^2 Var(e*) / (2(g^+ + g^-))
+%       (Prop. 3). In simulation the best cell needs about 20,821 test items
+%       for 80% power against B9+ [POW; PRE2 Sec. 6] -- C1 cannot carry a
+%       confirmatory test at the planned sizes.
+%   (b) C2, information versus overlap (drop A3): waiting buys a sharper
+%       belief (Howard's value of information [howard1966information]) and
+%       loses overlap; under COMMIT the optimal stopping region is not a
+%       product set, so every decomposed policy is strictly suboptimal when
+%       both regions have mass (Prop. 4).
+%   (c) Under SPECULATIVE prefetch the decomposed B10 is optimal at
+%       lambda_c = 0 and within lambda_c(1+w) per turn otherwise (Prop. 4').
+%       In simulation B10 (SPEC) beats joint-commit at every price above the
+%       median cut in d2_support [TH Sec. 6.2].
+%   (d) C3, partial-query risk alone (drop A1): optimal timing becomes
+%       belief-dependent but stays b-measurable, so it does not separate the
+%       classes (Prop. 5).
+% NUMBERS: 20,821 [POW cells_C1 / PRE2 Sec. 6].
+\todo{P-IV.4: the four channels and their sizes; joint control is predicted
+to matter when retrieval is committed, and a speculative decomposed rule is
+predicted to match it otherwise (Table~\ref{tab:predictions}).}
+
+\input{sections/theory_formal}
+
+\input{tables/tab_predictions}

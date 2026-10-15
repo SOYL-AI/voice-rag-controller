@@ -1,0 +1,473 @@
+{
+ "n_items": 720,
+ "n_pos": 444,
+ "n_groups": 276,
+ "domains": [
+  "airline",
+  "automotive",
+  "banking",
+  "ecommerce",
+  "education",
+  "food_delivery",
+  "government",
+  "healthcare",
+  "insurance",
+  "saas",
+  "telecom",
+  "utilities"
+ ],
+ "label": "combined after round C1 (batch 1)",
+ "target_auc_max": 0.65,
+ "configs": [
+  {
+   "variant": "question:word+char+len",
+   "C": 0.1,
+   "auc_pooled_oof_mean_over_seeds": 0.5567,
+   "auc_per_seed": [
+    0.555,
+    0.5481,
+    0.5671
+   ]
+  },
+  {
+   "variant": "question:word+char+len",
+   "C": 1.0,
+   "auc_pooled_oof_mean_over_seeds": 0.5851,
+   "auc_per_seed": [
+    0.5848,
+    0.5672,
+    0.6032
+   ]
+  },
+  {
+   "variant": "question:word+char+len",
+   "C": 10.0,
+   "auc_pooled_oof_mean_over_seeds": 0.597,
+   "auc_per_seed": [
+    0.5994,
+    0.5723,
+    0.6194
+   ]
+  },
+  {
+   "variant": "question:word",
+   "C": 0.1,
+   "auc_pooled_oof_mean_over_seeds": 0.5485,
+   "auc_per_seed": [
+    0.5386,
+    0.5299,
+    0.577
+   ]
+  },
+  {
+   "variant": "question:word",
+   "C": 1.0,
+   "auc_pooled_oof_mean_over_seeds": 0.5548,
+   "auc_per_seed": [
+    0.5469,
+    0.5361,
+    0.5816
+   ]
+  },
+  {
+   "variant": "question:word",
+   "C": 10.0,
+   "auc_pooled_oof_mean_over_seeds": 0.5651,
+   "auc_per_seed": [
+    0.5601,
+    0.547,
+    0.5881
+   ]
+  },
+  {
+   "variant": "question:char",
+   "C": 0.1,
+   "auc_pooled_oof_mean_over_seeds": 0.5657,
+   "auc_per_seed": [
+    0.5519,
+    0.5554,
+    0.5899
+   ]
+  },
+  {
+   "variant": "question:char",
+   "C": 1.0,
+   "auc_pooled_oof_mean_over_seeds": 0.5765,
+   "auc_per_seed": [
+    0.5682,
+    0.5614,
+    0.5997
+   ]
+  },
+  {
+   "variant": "question:char",
+   "C": 10.0,
+   "auc_pooled_oof_mean_over_seeds": 0.5951,
+   "auc_per_seed": [
+    0.5976,
+    0.5714,
+    0.6163
+   ]
+  },
+  {
+   "variant": "question:len_only",
+   "C": 0.1,
+   "auc_pooled_oof_mean_over_seeds": 0.5075,
+   "auc_per_seed": [
+    0.5091,
+    0.5102,
+    0.5032
+   ]
+  },
+  {
+   "variant": "question:len_only",
+   "C": 1.0,
+   "auc_pooled_oof_mean_over_seeds": 0.5069,
+   "auc_per_seed": [
+    0.5096,
+    0.5098,
+    0.5012
+   ]
+  },
+  {
+   "variant": "question:len_only",
+   "C": 10.0,
+   "auc_pooled_oof_mean_over_seeds": 0.5068,
+   "auc_per_seed": [
+    0.5094,
+    0.5098,
+    0.501
+   ]
+  },
+  {
+   "variant": "question+history:word+char+len",
+   "C": 0.1,
+   "auc_pooled_oof_mean_over_seeds": 0.5668,
+   "auc_per_seed": [
+    0.5603,
+    0.5576,
+    0.5826
+   ]
+  },
+  {
+   "variant": "question+history:word+char+len",
+   "C": 1.0,
+   "auc_pooled_oof_mean_over_seeds": 0.5872,
+   "auc_per_seed": [
+    0.5891,
+    0.5707,
+    0.6018
+   ]
+  },
+  {
+   "variant": "question+history:word+char+len",
+   "C": 10.0,
+   "auc_pooled_oof_mean_over_seeds": 0.5983,
+   "auc_per_seed": [
+    0.6057,
+    0.5763,
+    0.6129
+   ]
+  }
+ ],
+ "headline": {
+  "variant": "question:word+char+len",
+  "C": 10.0,
+  "auc": 0.597,
+  "ci95_group_bootstrap": [
+   0.5645,
+   0.6412
+  ],
+  "pass": true,
+  "by_domain": {
+   "airline": 0.5984,
+   "automotive": 0.5718,
+   "banking": 0.6065,
+   "ecommerce": 0.5613,
+   "education": 0.7129,
+   "food_delivery": 0.6124,
+   "government": 0.6029,
+   "healthcare": 0.566,
+   "insurance": 0.6991,
+   "saas": 0.6316,
+   "telecom": 0.5694,
+   "utilities": 0.5825
+  },
+  "by_type": {
+   "org_specific_vs_general": 0.6179,
+   "counter_prior_vs_general": 0.5901,
+   "ambiguous_vs_general": 0.5844
+  }
+ },
+ "worst_config_any_variant": {
+  "variant": "question+history:word+char+len",
+  "C": 10.0,
+  "auc_pooled_oof_mean_over_seeds": 0.5983,
+  "auc_per_seed": [
+   0.6057,
+   0.5763,
+   0.6129
+  ]
+ },
+ "leave_one_domain_out": {
+  "pooled_auc": 0.6102,
+  "by_domain": {
+   "airline": 0.588,
+   "automotive": 0.5909,
+   "banking": 0.6076,
+   "ecommerce": 0.669,
+   "education": 0.6531,
+   "food_delivery": 0.6232,
+   "government": 0.5287,
+   "healthcare": 0.684,
+   "insurance": 0.7257,
+   "saas": 0.6112,
+   "telecom": 0.5995,
+   "utilities": 0.5407
+  }
+ },
+ "top_features_retrieval_needed": [
+  [
+   "w:much is",
+   0.434
+  ],
+  [
+   "w:new",
+   0.429
+  ],
+  [
+   "w:the",
+   0.417
+  ],
+  [
+   "w:cost",
+   0.411
+  ],
+  [
+   "c:' we'",
+   0.398
+  ],
+  [
+   "w:deposit",
+   0.39
+  ],
+  [
+   "w:and",
+   0.387
+  ],
+  [
+   "w:have i",
+   0.364
+  ],
+  [
+   "w:all",
+   0.361
+  ],
+  [
+   "w:extra",
+   0.359
+  ],
+  [
+   "w:and how",
+   0.357
+  ],
+  [
+   "w:per",
+   0.354
+  ],
+  [
+   "w:work",
+   0.345
+  ],
+  [
+   "c:'ork '",
+   0.345
+  ],
+  [
+   "c:'ost '",
+   0.343
+  ],
+  [
+   "c:'ome'",
+   0.342
+  ],
+  [
+   "c:'ew'",
+   0.341
+  ],
+  [
+   "w:week",
+   0.337
+  ],
+  [
+   "c:'eek'",
+   0.337
+  ],
+  [
+   "c:' week'",
+   0.337
+  ],
+  [
+   "c:' wee'",
+   0.337
+  ],
+  [
+   "c:'ek'",
+   0.337
+  ],
+  [
+   "c:'week'",
+   0.337
+  ],
+  [
+   "w:fee",
+   0.333
+  ],
+  [
+   "w:do you",
+   0.331
+  ],
+  [
+   "w:drop",
+   0.33
+  ],
+  [
+   "w:cash",
+   0.33
+  ],
+  [
+   "c:'new'",
+   0.328
+  ],
+  [
+   "c:'work '",
+   0.327
+  ],
+  [
+   "w:i can't",
+   0.324
+  ]
+ ],
+ "top_features_general": [
+  [
+   "c:'ot'",
+   -0.574
+  ],
+  [
+   "w:as",
+   -0.461
+  ],
+  [
+   "w:difference between",
+   -0.46
+  ],
+  [
+   "w:an",
+   -0.437
+  ],
+  [
+   "w:bank",
+   -0.419
+  ],
+  [
+   "c:'rs '",
+   -0.412
+  ],
+  [
+   "w:code",
+   -0.39
+  ],
+  [
+   "w:says",
+   -0.388
+  ],
+  [
+   "w:why do",
+   -0.384
+  ],
+  [
+   "w:if my",
+   -0.384
+  ],
+  [
+   "w:gst",
+   -0.374
+  ],
+  [
+   "w:should",
+   -0.367
+  ],
+  [
+   "w:do i",
+   -0.365
+  ],
+  [
+   "w:need a",
+   -0.364
+  ],
+  [
+   "w:the bank",
+   -0.357
+  ],
+  [
+   "c:'hot'",
+   -0.355
+  ],
+  [
+   "w:long should",
+   -0.353
+  ],
+  [
+   "w:number",
+   -0.352
+  ],
+  [
+   "w:okay",
+   -0.351
+  ],
+  [
+   "w:exactly",
+   -0.35
+  ],
+  [
+   "w:get to",
+   -0.348
+  ],
+  [
+   "w:with",
+   -0.348
+  ],
+  [
+   "c:'ir'",
+   -0.347
+  ],
+  [
+   "w:how can",
+   -0.347
+  ],
+  [
+   "w:gets",
+   -0.341
+  ],
+  [
+   "w:how come",
+   -0.337
+  ],
+  [
+   "c:'sho'",
+   -0.337
+  ],
+  [
+   "c:' sho'",
+   -0.337
+  ],
+  [
+   "w:to be",
+   -0.336
+  ],
+  [
+   "w:why does",
+   -0.331
+  ]
+ ]
+}

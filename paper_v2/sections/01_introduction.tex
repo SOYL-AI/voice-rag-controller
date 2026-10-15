@@ -1,0 +1,74 @@
+% ============================================================================
+% I. INTRODUCTION  (target length: about 0.75 column)
+% Source keys: see sections/00_abstract.tex.
+% ============================================================================
+\section{Introduction}\label{sec:intro}
+
+% ---- P-I.1 ------------------------------------------------------------------
+% PURPOSE: the systems problem. A voice assistant that grounds answers in
+%   documents must decide (i) whether to retrieve for this turn and (ii) when
+%   to dispatch the retrieval relative to the user's ongoing speech. Early
+%   dispatch hides latency inside speech but acts on a partial transcript.
+% CLAIMS + EVIDENCE:
+%   (a) Retrieval improves grounded answers [lewis2020rag].
+%   (b) Retrieval is not always beneficial; adaptive methods decide whether
+%       to retrieve [jiang2023flare, su2024dragin, asai2024selfrag,
+%       jeong2024adaptiverag]; retrieval can hurt on questions the model
+%       already answers [mallen2023trust].
+%   (c) Spoken interaction adds a timing dimension; end-of-turn prediction
+%       is an active area [ekstedt2020turngpt, ekstedt2022vap,
+%       skantze2021turntaking].
+% NUMBERS: none.
+\todo{P-I.1: the retrieve-and-when problem in streaming voice RAG; cite
+\cite{lewis2020rag,jiang2023flare,su2024dragin,asai2024selfrag,jeong2024adaptiverag,mallen2023trust,ekstedt2020turngpt,ekstedt2022vap,skantze2021turntaking}.}
+
+% ---- P-I.2 ------------------------------------------------------------------
+% PURPOSE: the question and why it is not obvious. Should the two decisions
+%   be taken jointly (one argmax over (retrieve, timing)) or by separate
+%   components that share prices? State that the submitted version found a
+%   tie and that this revision explains it and identifies when it breaks.
+% CLAIMS + EVIDENCE:
+%   (a) The pre-registered E3 test found no dominance in 0 of 5 seeds
+%       [analysis/e3_dominance.json: seeds_with_strict_dominance = 0].
+%   (b) Do NOT present the tie as evidence for or against coupling; present
+%       it as the case the theory predicts (A1--A3 hold in v1 by design).
+% NUMBERS: 0/5 seeds [analysis/e3_dominance.json].
+\todo{P-I.2: the joint-versus-decomposed question; the v1 tie (0/5 seeds)
+and the plan to explain it and test its boundaries.}
+
+% ---- P-I.3 ------------------------------------------------------------------
+% PURPOSE: contributions, as a numbered list (authors may keep the list
+%   form; wording is theirs). Contribution 0 must be phrased as ADOPTED,
+%   not proposed (R1 minor): uncertainty-triggered retrieval follows
+%   FLARE/DRAGIN [jiang2023flare, su2024dragin].
+% CONTRIBUTIONS TO LIST (from docs/research_v2/NOVELTY.md, updated for the
+%   PI decision of 2026-10-15 that v2 tests the boundary in both directions):
+%   C1  Equivalence (Prop. 1) and fixed-price gap (Prop. 2): under A1--A3 the
+%       joint controller at lambda_l equals the decomposed one at an exactly
+%       mapped price; v1's tie is a corollary. [TH Secs. 2--3]
+%   C2  Boundaries: turn-dependent overlap gives a second-order gain only
+%       (Prop. 3); information versus overlap is first order but separates the
+%       classes only under a COMMIT architecture (Prop. 4); with SPECULATIVE
+%       prefetch a decomposed rule (B10) is within lambda_c(1+w) per turn of
+%       the joint optimum (Prop. 4'); partial-query risk alone does not
+%       separate them (Prop. 5). [TH Secs. 5--6]
+%   C3  A corrected objective that charges retrieval's measured harm on
+%       questions that do not need it (g^- = 0.592 vs g^+ = 0.720 on v1).
+%       [V1T retrieval_effect]
+%   C4  A pre-registered TWO-SIDED test of the boundary on new open-domain
+%       and customer-support speech data with live ASR partials: under commit,
+%       joint > best decomposed (B9+); under speculative prefetch, B10 is
+%       within the Prop. 4' bound of joint. [PRE2 Sec. 3 -- \PEND{PREREG_V2
+%       must be updated to the two-architecture design before freezing}]
+%   C5  Released artifacts: controllers, data, analysis scripts that
+%       regenerate every number. \PEND{release plan and URL}
+% NUMBERS: g^+ = 0.720, g^- = 0.592 [V1T retrieval_effect].
+% DO NOT USE the words "unified multi-timescale framework" or "architectural
+%   strength" (R1 minor: overstated).
+\todo{P-I.3: contributions C1--C5 as listed in the comment above, with
+contribution 0 (uncertainty-triggered retrieval) stated as adopted from
+\cite{jiang2023flare,su2024dragin}.}
+
+% ---- P-I.4 ------------------------------------------------------------------
+% PURPOSE: one-sentence roadmap with section references.
+\todo{P-I.4: roadmap (Sec.~\ref{sec:related} to Sec.~\ref{sec:conclusion}).}

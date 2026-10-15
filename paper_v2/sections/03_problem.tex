@@ -1,0 +1,207 @@
+% ============================================================================
+% III. PROBLEM, OBJECTIVE AND CONTROLLERS
+% Equations, definitions, the controller table and the algorithms are written
+% in full (permitted). Connecting prose is author-written (\todo).
+% Implementation sources: controller/baselines/_objective.py (v1 shared
+% terms), ours.py, b9_decomposed.py, b8_independent.py, b4_flare.py,
+% b6_dragin.py; v2: _objective_v2.py, ours_v2.py, b9_v2.py, b9plus_v2.py,
+% controller/sequential_v2.py; pseudocode source docs/research_v2/pseudocode.md.
+% ============================================================================
+\section{Problem Formulation and Controllers}\label{sec:problem}
+
+% ---- P-III.1 ----------------------------------------------------------------
+% PURPOSE: introduce Fig. 1 and the decision a controller takes per turn.
+% CLAIMS: a turn is a stream of ASR partials; at each partial the controller
+%   may dispatch retrieval, wait, or (at end of turn) skip; Fig. 1 contrasts
+%   the joint and the decomposed structure (R2: diagram that highlights the
+%   novelty). Every figure must be referenced in text: "Fig.~\ref{fig:arch}
+%   shows ...".
+\todo{P-III.1: the per-turn decision and a walk-through of
+Fig.~\ref{fig:arch}.}
+
+\input{figures/fig1_architecture}
+
+\subsection{Belief}\label{sec:belief}
+% ---- P-III.2 ----------------------------------------------------------------
+% PURPOSE: define the belief and say exactly what it is computed from.
+% CLAIMS + EVIDENCE:
+%   (a) v1: s is the mean per-token entropy of a closed-book draft generated
+%       from the FULL question, averaged over 5 draws (seeds 11,23,37,53,71,
+%       temperature 0.2, top-p 0.9, 80 tokens), computed once per scenario
+%       before the sweep [simulator/e3_scenario_signals.json "precompute"].
+%       Hence the v1 belief does not depend on dispatch time (A3), even for
+%       policies that dispatch before the question is complete (R1.4).
+%   (b) The closed-book pass has a latency cost that v1 did not charge:
+%       \TBD{closed-book draft latency, from llm/experiment1_v2/results/*.jsonl
+%       fields ttft_ms and gen_ms (median over dev items)}. v2 charges it.
+%   (c) v2: the belief is recomputed on each ASR partial x_k (contract
+%       docs/research_v2/CONTRACTS.md Sec. 5--6, uncertainty_by_prefix).
+%   (d) Calibration: logistic fit of P(need) on E1's 180 samples
+%       (36 items x 5 seeds), IN-SAMPLE (R1.5); slope 11.288, intercept
+%       -3.633; floor beta = 0.05 [configs/e3_price_grid.json calibration;
+%       controller/baselines/e1_calibration_mean_entropy.json]. v2 fits it on
+%       the dev split only and evaluates on test [PRE2 H-E1v2].
+% NUMBERS: slope 11.288, intercept -3.633, floor 0.05, n = 180.
+\todo{P-III.2: what the belief is computed from in v1 and in v2, the
+in-sample v1 calibration, and the closed-book latency cost.}
+
+\begin{equation}
+s_k=\frac{1}{N}\sum_{i=1}^{N}H\!\left(p_\theta(\cdot\mid y_{<i},x_k)\right),\qquad
+b_k=\max\!\big(\beta,\ \sigma(w\,s_k+c)\big),
+\label{eq:belief}
+\end{equation}
+where $x_k$ is the transcript prefix available at step $k$, $y$ is the
+closed-book draft, $H$ is the entropy in nats, $\sigma$ the logistic
+function and $\beta=0.05$ a floor.
+
+\subsection{Objective}\label{sec:objective}
+% ---- P-III.3 ----------------------------------------------------------------
+% PURPOSE: define the corrected objective and say why the v1 form conflated
+%   two quantities (R1.6): v1 used Q(retrieve) = b, i.e. it treated the
+%   probability of need as the size of the gain and assumed retrieval never
+%   hurts. Eq. (obj) separates P(need) = b from the gain g^+ on needed turns
+%   and the harm g^- on non-needed turns.
+% CLAIMS + EVIDENCE:
+%   (a) On v1, retrieval raises accuracy from 0.112 to 0.832 on needed
+%       scenarios (g^+ = 0.720 [0.504, 0.888]) and lowers it from 0.704 to
+%       0.112 on non-needed ones (g^- = 0.592 [0.408, 0.768]); 25+25
+%       scenarios x 5 seeds; scenario-bootstrap 95% CIs
+%       [V1T retrieval_effect; cross-check PN e3_retrieval_effect].
+%   (b) The zero-price retrieve boundary moves from b* = 0.05 (v1) to
+%       b* = g^-/(g^+ + g^-) = 0.451 [V1T retrieval_effect.b_star_at_zero_cost].
+%   (c) g^+, g^- are dataset-specific and are re-estimated on the v2 dev
+%       split: \TBD{g^+, g^- per dataset, from E1-v2 dev outputs,
+%       llm/experiment1_v2/results/}.
+% NUMBERS: 0.112, 0.832, 0.704, 0.112, 0.720 [0.504, 0.888],
+%   0.592 [0.408, 0.768], 0.451 -- all [V1T].
+\todo{P-III.3: the corrected objective, why $Q=b$ was a conflation, and the
+measured $g^{\pm}$.}
+
+\begin{equation}
+U_t(b)=b\,\gp(1-\rho_t)-(1-b)\,\gm-\lamL\,e_t-\lamC(1+w_t),\qquad U(\text{skip})=0,
+\label{eq:obj}
+\end{equation}
+where $t$ is the dispatch timing, $\rho_t$ the fraction of $\gp$ lost to a
+partial query, $e_t$ the expected exposed latency, $w_t$ the expected wasted
+retrievals, and $\lamL$ (accuracy per second) and $\lamC$ (accuracy per
+retrieval) are prices. The v1 objective is the special case $\gp=1$,
+$\gm=\rho_t=0$, $e_t=L-o_t$ with a constant overlap $o_t$ per policy.
+In v2 the exposure is turn-dependent,
+\begin{equation}
+e_k=\E\!\left[\pi+\max(0,\,L-W_k)\mid Z_k\right],
+\label{eq:exposure}
+\end{equation}
+where $L$ is the retrieval latency, $W_k$ the speech remaining after step $k$
+plus end-of-turn detection delay, $\pi$ the non-hideable part of retrieval's
+cost (e.g.\ the longer prompt), and $Z_k$ the timing state observed at $k$.
+Time to first audio is
+\begin{equation}
+\mathrm{TTFA}=t_{\text{first audio}}-t_{\text{user end}}.
+\label{eq:ttfa}
+\end{equation}
+
+% ---- P-III.4 ----------------------------------------------------------------
+% PURPOSE: say that waste_rate w_t is a placeholder in v1 (0, 0.02, 0.08)
+%   that was never measured, and how v2 treats it (R1.10, R2).
+% CLAIMS + EVIDENCE:
+%   (a) v1 placeholder values [controller/baselines/_objective.py waste_rate;
+%       paper/preregistration.md "Methodological Disclosures" item 2].
+%   (b) In v1 all 751 logged retrievals had forecast_invalidated = false on
+%       the text path, which cannot evidence the rate
+%       [_objective.py waste_rate docstring].
+%   (c) The exact price map depends on w through lambda_c (w* - w_se)/L
+%       (Prop. 1); the approximate map lambda (L - o*)/L fails at 46 of 200
+%       prices because of this term [V1T prop1_dense].
+%   (d) Sensitivity: \TBD{decision agreement and frontier under
+%       w in {0, 0.04, 0.08, 0.16} for v1, from an extension of
+%       analysis/v1_theory_check.py (not yet written)} and v2: w measured as
+%       the cancellation rate of committed dispatches \TBD{from the v2
+%       pipeline logs}.
+\todo{P-III.4: the waste-rate placeholder, its role in the exact price map,
+and the sensitivity analysis.}
+
+\subsection{Controllers}\label{sec:controllers}
+% ---- P-III.5 ----------------------------------------------------------------
+% PURPOSE: define every controller in Table I and Algorithm 1; make the B8
+%   vs B9 vs B9+ vs B10 distinctions explicit (R2: B9 pseudocode and its
+%   difference from B8).
+% CLAIMS:
+%   (a) B8 does not price: an entropy threshold plus a separately chosen
+%       timing; one operating point [b8_independent.py].
+%   (b) B9 prices but its retrieval sub-optimiser charges the full latency L
+%       because it cannot see the timing choice [b9_decomposed.py].
+%   (c) B9+ is the decomposed controller R1 describes: it prices the expected
+%       exposure of the timing its own timing sub-optimiser picks; under
+%       A1--A3 it equals Ours (Prop. 2) [V1T b9plus: 11,300/11,300].
+%   (d) B10 dispatches speculatively at the first query-ready partial and
+%       decides at end of turn whether to use the result (Prop. 4').
+%       \PEND{B10 is not implemented yet on v2/controllers; see README}.
+%   (e) B4 and B6 are single-turn proxies in the style of FLARE and DRAGIN:
+%       a threshold on 1 - mean token confidence (B4, 0.5) or on max token
+%       entropy (B6, 1.0) of the closed-book draft, dispatch at sentence end
+%       [configs/config.yaml controller.e3.b4/b6].
+% NUMBERS: 11,300/11,300 [V1T b9plus].
+\todo{P-III.5: the controllers of Table~\ref{tab:controllers} and their
+differences, with Algorithm~\ref{alg:v1} for the v1 rules and
+Algorithm~\ref{alg:oursv2} for the v2 joint controller.}
+
+\input{tables/tab_controllers}
+
+\begin{algorithm}[t]
+\caption{Decision rules at prices $(\lamL,\lamC)$ for one turn with belief $b$. The v1 runs used $\gp=1$, $\gm=\rho_t=0$, $e_t=L-o_t$.}
+\label{alg:v1}
+\begin{algorithmic}[1]
+\Statex \textbf{Ours (joint).}
+\State $a^\star\gets\arg\max\{\,0,\ \max_{t\in\mathcal T}U_t(b)\,\}$ \Comment{ties to skip}
+\Statex \textbf{B9 (decomposed, full-latency pricing).}
+\State $\tau\gets\arg\max_{t\in\mathcal T}\big[-b\,\gp\rho_t+\lamL o_t-\lamC w_t\big]$ \Comment{timing; no retrieve decision}
+\State $r\gets\mathbf 1\{\,b\gp-(1-b)\gm-\lamL L-\lamC(1+w_{\mathrm{se}})>0\,\}$ \Comment{retrieval; no timing}
+\State \Return $(r,\tau)$
+\Statex \textbf{\Bplus{} (decomposed, expected-exposure pricing).}
+\State $\hat\tau\gets$ timing of B9 (line 2)
+\State \Return $\big(\mathbf 1\{U_{\hat\tau}(b)>0\},\ \hat\tau\big)$
+\Statex \textbf{B8 (independent, unpriced).}
+\State \Return $\big(\mathbf 1\{s^{\max}\ge 1.2\},\ \pol{fixed\_early\_proxy}\big)$ \Comment{$s^{\max}$: max token entropy}
+\end{algorithmic}
+\end{algorithm}
+
+\begin{algorithm}[t]
+\caption{\OursV: joint retrieve/dispatch decision over one turn (commit architecture)}
+\label{alg:oursv2}
+\begin{algorithmic}[1]
+\Require prices $(\lamL,\lamC)$; latency distribution of $L$; belief-transition model $P(b'\mid b,\phi)$ fitted on dev; lookahead $n\ge1$
+\For{$k=0,1,\dots$ \textbf{as} partial $k$ arrives at time $t_k$}
+  \State observe $x_k$, $b_k$, $\hat R_k$ \Comment{only data stamped $\le t_k$}
+  \State $u\gets U_k(b_k)$ \Comment{Eq.~(\ref{eq:obj}) with $e_k$ from Eq.~(\ref{eq:exposure})}
+  \If{$k$ is the end-of-turn step}
+    \State \Return \textsc{Retrieve} \textbf{if} $u>0$ \textbf{else} \textsc{Skip}
+  \EndIf
+  \State $v\gets\textsc{Wait}(b_k,\hat R_k,n)$ \Comment{expected value of waiting}
+  \If{$u>0$ \textbf{and} $u\ge v$}
+    \State \Return \textsc{Retrieve} \Comment{dispatch now; committed}
+  \EndIf
+\EndFor
+\end{algorithmic}
+\end{algorithm}
+% Source: docs/research_v2/pseudocode.md (full Wait() recursion there; it is
+% omitted here for space and described in one sentence by the authors).
+% \textsc{Wait}(b,R,n) = E[max(U at the next partial, value of waiting
+% further)] under the dev-fitted belief-transition model, truncated at depth
+% n; every truncation is a lower bound on the continuation value.
+
+% ---- P-III.6 ----------------------------------------------------------------
+% PURPOSE: define the two v1 early-dispatch policies precisely (R1.7: "define
+%   the fixed early proxy").
+% DEFINITIONS (complete; authors may tighten wording):
+%   Simulated speech duration T = (#words / 150 wpm) x 60 s, slept in real
+%   time on the text path [configs/config.yaml controller.timing
+%   .simulated_speech]. ready_at = time at which the revealed prefix first
+%   has >= 4 words including a content word (query_ready gate).
+%   fixed_early_proxy dispatches at min(max(0.35 T capped at 0.8 x first
+%   partial time, ready_at), T); immediate dispatches at
+%   min(max(first partial time, ready_at + partial interval), T)
+%   [controller/timing.py SpeechPlan.dispatch_at_s]. Neither forecasts
+%   anything; fixed_early_proxy is NOT the pre-registered "forecast-timed"
+%   policy, which was not implemented [PRE "Implementation note"].
+\todo{P-III.6: the exact dispatch rules of \pol{immediate} and
+\pol{fixed\_early\_proxy} in v1 (definitions in the comment above).}
