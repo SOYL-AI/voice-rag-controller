@@ -15,7 +15,24 @@ Code: `audio/v2/` (`render.py`, `trace.py`, `trace_report.py`, `voices.py`,
 `tts_engines.py`, `tts_worker.py`, `align.py`, `asr.py`, `textnorm.py`,
 `accent_screen.py`, `record_prompts.py`). Tests: `tests/test_speech_v2.py`.
 
-__RESULTS__
+## 0. Status (what exists now)
+
+* **v1 smoke test**: all 50 `simulator/scenarios.json` questions x 6 voices x 3
+  rates x 3 noises = 54 conditions, 2,700 traces in
+  `datasets/v2/v1_scenarios/speech/traces/`, report in
+  `datasets/v2/v1_scenarios/speech/trace_report.md`.
+* **d2_support dev, primary condition**: 222 dev items (ids from
+  `splits.json`), `piper-en_US-hfc_male-medium__150wpm__clean`, in
+  `datasets/v2/d2_support/speech/traces/`; report in
+  `datasets/v2/d2_support/speech/trace_report.md`. This is the trace E1-v2
+  should use for ASR-prefix signals.
+* Headline findings: real partials are far from word prefixes (partial WER
+  ~11-21 % clean, 21-33 % in babble; 54-73 % of items have at least one revision
+  of earlier words); end-of-turn with the live Silero settings works in quiet
+  (endpoint ~830 ms after the last word, i.e. the 800 ms hang + ~30 ms) but
+  **fails under babble** (no endpoint before the audio ends in 89 % of items at
+  10 dB and 99.9 % at 5 dB); on the longer d2 questions 5 % of turns are cut
+  early by a pause.
 
 ## 1. Setup
 
@@ -170,7 +187,23 @@ posteriors are peaky and cut word ends short). Accuracy check
 same audio for the words Whisper recognises correctly, and first/last word vs an
 energy-based speech-activity bound.
 
-__ALIGN__
+Results (`datasets/v2/<name>/speech/align_check.json`, `audio/v2/align_report.py`):
+
+| set | renders checked | words matched by Whisper | Whisper - forced, start (median; IQR) | end (median; IQR) | first word vs energy within 50 ms | last word vs energy within 50 ms |
+|---|---|---|---|---|---|---|
+| v1_scenarios (all clean renders) | 900 | 92.7 % | -160 ms; 220 ms | -120 ms; 154 ms | 91.9 % | 78.7 % |
+| d2_support dev (25 % sample) | 63 | 96.9 % | -140 ms | -120 ms | 100 % | 71.4 % |
+
+Reading: the utterance edges are anchored to the acoustics (by construction of
+the energy refinement, so that check is not independent). Whisper's word times
+sit consistently ~120-160 ms *earlier* than the forced alignment, with an IQR
+of 150-220 ms. Whisper DTW word timestamps are known to be coarse and early, so
+this does not show the forced times are wrong, but it also does not validate
+mid-utterance boundaries to better than ~100-200 ms. If the latency analysis
+needs tighter word boundaries, cross-check a sample with the Montreal Forced
+Aligner (open issue). Quantities that depend only on the utterance edges
+(speech onset, speech end, end-of-turn error, `duration_ms`) are the reliable
+ones.
 
 ## 7. Streaming ASR replay (trace.py)
 
@@ -203,7 +236,47 @@ ASR call blocks the audio loop, so when ASR takes longer than the interval live
 partials thin out; the replay schedules on audio time and carries the delay in
 `available_ms` instead.
 
-__TRACEQ__
+### Trace quality on the 50 v1 scenarios (2,700 traces)
+
+Metric definitions: `audio/v2/trace_report.py` docstring. WER uses Whisper's
+English normaliser on both sides. "EOT" = `vad_user_end_ms` minus the last
+word's end, over items where the VAD fired.
+
+| noise (pooled over 6 voices x 3 rates) | partial WER | final WER | revision rate (lenient) | items with a revision | EOT median | VAD endpoint missed | ASR ms per partial (median) | avail. lag p90 | final available after speech end (median) |
+|---|---|---|---|---|---|---|---|---|---|
+| clean | 20.7 % | 9.7 % | 14.9 % | 54 % | 831 ms | 0 % | 177 | 310 ms | 1,163 ms |
+| babble 10 dB | 20.6 % | 15.2 % | 14.2 % | 67 % | (few endpoints) | 89.1 % | 188 | 1,332 ms | 2,993 ms |
+| babble 5 dB | 33.2 % | 33.5 % | 22.8 % | 79 % | (1 endpoint) | 99.9 % | 194 | 2,461 ms | 3,155 ms |
+
+Clean, per voice (final WER at 130 / 150 / 180 wpm): hfc_male 4.0 / 3.6 / 3.6 %,
+lessac 6.6 / 6.6 / 4.0 %, cori 8.6 / 9.3 / 7.3 %, northern_english_male
+13.2 / 12.9 / 7.3 %, **ksp (en-IN) 8.6 / 7.3 / 10.6 %**, **SVBI (en-IN)
+26.5 / 17.2 / 17.5 %**. Pooled over noise, final WER by voice: hfc_male 6.0 %,
+lessac 8.8 %, cori 16.8 %, northern 20.3 %, ksp 19.4 %, SVBI 45.4 %. Slower
+speech gives *more* revisions (items revised 75 % at 130 wpm vs 59 % at 180 wpm)
+and slightly worse WER, because partials more often cut a drawn-out word.
+
+The v1 questions are short (median 5 words, e.g. "Tell me about spa."), so
+per-item `wpm_actual` averages ~10 % below target (the final word is drawn
+out); on the 15-word d2 questions it is 141 for a 150 target.
+
+**d2_support dev, primary condition** (222 items, mean speech 6.4 s, 16
+partials per item): partial WER 10.6 %, final WER 5.2 % (31.5 % of finals not
+an exact normalised match), revision rate 11.7 % (73 % of items revised at
+least once), EOT median 834 ms (p90 949 ms), **5.0 % premature endpoints** (a
+pause after a filler such as "Uh," or "So," exceeded the 800 ms hang and the
+live loop ended the turn), 0 % missed; ASR compute median 302 ms per partial,
+p90 available-lag 1.1 s (compute can exceed the 400 ms interval on long audio,
+so partials queue); first partial available 660 ms after speech onset
+(median); final transcript available 1.73 s after the last word (median).
+
+Host contention: this machine was shared with other jobs at < 1 GB free RAM.
+118 of 2,922 traces contain an ASR call slower than 2.5 s (21 clean, 27 babble
+10 dB, 70 babble 5 dB); some are real (Whisper hallucination loops on babble),
+some are host stalls that survived one re-trace pass (`trace.py
+--retrace-over-ms 2500`). Treat `compute_ms` as an upper bound for this GPU and
+re-run `--retrace-over-ms` on a quiet host before using `available_ms` in the
+latency simulation.
 
 ## 8. Human speech subset
 
@@ -248,8 +321,58 @@ speech; treat HeySQuAD as optional external validity.
 
 ## 9. Throughput and the full run
 
-__THROUGHPUT__
+Measured on this host (RTX 4060 Laptop 8 GB, shared, < 1 GB free RAM):
+
+| stage | per item per condition | notes |
+|---|---|---|
+| calibration | ~6-10 min per voice, once | cached in `voice_calibration.json` |
+| clean render (piper + resample + forced alignment) | 1.0-2.0 s (v1 short questions); **2.0 s** (d2) | CPU; parallelises across `--shard` processes if RAM allows |
+| babble mix | 0.01-0.2 s | needs all six voices' clean renders at that rate |
+| alignment cross-check | ~0.4 s | optional separate pass (`--check-existing`) |
+| ASR replay, clean | 1.8 s median (v1, 5.8 s files); **6.6 s median (d2, 9.7 s files)**; real-time factor ~0.35-0.66 | GPU; one process per GPU for valid compute times |
+| ASR replay, babble | real-time factor ~0.54 (10 dB) / 0.63 (5 dB); expect **~10-12 s** for d2-length items | no endpoint, so the whole tail is transcribed |
+
+Planning a ~6,000-item run (d1_open ~5,300 + d2_support 720, assuming
+d2-like question length):
+
+* one clean condition: render ~3.3 h + replay ~11 h = **~14-15 h**;
+* each babble condition: + ~17-20 h replay (the clean render is shared);
+* the full 54-condition grid would be ~850 GPU-hours on this card - not
+  feasible. Suggested design: the primary condition
+  (`piper-en_US-hfc_male-medium__150wpm__clean`) for all items; the full
+  voice x rate x noise grid on a stratified subset of ~300-500 dev items
+  (~25-40 h); and `ksp` (en-IN) at 150 wpm clean as a second all-items condition
+  if accent is a reported factor.
+* Storage: ~300 KB wav per item per condition (6,000 items: 1.8 GB per
+  condition, gitignored); traces ~5 KB per item per condition (30 MB per
+  condition) - fine to commit for a few conditions, not for the whole grid.
+* A quiet dedicated GPU host should be noticeably faster (median partial
+  compute was ~150-175 ms when this host was less loaded vs ~300 ms on d2).
 
 ## 10. Open issues
 
-__ISSUES__
+1. **Babble breaks the live endpointer** (Silero threshold 0.3, 800 ms hang):
+   89-100 % of babble traces have no VAD end-of-turn. This is a real finding
+   about the live pipeline; the latency simulation needs an explicit policy for
+   such turns (e.g. a max-turn timeout or a semantic end-of-turn signal), and
+   the paper should say so. `vad_user_end_ms` is `null` there.
+2. **Premature endpoints** on longer questions with fillers (5 % of d2 dev):
+   the live loop ends the turn and the final is truncated. Kept as is.
+3. **SVBI (en-IN, L2-ARCTIC)** is much harder for Whisper (clean final WER
+   17-27 %, 45 % pooled with noise) than ksp (7-11 % clean). Part of that may be
+   TTS artefacts of a low-resource speaker rather than accent; a short listening
+   check, and Svarah as a real-speech reference, are advised before
+   interpreting accent effects.
+4. **Indic Parler-TTS not evaluated** (gated repo, no HF token on this host;
+   worktree path too long for a parler-tts install on Windows). Adapter ready.
+5. **Word-boundary validation** beyond utterance edges is only ~100-200 ms
+   (Whisper DTW is too coarse to validate tighter); MFA cross-check pending.
+6. **Rates**: by articulation rate, piper voices speak short questions at
+   217-270 wpm; the 130-180 wpm targets need length_scale 1.3-2.4 (slow,
+   somewhat drawn-out speech). Short v1 questions land ~10 % under target.
+7. **Compute timing** is host-dependent and was measured under contention; see
+   the re-trace note in section 7.
+8. Piper synthesis is not seeded (VITS noise inside the ONNX graph), so a
+   re-render differs slightly; the wavs and the committed traces are the
+   stimulus of record - keep the wavs for the paper runs.
+9. Human speech: tool and protocol ready, nothing recorded yet.
