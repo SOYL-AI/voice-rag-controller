@@ -220,7 +220,37 @@ cosine. Passages are embedded as `title\ntext`. The query is the full
 written question. hit@k = at least one gold passage among the top-k
 distinct passages.
 
-RETRIEVAL_TABLE
+| Group (dev) | n | hit@1 | hit@3 | hit@5 | MRR@50 | primary hit@1 / @3 / @5 |
+|---|---|---|---|---|---|---|
+| **all** | 1,566 | **0.799** | **0.932** | **0.949** | 0.867 | |
+| popqa | 1,479 | 0.792 | 0.930 | 0.948 | 0.862 | 0.761 / 0.920 / 0.943 |
+| popqa bin0 (least popular) | 300 | 0.867 | 0.943 | 0.950 | 0.906 | 0.860 / 0.943 / 0.950 |
+| popqa bin1 | 293 | 0.792 | 0.925 | 0.942 | 0.859 | 0.778 / 0.918 / 0.942 |
+| popqa bin2 | 286 | 0.825 | 0.951 | 0.972 | 0.887 | 0.787 / 0.948 / 0.969 |
+| popqa bin3 | 314 | 0.752 | 0.911 | 0.936 | 0.837 | 0.723 / 0.895 / 0.927 |
+| popqa bin4 (most popular) | 286 | 0.724 | 0.923 | 0.941 | 0.823 | 0.654 / 0.895 / 0.927 |
+| multihop | 87 | 0.931 | 0.966 | 0.966 | 0.951 | both gold @3 / @5: 0.724 / 0.805 |
+| multihop bridge | 41 | 0.878 | 0.927 | 0.927 | 0.908 | both gold @3 / @5: 0.463 / 0.610 |
+| multihop comparison | 46 | 0.978 | 1.000 | 1.000 | 0.989 | both gold @3 / @5: 0.957 / 0.978 |
+
+"Primary" counts only the first alias-bearing passage of the subject
+article. "Both gold" requires both HotpotQA supporting passages in the top k.
+Per-relation numbers are in `index/eval_dev.json` after a local build; the
+hardest relation at hit@1 is `capital` (0.59, since city articles mention
+many places).
+
+Reading: retrieval is non-trivial but mostly successful (5% of PopQA dev
+questions miss at k = 5). hit@1 **falls** with popularity (0.87 → 0.72):
+popular subjects have long articles and many same-name or same-relation
+neighbours, while obscure subjects have short, distinctive articles. So
+retrieval quality and the closed-book prior move in opposite directions
+along the popularity axis, which E1-v2/E3-v2 analyses should keep in mind.
+Bridge questions are the hard multihop case: only 61% get both passages
+in the top 5 from the full written question.
+
+Index build: 49,694 vectors, 4,928 s of embedding on 8 CPU threads on a
+shared machine (streamed in blocks of 2,048; peak RSS about 1 GB);
+`index.faiss` 76 MB and `chunks.json` 62 MB, both gitignored.
 
 ## Rebuild
 
@@ -235,7 +265,7 @@ rem    re-run from cache only (byte-identical, ~5 min)
 .venv-e2\Scripts\python datasets\v2\build_d1_open.py --offline
 rem    pilot build with 1,000 PopQA items
 .venv-e2\Scripts\python datasets\v2\build_d1_open.py --n-popqa 1000 --out <dir>
-rem 2. FAISS index + dev retrieval check (~embedding time on CPU; streamed in blocks)
+rem 2. FAISS index + dev retrieval check (~80 min on 8 CPU threads; streamed in blocks)
 .venv-e2\Scripts\python retrieval\build_index_v2.py --corpus datasets\v2\d1_open\corpus.jsonl ^
     --eval-items datasets\v2\d1_open\items.jsonl --split dev
 ```
