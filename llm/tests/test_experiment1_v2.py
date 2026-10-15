@@ -604,8 +604,14 @@ class JudgeTests(unittest.TestCase):
             ledger = Path(tmp) / "ledger.json"
             budget = spend.budget_from_config("primary", self.CFG, env={}, ledger_path=ledger)
             status = budget.status()
-            self.assertAlmostEqual(status["spent_usd"], 88.85, places=2)  # the Azure-metrics baseline
-            self.assertAlmostEqual(status["spent_inr"], 88.85 * 88, delta=1)
+            # The baseline is refreshed from Azure metrics in judges.json, so the
+            # expected spend is computed from the config, never hard-coded.
+            block = self.CFG["judges"]["primary"]["budget"]
+            base, price = block["baseline"], block["price_usd_per_1m"]
+            expected = (base["input_tokens"] * price["input"] + base["output_tokens"] * price["output"]) / 1e6
+            self.assertGreater(expected, 0)
+            self.assertAlmostEqual(status["spent_usd"], expected, places=2)
+            self.assertAlmostEqual(status["spent_inr"], expected * 88, delta=1)
             self.assertEqual(status["cap_inr"], 20000)
             capped = spend.budget_from_config("primary", self.CFG, env={"VOICE_RAG_JUDGE_CAP_INR": "9000"},
                                               ledger_path=ledger)
