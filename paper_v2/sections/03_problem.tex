@@ -123,7 +123,7 @@ and the sensitivity analysis.}
 \subsection{Controllers}\label{sec:controllers}
 % ---- P-III.5 ----------------------------------------------------------------
 % PURPOSE: define every controller in Table I and Algorithm 1; make the B8
-%   vs B9 vs B9+ vs B10 distinctions explicit (R2: B9 pseudocode and its
+%   vs B9 vs B9+ vs B10 vs B11 distinctions explicit (R2: B9 pseudocode and its
 %   difference from B8).
 % CLAIMS:
 %   (a) B8 does not price: an entropy threshold plus a separately chosen
@@ -133,9 +133,15 @@ and the sensitivity analysis.}
 %   (c) B9+ is the decomposed controller R1 describes: it prices the expected
 %       exposure of the timing its own timing sub-optimiser picks; under
 %       A1--A3 it equals Ours (Prop. 2) [V1T b9plus: 11,300/11,300].
-%   (d) B10 dispatches speculatively at the first query-ready partial and
-%       decides at end of turn whether to use the result (Prop. 4').
-%       \PEND{B10 is not implemented yet on v2/controllers; see README}.
+%   (d) B10 (SPEC) always prefetches at the first query-ready partial and
+%       decides at end of turn, with the final belief, whether to use the
+%       result [controller/baselines/b10_speculative_v2.py]. B11 (SPEC-theta)
+%       prefetches at the same partial only if the belief-only option value
+%       of the prefetch, computed with dev-mean scalar exposures, exceeds the
+%       belief-only value of not prefetching; its use rule is B10's
+%       [controller/baselines/b11_speculative_gated_v2.py]. Both are
+%       decomposed in the sense B9+ is: timing fixes WHEN, and the belief
+%       with fixed prices decides WHETHER (Prop. 4'').
 %   (e) B4 and B6 are single-turn proxies in the style of FLARE and DRAGIN:
 %       a threshold on 1 - mean token confidence (B4, 0.5) or on max token
 %       entropy (B6, 1.0) of the closed-book draft, dispatch at sentence end

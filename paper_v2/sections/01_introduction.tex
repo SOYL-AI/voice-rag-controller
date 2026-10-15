@@ -42,24 +42,29 @@ and the plan to explain it and test its boundaries.}
 %   not proposed (R1 minor): uncertainty-triggered retrieval follows
 %   FLARE/DRAGIN [jiang2023flare, su2024dragin].
 % CONTRIBUTIONS TO LIST (from docs/research_v2/NOVELTY.md, updated for the
-%   PI decision of 2026-10-15 that v2 tests the boundary in both directions):
+%   boundary-test design merged at 1d8900c):
 %   C1  Equivalence (Prop. 1) and fixed-price gap (Prop. 2): under A1--A3 the
 %       joint controller at lambda_l equals the decomposed one at an exactly
 %       mapped price; v1's tie is a corollary. [TH Secs. 2--3]
 %   C2  Boundaries: turn-dependent overlap gives a second-order gain only
 %       (Prop. 3); information versus overlap is first order but separates the
 %       classes only under a COMMIT architecture (Prop. 4); with SPECULATIVE
-%       prefetch a decomposed rule (B10) is within lambda_c(1+w) per turn of
-%       the joint optimum (Prop. 4'); partial-query risk alone does not
-%       separate them (Prop. 5). [TH Secs. 5--6]
+%       prefetch, always-prefetch (B10, SPEC) can be beaten by a joint
+%       controller mainly through a compute saving that a belief-gated
+%       decomposed prefetcher (B11, SPEC-theta) also captures, leaving a
+%       C1-sized gap (Props. 4', 4''); partial-query risk alone does not
+%       separate the classes (Prop. 5). [TH Secs. 5--6]
 %   C3  A corrected objective that charges retrieval's measured harm on
 %       questions that do not need it (g^- = 0.592 vs g^+ = 0.720 on v1).
 %       [V1T retrieval_effect]
-%   C4  A pre-registered TWO-SIDED test of the boundary on new open-domain
-%       and customer-support speech data with live ASR partials: under commit,
-%       joint > best decomposed (B9+); under speculative prefetch, B10 is
-%       within the Prop. 4' bound of joint. [PRE2 Sec. 3 -- \PEND{PREREG_V2
-%       must be updated to the two-architecture design before freezing}]
+%   C4  A pre-registered BOUNDARY TEST on new open-domain and
+%       customer-support speech data with live ASR partials, both
+%       architectures on the same items: P1 joint > B9+ under commit; P2 the
+%       joint advantage is larger under commit than under speculation
+%       (paired interaction); P3 under speculation the joint advantage over
+%       the best decomposed rival, including the belief-gated SPEC-theta, is
+%       within +-half the dev commit effect (TOST); the claim requires all
+%       three (intersection-union test). [PRE2 Sec. 3, Sec. 6.1]
 %   C5  Released artifacts: controllers, data, analysis scripts that
 %       regenerate every number. \PEND{release plan and URL}
 % NUMBERS: g^+ = 0.720, g^- = 0.592 [V1T retrieval_effect].
