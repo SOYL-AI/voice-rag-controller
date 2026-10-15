@@ -75,6 +75,14 @@ $PY -m audio.v2.trace_report --name d2_support
   trace appends hold `<trace>.lock`). `--shard k/n` splits items across
   processes. For trace timing, run **one trace process per GPU**: several
   processes on one GPU inflate `compute_ms` and hence `available_ms`.
+* Production runs: the primary condition
+  `piper-en_US-hfc_male-medium__150wpm__clean` for all items and splits of
+  d1_open and d2_support; the robustness grid (hfc_male, lessac, cori, ksp,
+  SVBI x 150 wpm x {clean, babble_10dB}, plus hfc_male x {130, 180} wpm clean)
+  on a fixed seeded 300-item dev subset (`python -m audio.v2.grid_subset` ->
+  `datasets/v2/<name>/speech/grid_subset.json`: 150 d1 stratified by popularity
+  bin + multihop, 150 d2 stratified by item_type); pass it with
+  `--ids datasets/v2/<name>/speech/grid_subset.json`.
 * `--split dev|test|all` filters items (default all: speech prep is allowed on
   the sealed test split because it measures nothing about the models).
 
@@ -236,6 +244,23 @@ ASR call blocks the audio loop, so when ASR takes longer than the interval live
 partials thin out; the replay schedules on audio time and carries the delay in
 `available_ms` instead.
 
+### 7b. Fallback end of turn (VAD never fired)
+
+Under babble the Silero endpointer rarely sees 800 ms of non-speech, so the
+live loop would never end the turn. For the latency simulation each such turn
+gets a fallback end of turn, evaluated online over the emitted partials
+(`trace.fallback_end`): the first of
+
+* last partial's `t_ms` + silence hang (800 ms) - `endpoint_rule: "no_new_partial"`;
+* 2.0 s after the last change of the normalised partial text - `"no_text_change"`.
+
+The trace then has `endpoint_reason: "fallback_timeout"`, `vad_user_end_ms:
+null`, `user_end_ms` = the fallback time; partials after it are dropped
+(`n_partials_after_end`), and `asr_final` is the beam-5 pass over the speech
+audio up to it. Report these turns separately from VAD-ended ones. Older
+(v2-speech-1) traces are upgraded in place with `trace.py --upgrade-fallback`
+(re-runs only the final pass).
+
 ### Trace quality on the 50 v1 scenarios (2,700 traces)
 
 Metric definitions: `audio/v2/trace_report.py` docstring. WER uses Whisper's
@@ -353,9 +378,12 @@ d2-like question length):
 
 1. **Babble breaks the live endpointer** (Silero threshold 0.3, 800 ms hang):
    89-100 % of babble traces have no VAD end-of-turn. This is a real finding
-   about the live pipeline; the latency simulation needs an explicit policy for
-   such turns (e.g. a max-turn timeout or a semantic end-of-turn signal), and
-   the paper should say so. `vad_user_end_ms` is `null` there.
+   about the live pipeline and the paper should say so. Resolved for the
+   simulation by the fallback end of turn (section 7b): `user_end_ms` is always
+   set, `endpoint_reason: "fallback_timeout"` marks those turns. The rule can
+   end a turn early when babble in the lead-in yields a partial followed by
+   empty partials (`no_new_partial` before the user has finished); the report's
+   `user_end_premature` column counts this.
 2. **Premature endpoints** on longer questions with fillers (5 % of d2 dev):
    the live loop ends the turn and the final is truncated. Kept as is.
 3. **SVBI (en-IN, L2-ARCTIC)** is much harder for Whisper (clean final WER
