@@ -54,11 +54,14 @@ STAGE_LABELS = [
 ]
 
 
-def stage_central(s):
+def stage_central(s, name=""):
+    """Central and 95% CI ends; CPU-only stages carry no GPU term (on the
+    shared host their GPU 'net' is other workloads' noise; see fit_params)."""
     if "cpu_attr_j" not in s:  # gpu_wake_tail
         g = s["gpu_net_j"]
         return g["mean"], g["lo"], g["hi"]
-    g = s["gpu_net_j"]
+    from energy.fit_params import is_cpu_only
+    g = {"mean": 0.0, "lo": 0.0, "hi": 0.0} if is_cpu_only(name) else s["gpu_net_j"]
     a = s["cpu_attr_j"]
     gm = max(g["mean"] or 0, 0)
     c = (a["mean"] or 0) + gm
@@ -69,7 +72,7 @@ def stage_central(s):
 
 def fig_stages(stages):
     S = stages["stages"]
-    rows = [(lab, *stage_central(S[k])) for k, lab in STAGE_LABELS if k in S]
+    rows = [(lab, *stage_central(S[k], k)) for k, lab in STAGE_LABELS if k in S]
     rows = rows[::-1]
     fig, ax = plt.subplots(figsize=(8.5, 0.42 * len(rows) + 1.2))
     y = np.arange(len(rows))
