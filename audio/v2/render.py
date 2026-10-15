@@ -312,6 +312,29 @@ def render_noisy(name, item, voice_id, wpm, noise, items_all, babble_voices, cac
     return meta
 
 
+def check_existing(name, todo, voices, rates, frac):
+    from audio.v2.asr import whisper_for_alignment_check
+
+    whisper, n = None, 0
+    for wpm in rates:
+        for vid in voices:
+            for it in todo:
+                if (seed_of("check", it["item_id"], vid, wpm) % 10000) >= frac * 10000:
+                    continue
+                d = audio_dir(name, vid, wpm, "clean")
+                mp = d / f"{it['item_id']}.json"
+                if not mp.exists():
+                    continue
+                m = json.loads(mp.read_text(encoding="utf-8"))
+                if "align_check" in m:
+                    continue
+                whisper = whisper or whisper_for_alignment_check()
+                m["align_check"] = cross_check(read_wav16(d / f"{it['item_id']}.wav"), m["words_in_file"], whisper)
+                write_json(mp, m)
+                n += 1
+    print(f"alignment cross-check added to {n} clean renders", flush=True)
+
+
 # ---------------------------------------------------------------------------- cli
 def main(argv=None):
     ap = argparse.ArgumentParser(description=__doc__.split("\n\n")[0])
@@ -326,6 +349,9 @@ def main(argv=None):
     ap.add_argument("--align-check-frac", type=float, default=0.1,
                     help="fraction of clean renders that get the Whisper timestamp cross-check")
     ap.add_argument("--calibrate-only", action="store_true")
+    ap.add_argument("--check-existing", action="store_true",
+                    help="only add the Whisper timestamp cross-check to existing clean renders (a separate "
+                         "pass keeps Whisper and the TTS/aligner out of memory at the same time)")
     a = ap.parse_args(argv)
 
     from audio.v2.tts_engines import close_all
@@ -337,6 +363,8 @@ def main(argv=None):
     todo = shard(items_all, a.shard)
     print(f"{name}: {len(todo)}/{len(items_all)} items, voices={a.voices}, rates={a.rates}, "
           f"noises={a.noises}", flush=True)
+    if a.check_existing:
+        return check_existing(name, todo, a.voices, a.rates, a.align_check_frac)
     try:
         for vid in a.voices:
             calibrate_voice(vid, a.rates)
