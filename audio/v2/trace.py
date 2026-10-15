@@ -364,3 +364,8 @@ def main(argv=None):
 
 if __name__ == "__main__":
     main()
+    # CTranslate2's CUDA teardown at interpreter exit can return a spurious non-zero
+    # code on Windows after all work is written; exit explicitly instead.
+    sys.stdout.flush()
+    sys.stderr.flush()
+    os._exit(0)
