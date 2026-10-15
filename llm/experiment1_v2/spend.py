@@ -91,23 +91,29 @@ def file_lock(path: Path, timeout_s: float = 120.0):
             os.write(fd, f"{os.getpid()} {time.time()}".encode())
             os.close(fd)
             break
-        except FileExistsError:
+        except (FileExistsError, PermissionError):
+            # Windows raises PermissionError (not FileExistsError) when the
+            # lock file is being deleted by its holder: treat it as contention.
             try:
                 if time.time() - lock.stat().st_mtime > LOCK_STALE_S:
                     lock.unlink()
                     continue
-            except FileNotFoundError:
-                continue
+            except (FileNotFoundError, PermissionError):
+                pass
             if time.monotonic() > deadline:
                 raise TimeoutError(f"could not lock {lock} within {timeout_s}s")
             time.sleep(0.02)
     try:
         yield
     finally:
-        try:
-            lock.unlink()
-        except FileNotFoundError:
-            pass
+        for attempt in range(50):
+            try:
+                lock.unlink()
+                break
+            except FileNotFoundError:
+                break
+            except PermissionError:  # a contender has it open for a moment
+                time.sleep(0.02)
 
 
 def cost_usd(input_tokens: float, output_tokens: float, price: dict) -> float:
@@ -147,7 +153,7 @@ class SpendBudget:
         ledger["updated_at_utc"] = common.now_utc()
         tmp = self.path.with_name(self.path.name + f".{os.getpid()}.{threading.get_ident()}.tmp")
         tmp.write_text(json.dumps(ledger, indent=2) + "\n", encoding="utf-8")
-        os.replace(tmp, self.path)
+        common.replace_with_retry(tmp, self.path)
 
     def _entry(self, ledger: dict) -> dict:
         entry = ledger["entries"].get(self.key)
