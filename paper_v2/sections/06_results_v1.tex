@@ -45,7 +45,16 @@
 % NUMBERS: 0.978, 0.963, 0.991, 0.925, 0.917, 0.938, 0.922, 0.882, 0.083,
 %   0.113, 7, 0.973, 2 of 49.
 \todo{P-VI.1: E1 gate result, the mean-versus-max entropy choice with AUCs on
-both datasets, and calibration (ECE, reliability, in-sample caveat).}
+both datasets, and calibration (ECE of Eq.~(\ref{eq:ece}), reliability,
+in-sample caveat).}
+
+\begin{equation}
+\mathrm{ECE}=\sum_{m=1}^{M}\frac{|B_m|}{n}\,\Big|\frac{1}{|B_m|}\sum_{i\in B_m}b_i-\frac{1}{|B_m|}\sum_{i\in B_m}N_i\Big|,
+\label{eq:ece}
+\end{equation}
+where $B_1,\dots,B_M$ are equal-width bins of the belief $b$ on $[0,1]$
+($M=5$ in v1, $M=10$ in v2), $N_i$ is the need label and $n$ the number of
+items.
 
 \subsection{Timing Value (E2)}\label{sec:v1-e2}
 % ---- P-VI.2 -------------------------------------------------------------------

@@ -1,63 +1,100 @@
 % ============================================================================
-% II. RELATED WORK  (target length: about 0.5 column; three short paragraphs)
-% R2: originality versus RAG / uncertainty / decision-theoretic work must be
-% explicit. Each paragraph ends with one sentence that states the difference
-% from this paper. The submitted memory-system paragraphs (MemGPT, LongMem,
-% MemoryBank, LightMem) are removed: Experiment 4 (memory) was cut and the
-% 15-reference cap leaves no room for work the paper does not use.
+% II. RELATED WORK  (target length: about 0.6 column; four short paragraphs)
+% Revised after a verified novelty search (2026-10-16). R2: originality
+% versus RAG / uncertainty / decision-theoretic work must be explicit. Each
+% paragraph ends with ONE sentence that states the difference from this
+% paper, hedged "to our knowledge" where novelty is claimed.
+% Terminology: say "speculative prefetch", never "Speculative RAG" (that name
+% belongs to a drafter/verifier generation method).
+% The memory-system paragraphs of the submitted version (MemGPT, LongMem,
+% MemoryBank, LightMem) are removed: Experiment 4 was cut and the 15-entry
+% cap leaves no room for work the paper does not use.
 % ============================================================================
 \section{Related Work}\label{sec:related}
 
-% ---- P-II.1 Adaptive retrieval ------------------------------------------------
-% PURPOSE: position against work that decides WHETHER/HOW MUCH to retrieve.
+% ---- P-II.1 Streaming and speculative retrieval in spoken dialogue ------------
+% PURPOSE: present early and speculative retrieval on partial transcripts as
+%   PRIOR WORK that this paper builds on, not as a contribution.
 % CLAIMS + EVIDENCE:
-%   (a) RAG conditions generation on retrieved passages [lewis2020rag].
-%   (b) FLARE triggers retrieval on low-confidence tokens of the upcoming
-%       sentence [jiang2023flare]; DRAGIN on real-time information need
-%       during generation [su2024dragin]; Self-RAG uses learned reflection
-%       tokens [asai2024selfrag]; Adaptive-RAG routes by predicted query
-%       complexity [jeong2024adaptiverag].
-%   (c) Retrieval can lower accuracy on popular entities the model already
-%       knows; popularity-aware adaptive retrieval [mallen2023trust]. This
-%       motivates g^- > 0 in Eq.~(\ref{eq:obj}).
-%   (d) DIFFERENCE: these methods decide whether to retrieve during text
-%       generation; none prices the dispatch time against a user's ongoing
-%       speech, and none asks when joint control of the two decisions adds
-%       value over separate components.
-% NOTE: the paper's B4 and B6 are single-turn, pre-generation proxies
-%   "in the style of" FLARE and DRAGIN (thresholds on a confidence/entropy
-%   statistic of a closed-book draft), not reimplementations; say so here or
-%   in Sec. V [controller/baselines/b4_flare.py, b6_dragin.py].
-\todo{P-II.1: adaptive retrieval \cite{lewis2020rag,jiang2023flare,su2024dragin,asai2024selfrag,jeong2024adaptiverag,mallen2023trust}
-and the difference from this paper.}
+%   (a) Stream RAG issues retrieval/tool calls while the user is still
+%       speaking; it compares fixed-interval speculative calls with
+%       model-triggered calls, which correspond to our speculative and commit
+%       architectures [arora2026streamrag].
+%   (b) Speculative execution hides tool latency in an on-device cascaded
+%       voice agent [jung2026hiding].
+%   (c) Galbraith characterises when tool intent stabilises on a streaming
+%       transcript, i.e. when early dispatch is safe; it studies timing only,
+%       assumes every query needs retrieval, and has no decision model
+%       [galbraith2026streaming].
+%   (d) MoshiRAG learns whether to retrieve in a full-duplex speech model, but
+%       retrieval starts at response onset, not during the user's speech
+%       [chien2026moshirag].
+%   (e) DIFFERENCE: these systems establish that early or speculative
+%       retrieval is feasible and useful. To our knowledge none asks when
+%       deciding WHETHER and WHEN jointly is worth more than deciding them
+%       separately with shared prices, or characterises that boundary
+%       formally.
+\todo{P-II.1: streaming and speculative retrieval in spoken dialogue as the
+setting this paper builds on \cite{arora2026streamrag,jung2026hiding,galbraith2026streaming,chien2026moshirag},
+and the difference.}
 
-% ---- P-II.2 Turn-taking ---------------------------------------------------------
-% PURPOSE: position against work that predicts WHEN the user stops.
+% ---- P-II.2 Adaptive retrieval and self-knowledge -----------------------------
+% PURPOSE: position the belief (whether to retrieve) against adaptive
+%   retrieval and self-knowledge work.
 % CLAIMS + EVIDENCE:
-%   (a) TurnGPT predicts turn shifts from text [ekstedt2020turngpt]; VAP
-%       projects future voice activity from audio [ekstedt2022vap]; review of
-%       end-of-turn detection and prediction [skantze2021turntaking].
-%       (R1 minor: cite TurnGPT/VAP directly, not only the review.)
-%   (b) Streaming ASR supplies the partial transcripts the belief is computed
-%       on [radford2023whisper] -- only if v2 uses a Whisper-family model;
-%       confirm against datasets/v2/*/speech/traces/*.jsonl asr_model field.
-%   (c) DIFFERENCE: these predict the timing state Z (remaining speech); this
-%       paper uses such a prediction as an input and asks how it should be
-%       combined with the retrieval decision.
-\todo{P-II.2: turn-taking and streaming ASR \cite{ekstedt2020turngpt,ekstedt2022vap,skantze2021turntaking,radford2023whisper}
-and the difference from this paper.}
+%   (a) Retrieval triggered on low-confidence tokens (FLARE) or on real-time
+%       information need during generation (DRAGIN) [jiang2023flare,
+%       su2024dragin]; routing by predicted question complexity
+%       (Adaptive-RAG, the source of the v2 B5 baseline)
+%       [jeong2024adaptiverag].
+%   (b) Uncertainty-based triggers are competitive with more complex
+%       adaptive-retrieval methods [moskvoretskii2025adaptive]; models can be
+%       trained to predict whether they know the answer (P(IK))
+%       [kadavath2022language]. The paper's probe is in this family and is
+%       NOT claimed as new.
+%   (c) Retrieval can hurt on questions the model already answers, e.g.
+%       popular entities [mallen2023trust]; this motivates g^- > 0.
+%   (d) DIFFERENCE (hedged): what is new is the setting, not the probe --
+%       \PEND{state the persona finding once the v2 E1 result exists: e.g.
+%       that token-entropy signals fail in the persona/company-support
+%       setting and that a P(IK)-style probe sharpens as the ASR partial
+%       grows; evidence \TBD{llm/experiment1_v2/results/ dev analysis}}.
+\todo{P-II.2: adaptive retrieval and self-knowledge \cite{jiang2023flare,su2024dragin,jeong2024adaptiverag,moskvoretskii2025adaptive,kadavath2022language,mallen2023trust};
+the probe follows this work, and what is new is its behaviour in the
+persona setting and on partial transcripts.}
 
-% ---- P-II.3 Decision theory -----------------------------------------------------
-% PURPOSE: position against decision-theoretic control.
+% ---- P-II.3 Benchmarks -------------------------------------------------------
+% PURPOSE: position d2_support (and the speech rendering of d1_open).
 % CLAIMS + EVIDENCE:
-%   (a) Value of information [howard1966information] (R1 minor) -- the
-%       one-step waiting value I_k in Prop. 4 is Howard's VoI.
-%   (b) Decision-theoretic turn-taking that weighs acting early against
-%       waiting under uncertainty and processing delay [bohus2011decisions].
-%   (c) Calibration and ECE [guo2017calibration] (used in Sec. VI).
-%   (d) DIFFERENCE: the contribution is not the use of expected utility but
-%       an exact characterisation of when a joint argmax and a decomposed
-%       controller with shared prices coincide, and a test of the boundary.
-\todo{P-II.3: value of information and decision-theoretic dialogue control
-\cite{howard1966information,bohus2011decisions,guo2017calibration} and the
+%   (a) tau-Voice benchmarks full-duplex voice agents on real-world domains
+%       [ray2026tauvoice]; open-domain QA sources PopQA and HotpotQA
+%       [mallen2023trust, yang2018hotpotqa].
+%   (b) DIFFERENCE (hedged): to our knowledge no spoken benchmark pairs
+%       retrieval-needed and not-needed questions in matched groups across
+%       organisations so that need cannot be read off surface form (leak-test
+%       AUC 0.576 [0.541, 0.617] on d2_support) [branch v2/d2-support-a
+%       leak_test.json]. RetrievalQA (Zhang et al., Findings of ACL 2024) is a
+%       text-only adaptive-retrieval benchmark; it is not cited under the
+%       15-entry cap -- mention it only if a slot is freed.
+\todo{P-II.3: voice-agent and QA benchmarks \cite{ray2026tauvoice,mallen2023trust,yang2018hotpotqa}
+and what the matched-pair support benchmark adds.}
+
+% ---- P-II.4 Turn-taking and decision theory -----------------------------------
+% PURPOSE: the timing state and the decision-theoretic framing.
+% CLAIMS + EVIDENCE:
+%   (a) Voice activity projection predicts upcoming turn shifts from audio
+%       [ekstedt2022vap]; such a predictor supplies the remaining-speech
+%       estimate R_k. (R1 minor asked for TurnGPT/VAP to be cited directly;
+%       under the cap VAP is cited as the audio-based method and TurnGPT is
+%       dropped -- say so in the response.)
+%   (b) Value of information [howard1966information]; decision-theoretic
+%       turn-taking that weighs acting early against waiting under
+%       uncertainty and processing delay [bohus2011decisions].
+%   (c) DIFFERENCE: the contribution is not the use of expected utility but,
+%       to our knowledge, the first exact characterisation of when a joint
+%       retrieve-and-dispatch decision coincides with a price-sharing
+%       decomposed one, and of where it does not (commit versus speculative
+%       prefetch).
+\todo{P-II.4: turn-taking prediction and decision-theoretic control
+\cite{ekstedt2022vap,howard1966information,bohus2011decisions} and the
 difference from this paper.}
