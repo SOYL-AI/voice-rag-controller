@@ -21,6 +21,7 @@ Backend configuration (CLI flags override environment variables)::
     --rerank-model RETRIEVAL_RERANK_MODEL   cross-encoder name
     --rerank-device RETRIEVAL_RERANK_DEVICE (default cuda, falls back to cpu)
     --candidates   RETRIEVAL_CANDIDATES     FAISS candidates before reranking (default 50)
+    --rerank-dtype RETRIEVAL_RERANK_DTYPE   float32 | float16 (CUDA only; default float32)
 
 Optional auth: if the environment variable ``RETRIEVAL_SERVICE_API_KEY`` is
 set, requests must carry the same value in the ``x-api-key`` header. No key is
@@ -66,6 +67,7 @@ def config_from_env() -> dict:
         "rerank_model": os.environ.get("RETRIEVAL_RERANK_MODEL", DEFAULT_RERANK_MODEL),
         "rerank_device": os.environ.get("RETRIEVAL_RERANK_DEVICE", "cuda"),
         "candidates": int(os.environ.get("RETRIEVAL_CANDIDATES", "50")),
+        "rerank_dtype": os.environ.get("RETRIEVAL_RERANK_DTYPE", "float32"),
     }
 
 
@@ -74,7 +76,8 @@ def backend_from_config(cfg: dict) -> Retriever:
         raise ValueError(f"service backend must be faiss or faiss_rerank, got {cfg['backend']!r}")
     return make_retriever(cfg["backend"], index_dir=cfg["index_dir"], device=cfg["device"],
                           torch_threads=cfg["torch_threads"], rerank_model=cfg["rerank_model"],
-                          rerank_device=cfg["rerank_device"], candidates=cfg["candidates"])
+                          rerank_device=cfg["rerank_device"], candidates=cfg["candidates"],
+                          rerank_dtype=cfg.get("rerank_dtype", "float32"))
 
 
 def create_app(backend: Optional[Retriever] = None,
@@ -146,13 +149,14 @@ def _main(argv: Optional[list] = None) -> int:
     p.add_argument("--rerank-model")
     p.add_argument("--rerank-device")
     p.add_argument("--candidates", type=int)
+    p.add_argument("--rerank-dtype", choices=["float32", "float16"])
     p.add_argument("--log-level", default="warning")
     args = p.parse_args(argv)
 
     env_map = {"backend": "RETRIEVAL_BACKEND", "index_dir": "RETRIEVAL_INDEX_DIR",
                "device": "RETRIEVAL_DEVICE", "torch_threads": "RETRIEVAL_TORCH_THREADS",
                "rerank_model": "RETRIEVAL_RERANK_MODEL", "rerank_device": "RETRIEVAL_RERANK_DEVICE",
-               "candidates": "RETRIEVAL_CANDIDATES"}
+               "candidates": "RETRIEVAL_CANDIDATES", "rerank_dtype": "RETRIEVAL_RERANK_DTYPE"}
     for attr, env in env_map.items():
         val = getattr(args, attr)
         if val is not None:

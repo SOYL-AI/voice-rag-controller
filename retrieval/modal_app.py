@@ -12,6 +12,7 @@ Modal account configured)::
     #   RETRIEVAL_MODAL_GPU        T4 | L4 | none                (default T4)
     #   RETRIEVAL_MODAL_INDEX_DIR  local v2 index dir to bake in (default: v1 hotel index)
     #   RETRIEVAL_MODAL_RERANK_MODEL cross-encoder name
+    #   RETRIEVAL_MODAL_RERANK_DTYPE float32 | float16              (default float32)
     modal deploy retrieval/modal_app.py
 
 Modal prints the endpoint after deploying. Do not commit it. Point the client
@@ -46,12 +47,15 @@ BACKEND = os.environ.get("RETRIEVAL_MODAL_BACKEND", "faiss")
 GPU = os.environ.get("RETRIEVAL_MODAL_GPU", "T4")
 INDEX_DIR = os.environ.get("RETRIEVAL_MODAL_INDEX_DIR")  # None -> v1 hotel index
 RERANK_MODEL = os.environ.get("RETRIEVAL_MODAL_RERANK_MODEL", "cross-encoder/ms-marco-MiniLM-L6-v2")
+RERANK_DTYPE = os.environ.get("RETRIEVAL_MODAL_RERANK_DTYPE", "float32")
 SECRET_NAME = os.environ.get("RETRIEVAL_MODAL_SECRET")
 EMBED_MODEL = "BAAI/bge-small-en-v1.5"
 REMOTE_INDEX_DIR = "/index"
 REMOTE_PKG_DIR = "/root/retrieval"
 
+# Versions match the host the local latency profiles were measured on.
 PIP_PACKAGES = [
+    "torch==2.9.1",
     "faiss-cpu==1.15.0",
     "sentence-transformers==5.7.0",
     "fastapi==0.115.0",
@@ -77,6 +81,7 @@ if MODAL_AVAILABLE:  # pragma: no cover - never executed in tests
         "RETRIEVAL_DEVICE": _device,
         "RETRIEVAL_RERANK_DEVICE": _device,
         "RETRIEVAL_RERANK_MODEL": RERANK_MODEL,
+        "RETRIEVAL_RERANK_DTYPE": RERANK_DTYPE,
         "RETRIEVAL_TORCH_THREADS": "4",
     }
     if INDEX_DIR:
@@ -84,7 +89,7 @@ if MODAL_AVAILABLE:  # pragma: no cover - never executed in tests
 
     image = (
         modal.Image.debian_slim(python_version="3.10")
-        .pip_install("torch==2.5.1", *PIP_PACKAGES)
+        .pip_install(*PIP_PACKAGES)
         .env(_env)
         .run_function(_download_models)
         .add_local_python_source("retrieval")

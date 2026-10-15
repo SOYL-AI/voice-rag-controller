@@ -14,7 +14,10 @@ Three profiles (CONTRACTS.md section 6, ``signals["retrieval"]``):
     FAISS top-``candidates`` (default 50) followed by a cross-encoder that
     rescores every (query, passage) pair. ``score`` is the raw cross-encoder
     **logit** (no sigmoid): higher is better. ``faiss_score`` keeps the
-    first-stage FAISS score.
+    first-stage FAISS score. Supported rerankers: ``BAAI/bge-reranker-base``
+    and ``cross-encoder/ms-marco-MiniLM-L6-v2`` (the current Hub name of
+    ``ms-marco-MiniLM-L-6-v2``; the old name redirects to it).
+    ``rerank_dtype="float16"`` runs the reranker in half precision on CUDA.
 
 ``remote_api``
     HTTP client for retrieval/service.py (``POST /search``). Hits and
@@ -277,6 +280,45 @@ class FaissRetriever(Retriever):
                 "score_kind": self.score_kind, "index": self.corpus.source}
 
 
+def load_cross_encoder(model_name: str, device: str = "cuda", dtype: str = "float32",
+                       max_length: int = 512) -> Callable[[list], np.ndarray]:
+    """Return ``score(pairs) -> np.ndarray`` of raw cross-encoder logits.
+
+    Scores with the Hugging Face model directly (tokenise, one batched
+    forward pass under ``torch.inference_mode``) instead of
+    ``sentence_transformers.CrossEncoder.predict``: same logits, without the
+    per-call bookkeeping that adds tens of milliseconds for a 50-pair batch.
+    Both supported rerankers have a single relevance logit.
+
+    ``dtype="float16"`` halves the weights on CUDA (tensor cores); it is
+    ignored on CPU, where half precision is slower.
+    """
+    import torch
+    from transformers import AutoModelForSequenceClassification, AutoTokenizer
+
+    device = resolve_device(device)
+    tok = AutoTokenizer.from_pretrained(model_name)
+    model = AutoModelForSequenceClassification.from_pretrained(model_name)
+    if dtype == "float16" and device.startswith("cuda"):
+        model = model.half()
+    elif dtype not in ("float32", "float16"):
+        raise ValueError(f"rerank dtype must be float32 or float16, got {dtype!r}")
+    model = model.to(device).eval()
+
+    def score(pairs: list) -> np.ndarray:
+        if not pairs:
+            return np.zeros(0, dtype="float32")
+        feats = tok([p[0] for p in pairs], [p[1] for p in pairs], padding=True,
+                    truncation=True, max_length=max_length, return_tensors="pt")
+        feats = {k: v.to(device) for k, v in feats.items()}
+        with torch.inference_mode():
+            logits = model(**feats).logits
+        # .cpu() synchronises with the GPU, so callers time the full forward pass
+        return logits[:, 0].float().cpu().numpy().astype("float32")
+
+    return score
+
+
 class FaissRerankRetriever(FaissRetriever):
     """FAISS top-``candidates`` then cross-encoder rescoring. ``score`` is
     the raw cross-encoder logit (higher is better)."""
@@ -287,6 +329,7 @@ class FaissRerankRetriever(FaissRetriever):
     def __init__(self, index_dir: Optional[str | Path] = None, *, device: str = "cpu",
                  torch_threads: Optional[int] = 4, rerank_model: str = DEFAULT_RERANK_MODEL,
                  rerank_device: str = "cuda", candidates: int = 50,
+                 rerank_dtype: str = "float32",
                  corpus: Optional[Corpus] = None,
                  encoder: Optional[Callable[[list], np.ndarray]] = None,
                  cross_encoder: Optional[Callable[[list], np.ndarray]] = None):
@@ -294,22 +337,15 @@ class FaissRerankRetriever(FaissRetriever):
                          corpus=corpus, encoder=encoder)
         self.rerank_model = rerank_model
         self.rerank_device = resolve_device(rerank_device)
+        # half precision only applies on CUDA (see load_cross_encoder)
+        self.rerank_dtype = rerank_dtype if self.rerank_device.startswith("cuda") else "float32"
         self.candidates = int(candidates)
         self._cross = cross_encoder
 
     def _get_cross(self) -> Callable[[list], np.ndarray]:
         if self._cross is None:
-            import torch
-            from sentence_transformers import CrossEncoder
-
-            ce = CrossEncoder(self.rerank_model, device=self.rerank_device,
-                              max_length=512, activation_fn=torch.nn.Identity())
-
-            def predict(pairs: list) -> np.ndarray:
-                return np.asarray(ce.predict(pairs, batch_size=64, show_progress_bar=False,
-                                             convert_to_numpy=True), dtype="float32").reshape(-1)
-
-            self._cross = predict
+            self._cross = load_cross_encoder(self.rerank_model, self.rerank_device,
+                                             self.rerank_dtype)
         return self._cross
 
     def search(self, query: str, k: int = 3) -> list[dict]:
@@ -336,7 +372,7 @@ class FaissRerankRetriever(FaissRetriever):
         d = super().describe()
         d.update({"profile": self.profile, "score_kind": self.score_kind,
                   "rerank_model": self.rerank_model, "rerank_device": self.rerank_device,
-                  "candidates": self.candidates})
+                  "rerank_dtype": self.rerank_dtype, "candidates": self.candidates})
         return d
 
 
@@ -413,15 +449,20 @@ class RemoteRetriever(Retriever):
 def make_retriever(profile: str, index_dir: Optional[str] = None, device: str = "cpu",
                    torch_threads: Optional[int] = 4, rerank_model: str = DEFAULT_RERANK_MODEL,
                    rerank_device: str = "cuda", candidates: int = 50,
-                   url: Optional[str] = None) -> Retriever:
+                   url: Optional[str] = None, rerank_dtype: str = "float32") -> Retriever:
     """Construct a retriever for ``profile`` (``faiss`` | ``faiss_rerank`` |
-    ``remote_api``). Nothing heavy loads until the first search."""
+    ``remote_api``). Nothing heavy loads until the first search.
+
+    ``device``/``torch_threads`` apply to the query embedding,
+    ``rerank_*``/``candidates`` to ``faiss_rerank`` only, ``url`` to
+    ``remote_api`` only.
+    """
     if profile == "faiss":
         return FaissRetriever(index_dir, device=device, torch_threads=torch_threads)
     if profile == "faiss_rerank":
         return FaissRerankRetriever(index_dir, device=device, torch_threads=torch_threads,
                                     rerank_model=rerank_model, rerank_device=rerank_device,
-                                    candidates=candidates)
+                                    candidates=candidates, rerank_dtype=rerank_dtype)
     if profile == "remote_api":
         return RemoteRetriever(url)
     raise ValueError(f"unknown retriever profile {profile!r}; expected one of {PROFILES}")

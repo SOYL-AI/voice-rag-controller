@@ -20,9 +20,12 @@ Variants (``name: what it isolates``):
   torch's default intra-op thread count (one per logical core), i.e. the
   condition the v1 pipeline ran in. Explains the E2 in-pipeline number.
 * ``faiss_cuda`` - query embedding on the GPU.
-* ``faiss_rerank_minilm_l6`` / ``faiss_rerank_bge_base`` - FAISS top-50 then a
-  cross-encoder on CUDA. The canonical ``faiss_rerank`` is chosen by the rule
-  in :func:`choose_canonical_rerank` and recorded in the artifact.
+* ``faiss_rerank_minilm_l6`` / ``faiss_rerank_bge_base`` (+ ``_fp16``) - FAISS
+  top-50 then a cross-encoder (ms-marco-MiniLM-L6-v2 or bge-reranker-base)
+  on CUDA in float32 or float16. The canonical ``faiss_rerank`` is chosen by
+  the rule in :func:`choose_canonical_rerank` (quality first, then p50) and
+  the reason is recorded in the artifact. Quality = hit@1/hit@3 of the
+  scenario ``document`` over the retrieval_needed questions.
 * ``remote_api_faiss`` / ``remote_api_faiss_rerank`` - HTTP client against
   retrieval/service.py started as a local uvicorn subprocess on 127.0.0.1.
   Transport overhead = client round trip - server handler time. Network is
@@ -70,11 +73,26 @@ QUANT_PCTS = {"p10": 10, "p25": 25, "p50": 50, "p75": 75, "p90": 90, "p95": 95, 
 K = 3
 CANDIDATES = 50
 EMBED_MODEL = "BAAI/bge-small-en-v1.5"
+MINILM = "cross-encoder/ms-marco-MiniLM-L6-v2"
+BGE_RERANK = "BAAI/bge-reranker-base"
+# rerank variant -> (cross-encoder, dtype on CUDA)
 RERANKERS = {
-    "faiss_rerank_minilm_l6": "cross-encoder/ms-marco-MiniLM-L6-v2",
-    "faiss_rerank_bge_base": "BAAI/bge-reranker-base",
+    "faiss_rerank_minilm_l6": (MINILM, "float32"),
+    "faiss_rerank_bge_base": (BGE_RERANK, "float32"),
+    "faiss_rerank_minilm_l6_fp16": (MINILM, "float16"),
+    "faiss_rerank_bge_base_fp16": (BGE_RERANK, "float16"),
 }
 THREAD_ENV_VARS = ("OMP_NUM_THREADS", "MKL_NUM_THREADS", "OPENBLAS_NUM_THREADS")
+
+
+def _rerank_variant(name: str) -> dict:
+    model, dtype = RERANKERS[name]
+    return {
+        "kind": "local", "profile": "faiss_rerank", "device": "cpu", "torch_threads": 4,
+        "call": "sync", "rerank_model": model, "rerank_device": "cuda", "rerank_dtype": dtype,
+        "notes": f"FAISS top-{CANDIDATES} (CPU embed, 4 threads) then {model} rescoring all "
+                 f"{CANDIDATES} candidates in one batch on CUDA in {dtype}."}
+
 
 VARIANTS: dict[str, dict] = {
     "faiss": {
@@ -97,14 +115,7 @@ VARIANTS: dict[str, dict] = {
     "faiss_cuda": {
         "kind": "local", "profile": "faiss", "device": "cuda", "torch_threads": 4, "call": "sync",
         "notes": "Query embedding on the GPU; FAISS search stays on CPU."},
-    "faiss_rerank_minilm_l6": {
-        "kind": "local", "profile": "faiss_rerank", "device": "cpu", "torch_threads": 4,
-        "call": "sync", "rerank_model": RERANKERS["faiss_rerank_minilm_l6"], "rerank_device": "cuda",
-        "notes": "FAISS top-50 (CPU embed, 4 threads) then cross-encoder rescoring on CUDA."},
-    "faiss_rerank_bge_base": {
-        "kind": "local", "profile": "faiss_rerank", "device": "cpu", "torch_threads": 4,
-        "call": "sync", "rerank_model": RERANKERS["faiss_rerank_bge_base"], "rerank_device": "cuda",
-        "notes": "FAISS top-50 (CPU embed, 4 threads) then cross-encoder rescoring on CUDA."},
+    **{name: _rerank_variant(name) for name in RERANKERS},
     "remote_api_faiss": {
         "kind": "remote", "profile": "remote_api", "backend": "faiss", "device": "cpu",
         "torch_threads": 4, "call": "sync",
@@ -120,8 +131,8 @@ VARIANTS: dict[str, dict] = {
         "notes": "HTTP client against an externally deployed service (--remote-url)."},
 }
 DEFAULT_ORDER = ["faiss", "faiss_to_thread", "faiss_v1_default_threads",
-                 "faiss_v1_default_threads_to_thread", "faiss_cuda", "faiss_rerank_minilm_l6",
-                 "faiss_rerank_bge_base", "remote_api_faiss", "remote_api_faiss_rerank"]
+                 "faiss_v1_default_threads_to_thread", "faiss_cuda", *RERANKERS,
+                 "remote_api_faiss", "remote_api_faiss_rerank"]
 
 
 # --------------------------------------------------------------------------
@@ -133,28 +144,42 @@ def load_scenarios(path: Path = SCENARIOS_PATH) -> list[dict]:
         return json.load(f)
 
 
-def build_query_set(scenarios: list[dict], min_words: int = MIN_PREFIX_WORDS) -> list[dict]:
-    """Questions plus their word prefixes (>= min_words), de-duplicated.
+def _gold(sc: dict) -> Optional[str]:
+    """Source document of a scenario that needs retrieval, else None."""
+    if sc.get("retrieval_needed") and sc.get("document"):
+        return sc["document"]
+    return None
 
-    Each entry: {"query", "full": bool, "gold": filename of the first
-    question that produced it}.
+
+def build_query_set(scenarios: list[dict], min_words: int = MIN_PREFIX_WORDS) -> list[dict]:
+    """Questions plus their word prefixes (>= min_words), de-duplicated in
+    first-seen order.
+
+    Each entry: {"query", "full": bool, "gold": str | None}. ``gold`` is the
+    scenario's ``document`` when every scenario producing that string needs
+    retrieval and they all share one document; otherwise None (closed-book
+    questions, and generic prefixes such as "Tell me about" shared by
+    questions about different documents). Only entries with a gold document
+    count towards hit@k; every entry is timed.
     """
     out: list[dict] = []
-    seen: set[str] = set()
+    by_query: dict[str, dict] = {}
+    golds: dict[str, set] = {}
     for sc in scenarios:
         words = sc["question"].split()
-        lengths = list(range(min(min_words, len(words)), len(words) + 1))
-        for n in lengths:
+        for n in range(min(min_words, len(words)), len(words) + 1):
             q = " ".join(words[:n])
-            full = n == len(words)
-            if q in seen:
-                if full:  # a full question that is also another's prefix
-                    for e in out:
-                        if e["query"] == q:
-                            e["full"] = True
+            golds.setdefault(q, set()).add(_gold(sc))
+            if q in by_query:
+                if n == len(words):  # a full question that is also another's prefix
+                    by_query[q]["full"] = True
                 continue
-            seen.add(q)
-            out.append({"query": q, "full": full, "gold": sc.get("document")})
+            entry = {"query": q, "full": n == len(words), "gold": None}
+            by_query[q] = entry
+            out.append(entry)
+    for e in out:
+        g = golds[e["query"]]
+        e["gold"] = next(iter(g)) if len(g) == 1 else None
     return out
 
 
@@ -212,9 +237,37 @@ def _cpu_name() -> str:
     return platform.processor() or platform.machine()
 
 
+def _nvidia_smi(fields: list[str]) -> dict:
+    """Query nvidia-smi for GPU 0; {} when unavailable."""
+    try:
+        out = subprocess.run(["nvidia-smi", f"--query-gpu={','.join(fields)}",
+                              "--format=csv,noheader,nounits"],
+                             capture_output=True, text=True, timeout=10)
+    except (OSError, subprocess.SubprocessError):
+        return {}
+    if out.returncode != 0 or not out.stdout.strip():
+        return {}
+    vals = [v.strip() for v in out.stdout.strip().splitlines()[0].split(",")]
+    res: dict = {}
+    for f, v in zip(fields, vals):
+        try:
+            res[f] = float(v)
+        except ValueError:
+            res[f] = v
+    return res
+
+
 def host_info() -> dict:
     info = {"cpu": _cpu_name(), "logical_cpus": os.cpu_count(), "os": platform.platform(),
             "python": platform.python_version()}
+    smi = _nvidia_smi(["driver_version", "enforced.power.limit", "power.default_limit",
+                       "power.max_limit", "clocks.max.sm"])
+    if smi:
+        info["gpu_driver"] = smi.get("driver_version")
+        info["gpu_power_limit_w"] = smi.get("enforced.power.limit")
+        info["gpu_power_default_limit_w"] = smi.get("power.default_limit")
+        info["gpu_power_max_limit_w"] = smi.get("power.max_limit")
+        info["gpu_max_sm_clock_mhz"] = smi.get("clocks.max.sm")
     try:
         import psutil
 
@@ -249,17 +302,14 @@ def load_snapshot() -> dict:
         snap["ram_available_gb"] = round(psutil.virtual_memory().available / 2**30, 2)
     except ImportError:
         pass
-    try:
-        out = subprocess.run(
-            ["nvidia-smi", "--query-gpu=utilization.gpu,memory.used,memory.total",
-             "--format=csv,noheader,nounits"], capture_output=True, text=True, timeout=10)
-        if out.returncode == 0 and out.stdout.strip():
-            u, used, tot = [x.strip() for x in out.stdout.strip().splitlines()[0].split(",")]
-            snap["gpu_util_percent"] = float(u)
-            snap["gpu_mem_used_mb"] = float(used)
-            snap["gpu_mem_total_mb"] = float(tot)
-    except (OSError, subprocess.SubprocessError, ValueError):
-        pass
+    smi = _nvidia_smi(["utilization.gpu", "memory.used", "memory.total", "pstate",
+                       "power.draw", "enforced.power.limit", "temperature.gpu"])
+    names = {"utilization.gpu": "gpu_util_percent", "memory.used": "gpu_mem_used_mb",
+             "memory.total": "gpu_mem_total_mb", "pstate": "gpu_pstate",
+             "power.draw": "gpu_power_draw_w", "enforced.power.limit": "gpu_power_limit_w",
+             "temperature.gpu": "gpu_temp_c"}
+    for k, v in smi.items():
+        snap[names[k]] = v
     return snap
 
 
@@ -277,6 +327,7 @@ def _make_worker_retriever(spec: dict, url: Optional[str]):
     return FaissRerankRetriever(None, device=spec["device"], torch_threads=spec["torch_threads"],
                                 rerank_model=spec["rerank_model"],
                                 rerank_device=spec.get("rerank_device", "cuda"),
+                                rerank_dtype=spec.get("rerank_dtype", "float32"),
                                 candidates=CANDIDATES)
 
 
@@ -311,18 +362,24 @@ def run_worker(spec: dict, qset: list[dict], passes: int, seed: int,
     load_s = time.perf_counter() - t_load0
 
     # Warm-up pass (discarded); also used for the quality check since the
-    # ranking is deterministic.
+    # ranking is deterministic. Only entries with a gold document count.
     hit1 = hit3 = n_full = 0
-    phit3 = 0
+    phit1 = phit3 = n_prefix = 0
     for e in qset:
         _, hits = timed(e["query"])
-        names = [h.get("filename") for h in hits]
+        if not e.get("gold"):
+            continue
+        names = [h.get("parent_doc_id") or h.get("filename") for h in hits]
+        ok1 = bool(names) and names[0] == e["gold"]
         ok3 = e["gold"] in names[:3]
-        phit3 += ok3
         if e["full"]:
             n_full += 1
+            hit1 += ok1
             hit3 += ok3
-            hit1 += bool(names) and names[0] == e["gold"]
+        else:
+            n_prefix += 1
+            phit1 += ok1
+            phit3 += ok3
 
     totals: list[float] = []
     comps: dict[str, list[float]] = {}
@@ -356,8 +413,12 @@ def run_worker(spec: dict, qset: list[dict], passes: int, seed: int,
         "quality": {"n_full_questions": n_full,
                     "hit1_full": round(hit1 / n_full, 4) if n_full else None,
                     "hit3_full": round(hit3 / n_full, 4) if n_full else None,
-                    "hit3_all_queries_vs_source_doc": round(phit3 / len(qset), 4),
-                    "note": "hit@k of the scenario's source document; the warm-up pass ranking"},
+                    "n_prefixes": n_prefix,
+                    "hit1_prefixes": round(phit1 / n_prefix, 4) if n_prefix else None,
+                    "hit3_prefixes": round(phit3 / n_prefix, 4) if n_prefix else None,
+                    "note": "hit@k of simulator/scenarios.json `document` over retrieval_needed "
+                            "questions (full) and their unambiguous partial prefixes; ranking "
+                            "from the warm-up pass"},
     }
 
 
@@ -442,14 +503,14 @@ class LocalServer:
     def __enter__(self) -> "LocalServer":
         import httpx
 
-        cmd = [sys.executable, "-m", "retrieval.service", "--port", str(self.port), *self.args]
+        cmd = [sys.executable, "-X", "faulthandler", "-m", "retrieval.service", "--port", str(self.port), *self.args]
         self.proc = subprocess.Popen(cmd, cwd=ROOT, env=_clean_env(), stdout=self.log,
                                      stderr=subprocess.STDOUT)
         deadline = time.time() + 300
         while time.time() < deadline:
             if self.proc.poll() is not None:
                 self.log.seek(0)
-                raise RuntimeError(f"server exited early:\n{self.log.read()[-4000:]}")
+                raise RuntimeError(f"server exited early (code {self.proc.returncode}):\n{self.log.read()[-4000:]}")
             try:
                 r = httpx.get(f"{self.url}/healthz", timeout=2.0)
                 if r.status_code == 200 and r.json().get("ready"):
@@ -470,33 +531,46 @@ class LocalServer:
         self.log.close()
 
 
+QUALITY_TOL = 0.02
+
+
 def choose_canonical_rerank(profiles: dict) -> tuple[Optional[str], str]:
-    """Pick the canonical faiss_rerank variant: the higher hit@3 on the full
-    questions wins; if within 0.02 of each other, the lower p50 latency
-    wins (a reranker that is no better but slower should not set the
-    latency profile the controller plans against)."""
+    """Pick the canonical faiss_rerank variant among the measured rerank
+    variants, lexicographically:
+
+    1. hit@3 on the full retrieval_needed questions: keep every variant
+       within ``QUALITY_TOL`` of the best;
+    2. hit@1 on the same questions: likewise;
+    3. lowest p50 latency.
+
+    A reranker that is no better but slower should not set the latency
+    profile the controller plans against.
+    """
     cands = [n for n in RERANKERS if n in profiles]
     if not cands:
         return None, "no rerank variant measured"
-    if len(cands) == 1:
-        return cands[0], "only reranker measured"
 
-    def key(n):
-        return (profiles[n].get("quality", {}).get("hit3_full") or 0.0,
-                profiles[n]["quantiles_ms"]["p50"])
+    def qual(n: str, key: str) -> float:
+        return float((profiles[n].get("quality") or {}).get(key) or 0.0)
 
-    a, b = sorted(cands, key=lambda n: -key(n)[0])[:2]
-    qa, qb = key(a)[0], key(b)[0]
-    if qa - qb > 0.02:
-        return a, f"higher hit@3 on full questions ({qa:.2f} vs {qb:.2f})"
-    best = min((a, b), key=lambda n: key(n)[1])
-    other = b if best == a else a
-    return best, (f"hit@3 within 0.02 ({key(best)[0]:.2f} vs {key(other)[0]:.2f}); lower p50 "
-                  f"({key(best)[1]:.1f} vs {key(other)[1]:.1f} ms)")
+    def p50(n: str) -> float:
+        return float(profiles[n]["quantiles_ms"]["p50"])
+
+    pool = list(cands)
+    for key in ("hit3_full", "hit1_full"):
+        best = max(qual(n, key) for n in pool)
+        pool = [n for n in pool if qual(n, key) >= best - QUALITY_TOL]
+    choice = min(pool, key=p50)
+    summary = "; ".join(f"{n}: hit@1={qual(n, 'hit1_full'):.2f} hit@3={qual(n, 'hit3_full'):.2f} "
+                        f"p50={p50(n):.1f} ms" for n in cands)
+    return choice, (f"rule: max hit@3, then max hit@1 (each within {QUALITY_TOL}), then min p50. "
+                    f"Tied on quality: {', '.join(pool)}. Measured: {summary}")
 
 
 def measure_variant(name: str, qset_path: Path, passes: int, seed: int,
-                    canonical_rerank_model: Optional[str], remote_url: Optional[str]) -> dict:
+                    canonical_rerank: Optional[str], remote_url: Optional[str]) -> dict:
+    """Measure one variant in fresh processes. ``canonical_rerank`` names the
+    rerank variant whose model and dtype the remote rerank server uses."""
     spec = dict(VARIANTS[name])
     wargs = ["--worker", name, "--queries-file", str(qset_path), "--passes", str(passes),
              "--seed", str(seed)]
@@ -504,9 +578,12 @@ def measure_variant(name: str, qset_path: Path, passes: int, seed: int,
         sargs = ["--backend", spec["backend"], "--device", spec["device"],
                  "--torch-threads", str(spec["torch_threads"])]
         if spec["backend"] == "faiss_rerank":
-            spec["rerank_model"] = canonical_rerank_model or RERANKERS["faiss_rerank_minilm_l6"]
+            spec["rerank_model"], spec["rerank_dtype"] = RERANKERS[
+                canonical_rerank or "faiss_rerank_minilm_l6"]
+            spec["notes"] += f" Reranker: {spec['rerank_model']} ({spec['rerank_dtype']})."
             sargs += ["--rerank-model", spec["rerank_model"],
                       "--rerank-device", spec.get("rerank_device", "cuda"),
+                      "--rerank-dtype", spec["rerank_dtype"],
                       "--candidates", str(CANDIDATES)]
         with LocalServer(sargs) as srv:
             raw = _run_subprocess_worker(wargs + ["--url", srv.url], timeout_s=3600)
@@ -534,6 +611,7 @@ def measure_variant(name: str, qset_path: Path, passes: int, seed: int,
         "model": EMBED_MODEL,
         "rerank_model": spec.get("rerank_model"),
         "rerank_device": desc.get("rerank_device") if spec.get("rerank_model") else None,
+        "rerank_dtype": desc.get("rerank_dtype") if spec.get("rerank_model") else None,
         "score_kind": desc.get("score_kind"),
         "load_and_first_query_s": raw["load_and_first_query_s"],
         "quality": raw["quality"],
@@ -561,10 +639,12 @@ def print_table(art: dict) -> None:
         for c in ("embed", "search", "rerank", "server", "transport", "dispatch"):
             if c in comp:
                 parts.append(f"{c}={comp[c]['p50']:.2f}")
+        qual = e.get("quality") or {}
         rows.append((name, str(e.get("device")), str(e.get("torch_threads")), e["n"],
                      q["p50"], q["p90"], q["p95"], q["p99"], e["mean_ms"],
-                     (e.get("quality") or {}).get("hit3_full"), " ".join(parts)))
-    hdr = ("variant", "device", "thr", "n", "p50", "p90", "p95", "p99", "mean", "hit@3", "components p50 (ms)")
+                     qual.get("hit1_full"), qual.get("hit3_full"), " ".join(parts)))
+    hdr = ("variant", "device", "thr", "n", "p50", "p90", "p95", "p99", "mean", "hit@1", "hit@3",
+           "components p50 (ms)")
     w = [max(len(str(r[i])) if not isinstance(r[i], float) else 8 for r in rows + [hdr]) for i in range(len(hdr))]
     w[0] = max(len(r[0]) for r in rows + [hdr])
     line = "  ".join(f"{h:<{w[i]}}" for i, h in enumerate(hdr))
@@ -614,7 +694,17 @@ def orchestrate(args) -> int:
                         "n_full_questions": sum(e["full"] for e in qset),
                         "min_prefix_words": MIN_PREFIX_WORDS, "dedup": True,
                         "sha256": query_set_sha256(queries)}
-    art["corpus"] = {"index_dir": None, "n_docs": None}
+    art["corpus"] = {"index_dir": None, "n_docs": None,
+                     "note": "index_dir null = the v1 hotel index (retrieval/index.faiss + "
+                             "chunks.json), as make_retriever(index_dir=None) loads it"}
+    host = art["host"]
+    lim, dflt = host.get("gpu_power_limit_w"), host.get("gpu_power_default_limit_w")
+    if isinstance(lim, float) and isinstance(dflt, float) and lim < dflt:
+        host["gpu_note"] = (
+            f"Enforced GPU power limit {lim:.0f} W is below the board default {dflt:.0f} W "
+            "(laptop power mode; it varies at run time, see load_before/load_after). CUDA "
+            "timings, especially the cross-encoders, are slower than the same GPU at its "
+            "default limit.")
     art["protocol"] = {
         "warmup": "1 full pass over the query set, discarded",
         "passes": args.passes, "order": "seeded shuffle per pass", "seed": args.seed,
@@ -634,12 +724,11 @@ def orchestrate(args) -> int:
                 canon, why = choose_canonical_rerank(art["profiles"])
                 art["canonical"]["faiss_rerank"] = canon
                 art["canonical_rerank_reason"] = why
-            canon_model = (art["profiles"].get(art["canonical"].get("faiss_rerank") or "", {})
-                           .get("rerank_model"))
             print(f"[measure] {name} ...", flush=True)
             t0 = time.time()
             art["profiles"][name] = measure_variant(name, qpath, args.passes, args.seed,
-                                                    canon_model, args.remote_url)
+                                                    art["canonical"].get("faiss_rerank"),
+                                                    args.remote_url)
             e = art["profiles"][name]
             print(f"[measure] {name}: n={e['n']} p50={e['quantiles_ms']['p50']:.2f} "
                   f"p90={e['quantiles_ms']['p90']:.2f} p99={e['quantiles_ms']['p99']:.2f} ms "

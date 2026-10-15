@@ -37,6 +37,15 @@ CLI::
 
     python -m retrieval.v2_index build --corpus datasets/v2/d2_support/corpus.jsonl \\
         --out .scratch/index_d2_support
+
+API::
+
+    li = load_index(".scratch/index_d2_support")
+    hits = li.search("late fee on postpaid?", encoder, k=3, dedupe_parents=True)
+    # each hit carries doc_id, parent_doc_id, score, rank, ...
+
+For timed retrieval behind the profile interface use
+``retrieval.profiles.make_retriever("faiss", index_dir=...)``.
 """
 
 from __future__ import annotations
@@ -259,6 +268,54 @@ class LoadedIndex:
     @property
     def n_docs(self) -> int:
         return len(self.docs)
+
+    @property
+    def higher_is_better(self) -> bool:
+        return self.meta.get("metric", "l2") == "ip"
+
+    def search_vectors(self, query_vecs: np.ndarray, k: int = 3, *,
+                       dedupe_parents: bool = False) -> list[list[dict]]:
+        """Search raw query embeddings (shape ``(nq, dim)`` or ``(dim,)``).
+
+        Query vectors are L2-normalised here when the index was built with
+        ``normalize``. Returns, per query, hits ``{doc_id, parent_doc_id,
+        chunk_index, title, text, score, rank, row}`` best first. With
+        ``dedupe_parents`` only the best chunk of each parent is kept (FAISS
+        is asked for more rows so ``k`` distinct parents can still come back).
+        """
+        q = np.asarray(query_vecs, dtype="float32")
+        if q.ndim == 1:
+            q = q.reshape(1, -1)
+        if self.meta.get("normalize"):
+            q = _l2_normalize(q).astype("float32")
+        n_fetch = min(self.n_docs, k * 4 if dedupe_parents else k)
+        scores, idx = self.index.search(np.ascontiguousarray(q), n_fetch)
+        out: list[list[dict]] = []
+        for srow, irow in zip(scores, idx):
+            hits: list[dict] = []
+            seen: set[str] = set()
+            for s, i in zip(srow, irow):
+                if i < 0:
+                    continue
+                d = self.docs[int(i)]
+                parent = d.get("parent_doc_id", d["doc_id"])
+                if dedupe_parents:
+                    if parent in seen:
+                        continue
+                    seen.add(parent)
+                hits.append({"doc_id": d["doc_id"], "parent_doc_id": parent,
+                             "chunk_index": d.get("chunk_index", 0), "title": d.get("title", ""),
+                             "text": d["text"], "score": float(s), "rank": len(hits),
+                             "row": int(i)})
+                if len(hits) == k:
+                    break
+            out.append(hits)
+        return out
+
+    def search(self, query: str, encoder: Encoder, k: int = 3, *,
+               dedupe_parents: bool = False) -> list[dict]:
+        """Embed ``query`` with ``encoder`` and search; see :meth:`search_vectors`."""
+        return self.search_vectors(encoder([query]), k, dedupe_parents=dedupe_parents)[0]
 
 
 def load_index(index_dir: str | Path) -> LoadedIndex:
