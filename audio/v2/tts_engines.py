@@ -195,11 +195,16 @@ class AzureSpeechEngine(TTSEngine):
 
 
 _CACHE: dict[tuple[str, str], TTSEngine] = {}
+MAX_LIVE_ENGINES = int(os.environ.get("VOICE_RAG_MAX_TTS_ENGINES", "1"))  # each worker holds a model
 
 
 def get_engine(voice: dict) -> TTSEngine:
     key = (voice["engine"], voice["model"])
-    if key not in _CACHE:
+    if key in _CACHE:
+        _CACHE[key] = _CACHE.pop(key)  # most recently used last
+    else:
+        while len(_CACHE) >= MAX_LIVE_ENGINES:
+            _CACHE.pop(next(iter(_CACHE))).close()
         if voice["engine"] == "piper":
             _CACHE[key] = PiperEngine(voice["model"])
         elif voice["engine"] == "parler":

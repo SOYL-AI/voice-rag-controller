@@ -18,6 +18,44 @@
    }
   }
  },
+ "piper-en_GB-northern_english_male-medium": {
+  "engine_version": "piper-tts 1.8.0",
+  "n_sentences": 20,
+  "natural_wpm": 261.7,
+  "rates": {
+   "130": {
+    "length_scale": 2.4167,
+    "measured_wpm": 132.6
+   },
+   "150": {
+    "length_scale": 2.0538,
+    "measured_wpm": 153.8
+   },
+   "180": {
+    "length_scale": 1.6692,
+    "measured_wpm": 182.3
+   }
+  }
+ },
+ "piper-en_US-arctic-medium-spk_ksp": {
+  "engine_version": "piper-tts 1.8.0",
+  "n_sentences": 20,
+  "natural_wpm": 217.2,
+  "rates": {
+   "130": {
+    "length_scale": 1.8747,
+    "measured_wpm": 131.2
+   },
+   "150": {
+    "length_scale": 1.5638,
+    "measured_wpm": 153.8
+   },
+   "180": {
+    "length_scale": 1.2853,
+    "measured_wpm": 180.0
+   }
+  }
+ },
  "piper-en_US-hfc_male-medium": {
   "engine_version": "piper-tts 1.8.0",
   "n_sentences": 20,
@@ -34,6 +72,25 @@
    "180": {
     "length_scale": 1.4832,
     "measured_wpm": 178.0
+   }
+  }
+ },
+ "piper-en_US-l2arctic-medium-spk_SVBI": {
+  "engine_version": "piper-tts 1.8.0",
+  "n_sentences": 20,
+  "natural_wpm": 242.1,
+  "rates": {
+   "130": {
+    "length_scale": 2.1563,
+    "measured_wpm": 130.0
+   },
+   "150": {
+    "length_scale": 1.8729,
+    "measured_wpm": 154.1
+   },
+   "180": {
+    "length_scale": 1.4668,
+    "measured_wpm": 184.8
    }
   }
  },
