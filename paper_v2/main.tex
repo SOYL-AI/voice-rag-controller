@@ -1,0 +1,90 @@
+% ============================================================================
+% INDICON 2026 -- Paper ID 4422 -- major revision (v2)
+% Skeleton with a paragraph-level outline. The prose is written by the
+% authors (conference AI-content rule): every \todo{} marks a paragraph the
+% authors write, guided by the PURPOSE / CLAIMS / NUMBERS comment above it.
+% Equations, algorithms, tables, captions and definitions are complete.
+%
+% MUST be ported into the official INDICON 2026 Overleaf template before
+% submission (see README.md). This file uses the stock IEEEtran conference
+% class only so that the structure can be checked locally.
+% ============================================================================
+\documentclass[conference]{IEEEtran}
+\IEEEoverridecommandlockouts
+
+\usepackage{cite}
+\usepackage{amsmath,amssymb,amsfonts}
+\usepackage{amsthm}
+\usepackage{algorithm}
+\usepackage[noend]{algpseudocode}
+\usepackage{graphicx}
+\usepackage{textcomp}
+\usepackage[table]{xcolor}
+\usepackage{booktabs}
+\usepackage{multirow}
+\usepackage{tikz}
+\usetikzlibrary{positioning,arrows.meta,fit,backgrounds,calc,shapes.geometric}
+\usepackage{url}
+
+\input{macros}
+
+\graphicspath{{figures/}}
+
+\begin{document}
+
+% ----------------------------------------------------------------------------
+% TITLE (Title Case). Options; the authors choose one. A title change in a
+% revision may need the TPC chair's approval: \PEND{confirm with INDICON TPC}.
+%  (1) Joint Versus Decomposed Control of Retrieval and Timing in Streaming
+%      Voice RAG: An Equivalence Result and Its Boundaries
+%  (2) When Does Joint Control Pay? Retrieval and Timing in Streaming Voice RAG
+%  (3) Information Versus Overlap: Testing When Joint Retrieval Dispatch Beats
+%      Decomposed Control in Streaming Voice Assistants
+%  (4) [submitted title] Joint vs. Decomposed Control of Retrieval and Timing
+%      in Streaming Voice RAG
+% ----------------------------------------------------------------------------
+\title{Joint Versus Decomposed Control of Retrieval and Timing in Streaming
+Voice RAG: An Equivalence Result and Its Boundaries}
+
+% ----------------------------------------------------------------------------
+% AUTHORS. No honorifics or designations. Numeric affiliation superscripts.
+% Exactly one corresponding-author marker (*).
+% \PEND: full author list and order; corresponding author (marker placed on
+% Ryan Gomez as a placeholder); Renya Peter's e-mail; ORCIDs if required.
+% ----------------------------------------------------------------------------
+\author{
+\IEEEauthorblockN{Renya Peter\textsuperscript{1},
+Ryan Gomez\textsuperscript{1,*},
+[Author~3]\textsuperscript{1},
+[Author~4]\textsuperscript{1}}
+\IEEEauthorblockA{\textsuperscript{1}SOYL AI Private Limited, Bengaluru, India\\
+Email: [renya.peter e-mail], ryan.gomez@soyl.cloud\\
+\textsuperscript{*}Corresponding author\\
+\PEND{author list, order, corresponding author, e-mails}}
+}
+
+\maketitle
+
+\begin{abstract}
+\input{sections/00_abstract}
+\end{abstract}
+
+\begin{IEEEkeywords}
+retrieval-augmented generation, spoken dialogue systems, adaptive retrieval,
+value of information, optimal stopping, streaming speech recognition
+\end{IEEEkeywords}
+
+\input{sections/01_introduction}
+\input{sections/02_related_work}
+\input{sections/03_problem}
+\input{sections/04_theory}
+\input{sections/05_setup}
+\input{sections/06_results_v1}
+\input{sections/07_results_v2}
+\input{sections/08_discussion}
+\input{sections/09_conclusion}
+
+\bibliographystyle{IEEEtran}
+\bibliography{references}
+
+\end{document}

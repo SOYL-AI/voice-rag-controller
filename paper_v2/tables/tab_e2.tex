@@ -1,0 +1,31 @@
+% Table -- v1 E2 latency (750 runs; hit@3 = 100% for all three policies).
+% Sources (all reproduced 2026-10-15):
+%   p50, p95 and p95 CI: analysis/paper_v1_numbers.json e2.policies, which
+%     calls harness/e2_bootstrap.py's own functions on logs/ (rng seed 42,
+%     10,000 draws; identical to `python -m harness.e2_bootstrap logs/`).
+%   paired difference vs sentence_end: e2.paired_vs_sentence_end. The
+%     statistic is the MEAN over 50 scenarios of the per-scenario
+%     (median-over-seeds) TTFA difference; the median of those paired
+%     differences is also given (R1.7: "479 ms" is a mean, not a median).
+%   pre-registered criterion: p95(fixed_early_proxy) < p95(sentence_end):
+%     NOT MET (+38.2 ms) [paper/lab_log.md 2026-08-16].
+\begin{table}[t]
+\caption{v1 E2 Time to First Audio by Dispatch Policy (750 Runs; 95\%
+Scenario-Cluster Bootstrap Intervals)}
+\label{tab:e2}
+\centering
+\footnotesize
+\setlength{\tabcolsep}{2.5pt}
+\resizebox{\columnwidth}{!}{%
+\begin{tabular}{@{}l c c c@{}}
+\toprule
+ & \pol{sentence\_end} & \pol{immediate} & \pol{fixed\_early\_proxy}\\
+\midrule
+p50 TTFA (s) & 4.11 & 4.07 & 3.69\\
+p95 TTFA (s) & 7.05 [6.58, 7.97] & 6.92 [6.51, 7.22] & 7.09 [6.67, 7.58]\\
+$\Delta$ vs \pol{sentence\_end}, mean (ms) & -- & $-180$ [$-413$, $+51$] & $-479$ [$-690$, $-275$]\\
+$\Delta$ vs \pol{sentence\_end}, median (ms) & -- & $-148$ & $-400$\\
+\bottomrule
+\end{tabular}%
+}
+\end{table}
