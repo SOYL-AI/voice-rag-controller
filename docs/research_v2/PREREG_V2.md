@@ -61,7 +61,7 @@
 | `max_completion_tokens` | [TO FILL AT FREEZE; fixed from the dev pilot so that < 1% of calls truncate] |
 | `seed` | sent per call, best-effort only; recorded but not relied on |
 | prompt | [PROMPT VERSION ID AND SHA256 TO FILL AT FREEZE]; same rubric as the v4 reasoned+strip judge, adapted to the reasoning model |
-| sampling | **k = 3 independent samples per answer; verdict = majority (2 of 3)**; all three raw outputs and parsed verdicts are stored |
+| sampling | **k = 1 sample per answer** (decided 2026-10-16, before freeze, to meet the compute budget). Justification from dev: under rubric r3 the 3 samples were unanimous on 98.8% of answers (Fleiss' κ 0.977), so majority-of-3 changes almost no verdicts. The raw output and parsed verdict are stored |
 
 **Recording requirement.** For every call, store the exact request body sent (all parameters, including any the SDK adds), the response id, the model version reported by the service, the usage fields and the raw output. A parameter that is rejected, or silently dropped, is a recorded fact, not an error to work around.
 
@@ -71,7 +71,7 @@
 
 `azure-openai/gpt-4o@2025-01-01-preview`, cache version `v4-azure-reasoned` (reasoned+strip prompt), temperature 0 (deterministic). This is the judge validated in v1 (`simulator/judge_validation/`).
 
-* **All primary v2 results are re-reported under it** as a robustness check.
+* It grades a **stratified random 30% subsample** of all graded answers (strata: dataset × item_type × primary verdict; fixed seed recorded at freeze). On that subsample, all primary v2 results are recomputed under both judges and compared, as a robustness check. Decided 2026-10-16, before freeze, to meet the compute and cost budget.
 * A conclusion that holds under one judge and not the other is reported as judge-dependent.
 
 ### 2.4 Judge-validation gate (before any test grading)
@@ -86,7 +86,7 @@ The set is split, before any judge sees it, into **100 prompt-development** and 
 **Gate metrics.** In this order:
 
 1. **Human inter-annotator agreement**: Cohen's κ, reported first. If κ_human < 0.70, the labelling guideline is revised and the set re-labelled before the judge is assessed, because a judge cannot be validated against labels less reliable than the bar it must clear.
-2. **Judge vs adjudicated human labels** (on the 200 holdout, majority-of-3 verdict). Pass requires **all** of:
+2. **Judge vs adjudicated human labels** (on the 200 holdout, single-sample verdict, k = 1). Pass requires **all** of:
    * Cohen's κ ≥ 0.80, with the lower 95% bootstrap bound ≥ 0.70;
    * accuracy ≥ 0.90;
    * |error rate on retrieve-path answers − error rate on skip-path answers| ≤ 0.05.
@@ -233,7 +233,7 @@ How the tests are decided:
 ### 4.4 Exclusions and failed runs
 * **Failed runs.** A run that crashes or times out is retried up to 3 times with the same seed. If it still fails, the item is **excluded from all controllers** (pairwise complete) and counted.
 * **Unusable audio.** Items whose ASR final transcript is empty, or whose speech trace violates `CONTRACTS.md` §4, are excluded from all controllers and counted.
-* **Judge parse failures.** If fewer than 2 of 3 samples parse, up to 3 more samples are drawn. If no valid majority emerges, the item is excluded in the primary analysis and counted incorrect in a sensitivity analysis.
+* **Judge parse failures.** If the sample does not parse, up to 3 more samples are drawn and the first that parses is used. If none parses, the item is excluded in the primary analysis and counted incorrect in a sensitivity analysis.
 * **Flagging.** A cell with exclusions above 5% is flagged, and its result is reported with and without the exclusions.
 * **No outcome-based exclusions.** No item is excluded on the basis of its outcomes.
 
@@ -262,6 +262,12 @@ How the tests are decided:
 Every deviation is recorded before the affected analysis is run in:
 * `paper/lab_log.md`, with the date, what changed, why, who decided, and whether any test outcome had been seen;
 * a "Deviations" section appended to the frozen addendum. That section is the only part that may be appended after the freeze.
+
+
+### 4.8 Compute-saving implementation rules (decided 2026-10-16, before freeze; results-invariant)
+* **Lazy outcome evaluation.** Controller decisions depend only on beliefs, the timing state and the latency model, never on answer correctness. So Phase B runs first on test, and only (item, seed, condition, query_variant) cells chosen by at least one pre-registered controller at at least one pre-registered (profile, price) are generated and graded. This gives results identical to grading every cell; the cell list is written to disk before any grading.
+* **E1-v2 on test.** `self_assessed_need` (the operational and gate signal) is computed on every text prefix and every ASR partial. Closed-book entropy signals are computed on the full question only, for the reported E1 comparison, not on partials.
+* **Throughput only.** The LLM is served on more containers and with higher client concurrency, and the primary judge uses a pool of two deployments of the identical model version (2026-09-29). Neither changes any model, prompt or parameter.
 
 ## 5. Statistical details
 * Primary statistic: $\bar D$, the mean over test items of the seed-averaged paired utility difference.
@@ -373,7 +379,7 @@ Every deviation is recorded before the affected analysis is run in:
 ## 7. Reporting
 * Every hypothesis is reported with its verdict, the point estimate, the CI and the exclusion counts.
 * Ties are reported as ties.
-* Every primary result is also reported under the secondary judge.
+* Every primary result is also reported under the secondary judge, on its 30% subsample (§2.3).
 * v1 and v2 results appear in separate tables.
 
 ## 8. Freeze checklist (sign-offs)
@@ -415,7 +421,7 @@ Run these only after every item in §8 is signed off.
 
 ## 10. Limitations stated in advance
 * **Single model.** All v2 results are for Mistral-7B-Instruct-v0.3. Nothing is claimed about other generators.
-* **Judge non-determinism.** The primary LLM judge is a reasoning model that runs only at temperature 1 with a best-effort seed. Verdicts are stochastic, majority-of-3 reduces but does not eliminate this, and re-grading may not reproduce identical verdicts.
+* **Judge non-determinism.** The primary LLM judge is a reasoning model that runs only at temperature 1 with a best-effort seed. Verdicts are stochastic, k = 1 is used (dev unanimity across 3 samples was 98.8%, so the residual instability is small but non-zero), and re-grading may not reproduce identical verdicts.
   * Mitigations: all individual samples are stored; self-consistency is a gate metric; the deterministic GPT-4o v4 judge re-reports every primary result.
 * **Synthetic speech.** Speech is synthetic (TTS), and ASR partials come from one streaming ASR configuration.
 * **Placeholders in the power analysis.** The timing parameters in §6 are placeholders until the dev measurements replace them.
