@@ -335,7 +335,9 @@ def run_phase_b(
                     if name == "oracle_v2":
                         if labels is None or gold is None:
                             raise ValueError("oracle_v2 needs labels and gold ids")
-                        oracle = {"closed_book_wrong": bool(labels[turn.item_id]),
+                        # an undetermined empirical label counts as "not wrong"
+                        # (the oracle skips); E1-v2 reports how many there are
+                        oracle = {"closed_book_wrong": bool(labels.get(turn.item_id, False)),
                                   "gold_hit_partial_indices": store.gold_hit_partials(
                                       turn.item_id, turn.condition, gold.get(turn.item_id, [])),
                                   "label_source": "E1-v2 empirical closed-book label"}
