@@ -409,6 +409,38 @@
   "automotive/Arunodaya Motors": 15,
   "automotive/Corrigan & Pike Auto Group": 15
  },
+ "core_facts": {
+  "org_specific": {
+   "n_core_per_item": {
+    "1": 179,
+    "2": 58,
+    "3": 3
+   },
+   "frac_key_facts_core": 0.751
+  },
+  "counter_prior": {
+   "n_core_per_item": {
+    "1": 101,
+    "2": 31
+   },
+   "frac_key_facts_core": 0.622
+  },
+  "ambiguous": {
+   "n_core_per_item": {
+    "1": 31,
+    "2": 38,
+    "3": 3
+   },
+   "frac_key_facts_core": 0.748
+  },
+  "general": {
+   "n_core_per_item": {
+    "1": 232,
+    "2": 44
+   },
+   "frac_key_facts_core": 0.654
+  }
+ },
  "validator": {
   "errors": 0,
   "warnings": 46

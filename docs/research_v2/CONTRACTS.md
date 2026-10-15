@@ -88,6 +88,27 @@ Dataset names: `d1_open` (public open-domain QA, popularity-stratified) and
   ends with an assistant turn. An empty list means a single-turn item. The
   D2 builder also accepts `{"role": "caller" | "agent", "text": ...}` in raw
   files and normalises it to this shape.
+- `meta.key_facts` (D2) lists the facts a correct answer must contain and
+  must not contradict. `meta.core_facts` (D2) is a non-empty, verbatim
+  subset of `key_facts`.
+  - **Definition.** A key fact is *core* if, without it, the caller's literal
+    question is not answered, or is answered wrongly. Everything else is
+    supplementary: extra conditions, advice, follow-up steps, contact
+    details and rationale.
+  - **By type:**
+    - `general`: usually one core fact, the direct answer.
+    - `org_specific` and `counter_prior`: the org value or values asked
+      for, plus any condition that flips the answer when the question
+      doesn't settle it.
+    - `ambiguous`: the org-specific detail that makes the generic answer
+      wrong.
+  - **Questions that ask several things** ("how much and how long"): one
+    fact per thing asked is core.
+  - **Judging.** A judge should require every core fact to be present. A
+    supplementary fact counts only if the answer contradicts it.
+  - **Provenance.** Core facts were annotated per item from the question,
+    history, expected answer and gold documents only, without looking at
+    any model output.
 - `item_type: "multihop"` marks multi-hop open-domain questions (D1 uses
   HotpotQA bridge and comparison questions).
 - **D1 (`d1_open`) has no authored retrieval label.** For every D1 item
