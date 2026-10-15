@@ -98,6 +98,22 @@ def load_json(path: Path):
         return json.load(handle)
 
 
+def replace_with_retry(tmp, path, attempts: int = 20, base_delay_s: float = 0.05) -> None:
+    """os.replace that retries a transient Windows PermissionError (another
+    reader, an antivirus scan or OneDrive sync holding the target open for a
+    moment); the last failure is re-raised."""
+    import time
+
+    for attempt in range(attempts):
+        try:
+            os.replace(tmp, path)
+            return
+        except PermissionError:
+            if attempt == attempts - 1:
+                raise
+            time.sleep(min(1.0, base_delay_s * (2 ** attempt)))
+
+
 def atomic_write_json(path: Path, payload) -> None:
     path = Path(path)
     path.parent.mkdir(parents=True, exist_ok=True)
@@ -105,7 +121,7 @@ def atomic_write_json(path: Path, payload) -> None:
     with open(tmp, "w", encoding="utf-8") as handle:
         json.dump(payload, handle, indent=2, ensure_ascii=False)
         handle.write("\n")
-    tmp.replace(path)
+    replace_with_retry(tmp, path)
 
 
 def read_jsonl(path: Path, tolerate_partial_tail: bool = True) -> list:

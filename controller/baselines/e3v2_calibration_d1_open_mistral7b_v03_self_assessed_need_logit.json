@@ -1,0 +1,41 @@
+{
+  "calibration": {
+    "signal": "self_assessed_need_logit",
+    "kind": "logistic",
+    "intercept": 0.41730283839180443,
+    "slope": 0.04510120034607392,
+    "frac_slope": 0.15913158886955633,
+    "interaction": 0.02173169705331019,
+    "calibrated": true,
+    "source": "Fitted on d1_open dev (1566 items, 23413 prefix records over 2 conditions): P(empirical need) = sigmoid(a + b*logit(SA) + c*f + d*logit(SA)*f), SA = self_assessed_need (sa-v1-frozen), f = spoken word fraction",
+    "auc": 0.5720139142163917
+  },
+  "diagnostics": {
+    "auc_in_sample": 0.5720139142163917,
+    "auc_oof_grouped5": 0.5659196851361246,
+    "auc_oof_by_frac": {
+      "[0,0.4)": {
+        "n": 5099,
+        "auc_oof": 0.538890498690608
+      },
+      "[0.4,0.8)": {
+        "n": 8803,
+        "auc_oof": 0.5547532676771263
+      },
+      "[0.8,0.999)": {
+        "n": 3204,
+        "auc_oof": 0.5625223030064845
+      },
+      "[0.999,1.01)": {
+        "n": 6307,
+        "auc_oof": 0.6007796414761307
+      }
+    },
+    "n_records": 23413,
+    "n_items": 1566,
+    "base_rate": 0.5570836714645709
+  },
+  "generated_by": "python -m simulator.e3v2_dev_analysis",
+  "fitted_at_utc": "2026-10-15T17:55:30.267076+00:00",
+  "split": "dev"
+}

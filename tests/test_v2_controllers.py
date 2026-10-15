@@ -86,6 +86,31 @@ def test_hiding_window_includes_end_of_turn_detection():
     assert expected_exposed_ms(lat, 0.0, True, cfg) == 1000
 
 
+def test_steps_use_partial_availability_and_trace_endpoint():
+    """Real ASR traces: a partial is usable only from available_ms (ASR
+    compute), predictions likewise; the end-of-turn step is the later of VAD
+    end and the final transcript's availability; speech-elapsed at the end is
+    the actual speech end."""
+    from controller.sequential_v2 import TurnCtx, end_of_turn_ms, speech_end_ms
+    cfg = syn_cfg()
+    timing = {
+        "speech_onset_ms": 0,
+        "partials": [{"t_ms": 400, "available_ms": 700, "text": "what is the late fee"},
+                     {"t_ms": 800, "available_ms": 1200, "text": "what is the late fee on my plan"}],
+        "predicted_remaining_speech_ms": [{"t_ms": 400, "available_ms": 700, "remaining_ms": 900},
+                                          {"t_ms": 800, "available_ms": 1200, "remaining_ms": 500}],
+        "speech_end_ms": 1300, "user_end_ms": 2100,
+        "asr_final": {"t_ms": 2100, "available_ms": 2600, "text": "what is the late fee on my plan"},
+    }
+    ctx = TurnCtx(item_id="x", signals={"timing": timing,
+                                        "retrieval": {"latency_profile": "x", "latency_quantiles_ms": {"p50": 500}}})
+    steps = build_steps(ctx, cfg)
+    assert [s.available_ms for s in steps] == [700, 1200, 2600]
+    assert steps[0].remaining_ms == pytest.approx(900 - (700 - 400))  # aged from the audio time
+    assert steps[-1].speech_elapsed_ms == 1300
+    assert end_of_turn_ms(ctx, cfg) == 2600 and speech_end_ms(ctx) == 1300
+
+
 def test_rho_waste_and_frac():
     cfg = syn_cfg()
     assert estimated_frac(300, 900, False) == 0.25
@@ -277,6 +302,42 @@ def test_tune_v2_equal_budget_and_artifact_roundtrip(tmp_path):
     assert b9p.constants_source == "estimates_artifact"
     b8 = get_controller_v2("b8_v2", cfg=cfg2)
     assert b8.policy == art["unpriced"]["b8"]["chosen"]["timing"]
+
+
+def test_b9plus_timing_rules_and_tuning():
+    from controller.tune_v2 import tune_b9plus_timing, tune_spec_trigger
+    cfg = syn_cfg(rho={"scale": 0.0})  # isolate timing: an early query loses nothing
+    ret ={"latency_profile": "x", "latency_quantiles_ms": {"p50": 700}}
+    long_turn = synthetic_turn("long", [0.9] * 8, 0.9, interval_ms=300.0, retrieval=ret,
+                               prices={"lambda_l": 0.5, "lambda_c": 0.05})
+    early = get_controller_v2("b9plus_v2", cfg=cfg, timing_rule={"kind": "early"}).decide_turn(long_turn)
+    late = get_controller_v2("b9plus_v2", cfg=cfg, timing_rule={"kind": "late"}).decide_turn(long_turn)
+    assert early.dispatch_t_ms == 300 and late.timing_label == "sentence_end"
+    # threshold: R_hat at the first ready partial is 2400 ms here
+    hi = get_controller_v2("b9plus_v2", cfg=cfg, timing_rule={"kind": "r_threshold", "r0": 1000,
+                                                             "early_exposed_ms": 0.0}).decide_turn(long_turn)
+    lo = get_controller_v2("b9plus_v2", cfg=cfg, timing_rule={"kind": "r_threshold", "r0": 5000,
+                                                             "early_exposed_ms": 0.0}).decide_turn(long_turn)
+    assert hi.dispatch_t_ms == 300 and lo.dispatch_t_ms == 2700
+    with pytest.raises(ValueError):
+        get_controller_v2("b9plus_v2", cfg=cfg, timing_rule={"kind": "sometimes"})
+    # diagnostic r_below: first ready partial with R_hat <= r0 (R_hat = 2700 - t here)
+    rb = get_controller_v2("b9plus_v2", cfg=cfg, timing_rule={"kind": "r_below", "r0": 700,
+                                                             "late_exposed_ms": 0.0}).decide_turn(long_turn)
+    assert rb.dispatch_t_ms == 2100 and rb.timing_label == "r_below_partial"
+    never = get_controller_v2("b9plus_v2", cfg=cfg, timing_rule={"kind": "r_below", "r0": -1,
+                                                                "late_exposed_ms": 0.0}).decide_turn(long_turn)
+    assert never.dispatch_t_ms in (None, 2700)
+
+    turns, cells, labels, items = synthetic_dataset(20, seed=3)
+    store = CellStore(cells)
+    lm = load_latency_model(cfg)
+    price = {"lambda_l": 0.4, "lambda_c": 0.05}
+    out = tune_b9plus_timing(list(turns.values()), store, [11, 23], "faiss", price, cfg, lm)
+    assert out["n_evaluated"] == len(out["candidates"]) <= 23
+    assert out["dev_utility"] == max(c["dev_utility"] for c in out["candidates"])
+    spec = tune_spec_trigger(list(turns.values()), store, [11, 23], "faiss", price, cfg, lm)
+    assert spec["chosen"] in ("immediate", "forecast") and spec["n_evaluated"] == 4
 
 
 def test_quantile_grid():

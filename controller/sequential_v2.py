@@ -184,13 +184,28 @@ def user_end_ms(ctx: TurnCtx) -> float:
     return max(times) if times else 0.0
 
 
+def speech_end_ms(ctx: TurnCtx) -> float:
+    """When the user actually stopped talking (end of the last word):
+    signals["timing"]["speech_end_ms"] when the trace provides it, else the
+    VAD end. TTFA is measured from here."""
+    se = _timing_block(ctx).get("speech_end_ms")
+    return float(se) if se is not None else user_end_ms(ctx)
+
+
+def _available(entry: dict) -> float:
+    """When a timed entry (partial, prediction, final transcript) can be
+    used: its available_ms (CONTRACTS §4: ASR compute included), else t_ms."""
+    a = entry.get("available_ms")
+    return float(entry["t_ms"] if a is None else a)
+
+
 def end_of_turn_ms(ctx: TurnCtx, cfg: dict) -> float:
     """When the end-of-turn step happens: VAD end + end-of-turn detection
-    delay, or the final ASR transcript's arrival if that is later."""
+    delay, or the final ASR transcript's availability if that is later."""
     end = user_end_ms(ctx) + float(cfg["timing"]["eot_detection_ms"])
-    fin = (_timing_block(ctx).get("asr_final") or {}).get("t_ms")
-    if fin is not None:
-        end = max(end, float(fin))
+    fin = _timing_block(ctx).get("asr_final") or {}
+    if fin.get("t_ms") is not None or fin.get("available_ms") is not None:
+        end = max(end, _available(fin))
     return end
 
 
@@ -229,7 +244,11 @@ def build_steps(ctx: TurnCtx, cfg: Optional[dict] = None) -> List[StepObs]:
         [p for p in (timing.get("predicted_remaining_speech_ms") or []) if p.get("t_ms") is not None],
         key=lambda p: float(p["t_ms"]),
     )
-    partials = [p for p in _partials(ctx) if float(p["t_ms"]) < end_ms]
+    # A partial is a step at its AVAILABILITY time (ASR compute included);
+    # partials only usable at or after the end-of-turn step are not steps.
+    # Index = position in the t_ms-sorted list (availability is monotone in
+    # t_ms for a serial ASR worker), which is what Phase A keys on.
+    partials = [p for p in _partials(ctx) if _available(p) < end_ms]
 
     def latest_belief(at: float, final: bool) -> Tuple[Optional[dict], str]:
         avail = [e for a, e in beliefs if a <= at]
@@ -245,7 +264,9 @@ def build_steps(ctx: TurnCtx, cfg: Optional[dict] = None) -> List[StepObs]:
         return None, "none"
 
     def predicted_remaining(at: float) -> Optional[float]:
-        avail = [p for p in preds if float(p["t_ms"]) <= at]
+        # usable once its partial is available; aged from the audio time the
+        # prediction refers to (t_ms)
+        avail = [p for p in preds if _available(p) <= at]
         if not avail:
             return None
         last = avail[-1]
@@ -254,7 +275,7 @@ def build_steps(ctx: TurnCtx, cfg: Optional[dict] = None) -> List[StepObs]:
     steps: List[StepObs] = []
     history: List[str] = []
     for idx, part in enumerate(partials):
-        at = float(part["t_ms"])
+        at = _available(part)
         text = str(part.get("text") or "")
         history.append(text)
         entry, source = latest_belief(at, final=False)
@@ -272,7 +293,7 @@ def build_steps(ctx: TurnCtx, cfg: Optional[dict] = None) -> List[StepObs]:
     steps.append(StepObs(
         k=len(steps), partial_index=None, available_ms=int(math.ceil(end_ms)), is_final=True,
         text=str(final_text), query_ready=True,
-        speech_elapsed_ms=max(0.0, user_end_ms(ctx) - onset), remaining_ms=0.0,
+        speech_elapsed_ms=max(0.0, speech_end_ms(ctx) - onset), remaining_ms=0.0,
         belief_entry=entry, belief_source=source, partial_interval_ms=interval,
         retrieval=retrieval, prices=prices, history_texts=tuple(history + [str(final_text)]),
     ))

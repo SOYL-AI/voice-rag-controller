@@ -97,6 +97,8 @@ from controller.sequential_v2 import (  # noqa: E402
     TurnCtx,
     get_controller_v2,
     list_controllers_v2,
+    end_of_turn_ms,
+    speech_end_ms,
     user_end_ms,
 )
 
@@ -135,10 +137,27 @@ def query_variant_for(doc_ids: Sequence[str], order_sensitive: bool = True) -> s
 # Phase A cell store
 # ---------------------------------------------------------------------------
 class CellStore:
-    def __init__(self, records: Iterable[dict], order_sensitive: bool = True):
+    """
+    Phase A's measured cells. LAZY OUTCOME EVALUATION (PREREG_V2 §4.8):
+    with `recording` set, every cell a decision lands on is added to it
+    (as (item, condition, path, query_variant), all seeds) and a missing cell
+    is answered with a placeholder instead of raising. Decisions never read
+    a cell, so a recording pass over the exact evaluation pipeline yields
+    exactly the cells that must be generated and graded.
+
+    kind "skip_prompt" rows carry the skip prompt's token count for every
+    (item, condition); the skip path's TTFA depends on it even when the skip
+    answer itself is not needed, and it is known without generating.
+    """
+
+    PLACEHOLDER = {"answer_correct": False, "n_prompt_tokens": None, "placeholder": True}
+
+    def __init__(self, records: Iterable[dict], order_sensitive: bool = True, recording: Optional[set] = None):
         self.order_sensitive = order_sensitive
         self.retrievals: Dict[Tuple[str, str, Optional[int]], dict] = {}
         self.cells: Dict[Tuple[str, int, str, str, str], dict] = {}
+        self.skip_prompt_tokens: Dict[Tuple[str, str], float] = {}
+        self.recording = recording
         for rec in records:
             kind = rec.get("kind")
             if kind == "retrieval":
@@ -151,11 +170,13 @@ class CellStore:
                 key = (str(rec["item_id"]), int(rec["seed"]), str(rec["condition"]), str(rec["path"]),
                        str(rec.get("query_variant", "none")))
                 self.cells[key] = rec
+            elif kind == "skip_prompt":
+                self.skip_prompt_tokens[(str(rec["item_id"]), str(rec["condition"]))] = rec["n_prompt_tokens"]
             else:
                 raise ValueError(f"cell store record with unknown kind {kind!r}")
 
     @classmethod
-    def load(cls, path: Path, order_sensitive: bool = True) -> "CellStore":
+    def load(cls, path: Path, order_sensitive: bool = True, recording: Optional[set] = None) -> "CellStore":
         path = Path(path)
         files = sorted(path.glob("*.jsonl")) if path.is_dir() else [path]
         records = []
@@ -165,7 +186,7 @@ class CellStore:
                     records.extend(json.load(fh))
                 else:
                     records.extend(json.loads(line) for line in fh if line.strip())
-        return cls(records, order_sensitive)
+        return cls(records, order_sensitive, recording)
 
     def retrieval_for(self, item_id: str, condition: str, partial_index: Optional[int]) -> dict:
         key = (item_id, condition, partial_index)
@@ -176,15 +197,22 @@ class CellStore:
 
     def cell(self, item_id: str, seed: int, condition: str, path: str, variant: str) -> dict:
         key = (item_id, int(seed), condition, path, variant)
+        if self.recording is not None:
+            self.recording.add((item_id, condition, path, variant))
+            return self.cells.get(key, self.PLACEHOLDER)
         if key not in self.cells:
             raise KeyError(f"Phase A never generated cell {key}")
         return self.cells[key]
+
+    def skip_tokens(self, item_id: str, condition: str, fallback=None):
+        """Skip prompt tokens (known before generation) for the skip-path TTFA."""
+        return self.skip_prompt_tokens.get((item_id, condition), fallback)
 
     def gold_hit_partials(self, item_id: str, condition: str, gold_ids: Iterable[str]) -> List[int]:
         gold = set(gold_ids)
         return sorted(k[2] for k, rec in self.retrievals.items()
                       if k[0] == item_id and k[1] == condition and k[2] is not None
-                      and gold & set(rec["retrieved_doc_ids"]))
+                      and gold & set(rec.get("retrieved_parent_ids") or rec["retrieved_doc_ids"]))
 
 
 # ---------------------------------------------------------------------------
@@ -213,7 +241,8 @@ def _rng_for(item_id: str, seed: int, condition: str, profile: str) -> random.Ra
 
 
 def outcome_record(name: str, decision, turn: TurnCtx, seed: int, profile: str, prices: Optional[dict],
-                   store: CellStore, latency_model, split: str, architecture: str = "commit") -> dict:
+                   store: CellStore, latency_model, split: str, architecture: str = "commit",
+                   cfg: Optional[dict] = None) -> dict:
     """
     One scored record. A DISCARDED speculative dispatch (decision.used is
     False) is scored on the skip cell and the skip-path TTFA (the answer was
@@ -229,18 +258,31 @@ def outcome_record(name: str, decision, turn: TurnCtx, seed: int, profile: str, 
     else:
         variant, path = "none", "skip"
     cell = store.cell(item, seed, cond, path, variant)
-    ue = user_end_ms(turn)
+    if path == "skip" and store.skip_tokens(item, cond) is not None:
+        cell = {**cell, "n_prompt_tokens": store.skip_tokens(item, cond)}
+    # TTFA is measured from the end of the user's speech; the gap to the
+    # end-of-turn decision (VAD hang + final ASR) is the TRACE's actual
+    # endpoint for this turn, not a sampled one.
+    ue = speech_end_ms(turn)
+    eot_kw = {}
+    if cfg is not None:
+        eot_kw["eot_ms"] = max(0.0, end_of_turn_ms(turn, cfg) - ue)
     comps = latency_model.sample_ttfa(path, decision.dispatch_t_ms if path == "retrieve" else None,
                                       ue, profile, cell.get("n_prompt_tokens", 0),
-                                      _rng_for(item, seed, cond, profile))
+                                      _rng_for(item, seed, cond, profile), **eot_kw)
     exposed = comps.get("exposed_retrieval_ms")
     # The same item's skip-cell TTFA under the SAME latency draw (common
     # random numbers): Delta-TTFA in the realised utility is measured
     # against it (PREREG_V2 §3).
-    skip_cell = store.cell(item, seed, cond, "skip", "none")
+    # The skip counterfactual's TTFA needs only the skip prompt's length,
+    # which is known without generating (lazy evaluation reads no skip cell
+    # for a turn that retrieved).
+    skip_tokens = store.skip_tokens(item, cond)
+    if skip_tokens is None and not decision.uses_passages:
+        skip_tokens = cell.get("n_prompt_tokens", 0)
     skip_ttfa = float(latency_model.sample_ttfa("skip", None, ue, profile,
-                                                skip_cell.get("n_prompt_tokens", 0),
-                                                _rng_for(item, seed, cond, profile))["ttfa_ms"])
+                                                skip_tokens or 0,
+                                                _rng_for(item, seed, cond, profile), **eot_kw)["ttfa_ms"])
     retrievals = 1 if decision.retrieve else 0
     utility = None
     if prices is not None:
@@ -326,7 +368,9 @@ def run_phase_b(
                     if name == "oracle_v2":
                         if labels is None or gold is None:
                             raise ValueError("oracle_v2 needs labels and gold ids")
-                        oracle = {"closed_book_wrong": bool(labels[turn.item_id]),
+                        # an undetermined empirical label counts as "not wrong"
+                        # (the oracle skips); E1-v2 reports how many there are
+                        oracle = {"closed_book_wrong": bool(labels.get(turn.item_id, False)),
                                   "gold_hit_partial_indices": store.gold_hit_partials(
                                       turn.item_id, turn.condition, gold.get(turn.item_id, [])),
                                   "label_source": "E1-v2 empirical closed-book label"}
@@ -334,7 +378,7 @@ def run_phase_b(
                     decision = ctrl.decide_turn(ctx)
                     for seed in seeds:
                         records.append(outcome_record(name, decision, ctx, seed, profile, prices,
-                                                      store, latency_model, split, architecture))
+                                                      store, latency_model, split, architecture, cfg))
     return records
 
 

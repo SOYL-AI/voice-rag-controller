@@ -488,6 +488,12 @@ controller:
       # R_t + eot_detection_ms; the end-of-turn step happens at VAD end +
       # eot_detection_ms (or at the final ASR transcript, if later).
       eot_detection_ms: 0
+      # Expected gap from the END OF SPEECH to the end-of-turn decision, for
+      # the hiding window of an early dispatch (R_t + end_gap_ms). null ->
+      # eot_detection_ms. On real ASR traces the turn ends at the later of the
+      # VAD end (speech end + 800 ms hang) and the final transcript's
+      # availability; set it to the dev median of that gap (a shared estimate).
+      end_gap_ms: null
       default_partial_interval_ms: 300
       fixed_early_fraction: 0.5      # fixed_early_proxy fires at est. word fraction >= this
       forecast_lead_quantile: 0.5    # forecast fires when R_t + eot <= this latency quantile

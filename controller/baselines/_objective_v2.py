@@ -100,6 +100,9 @@ _DEFAULT_E3V2_CFG: dict = {
     "belief": {"prior": 0.5, "availability_lag_ms": 0},
     "timing": {
         "eot_detection_ms": 0,
+        # expected speech-end -> end-of-turn-decision gap for the hiding
+        # window; null = eot_detection_ms (see hiding_window_ms)
+        "end_gap_ms": None,
         "default_partial_interval_ms": 300,
         "fixed_early_fraction": 0.5,
         "forecast_lead_quantile": 0.5,
@@ -196,9 +199,14 @@ def load_e3v2_config(path: Optional[str] = None, overrides: Optional[dict] = Non
         if fitted:
             cfg["rho"] = {**cfg["rho"], "table": fitted}
     q = cfg["quality"]
-    if float(q["g_plus"]) < 0 or float(q["g_minus"]) < 0:
-        raise ValueError("controller.e3v2.quality g_plus/g_minus must be >= 0 "
-                         "(g_minus is the MAGNITUDE of the harm on not-needed items)")
+    # g_minus is SIGNED: positive = retrieval harms not-needed items (the v1
+    # finding), negative = it helps them too (measured on d1_open ASR, where
+    # the closed-book answer to a misrecognised question fails although the
+    # text label says "not needed"). The objective stays well defined as long
+    # as the retrieve utility increases with the belief: g+ (1-rho) + g- > 0.
+    if float(q["g_plus"]) < 0 or float(q["g_plus"]) + float(q["g_minus"]) <= 0:
+        raise ValueError("controller.e3v2.quality needs g_plus >= 0 and g_plus + g_minus > 0 "
+                         "(the retrieve utility must increase with the belief)")
     if cfg.get("architecture") not in ARCHITECTURES:
         raise ValueError(f"controller.e3v2.architecture must be one of {ARCHITECTURES}, "
                          f"got {cfg.get('architecture')!r}")
@@ -465,14 +473,24 @@ def priced_latency_ms(lat: LatencyDist, retrieval_exposed_ms: float) -> float:
 def hiding_window_ms(remaining_ms: Optional[float], is_final: bool, cfg: dict) -> float:
     """
     W_t: how long a retrieval dispatched now has before generation could
-    start. At a partial: predicted remaining speech + end-of-turn detection
-    delay. At the end-of-turn step: 0. With no remaining-time prediction the
-    window is taken as 0 (nothing is credited as hidden that the system cannot
-    predict) — conservative, and the same for every controller.
+    start. At a partial: predicted remaining speech + the expected gap from
+    the end of speech to the end-of-turn decision. At the end-of-turn step: 0.
+    With no remaining-time prediction the window is taken as 0 (nothing is
+    credited as hidden that the system cannot predict) — conservative, and
+    the same for every controller.
+
+    The gap is timing.end_gap_ms when set (a dev-estimated shared constant:
+    on real ASR traces the VAD hang plus the final transcript's ASR time,
+    since the end-of-turn step waits for both), else eot_detection_ms (the
+    delay build_steps adds after the VAD end, the same quantity when the
+    VAD end is the end of speech).
     """
     if is_final or remaining_ms is None:
         return 0.0
-    return max(0.0, float(remaining_ms)) + float(cfg["timing"]["eot_detection_ms"])
+    gap = cfg["timing"].get("end_gap_ms")
+    if gap is None:
+        gap = cfg["timing"]["eot_detection_ms"]
+    return max(0.0, float(remaining_ms)) + float(gap)
 
 
 def expected_exposed_ms(lat: LatencyDist, remaining_ms: Optional[float], is_final: bool, cfg: dict) -> float:
