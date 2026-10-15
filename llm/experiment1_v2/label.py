@@ -213,7 +213,7 @@ def grade_draws(records, items_by_id, judges, cfg, cache_dir, workers, judge_key
                 "samples": [
                     {**{k: s.get(k) for k in (
                         "sample_index", "seed", "extra_sample", "answer_correct", "parsed_ok",
-                        "judge_raw", "response_model", "response_id", "finish_reason",
+                        "judge_raw", "deployment", "response_model", "response_id", "finish_reason",
                         "sent_params", "usage", "sample_key", "request_body_captured")},
                      "request_body_sha256": common.sha256_text(
                          json.dumps(s.get("request_body"), sort_keys=True))}

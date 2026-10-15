@@ -132,25 +132,43 @@ class JudgeSpec:
     request: dict
     endpoint: str = field(default="", repr=False)
     api_key: str = field(default="", repr=False)
+    # The serving pool: several deployments of the SAME model version (e.g.
+    # gpt-6.1-sol GlobalStandard + gpt-6.1-sol-dz DataZoneStandard). Which one
+    # served a verdict is provenance, not identity. Empty -> [deployment].
+    deployments: tuple = ()
+
+    @property
+    def pool(self) -> tuple:
+        return tuple(self.deployments) or (self.deployment,)
 
     def identity(self) -> dict:
-        """Public identity: what graded. No endpoint, no key."""
+        """Public identity: WHAT graded, i.e. model version + API version +
+        rubric/prompt (+ the request params, which the cache key adds). The
+        deployment name is deliberately absent: deployments of one model
+        version are interchangeable, so their verdicts share a cache. No
+        endpoint, no key."""
         return {
             "role": self.role, "label": self.label, "provider": self.provider,
-            "deployment": self.deployment, "model_id": self.model_id,
+            "model_id": self.model_id,
             "api_version": self.api_version, "prompt_version": self.prompt_version,
             "prompt_sha256": rubric_sha256(self.prompt_version),
         }
 
+    def legacy_identities(self) -> list:
+        """Identities as written before deployment pools (they named the
+        deployment), one per pool member: cache lookups fall back to these
+        so verdicts graded earlier stay valid."""
+        return [dict(self.identity(), deployment=d) for d in self.pool]
+
     def identity_string(self) -> str:
-        return (f"{self.provider}/{self.deployment}[{self.model_id}]@{self.api_version}"
+        return (f"{self.provider}/{'|'.join(self.pool)}[{self.model_id}]@{self.api_version}"
                 f"#{self.prompt_version}")
 
-    def slug(self) -> str:
-        """Cache directory name: the label plus a hash of the full identity.
+    def slug(self, identity: dict = None) -> str:
+        """Cache directory name: the label plus a hash of the identity.
         Short on purpose (Windows MAX_PATH); the cache KEY carries the
         identity in full, this only keeps judges in separate directories."""
-        digest = common.sha256_text(json.dumps(self.identity(), sort_keys=True))[:10]
+        digest = common.sha256_text(json.dumps(identity or self.identity(), sort_keys=True))[:10]
         label = "".join(c if c.isalnum() or c in "-._" else "-" for c in self.label)[:24]
         return f"{label}-{digest}"
 
@@ -183,9 +201,16 @@ def resolve_spec(role: str, judges_cfg: dict, env=None) -> JudgeSpec:
     env = os.environ if env is None else env
     entry = judges_cfg["judges"][role]
     found, missing = {}, []
+    # A pool (VOICE_RAG_JUDGE_DEPLOYMENTS=a,b) takes precedence over the single
+    # deployment variable, which stays supported.
+    pool_names = entry["env"].get("deployments") or []
+    _, pool_value = _first_env(pool_names, env) if pool_names else (None, None)
+    pool = tuple(d.strip() for d in (pool_value or "").split(",") if d.strip())
     for field_name in ("deployment", "api_version", "model_id", "endpoint", "api_key"):
         names = entry["env"][field_name]
         _, value = _first_env(names, env)
+        if field_name == "deployment" and pool:
+            value = pool[0]
         if value is None and field_name == "model_id":
             value = entry.get("default_model_id")
         if value is None and field_name != "model_id":
@@ -224,13 +249,33 @@ def resolve_spec(role: str, judges_cfg: dict, env=None) -> JudgeSpec:
         deployment=found["deployment"], model_id=found["model_id"],
         api_version=found["api_version"], prompt_version=judges_cfg["prompt_version"],
         request=request, endpoint=found["endpoint"].rstrip("/"), api_key=found["api_key"],
+        deployments=pool or (found["deployment"],),
     )
 
 
 # ---------------------------------------------------------------------------
 # Judges
 # ---------------------------------------------------------------------------
-def _sdk_transport(spec: JudgeSpec, timeout_s: float = 120.0):
+class JudgeModelMismatch(JudgeCallError):
+    """A deployment returned a model other than the configured version. The
+    pool's verdicts are interchangeable only if every member serves the same
+    model version, so this stops the run."""
+
+
+def _is_rate_limit(error) -> bool:
+    status = getattr(error, "status_code", None) or getattr(error, "status", None)
+    return status == 429 or type(error).__name__ == "RateLimitError"
+
+
+def model_matches(expected: str, returned) -> bool:
+    """The returned model string is the configured version, or an unversioned
+    configured id (e.g. 'gpt-4o') plus a version suffix ('gpt-4o-2024-11-20')."""
+    if returned is None:
+        return True  # nothing reported (test transports); recorded as None
+    return returned == expected or returned.startswith(expected + "-")
+
+
+def _sdk_transport(spec: JudgeSpec, timeout_s: float = 120.0, deployment: str = None):
     from openai import AzureOpenAI, DefaultHttpxClient  # noqa: PLC0415 -- real runs only
 
     # The JSON body the SDK actually puts on the wire is captured by an
@@ -252,7 +297,7 @@ def _sdk_transport(spec: JudgeSpec, timeout_s: float = 120.0):
         # version knows about (openai 1.52 has no reasoning_effort argument).
         captured.body = None
         response = client.chat.completions.create(
-            model=spec.deployment, messages=messages, extra_body=params
+            model=deployment or spec.deployment, messages=messages, extra_body=params
         )
         body = json.loads(captured.body) if captured.body else None
         choice = response.choices[0]
@@ -269,14 +314,71 @@ def _sdk_transport(spec: JudgeSpec, timeout_s: float = 120.0):
 
 
 class AzureChatJudge:
-    def __init__(self, spec: JudgeSpec, transport=None, sleep=time.sleep):
+    """One judge served by a pool of deployments of the same model version.
+
+    Each call goes to the deployment with the fewest calls in flight among
+    those not cooling down (ties rotate). A 429 puts that deployment on a
+    per-deployment exponential cooldown (1 s doubling to 60 s), so traffic
+    moves to the other one; a success resets it. If every deployment is
+    cooling down the call waits for the earliest. The serving deployment
+    and the returned model string go on every sample; a model string that
+    does not match the configured version raises JudgeModelMismatch."""
+
+    MAX_COOLDOWN_S = 60.0
+
+    def __init__(self, spec: JudgeSpec, transport=None, sleep=time.sleep, clock=time.monotonic):
         self.spec = spec
-        self._transport = transport or _sdk_transport(spec)
+        # transport: None (real SDK clients), one callable for every
+        # deployment, or {deployment: callable}.
+        if transport is None:
+            self._transports = {d: _sdk_transport(spec, deployment=d) for d in spec.pool}
+        elif isinstance(transport, dict):
+            self._transports = dict(transport)
+        else:
+            self._transports = {d: transport for d in spec.pool}
         self._sleep = sleep
+        self._clock = clock
         self._lock = threading.Lock()
+        self._in_flight = {d: 0 for d in spec.pool}
+        self._cooldown_until = {d: 0.0 for d in spec.pool}
+        self._rate_limit_streak = {d: 0 for d in spec.pool}
+        self._served = {d: 0 for d in spec.pool}
+        self._rotation = 0
         self._temperature = spec.request.get("temperature")
         self._token_param = spec.request.get("token_param", "max_tokens")
         self.adaptations = []
+        self.models_seen = {}
+
+    def pool_stats(self) -> dict:
+        with self._lock:
+            return {d: {"served": self._served[d], "rate_limited_streak": self._rate_limit_streak[d]}
+                    for d in self.spec.pool}
+
+    def _acquire(self) -> str:
+        """Pick a deployment (least in flight among those not cooling down)."""
+        while True:
+            with self._lock:
+                now = self._clock()
+                ready = [d for d in self.spec.pool if self._cooldown_until[d] <= now]
+                if ready:
+                    self._rotation += 1
+                    order = {d: (i - self._rotation) % len(self.spec.pool)
+                             for i, d in enumerate(self.spec.pool)}
+                    chosen = min(ready, key=lambda d: (self._in_flight[d], order[d]))
+                    self._in_flight[chosen] += 1
+                    return chosen
+                wait = min(self._cooldown_until.values()) - now
+            self._sleep(max(0.05, wait))
+
+    def _release(self, deployment: str, rate_limited: bool) -> None:
+        with self._lock:
+            self._in_flight[deployment] -= 1
+            if rate_limited:
+                self._rate_limit_streak[deployment] += 1
+                backoff = min(self.MAX_COOLDOWN_S, 2.0 ** (self._rate_limit_streak[deployment] - 1))
+                self._cooldown_until[deployment] = self._clock() + backoff
+            else:
+                self._rate_limit_streak[deployment] = 0
 
     @property
     def identity(self) -> dict:
@@ -322,31 +424,26 @@ class AzureChatJudge:
 
     def complete(self, system: str, user: str, seed=None) -> dict:
         messages = [{"role": "system", "content": system}, {"role": "user", "content": user}]
-        transient = adapted = 0
+        transient = adapted = rate_limited = 0
         while True:
             params = self._params(seed)
+            deployment = self._acquire()
+            limited = False
             try:
-                reply = self._transport(messages, params)
-                if not isinstance(reply, dict):  # (text, model[, usage]) test transports
-                    reply = {"text": reply[0], "model": reply[1],
-                             "usage": reply[2] if len(reply) > 2 else None}
-                body = reply.get("request_body")
-                return {
-                    "text": (reply.get("text") or "").strip(),
-                    "sent_params": params,
-                    "request_body": body if body is not None else
-                    {"model": self.spec.deployment, "messages": messages, **params},
-                    "request_body_captured": body is not None,
-                    "response_model": reply.get("model"),
-                    "response_id": reply.get("response_id"),
-                    "finish_reason": reply.get("finish_reason"),
-                    "usage": reply.get("usage"),
-                    "attempts": transient + adapted + 1,
-                    "adaptations_so_far": list(self.adaptations),
-                }
+                reply = self._transports[deployment](messages, params)
             except Exception as error:  # noqa: BLE001 -- classified below
+                limited = _is_rate_limit(error)
+                self._release(deployment, limited)
                 if adapted < 3 and self._adapt(error):
                     adapted += 1
+                    continue
+                if limited:
+                    # The pool reroutes to a deployment that is not cooling
+                    # down; give up only after many consecutive 429s.
+                    rate_limited += 1
+                    if rate_limited > 10 * len(self.spec.pool):
+                        raise JudgeCallError(f"{self.spec.label}: rate-limited on every "
+                                             f"deployment {rate_limited} times") from None
                     continue
                 transient += 1
                 if not _is_retryable(error) or transient > 10:
@@ -354,6 +451,37 @@ class AzureChatJudge:
                         f"{self.spec.label}: {type(error).__name__}: {self._redact(error)}"[:600]
                     ) from None
                 self._sleep(min(60.0, 2 ** (transient - 1)))
+                continue
+            self._release(deployment, False)
+            if not isinstance(reply, dict):  # (text, model[, usage]) test transports
+                reply = {"text": reply[0], "model": reply[1],
+                         "usage": reply[2] if len(reply) > 2 else None}
+            served = reply.get("model")
+            with self._lock:
+                self._served[deployment] += 1
+                if served is not None:
+                    self.models_seen.setdefault(deployment, served)
+            if not model_matches(self.spec.model_id, served):
+                raise JudgeModelMismatch(
+                    f"{self.spec.label}: deployment {deployment!r} returned model {served!r}, "
+                    f"not the configured {self.spec.model_id!r}. Verdicts from a pool are only "
+                    "interchangeable if every deployment serves the same model version.")
+            body = reply.get("request_body")
+            return {
+                "text": (reply.get("text") or "").strip(),
+                "sent_params": params,
+                "request_body": body if body is not None else
+                {"model": deployment, "messages": messages, **params},
+                "request_body_captured": body is not None,
+                "deployment": deployment,
+                "response_model": served,
+                "response_id": reply.get("response_id"),
+                "finish_reason": reply.get("finish_reason"),
+                "usage": reply.get("usage"),
+                "attempts": transient + adapted + rate_limited + 1,
+                "rate_limited_retries": rate_limited,
+                "adaptations_so_far": list(self.adaptations),
+            }
 
 
 class MockJudge:
@@ -423,9 +551,11 @@ def make_judges(roles, backend: str, judges_cfg: dict = None, env=None) -> dict:
 # Grading with a cache
 # ---------------------------------------------------------------------------
 def cache_key(judge, *, item_id, question, reference, answer, key_facts, aliases, context,
-              dataset=None, history=None, core_facts=None) -> str:
+              dataset=None, history=None, core_facts=None, identity=None) -> str:
+    """Verdict cache key. `identity` defaults to the judge's deployment-free
+    identity; legacy_cache_keys() passes the old deployment-named ones."""
     parts = [
-        json.dumps(judge.identity, sort_keys=True),
+        json.dumps(identity if identity is not None else judge.identity, sort_keys=True),
         json.dumps(judge.spec.request, sort_keys=True),
         item_id, question, reference, json.dumps(key_facts or []), json.dumps(aliases or []),
         context, answer,
@@ -439,6 +569,15 @@ def cache_key(judge, *, item_id, question, reference, answer, key_facts, aliases
             # r3 only (r2 keys unchanged): the core facts actually graded against.
             parts.append(json.dumps(core_facts_or_fallback(core_facts, key_facts, reference)))
     return common.sha256_text(*parts)
+
+
+def legacy_cache_keys(judge, **kw) -> list:
+    """[(key, slug)] under the pre-pool identities that named the deployment,
+    so cache entries written before deployment pools are still found."""
+    legacy = getattr(judge.spec, "legacy_identities", None)
+    if legacy is None or judge.spec.provider == "mock":
+        return []
+    return [(cache_key(judge, identity=ident, **kw), judge.spec.slug(ident)) for ident in legacy()]
 
 
 def render_prompt(judge, *, question, reference, answer, key_facts=None, aliases=None,
@@ -460,16 +599,18 @@ def grade(judge, *, item_id, question, reference, answer, key_facts=None, aliase
     core facts]). The answer is stripped before both the key and the prompt
     (the v4 'strip' fix)."""
     answer = (answer or "").strip()
-    key = cache_key(judge, item_id=item_id, question=question, reference=reference, answer=answer,
-                    key_facts=key_facts, aliases=aliases, context=context, dataset=dataset,
-                    history=history, core_facts=core_facts)
+    kw = dict(item_id=item_id, question=question, reference=reference, answer=answer,
+              key_facts=key_facts, aliases=aliases, context=context, dataset=dataset,
+              history=history, core_facts=core_facts)
+    key = cache_key(judge, **kw)
+    legacy = legacy_cache_keys(judge, **kw) if cache_dir is not None else []
     system, user = render_prompt(judge, question=question, reference=reference, answer=answer,
                                  key_facts=key_facts, aliases=aliases, context=context,
                                  dataset=dataset, history=history, core_facts=core_facts)
     # Identical answers across seeds share a key; serialise them so the
     # judge is called once and nobody reads a file mid-replace (Windows).
     with _key_lock(key):
-        return _grade_locked(judge, key, item_id, system, user, cache_dir)
+        return _grade_locked(judge, key, item_id, system, user, cache_dir, legacy)
 
 
 _LOCKS: dict = {}
@@ -507,7 +648,24 @@ def majority(votes, min_parsed: int = 1) -> tuple:
     return yes > no, True, share
 
 
-def _grade_locked(judge, key, item_id, system, user, cache_dir) -> dict:
+def _cached_sample(cache_dir, judge, key, legacy, index, seed):
+    """(path to write, cached sample or None). Looks under the current key
+    first, then under the pre-pool deployment-named keys."""
+    sample_key = common.sha256_text(key, index, seed)
+    path = Path(cache_dir) / judge.spec.slug() / f"{sample_key[:40]}.json"
+    if path.exists():
+        return path, sample_key, common.load_json(path)
+    for legacy_key, legacy_slug in legacy:
+        legacy_sample = common.sha256_text(legacy_key, index, seed)
+        old = Path(cache_dir) / legacy_slug / f"{legacy_sample[:40]}.json"
+        if old.exists():
+            cached = common.load_json(old)
+            cached["cache_source"] = "legacy deployment-named key"
+            return path, sample_key, cached
+    return path, sample_key, None
+
+
+def _grade_locked(judge, key, item_id, system, user, cache_dir, legacy=()) -> dict:
     """k independent samples (each cached under its own key, which includes
     its seed), then a majority vote. Every sample is kept on the record."""
     request = judge.spec.request
@@ -526,11 +684,10 @@ def _grade_locked(judge, key, item_id, system, user, cache_dir) -> dict:
         sample_key = common.sha256_text(key, index, seed)
         path = None
         if cache_dir is not None:
-            path = Path(cache_dir) / judge.spec.slug() / f"{sample_key[:40]}.json"
-            if path.exists():
-                sample = common.load_json(path)
-                sample["cache_hit"] = True
-                samples.append(sample)
+            path, sample_key, cached = _cached_sample(cache_dir, judge, key, legacy, index, seed)
+            if cached is not None:
+                cached["cache_hit"] = True
+                samples.append(cached)
                 continue
         reply = judge.complete(system, user, seed=seed)
         correct, parsed_ok = parse_verdict(reply["text"])
@@ -542,6 +699,7 @@ def _grade_locked(judge, key, item_id, system, user, cache_dir) -> dict:
             "judge_raw": reply["text"],
             "sample_key": sample_key,
             "extra_sample": index >= k,
+            "deployment": reply.get("deployment"),  # which pool member served it (provenance)
             "response_model": reply.get("response_model"),
             "response_id": reply.get("response_id"),
             "finish_reason": reply.get("finish_reason"),
