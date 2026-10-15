@@ -1,0 +1,47 @@
+{
+  "created_at_utc": "2026-10-15T07:45:48.906098+00:00",
+  "git_commit": "021260d9f1a1904b9447fd8454e5a49a71c67006",
+  "seed": 20261015,
+  "n": 300,
+  "n_prompt_dev": 100,
+  "n_holdout": 200,
+  "n_items": 184,
+  "pool_size": 1006,
+  "strata": {
+    "ambiguous|agree": {
+      "sampled": 32,
+      "pool": 112
+    },
+    "counter_prior|agree": {
+      "sampled": 51,
+      "pool": 172
+    },
+    "general|agree": {
+      "sampled": 74,
+      "pool": 331
+    },
+    "general|disagree": {
+      "sampled": 40,
+      "pool": 54
+    },
+    "org_specific|agree": {
+      "sampled": 99,
+      "pool": 332
+    },
+    "org_specific|disagree": {
+      "sampled": 4,
+      "pool": 5
+    }
+  },
+  "labels_file": "llm/experiment1_v2/results/d2_support/mistral7b_v03/labels_dev.e1v2-r2.json",
+  "labels_sha256": "4339f257eaf66d96b3c312c749e6a3009eb7904e82ff647c7dc64ec000d588d4",
+  "items_sha256": "a1975cf69fff6ec195a48b04214957a80a1ab7d52de06681fe2c68e99c3ad228",
+  "judge_prompt_version": "e1v2-r2",
+  "sampling_note": "strata use the judge agreement in the labels file above; the same seed and labels file give the same sample",
+  "annotation_rubric": "e1v2-r3",
+  "core_facts_missing": [],
+  "dataset": "d2_support",
+  "paths": [
+    "skip"
+  ]
+}
