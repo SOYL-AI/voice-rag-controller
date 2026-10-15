@@ -17,9 +17,11 @@
 %       questions with the 36 E1 items (R1.5 "does E3 overlap E1")
 %       [PN e3_signal_quality.e3_e1_shared_questions].
 %   (c) Model: Mistral-7B-Instruct-v0.3, bf16, vLLM, for every run
-%       [jiang2023mistral; PRE "Recorded deviation"].
+%       [PRE "Recorded deviation"]. Identify the model by a footnote URL
+%       (https://huggingface.co/mistralai/Mistral-7B-Instruct-v0.3); the
+%       Mistral 7B report was dropped from the bib under the 15-entry cap.
 % NUMBERS: 36, 18/18, 50, 25, 49, 2 of 49.
-\todo{P-V.1: the v1 data, its known weakness, and the model \cite{jiang2023mistral}.}
+\todo{P-V.1: the v1 data, its known weakness, and the model (footnote URL, see comment).}
 
 % ---- P-V.2 what varies across seeds -------------------------------------------
 % PURPOSE: answer R1.3 directly.
@@ -101,7 +103,8 @@ split \cite{mallen2023trust,yang2018hotpotqa}.}
 %       query was frozen, so "negligible partial-query risk" holds only for
 %       that setting and is withdrawn as a general claim (R1.8).
 %   (b) v2 renders each item with TTS voices (en-US, en-IN, en-GB; clean and
-%       noisy), runs streaming ASR (faster-whisper [radford2023whisper]) with
+%       noisy), runs streaming ASR (faster-whisper; footnote URL to the project, the
+%       Whisper paper was dropped under the cap) with
 %       Silero VAD, and logs the real partials, including errors
 %       [CONTRACTS Sec. 4; branch v2/speech audio/stt.py]. Voices:
 %       \TBD{docs/research_v2/speech_accent_screen.json on branch v2/speech}.

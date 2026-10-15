@@ -1,26 +1,39 @@
 % ============================================================================
 % I. INTRODUCTION  (target length: about 0.75 column)
 % Source keys: see sections/00_abstract.tex.
+% Positioning after the verified novelty search (2026-10-16): early and
+% speculative retrieval on partial transcripts is PRIOR WORK (Stream RAG,
+% speculative execution for voice agents); the paper builds on it. Novelty
+% claims are limited to (i) the formal joint-vs-decomposed analysis and the
+% pre-registered boundary test, (ii) the persona finding on partial
+% transcripts, (iii) the matched-pair spoken benchmark -- each hedged "to our
+% knowledge". Never write "Speculative RAG"; write "speculative prefetch".
 % ============================================================================
 \section{Introduction}\label{sec:intro}
 
 % ---- P-I.1 ------------------------------------------------------------------
 % PURPOSE: the systems problem. A voice assistant that grounds answers in
 %   documents must decide (i) whether to retrieve for this turn and (ii) when
-%   to dispatch the retrieval relative to the user's ongoing speech. Early
-%   dispatch hides latency inside speech but acts on a partial transcript.
+%   to dispatch the retrieval relative to the user's ongoing speech.
 % CLAIMS + EVIDENCE:
-%   (a) Retrieval improves grounded answers [lewis2020rag].
-%   (b) Retrieval is not always beneficial; adaptive methods decide whether
-%       to retrieve [jiang2023flare, su2024dragin, asai2024selfrag,
-%       jeong2024adaptiverag]; retrieval can hurt on questions the model
-%       already answers [mallen2023trust].
-%   (c) Spoken interaction adds a timing dimension; end-of-turn prediction
-%       is an active area [ekstedt2020turngpt, ekstedt2022vap,
-%       skantze2021turntaking].
+%   (a) Recent spoken-dialogue systems already retrieve while the user is
+%       still speaking, either speculatively at fixed intervals or when a
+%       model triggers a call, and report lower latency at preserved accuracy
+%       [arora2026streamrag]; speculative execution hides tool latency in
+%       cascaded voice agents [jung2026hiding]. This is the setting the paper
+%       builds on, not a contribution.
+%   (b) Retrieval is not always beneficial: adaptive methods decide whether
+%       to retrieve [jiang2023flare, su2024dragin, jeong2024adaptiverag], and
+%       retrieval can hurt on questions the model already answers
+%       [mallen2023trust].
+%   (c) Timing work in this area treats dispatch as safe once the user's
+%       intent stabilises and assumes the query needs retrieval
+%       [galbraith2026streaming]; whether to retrieve and when are therefore
+%       studied separately.
 % NUMBERS: none.
-\todo{P-I.1: the retrieve-and-when problem in streaming voice RAG; cite
-\cite{lewis2020rag,jiang2023flare,su2024dragin,asai2024selfrag,jeong2024adaptiverag,mallen2023trust,ekstedt2020turngpt,ekstedt2022vap,skantze2021turntaking}.}
+\todo{P-I.1: the retrieve-and-when problem in streaming voice RAG, building on
+streaming retrieval \cite{arora2026streamrag,jung2026hiding,galbraith2026streaming}
+and adaptive retrieval \cite{jiang2023flare,su2024dragin,jeong2024adaptiverag,mallen2023trust}.}
 
 % ---- P-I.2 ------------------------------------------------------------------
 % PURPOSE: the question and why it is not obvious. Should the two decisions
@@ -38,41 +51,55 @@ and the plan to explain it and test its boundaries.}
 
 % ---- P-I.3 ------------------------------------------------------------------
 % PURPOSE: contributions, as a numbered list (authors may keep the list
-%   form; wording is theirs). Contribution 0 must be phrased as ADOPTED,
-%   not proposed (R1 minor): uncertainty-triggered retrieval follows
-%   FLARE/DRAGIN [jiang2023flare, su2024dragin].
-% CONTRIBUTIONS TO LIST (from docs/research_v2/NOVELTY.md, updated for the
-%   boundary-test design merged at 1d8900c):
-%   C1  Equivalence (Prop. 1) and fixed-price gap (Prop. 2): under A1--A3 the
-%       joint controller at lambda_l equals the decomposed one at an exactly
-%       mapped price; v1's tie is a corollary. [TH Secs. 2--3]
-%   C2  Boundaries: turn-dependent overlap gives a second-order gain only
-%       (Prop. 3); information versus overlap is first order but separates the
-%       classes only under a COMMIT architecture (Prop. 4); with SPECULATIVE
-%       prefetch, always-prefetch (B10, SPEC) can be beaten by a joint
-%       controller mainly through a compute saving that a belief-gated
-%       decomposed prefetcher (B11, SPEC-theta) also captures, leaving a
-%       C1-sized gap (Props. 4', 4''); partial-query risk alone does not
-%       separate the classes (Prop. 5). [TH Secs. 5--6]
+%   form; wording is theirs).
+% BACKGROUND, NOT CONTRIBUTIONS (state as adopted, with citations):
+%   - uncertainty-triggered retrieval [jiang2023flare, su2024dragin]
+%     (R1 minor: "present as adopted");
+%   - early and speculative retrieval on partial transcripts, commit-style
+%     (model-triggered) versus speculative (fixed-interval) dispatch
+%     [arora2026streamrag, jung2026hiding];
+%   - self-knowledge probes of the P(IK) kind [kadavath2022language,
+%     moskvoretskii2025adaptive].
+% CONTRIBUTIONS TO LIST (each hedged "to our knowledge" where novelty is
+%   claimed; sources docs/research_v2/NOVELTY.md and THEORY.md as merged at
+%   1d8900c, revised after the novelty search):
+%   C1  A formal analysis of joint versus decomposed control of retrieval and
+%       dispatch time: an equivalence theorem under A1--A3 with an exact price
+%       map (Prop. 1) and the fixed-price gap (Prop. 2), which explain the
+%       v1 tie; and the conditions under which the equivalence breaks --
+%       second order for turn-dependent overlap (Prop. 3), first order for
+%       information versus overlap under a COMMIT architecture (Prop. 4), and,
+%       under SPECULATIVE prefetch, an advantage that a belief-gated
+%       decomposed prefetcher (SPEC-theta) captures up to a C1-sized term
+%       (Props. 4', 4''). [TH Secs. 2--6]
+%   C2  A pre-registered boundary test of these predictions on the same items
+%       under both architectures: P1 joint > B9+ under commit; P2 the joint
+%       advantage is larger under commit than under speculation; P3 under
+%       speculation the joint advantage over the best decomposed rival
+%       (including SPEC-theta) lies within +-half the dev commit effect
+%       (TOST); claim iff all three (intersection-union test).
+%       [PRE2 Secs. 3, 6.1]
 %   C3  A corrected objective that charges retrieval's measured harm on
-%       questions that do not need it (g^- = 0.592 vs g^+ = 0.720 on v1).
-%       [V1T retrieval_effect]
-%   C4  A pre-registered BOUNDARY TEST on new open-domain and
-%       customer-support speech data with live ASR partials, both
-%       architectures on the same items: P1 joint > B9+ under commit; P2 the
-%       joint advantage is larger under commit than under speculation
-%       (paired interaction); P3 under speculation the joint advantage over
-%       the best decomposed rival, including the belief-gated SPEC-theta, is
-%       within +-half the dev commit effect (TOST); the claim requires all
-%       three (intersection-union test). [PRE2 Sec. 3, Sec. 6.1]
-%   C5  Released artifacts: controllers, data, analysis scripts that
-%       regenerate every number. \PEND{release plan and URL}
-% NUMBERS: g^+ = 0.720, g^- = 0.592 [V1T retrieval_effect].
-% DO NOT USE the words "unified multi-timescale framework" or "architectural
-%   strength" (R1 minor: overstated).
-\todo{P-I.3: contributions C1--C5 as listed in the comment above, with
-contribution 0 (uncertainty-triggered retrieval) stated as adopted from
-\cite{jiang2023flare,su2024dragin}.}
+%       questions that do not need it (g^- = 0.592 vs g^+ = 0.720 on v1)
+%       [V1T retrieval_effect]; together with C1 it explains the sign of the
+%       v1 mid-grid gaps.
+%   C4  An empirical finding about the belief on partial transcripts in a
+%       persona/company-support setting \PEND{state once the v2 E1 dev result
+%       exists: entropy-signal failure and P(IK)-style probe sharpening with
+%       transcript prefix; evidence \TBD{llm/experiment1_v2/results/}}. The
+%       probe itself is not claimed as new.
+%   C5  A matched-pair, multi-organisation spoken customer-support benchmark
+%       in which retrieval need is not recoverable from surface form
+%       (leak-test AUC 0.576 [0.541, 0.617]), released with the open-domain
+%       speech set and all analysis code \PEND{release plan and URL}.
+% NUMBERS: g^+ = 0.720, g^- = 0.592 [V1T retrieval_effect];
+%   0.576 [0.541, 0.617] [branch v2/d2-support-a leak_test.json].
+% DO NOT USE: "unified multi-timescale framework", "architectural strength"
+%   (R1 minor), "Speculative RAG" (name of an unrelated method).
+\todo{P-I.3: background stated as adopted
+\cite{jiang2023flare,su2024dragin,arora2026streamrag,jung2026hiding,kadavath2022language},
+then contributions C1--C5 as listed in the comment above, hedged where
+novelty is claimed.}
 
 % ---- P-I.4 ------------------------------------------------------------------
 % PURPOSE: one-sentence roadmap with section references.
