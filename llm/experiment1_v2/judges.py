@@ -348,11 +348,11 @@ class AzureChatJudge:
                     adapted += 1
                     continue
                 transient += 1
-                if not _is_retryable(error) or transient > 4:
+                if not _is_retryable(error) or transient > 10:
                     raise JudgeCallError(
                         f"{self.spec.label}: {type(error).__name__}: {self._redact(error)}"[:600]
                     ) from None
-                self._sleep(min(30.0, 2 ** (transient - 1)))
+                self._sleep(min(60.0, 2 ** (transient - 1)))
 
 
 class MockJudge:
