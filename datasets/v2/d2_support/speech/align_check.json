@@ -1,0 +1,36 @@
+{
+ "n_renders": 63,
+ "words_matched_share": 0.9693769799366421,
+ "start_whisper_minus_forced": {
+  "median": -140.0,
+  "median_abs": 140.0,
+  "within_50ms": 0.06971677559912855,
+  "within_100ms": 0.33769063180827885,
+  "iqr": 130.0,
+  "after_median_shift_within_50ms": 0.4466230936819172
+ },
+ "end_whisper_minus_forced": {
+  "median": -120.0,
+  "median_abs": 120.0,
+  "within_50ms": 0.16230936819172112,
+  "within_100ms": 0.42701525054466233,
+  "iqr": 130.0,
+  "after_median_shift_within_50ms": 0.46949891067538124
+ },
+ "first_word_onset_minus_energy": {
+  "median": 0.0,
+  "median_abs": 0.0,
+  "within_50ms": 1.0,
+  "within_100ms": 1.0,
+  "iqr": 0.0,
+  "after_median_shift_within_50ms": 1.0
+ },
+ "last_word_end_minus_energy": {
+  "median": 0.0,
+  "median_abs": 0.0,
+  "within_50ms": 0.7142857142857143,
+  "within_100ms": 0.7936507936507936,
+  "iqr": 55.0,
+  "after_median_shift_within_50ms": 0.7142857142857143
+ }
+}

@@ -75,4 +75,4 @@ def test_trace_file_resume_and_finalize(tmp_path):
     assert done_ids(p) == {"a", "b"}
     finalize(p)
     rows = [json.loads(l) for l in p.read_text(encoding="utf-8").splitlines()]
-    assert [r["item_id"] for r in rows] == ["a", "b"] and rows[1]["x"] == 1
+    assert [r["item_id"] for r in rows] == ["a", "b"] and rows[1]["x"] == 3  # last record wins

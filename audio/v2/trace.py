@@ -227,7 +227,16 @@ def file_lock(path: Path, timeout_s: float = 600.0):
             pass
 
 
-def done_ids(path: Path) -> set[str]:
+def max_compute_ms(rec: dict) -> float:
+    cs = [p["compute_ms"] for p in rec["partials"]]
+    if rec.get("asr_final"):
+        cs.append(rec["asr_final"]["compute_ms"])
+    return max(cs) if cs else 0.0
+
+
+def done_ids(path: Path, retrace_over_ms: float | None = None) -> set[str]:
+    """Item ids already traced; with retrace_over_ms, items whose slowest ASR call exceeded it
+    (host stalls: paging, contention) are treated as not done and get traced again."""
     if not path.exists():
         return set()
     out = set()
@@ -235,9 +244,11 @@ def done_ids(path: Path) -> set[str]:
         for line in fh:
             if line.strip():
                 try:
-                    out.add(json.loads(line)["item_id"])
+                    r = json.loads(line)
                 except Exception:
-                    pass  # a torn last line from a killed process; finalize drops it
+                    continue  # a torn last line from a killed process; finalize drops it
+                if retrace_over_ms is None or max_compute_ms(r) <= retrace_over_ms:
+                    out.add(r["item_id"])
     return out
 
 
@@ -248,7 +259,8 @@ def append_line(path: Path, rec: dict):
 
 
 def finalize(path: Path):
-    """Drop torn lines and duplicates, sort by item_id."""
+    """Drop torn lines and duplicates (the last record of an item wins, so a re-trace
+    replaces the earlier one), sort by item_id."""
     if not path.exists():
         return
     with file_lock(path):
@@ -259,7 +271,7 @@ def finalize(path: Path):
                     r = json.loads(line)
                 except Exception:
                     continue
-                recs.setdefault(r["item_id"], r)
+                recs[r["item_id"]] = r
         tmp = path.with_name(path.name + f".{os.getpid()}.part")
         with open(tmp, "w", encoding="utf-8", newline="\n") as fh:
             for k in sorted(recs):
@@ -314,6 +326,8 @@ def main(argv=None):
     ap.add_argument("--vad-threshold", type=float, default=LIVE_VAD_THRESHOLD)
     ap.add_argument("--partial-interval-ms", type=int, default=None)
     ap.add_argument("--traces-dir", default=None, help="default: datasets/v2/<name>/speech/traces")
+    ap.add_argument("--retrace-over-ms", type=float, default=None,
+                    help="re-trace items whose slowest ASR call took longer than this (host stalls)")
     a = ap.parse_args(argv)
 
     name = a.name or dataset_name_for(Path(a.items))
@@ -332,7 +346,7 @@ def main(argv=None):
     for cond in conds:
         vid, wpm, noise = V.parse_condition(cond)
         path = out_dir / f"{cond}.jsonl"
-        have = done_ids(path)
+        have = done_ids(path, a.retrace_over_ms)
         t0, n, skipped = time.perf_counter(), 0, 0
         for it in todo:
             if it["item_id"] in have:
