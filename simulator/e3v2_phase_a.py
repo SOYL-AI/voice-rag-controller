@@ -569,11 +569,15 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
         raise SystemExit("--split must be dev or test")
     if args.split == "test" and not PREREG_FROZEN.exists():
         raise SystemExit("Refusing --split test: sealed until docs/research_v2/PREREG_FROZEN exists.")
-    if args.judge_workers > 4:
-        raise SystemExit("--judge-workers is capped at 4 (judge rate limit)")
     if args.env_file:
         from dotenv import load_dotenv
         load_dotenv(args.env_file, override=False)
+    # 4 concurrent judge calls per deployment (rate limit); a deployment pool
+    # (VOICE_RAG_JUDGE_DEPLOYMENTS, llm/experiment1_v2/judges.py) routes each
+    # call to its least-loaded member, so the cap scales with the pool size.
+    n_deploy = max(1, len([d for d in os.environ.get("VOICE_RAG_JUDGE_DEPLOYMENTS", "").split(",") if d.strip()]))
+    if args.judge_workers > 4 * n_deploy:
+        raise SystemExit(f"--judge-workers is capped at 4 per judge deployment ({4 * n_deploy} here)")
     os.environ.setdefault("VOICE_RAG_MODEL", MODEL_KEY)
     if args.index_dir is None:
         args.index_dir = str(_REPO_ROOT / "retrieval" / "indexes" / args.dataset)
