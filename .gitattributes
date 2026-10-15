@@ -1,0 +1,4 @@
+# research v2 datasets: keep LF line endings so rebuilt files hash identically on every OS
+datasets/v2/**/*.jsonl text eol=lf
+datasets/v2/**/*.json text eol=lf
+datasets/v2/**/*.gz binary
