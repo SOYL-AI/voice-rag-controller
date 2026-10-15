@@ -223,3 +223,32 @@ before results are written.
 - Operational uncertainty signal confirmed as `mean_entropy_nats`.
 - Answer correctness for E3 is evaluated using the Azure GPT-4o judge at temperature 0 through the locked `answer_correct` metric.
 - E3 numerical results are not compiled here yet; they will be added once the final result artifacts and exact numbers are available on `main`.
+
+### 2026-10-16 — v2 primary design: the paper tests the commit/speculative boundary
+
+**Decision:** The v2 pre-registration (draft, `docs/research_v2/PREREG_V2.md` §3) tests BOTH pipeline architectures on the same test items, price and latency profile:
+
+- **COMMIT:** a dispatched retrieval is always used.
+- **SPECULATIVE:** a dispatched retrieval may be discarded at end of turn.
+
+There are three co-primary hypotheses:
+
+- **P1:** the joint controller beats the strongest decomposed rival under COMMIT.
+- **P2:** that advantage is larger under COMMIT than under SPECULATIVE (an interaction contrast).
+- **P3:** under SPECULATIVE, the joint advantage over speculative prefetch is below the THEORY Prop. 4′ margin λ_c(1+w̄)q̂.
+
+The boundary claim requires all three (an intersection–union test at one-sided α = 0.025).
+
+**Reason:** THEORY.md shows that:
+
+- joint and decomposed control are equivalent under A1–A3 (Prop. 1);
+- turn-dependent overlap is a second-order effect (Prop. 3);
+- the information-vs-overlap channel separates the two only when retrieval is committed (Prop. 4 / 4′).
+
+Testing both architectures makes the result informative whichever way it falls, instead of staking the study on one side of the boundary.
+
+**Not yet done before freeze:** extend the power analysis to P2/P3, fix m on dev, and name D\*[arch].
+
+**Decided by:** Ryan (PI)
+
+**Recorded by:** Ryan Gomez
