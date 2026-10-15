@@ -41,8 +41,17 @@ def _tri(c, lo, hi):
     return {"central": float(c), "low": float(min(lo, c)), "high": float(max(hi, c))}
 
 
-def stage_triple(s: dict) -> dict:
+def is_cpu_only(name: str) -> bool:
+    """Stages that never touch the GPU; their GPU 'net' is pure noise from
+    other workloads on the shared host and is excluded."""
+    return not ("cuda" in name or name == "gpu_wake_tail")
+
+
+def stage_triple(s: dict, name: str = "") -> dict:
     """(central, low, high) for one measured stage; see module docstring."""
+    if name and is_cpu_only(name):
+        s = dict(s)
+        s["gpu_net_j"] = {"mean": 0.0, "lo": 0.0, "hi": 0.0}
     cpu_s = s["cpu_s_per_op"]["mean"] or 0.0
     attr = s["cpu_attr_j"]["mean"] or 0.0
     rapl = s["cpu_net_j"]["mean"]
@@ -67,9 +76,9 @@ def add(*ts) -> dict:
 def build(stages: dict, util: dict, llm: dict, placement: str) -> dict:
     S = stages["stages"]
     utt = stages["utterance"]
-    tri = lambda name: stage_triple(S[name])
+    tri = lambda name: stage_triple(S[name], name)
     gpu = placement == "gpu"
-    wake = tri("gpu_wake_tail") if "gpu_wake_tail" in S else _tri(0, 0, 0)
+    wake = _tri(0, 0, 0)
     if "gpu_wake_tail" in S:   # wake/tail is GPU-only: use its own CI directly
         w = S["gpu_wake_tail"]["gpu_net_j"]
         wake = _tri(max(w["mean"], 0), max(w["lo"], 0), max(w["hi"], 0))
@@ -83,18 +92,19 @@ def build(stages: dict, util: dict, llm: dict, placement: str) -> dict:
     for lab in ("short", "typical", "long"):
         n = f"tts_piper_inproc_{lab}"
         if n in S:
-            xs.append(S[n]["chars"]); ys.append(stage_triple(S[n]))
+            xs.append(S[n]["chars"]); ys.append(stage_triple(S[n], n))
     import numpy as np
     fit = {}
     for q in ("central", "low", "high"):
         b, a = np.polyfit(xs, [y[q] for y in ys], 1) if len(xs) >= 2 else (ys[0][q] / xs[0], 0.0)
         fit[q] = (max(a, 0.0), max(b, 0.0))
-    tts_fixed = {q: fit[q][0] for q in fit}
-    tts_per_char = {q: fit[q][1] for q in fit}
+    order = lambda d: _tri(d["central"], d["low"], d["high"])
+    tts_fixed = order({q: fit[q][0] for q in fit})
+    tts_per_char = order({q: fit[q][1] for q in fit})
     sub_over = None
     if "tts_piper_subprocess_typical" in S and "tts_piper_inproc_typical" in S:
-        sub_over = {q: max(stage_triple(S["tts_piper_subprocess_typical"])[q]
-                           - stage_triple(S["tts_piper_inproc_typical"])[q], 0.0)
+        sub_over = {q: max(stage_triple(S["tts_piper_subprocess_typical"], "tts")[q]
+                           - stage_triple(S["tts_piper_inproc_typical"], "tts")[q], 0.0)
                     for q in ("central", "low", "high")}
         if not gpu:   # production = as implemented today
             tts_fixed = add(tts_fixed, sub_over)
