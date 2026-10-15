@@ -21,11 +21,14 @@ Code: `audio/v2/` (`render.py`, `trace.py`, `trace_report.py`, `voices.py`,
   rates x 3 noises = 54 conditions, 2,700 traces in
   `datasets/v2/v1_scenarios/speech/traces/`, report in
   `datasets/v2/v1_scenarios/speech/trace_report.md`.
-* **d2_support dev, primary condition**: 222 dev items (ids from
-  `splits.json`), `piper-en_US-hfc_male-medium__150wpm__clean`, in
-  `datasets/v2/d2_support/speech/traces/`; report in
-  `datasets/v2/d2_support/speech/trace_report.md`. This is the trace E1-v2
-  should use for ASR-prefix signals.
+* **Primary condition, all items and splits**:
+  `piper-en_US-hfc_male-medium__150wpm__clean` for d1_open (5,300 items) and
+  d2_support (720 items), in `datasets/v2/<name>/speech/traces/`, reports in
+  `datasets/v2/<name>/speech/trace_report.md`. This is the trace E1-v2 and the
+  controllers should use for ASR-prefix signals.
+* **Robustness grid** on the seeded 300-item dev subset (`grid_subset.json`):
+  hfc_male, lessac, cori, ksp, SVBI x 150 wpm x {clean, babble_10dB}, plus
+  hfc_male x {130, 180} wpm clean (section 7c).
 * Headline findings: real partials are far from word prefixes (partial WER
   ~11-21 % clean, 21-33 % in babble; 54-73 % of items have at least one revision
   of earlier words); end-of-turn with the live Silero settings works in quiet
@@ -327,6 +330,54 @@ some are host stalls that survived one re-trace pass (`trace.py
 re-run `--retrace-over-ms` on a quiet host before using `available_ms` in the
 latency simulation.
 
+### 7c. Primary condition and robustness grid (d1_open, d2_support)
+
+Primary condition, all items (`trace_version` v2-speech-2; every turn ended
+by the VAD, no fallback turns):
+
+| dataset | items | partial WER | final WER | items revised | end of turn after last word (median) | premature VAD endpoints | ASR ms per partial (median) |
+|---|---|---|---|---|---|---|---|
+| d1_open | 5,300 | 23.7 % | 14.2 % | 67 % | 830 ms | 0.6 % | 154 |
+| d2_support | 720 | 10.5 % | 5.5 % | 76 % | 834 ms | 5.0 % | 275 |
+
+d1's higher WER is mostly PopQA entity names (obscure people, places, works).
+
+Grid, 150 dev items per dataset (final WER clean / babble 10 dB; fallback turns
+under babble with their premature count and median end-of-turn lag after the
+last word):
+
+| voice @150 wpm | d1 final WER | d1 fallback turns (premature; lag) | d2 final WER | d2 fallback turns (premature; lag) |
+|---|---|---|---|---|
+| hfc_male (en-US) | 14.1 % / 14.6 % | 128 (3; 2.0 s) | 5.3 % / 3.8 % | 125 (2; 2.1 s) |
+| lessac (en-US) | 14.9 % / 15.3 % | 150 (4; 2.0 s) | 9.7 % / 5.4 % | 139 (5; 2.2 s) |
+| cori (en-GB) | 17.7 % / 20.0 % | 142 (0; 2.2 s) | 9.9 % / 8.2 % | 143 (8; 2.3 s) |
+| ksp (en-IN) | 22.3 % / 24.7 % | 134 (0; 2.2 s) | 5.6 % / 7.6 % | 126 (0; 2.2 s) |
+| SVBI (en-IN) | 35.7 % / 47.8 % | 142 (6; 4.0 s) | 24.6 % / 26.9 % | 139 (8; 4.3 s) |
+
+hfc_male rate sweep, clean: d1 final WER 15.4 / 14.1 / 13.2 % and d2
+10.8 / 5.3 / 2.2 % at 130 / 150 / 180 wpm; premature VAD endpoints on d2 rise
+to 14 % at 130 wpm (slow speech has longer pauses than the 800 ms hang).
+
+Reading notes. Under babble the VAD fires in only 0-17 % of turns; the rest
+end by the fallback, whose end of turn is ~2 s after the last word (SVBI ~4 s,
+because Whisper keeps revising hallucinated text). Babble can show a *lower*
+final WER than clean on d2 because clean turns are sometimes cut by a premature
+VAD endpoint while fallback turns wait for the text to settle - compare
+end-of-turn behaviour, not WER alone. Fallback turns must be analysed
+separately (their latency is structurally higher).
+
+Premature ends of turn under each fallback rule, recomputed from the stored
+partials (`fallback_compare.py`):
+
+| traces without a VAD endpoint | unarmed | armed-1 | first-2-word | armed-2 (used) |
+|---|---|---|---|---|
+| v1 scenarios, babble (1,701) | 349 | 349 | 244 | 7 |
+| d2 grid, babble 10 dB (672) | 160 | 159 | 117 | 23 |
+| d1 grid, babble 10 dB (696) | 137 | 136 | 110 | 13 |
+
+The d1/d2 rows were computed after the rule was fixed and confirm it out of
+sample (the rule was chosen on the v1 rows only).
+
 ## 8. Human speech subset
 
 ### 8a. Recording our own (record_prompts.py)
@@ -380,6 +431,10 @@ Measured on this host (RTX 4060 Laptop 8 GB, shared, < 1 GB free RAM):
 | alignment cross-check | ~0.4 s | optional separate pass (`--check-existing`) |
 | ASR replay, clean | 1.8 s median (v1, 5.8 s files); **6.6 s median (d2, 9.7 s files)**; real-time factor ~0.35-0.66 | GPU; one process per GPU for valid compute times |
 | ASR replay, babble | real-time factor ~0.54 (10 dB) / 0.63 (5 dB); expect **~10-12 s** for d2-length items | no endpoint, so the whole tail is transcribed |
+
+Actual production run (this host, shared with other jobs): primary condition
+for 6,020 items took ~6.3 h wall (render 0.2-3 s/item, replay median 1.85 s for
+d1 and 5.9 s for d2 per item); the 300-item grid (22 conditions) took ~5.3 h.
 
 Planning a ~6,000-item run (d1_open ~5,300 + d2_support 720, assuming
 d2-like question length):
