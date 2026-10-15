@@ -82,6 +82,53 @@ def cluster_bootstrap(metric, clusters, n_boot=2000, seed=0, alpha=0.05):
     return [float(lo), float(hi)]
 
 
+def fit_logistic_multi(design, y, ridge=0.0, max_iter=200, tol=1e-10):
+    """Logistic regression by IRLS on an explicit design matrix (last column
+    the intercept). ridge > 0 penalises every coefficient but the intercept;
+    with ridge 0 a separable problem raises and the caller retries ridged.
+    Returns (beta, iterations)."""
+    design, y = np.asarray(design, float), np.asarray(y, float)
+    p = design.shape[1]
+    penalty = np.eye(p) * ridge * len(y)
+    penalty[-1, -1] = 0.0
+    beta = np.zeros(p)
+    for iteration in range(max_iter):
+        mu = sigmoid(design @ beta)
+        w = np.clip(mu * (1 - mu), 1e-9, None)
+        grad = design.T @ (y - mu) - penalty @ beta
+        hess = design.T @ (design * w[:, None]) + penalty + 1e-10 * np.eye(p)
+        step = np.linalg.solve(hess, grad)
+        beta = beta + step
+        if np.max(np.abs(step)) < tol:
+            return beta, iteration + 1
+        if not np.all(np.isfinite(beta)) or np.max(np.abs(beta)) > 1e6:
+            break
+    raise RuntimeError("logistic IRLS did not converge (separable data?)")
+
+
+def fit_prefix_logistic(x, f, y, ridge=1e-3):
+    """P(need) = sigmoid(intercept + slope*x + frac_slope*f + interaction*x*f),
+    the form controller/baselines/_objective_v2.py:BeliefCalibration applies.
+    Unpenalised MLE when it exists, else ridged (recorded)."""
+    x, f = np.asarray(x, float), np.asarray(f, float)
+    design = np.column_stack([x, f, x * f, np.ones_like(x)])
+    try:
+        beta, iterations = fit_logistic_multi(design, y)
+        method = "mle"
+    except (RuntimeError, np.linalg.LinAlgError):
+        beta, iterations = fit_logistic_multi(design, y, ridge=ridge)
+        method = f"l2-penalised (ridge {ridge} x n, intercept free): MLE does not exist"
+    slope, frac_slope, interaction, intercept = (float(v) for v in beta)
+    return {"slope": slope, "frac_slope": frac_slope, "interaction": interaction,
+            "intercept": intercept, "method": method, "iterations": iterations}
+
+
+def predict_prefix_logistic(model, x, f):
+    x, f = np.asarray(x, float), np.asarray(f, float)
+    return sigmoid(model["intercept"] + model["slope"] * x + model["frac_slope"] * f
+                   + model["interaction"] * x * f)
+
+
 def sigmoid(z):
     return 1.0 / (1.0 + np.exp(-np.clip(z, -40.0, 40.0)))
 

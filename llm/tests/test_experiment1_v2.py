@@ -518,6 +518,18 @@ class StatsTests(unittest.TestCase):
         self.assertAlmostEqual(analyze.signal_latency_ms(r, "mean_entropy_nats", model), 300.0 + 19 * 30.0)
         self.assertEqual(analyze.signal_latency_ms(r, "first_k_mean_entropy_nats@8"), 999.0)
 
+    def test_prefix_aware_logistic_recovers_coefficients(self):
+        rng = np.random.default_rng(5)
+        n = 20000
+        x, f = rng.normal(0.5, 0.3, n), rng.uniform(0, 1, n)
+        true = {"intercept": -2.0, "slope": 1.5, "frac_slope": 0.5, "interaction": 2.5}
+        p = stats.predict_prefix_logistic(true, x, f)
+        y = (rng.uniform(size=n) < p).astype(float)
+        fit = stats.fit_prefix_logistic(x, f, y)
+        self.assertEqual(fit["method"], "mle")
+        for key, value in true.items():
+            self.assertAlmostEqual(fit[key], value, delta=0.35)
+
     def test_artifact_loads_in_controller(self):
         from controller.baselines._objective import load_voi_calibration
 
