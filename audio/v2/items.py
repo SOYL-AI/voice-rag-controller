@@ -45,7 +45,12 @@ def load_items(path, split: str = "all") -> list[dict]:
                     out.append({"item_id": r["id"], "text": r["question"].strip(),
                                 "split": r.get("split", "unknown")})
     if split != "all":
-        out = [r for r in out if r["split"] == split]
+        sp = path.parent / "splits.json"  # the split authority (CONTRACTS §7) when present
+        if sp.exists():
+            keep = set(json.loads(sp.read_text(encoding="utf-8"))[split])
+            out = [r for r in out if r["item_id"] in keep]
+        else:
+            out = [r for r in out if r["split"] == split]
     ids = [r["item_id"] for r in out]
     if len(ids) != len(set(ids)):
         raise ValueError(f"duplicate item ids in {path}")
