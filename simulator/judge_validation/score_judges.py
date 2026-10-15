@@ -185,8 +185,14 @@ def load_v2_labels(path: Path) -> list:
             "label": reference_label,
             "path": (row.get("path") or "").strip().lower() or None,  # retrieve | skip
         })
-    for case in cases:
-        case["gate_subset"] = gate_subset(case["case_id"])
+    explicit = {str(row.get("gate_subset") or "").strip() for row in rows}
+    for case, row in zip(cases, rows):
+        # The labelling kit writes an exact 100/200 partition (ranked by
+        # sha256 of the answer id); older files fall back to sha256 mod 3.
+        given = str(row.get("gate_subset") or "").strip()
+        case["gate_subset"] = given if given in ("prompt_dev", "holdout") else gate_subset(case["case_id"])
+    if explicit - {"", "prompt_dev", "holdout"}:
+        raise ValueError(f"unknown gate_subset values {sorted(explicit - {'', 'prompt_dev', 'holdout'})}")
     return cases
 
 

@@ -645,6 +645,99 @@ class StatsTests(unittest.TestCase):
 
 
 # ---------------------------------------------------------------------------
+class LabelingKitTests(unittest.TestCase):
+    def _fixture(self, tmp: Path):
+        items, draws = [], []
+        types = ["general", "org_specific", "counter_prior", "ambiguous"]
+        for n in range(60):
+            item = {"id": f"d2_support-{n:05d}", "dataset": "d2_support", "domain": "telecom",
+                    "org": "Kestrel Mobile", "question": f"Question {n}?",
+                    "expected_answer": f"Answer {n}.", "answer_aliases": [],
+                    "retrieval_needed_authored": n % 2 == 0, "item_type": types[n % 4],
+                    "history": [{"role": "user", "content": "hi"}] if n % 5 == 0 else [],
+                    "meta": {"key_facts": [f"fact {n}a", f"fact {n}b"]}}
+            items.append(item)
+            for seed in (11, 23, 37):
+                p = (n + seed) % 3 != 0
+                s = p if (n * seed) % 4 else not p
+                draws.append({"item_id": item["id"], "draw_seed": seed, "condition": "closed_book",
+                              "answer": f"answer {n} v{seed % 2}",
+                              "judges": {"primary": {"answer_correct": p},
+                                         "secondary": {"answer_correct": s}}})
+        items_path = tmp / "items.jsonl"
+        items_path.write_text("".join(json.dumps(i) + "\n" for i in items), encoding="utf-8")
+        labels = {"meta": {"split": "dev", "dataset": "d2_support",
+                           "judges": {"primary": {"prompt_version": "e1v2-r2"}}}, "draws": draws}
+        labels_path = tmp / "labels.json"
+        labels_path.write_text(json.dumps(labels), encoding="utf-8")
+        return items_path, labels_path
+
+    def test_build_merge_and_gate(self):
+        import csv
+
+        from simulator.judge_validation.v2_labeling import build_kit, merge_sheets
+
+        with tempfile.TemporaryDirectory() as tmp:
+            tmp = Path(tmp)
+            items_path, labels_path = self._fixture(tmp)
+            out = tmp / "kit"
+            self.assertEqual(build_kit.main(["--labels", str(labels_path), "--items", str(items_path),
+                                             "--n", "45", "--out-dir", str(out)]), 0)
+            read = lambda p: list(csv.DictReader(open(p, encoding="utf-8-sig", newline="")))  # noqa: E731
+            a, b = read(out / "sheet_annotator_A.csv"), read(out / "sheet_annotator_B.csv")
+            master = read(out / "kit_master_DO_NOT_SHARE.csv")
+            self.assertEqual(len(a), 45)
+            self.assertEqual({r["case_id"] for r in a}, {r["case_id"] for r in b})
+            self.assertNotEqual([r["case_id"] for r in a], [r["case_id"] for r in b])  # shuffled apart
+            for hidden in ("primary_r2", "secondary_r2", "item_type", "stratum", "path", "judges_agree"):
+                self.assertNotIn(hidden, a[0])
+            self.assertEqual(set(build_kit.SHEET_COLUMNS), set(a[0]))
+            self.assertTrue(all(r["verdict"] == "" for r in a))
+            self.assertEqual(sum(r["gate_subset"] == "prompt_dev" for r in master), 15)
+            per_item = {}
+            for r in master:
+                per_item[r["item_id"]] = per_item.get(r["item_id"], 0) + 1
+            self.assertLessEqual(max(per_item.values()), 2)
+            self.assertEqual({r["stratum"].split("|")[1] for r in master}, {"agree", "disagree"})
+            # Deterministic for a fixed seed
+            again = tmp / "kit2"
+            build_kit.main(["--labels", str(labels_path), "--items", str(items_path), "--n", "45",
+                            "--out-dir", str(again)])
+            self.assertEqual(read(again / "sheet_annotator_A.csv"), a)
+
+            def fill(rows, path, flip):
+                with open(path, "w", encoding="utf-8-sig", newline="") as handle:
+                    w = csv.DictWriter(handle, fieldnames=list(rows[0]))
+                    w.writeheader()
+                    for r in rows:
+                        n = int(r["case_id"].split("-")[1].split("#")[0])
+                        ok = n % 2 == 0
+                        w.writerow(dict(r, verdict=("correct" if ok != (flip and n % 7 == 0)
+                                                    else "incorrect")))
+
+            fill(a, out / "A_done.csv", False)
+            fill(b, out / "B_done.csv", True)
+            merged = out / "human.csv"
+            self.assertEqual(merge_sheets.main(["--a", str(out / "A_done.csv"), "--b",
+                                                str(out / "B_done.csv"), "--master",
+                                                str(out / "kit_master_DO_NOT_SHARE.csv"),
+                                                "--out", str(merged)]), 0)
+            disputes = read(out / "adjudication_needed.csv")
+            self.assertTrue(disputes)
+            cases = score_judges.load_v2_labels(merged)
+            self.assertEqual(len(cases), 45)
+            self.assertEqual(sum(c["gate_subset"] == "prompt_dev" for c in cases), 15)
+            self.assertEqual(cases[0]["key_facts"][0][:5], "fact ")
+            report = score_judges.validate_v2(merged, ("primary", "secondary"), "mock", tmp / "jc", 2)
+            self.assertEqual(report["gate"]["n_prompt_dev"], 15)
+            # a sheet with an unknown case_id is refused
+            bad = out / "bad.csv"
+            bad.write_text("case_id,verdict\nnope,correct\n", encoding="utf-8")
+            self.assertEqual(merge_sheets.main(["--a", str(bad), "--b", str(out / "B_done.csv"),
+                                                "--master", str(out / "kit_master_DO_NOT_SHARE.csv"),
+                                                "--out", str(tmp / "x.csv")]), 1)
+
+
 class EndToEndMockSmoke(unittest.TestCase):
     """v1 dataset -> v2 schema -> run (mock, text + plumbing ASR prefixes,
     lexical retrieval) -> label (mock judges) -> analyze -> judge validation."""
