@@ -27,12 +27,15 @@ Findings:
 
 - **Generation before TTS is the largest stage.** Batch TTS waits for the
   whole answer (about 62 tokens at about 33 ms per token).
-- **The retrieval call is slow because of CPU thread oversubscription.**
-  It takes a median of 657 ms and a p95 of 3.6 s for bge-small over 61
-  documents. The cause is torch's default 16 intra-op CPU threads on the run
-  laptop. With 1–4 threads the query embedding takes about 20 ms. The
-  pipeline now has an opt-in cap, `VOICE_RAG_TORCH_THREADS`. Section 3 has
-  the measured profiles.
+- **The retrieval call's in-pipeline time is not its compute cost.** In E2
+  it took a median of 657 ms and a p95 of 3.6 s for bge-small over 61
+  documents. Isolated microbenchmarks of the same call give 20–60 ms p50
+  (section 8). With torch's default 16 CPU threads the time was
+  load-dependent: one in-process run on the laptop measured ~1.2 s p50,
+  while the artifact run measured 26 ms p50. With the opt-in cap
+  `VOICE_RAG_TORCH_THREADS=4`, the v2 real-endpoint pipeline runs measured
+  47 ms median (p95 ~250 ms) in-pipeline. The v1 retrieval latency was
+  host contention, not intrinsic retrieval cost.
 - **The E2 "TTS" stage measured no real synthesis.** Piper was not
   installed and the voice model was missing, so `audio/tts.py` fell back to
   a synthetic tone, and TTFA contains no synthesis cost. With real piper,
@@ -201,6 +204,109 @@ out-of-fold predictions from 5-fold CV grouped by scenario:
 
 ## 8. Measurements on the current endpoint and host
 
-Filled from `retrieval/latency_profiles_v2.json`,
-`analysis/llm_tts_v2/measure_llm_tts.json` and
-`analysis/latency_model_v2/`, see below.
+Host: RTX 4060 Laptop and a shared CPU. Other jobs were running, and as
+little as 0.2–1.4 GB of RAM was free, so tails are inflated.
+
+### Retrieval profiles (`retrieval/latency_profiles_v2.json`)
+
+785 timed queries per profile: the 50 v1 questions plus their ≥3-word
+prefixes, in 5 shuffled passes after warm-up. Columns are ms.
+
+| profile | p50 | p90 | p95 | p99 | notes |
+|---|---|---|---|---|---|
+| **faiss** (CPU embed, 4 threads) | 41.3 | 179.7 | 246.9 | 422.8 | embed is ~all of it; flat search 0.1 ms |
+| faiss via asyncio.to_thread | 53.4 | 168.5 | 234.2 | 580.1 | how spine.py calls it |
+| faiss, v1 default threads (16) | 26.4 | 39.3 | 46.6 | 76.5 | load-dependent, see section 1 |
+| faiss_cuda | 22.3 | 27.2 | 30.2 | 40.9 | |
+| **faiss_rerank** = top-50 + ms-marco-MiniLM-L6-v2 fp16 on CUDA | 65.9 | 74.8 | 78.0 | 110.4 | rerank 43 ms |
+| faiss_rerank, MiniLM fp32 | 156.7 | 221.4 | 240.3 | 361.3 | |
+| faiss_rerank, bge-reranker-base fp16 / fp32 | 165.3 / 536.9 | 293.0 / 564.4 | 306.0 / 575.8 | 322.7 / 604.2 | lower hit@1 (0.87 vs 0.96) on v1 |
+| **remote_api** = faiss behind HTTP on loopback | 23.3 | 26.6 | 27.9 | 39.6 | server 20.1, transport 3.1 |
+| remote_api with faiss_rerank backend | 66.1 | 72.2 | 74.4 | 90.8 | transport 3.4 |
+
+MiniLM fp16 is the canonical reranker. It ties on quality with fp32
+(hit@1 0.96, hit@3 1.00 on the retrieval-needed v1 questions), and the
+bge-reranker-base variants are worse on hit@1. The loopback HTTP overhead
+is about 3 ms. WAN RTT is not measured, because that needs the Modal
+deployment.
+
+FAISS flat-search component, single query, k=3, p50: 0.006 ms at 61
+vectors, 0.06 ms at 1k, 1.2 ms at 10k and about 25–41 ms at 100k (noisy
+host). 1M vectors was not run, to keep memory modest.
+
+### LLM and TTS on the real endpoint
+
+From `analysis/llm_tts_v2/measure_llm_tts.json` and `logs/v2_llm_tts/`:
+Mistral-7B-Instruct-v0.3 on vLLM, sentence_end, frozen E3 queries, resident
+piper on CPU. That is 50 scenarios × {skip, retrieve} × {batch, streaming},
+plus a 60-request prefill sweep, 261 requests in total.
+
+| path / TTS | TTFA p50 | p95 | mean | TTFT p50 | first token → TTS input p50 | TTS first audio p50 |
+|---|---|---|---|---|---|---|
+| retrieve / batch | 2664 | 4548 | 2816 | 328 | 1640 (full answer) | 617 |
+| retrieve / streaming | 1836 | 3085 | 1946 | 328 | 718 (first clause) | 586 |
+| skip / batch | 1696 | 3410 | 1890 | 297 | 813 | 609 |
+| skip / streaming | 1430 | 2590 | 1499 | 313 | 547 | 500 |
+
+- **Streaming TTS** cuts the retrieve-path TTFA by 31% at p50 and by 32% at
+  p95.
+- **Prefill** costs about 0.14–0.15 ms per prompt token. Median TTFT is
+  321 / 355 / 462 ms at 79 / 596 / 1068 prompt tokens, which is 0, 5 and 10
+  passages. About 0.3 s of TTFT is network round trip. So the passages'
+  prefill is a small part of π.
+- **Real piper synthesis** is now a large stage, about 0.5–0.6 s for the
+  first clause on this loaded CPU.
+
+### Hideable vs non-hideable cost of retrieval (π)
+
+Paired retrieve−skip TTFA for the same scenario. π is that difference minus
+the retrieval call exposed after the end of turn. All values in ms.
+
+| source | TTS | total increment, mean / median | π mean | π p10 / p50 / p90 |
+|---|---|---|---|---|
+| v1 E3, sentence_end | batch (tone) | 1566 / 1390 | 739 | 782 at p50 |
+| v1 E3, fixed_early_proxy | batch (tone) | 1266 / 1125 | 809 | 952 at p50 |
+| v2 endpoint, sentence_end | batch (piper) | 926 / 874 | 855 | −431 / 812 / 1968 |
+| v2 endpoint, sentence_end | streaming (piper) | 447 / 430 | **371** | −133 / 382 / 969 |
+
+The model's π from rank-matched draws is 886 ms (batch) and 364 ms
+(streaming), against 855 and 371 measured.
+
+`analysis/latency_model_v2/signals_retrieval_v2.json` carries, per profile
+and TTS mode, the hideable call (`expected_latency_ms`,
+`latency_quantiles_ms`) and π (`nonhideable_increment_ms` as a number, plus
+`nonhideable_increment_quantiles_ms`). This is the shape
+`controller/baselines/_objective_v2.py` reads.
+
+The controllers' config, `controller.e3v2` in `configs/config.yaml`, still
+carries placeholders: faiss p50 672 / p90 3187, and π = 900. The measured
+replacements are:
+
+- faiss: p10/p50/p90 = 23/41/180.
+- faiss_rerank: 57/66/75.
+- remote_api: 20/23/27 on loopback, plus WAN RTT once deployed.
+- π = 371 (streaming) or 855 (batch).
+
+`LatencyModel(cfg=...)` samples the measured profiles regardless of what
+that config says.
+
+### Model fidelity (`analysis/latency_model_v2/fidelity_report.md`)
+
+Out-of-fold predictions, 5-fold CV grouped by scenario:
+
+| check | observed | predicted |
+|---|---|---|
+| E2 TTFA, sentence_end p50 / p95 / KS | 4110 / 7052 | 3998 / 7202, KS 0.062 |
+| E2 TTFA, fixed_early_proxy p50 / p95 / KS | 3688 / 7090 | 3718 / 6859, KS 0.038 |
+| E3 paired increment, sentence_end mean / median | 1566 / 1390 | 1557 / 1557 |
+| E3 paired increment, fixed_early_proxy mean / median | 1266 / 1125 | 1160 / 1163 |
+| E3 paired increment, immediate mean / median | 1295 / 1196 | 1340 / 1374 |
+| v2 paired increment, batch mean | 926 | 964 |
+| v2 paired increment, streaming mean | 447 | 453 |
+| v2 TTFA KS (four path × TTS groups) | | 0.07–0.14 |
+
+The model's "median" is the median of per-pair expectations. The observed
+median is of single noisy draws, so the medians are not like for like and
+should not be read too closely. The time to first clause reconstructed
+from token indices matches the logged `llm_first_clause` to within 7.7 ms
+MAE (n = 65).
