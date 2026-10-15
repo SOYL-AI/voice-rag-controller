@@ -7,7 +7,7 @@ import numpy as np
 from audio.v2 import voices as V
 from audio.v2.align import refine_with_energy
 from audio.v2.textnorm import align_chars, edit_ops, int_to_words, wer
-from audio.v2.trace import append_line, done_ids, fallback_end, finalize
+from audio.v2.trace import append_line, done_ids, fallback_arm_ms, fallback_end, finalize
 from audio.v2.trace_report import condition_metrics
 
 
@@ -84,10 +84,22 @@ def test_fallback_end_of_turn():
     ps = [P(0, "tell"), P(400, "tell me"), P(800, "tell me more"), P(1200, "tell me more."),
           P(1600, "Tell me more"), P(2000, "tell me more"), P(2400, "tell me more"),
           P(2800, "tell me more"), P(3200, "tell me more"), P(3600, "tell me more")]
-    assert fallback_end(ps, 800) == (2800, "no_text_change")
+    assert fallback_end(ps, 800, arm_ms=0) == (2800, "no_text_change")
     # a gap > hang between partials ends the turn first
     ps2 = [P(0, "a"), P(400, "a b"), P(1600, "a b c")]
-    assert fallback_end(ps2, 800) == (1200, "no_new_partial")
+    assert fallback_end(ps2, 800, arm_ms=0) == (1200, "no_new_partial")
     # stream ends: last partial + hang vs last change + 2 s
-    assert fallback_end([P(0, "a"), P(400, "a b")], 800) == (1200, "no_new_partial")
-    assert fallback_end([], 800) == (None, None)
+    assert fallback_end([P(0, "a"), P(400, "a b")], 800, arm_ms=0) == (1200, "no_new_partial")
+    assert fallback_end([], 800, arm_ms=0) == (None, None)
+
+
+def test_fallback_is_armed_after_onset():
+    P = lambda t, txt: {"t_ms": t, "text": txt}
+    # a babble partial before the question, then a gap, then the question
+    ps = [P(-400, "Hmm."), P(800, "what time"), P(1200, "what time does"), P(1600, "what time does it close")]
+    assert fallback_end(ps, 800, armed=False) == (400, "no_new_partial")       # old rule: premature
+    arm = fallback_arm_ms(ps, None)                                             # no VAD onset -> first 2-word partial
+    assert arm == 800
+    assert fallback_end(ps, 800, arm_ms=arm) == (2400, "no_new_partial")
+    assert fallback_arm_ms(ps, -500) == -500                                    # VAD onset wins when present
+    assert fallback_end([P(0, "...")], 800, arm_ms=0) == (None, None)           # wordless partials ignored

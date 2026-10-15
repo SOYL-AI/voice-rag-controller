@@ -48,6 +48,10 @@ Evaluated online over the emitted partials: the turn ends at the first of
   * last partial's t_ms + silence_hang_ms (no new non-empty partial for the hang), or
   * last text change + FALLBACK_NO_CHANGE_MS (2.0 s with no change of the
     normalised partial text).
+The rules are armed only after speech onset (fallback rule "armed-1"): the VAD
+onset when the VAD detected one, otherwise the first partial with >= 2 words;
+partials before the arm time and partials with no words are ignored by both
+rules. The arm time is recorded as fallback_arm_ms.
 Partials after that moment are dropped (the live turn would be over; their
 count is kept in n_partials_after_end), and asr_final is the beam-5 pass over
 the speech audio up to that moment.
@@ -83,6 +87,7 @@ from audio.v2.render import SR, audio_dir, read_wav16  # noqa: E402
 
 TRACE_VERSION = "v2-speech-2"  # 2: fallback end of turn, user_end_ms
 FALLBACK_NO_CHANGE_MS = 2000
+FALLBACK_RULE = "armed-1"
 MIC_BLOCK = 512           # audio_loop.generate_mic_stream block size
 PARTIAL_WINDOW_S = 8      # StreamingSTT: partials see the last 8 s of speech
 LIVE_VAD_THRESHOLD = 0.3  # audio_loop.py passes vad_threshold=0.3 for live turns
@@ -92,9 +97,26 @@ def _words(text: str) -> list[str]:
     return [w for w in re.sub(r"[^\w' ]", " ", text.lower()).split() if w]
 
 
-def fallback_end(partials: list[dict], hang_ms: float, no_change_ms: float = FALLBACK_NO_CHANGE_MS):
+def fallback_arm_ms(partials: list[dict], vad_onset_ms):
+    """When the fallback rules start: VAD onset if detected, else the first partial with >= 2 words."""
+    if vad_onset_ms is not None:
+        return vad_onset_ms
+    for p in partials:
+        if len(_words(p["text"])) >= 2:
+            return p["t_ms"]
+    return None
+
+
+def fallback_end(partials: list[dict], hang_ms: float, no_change_ms: float = FALLBACK_NO_CHANGE_MS,
+                 arm_ms=None, armed: bool = True):
     """Online fallback end of turn over emitted partials (times on the trace clock).
-    Returns (t_ms, rule) or (None, None) when there is no partial."""
+    With armed=True (rule "armed-1") only partials with words at or after arm_ms count;
+    armed=False is the original unarmed rule, kept for before/after comparisons.
+    Returns (t_ms, rule) or (None, None) when no partial counts."""
+    if armed:
+        if arm_ms is None:
+            return None, None
+        partials = [p for p in partials if p["t_ms"] >= arm_ms and _words(p["text"])]
     if not partials:
         return None, None
     change_t = partials[0]["t_ms"]
@@ -226,9 +248,10 @@ class Replayer:
                 endpoint = ("vad", now)
                 break
 
-        rule, n_after = None, 0
+        rule, n_after, arm = None, 0, None
         if endpoint is None and speech_buffer:
-            fb, rule = fallback_end(partials, self.hang)
+            arm = fallback_arm_ms(partials, rel(vad_onset) if vad_onset is not None else None)
+            fb, rule = fallback_end(partials, self.hang, arm_ms=arm)
             if fb is None:
                 endpoint = ("stream_end", n_blocks * blk_ms)
             else:
@@ -251,6 +274,8 @@ class Replayer:
             "user_end_ms": rel(endpoint[1]) if endpoint else None,
             "endpoint_reason": endpoint[0] if endpoint else "no_speech",
             "endpoint_rule": rule if endpoint and endpoint[0] == "fallback_timeout" else None,
+            "fallback_rule": FALLBACK_RULE if endpoint and endpoint[0] == "fallback_timeout" else None,
+            "fallback_arm_ms": arm if endpoint and endpoint[0] == "fallback_timeout" else None,
             "n_partials_after_end": n_after,
             "vad_onset_ms": rel(vad_onset) if vad_onset is not None else None,
         }
@@ -346,7 +371,8 @@ def upgrade_fallback(path: Path, name: str, rep: "Replayer") -> int:
             r["user_end_ms"] = r["vad_user_end_ms"]
             r["endpoint_rule"], r["n_partials_after_end"] = None, 0
             if r["endpoint_reason"] == "stream_end":
-                fb, rule = fallback_end(r["partials"], rep.hang)
+                arm = fallback_arm_ms(r["partials"], r.get("vad_onset_ms"))
+                fb, rule = fallback_end(r["partials"], rep.hang, arm_ms=arm)
                 if fb is not None:
                     vid, wpm, noise = r["voice_id"], r["wpm_target"], r["noise"]
                     x = read_wav16(audio_dir(name, vid, wpm, noise) / f"{r['item_id']}.wav")
@@ -361,6 +387,7 @@ def upgrade_fallback(path: Path, name: str, rep: "Replayer") -> int:
                     r["asr_final"] = {"t_ms": fb, "available_ms": int(round(busy + c)),
                                       "compute_ms": round(c, 1), "text": text}
                     r["user_end_ms"], r["endpoint_reason"], r["endpoint_rule"] = fb, "fallback_timeout", rule
+                    r["fallback_rule"], r["fallback_arm_ms"] = FALLBACK_RULE, arm
             r["trace_version"] = TRACE_VERSION
             n += 1
         tmp = path.with_name(path.name + f".{os.getpid()}.part")
@@ -390,6 +417,8 @@ def build_record(name, item, vid, wpm, noise, side, res, rep, wall_ms):
         "asr_final": res["asr_final"],
         "vad_user_end_ms": res["vad_user_end_ms"], "user_end_ms": res["user_end_ms"],
         "endpoint_reason": res["endpoint_reason"], "endpoint_rule": res["endpoint_rule"],
+        **({"fallback_rule": res["fallback_rule"], "fallback_arm_ms": res["fallback_arm_ms"]}
+           if res.get("fallback_rule") else {}),
         "n_partials_after_end": res["n_partials_after_end"],
         "vad_onset_ms": res["vad_onset_ms"],
         "asr_model": f"faster-whisper-{rep.cfg['stt']['model_size']}",
