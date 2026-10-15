@@ -268,3 +268,6 @@ datasets/v2/*/speech/audio/
 
 # local agent worktrees
 .claude/
+# energy/: worktree-local venv and model cache are never committed
+.venv-energy/
+.energy-cache/
