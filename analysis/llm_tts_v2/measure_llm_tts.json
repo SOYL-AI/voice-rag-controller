@@ -1,0 +1,1696 @@
+{
+ "model": "mistralai/Mistral-7B-Instruct-v0.3",
+ "seed": 11,
+ "generation": {
+  "max_tokens": 256,
+  "temperature": 0.2,
+  "top_p": 0.9
+ },
+ "tts": "piper resident en_US-lessac-medium (CPU), no playback sleeps",
+ "torch_threads": "4",
+ "pipeline_logs": [
+  {
+   "scenario_id": 1,
+   "path": "skip",
+   "tts_mode": "batch",
+   "log": "logs\\v2_llm_tts\\v2llm_batch_skip_s001.jsonl"
+  },
+  {
+   "scenario_id": 1,
+   "path": "skip",
+   "tts_mode": "streaming",
+   "log": "logs\\v2_llm_tts\\v2llm_streaming_skip_s001.jsonl"
+  },
+  {
+   "scenario_id": 1,
+   "path": "retrieve",
+   "tts_mode": "batch",
+   "log": "logs\\v2_llm_tts\\v2llm_batch_retrieve_s001.jsonl"
+  },
+  {
+   "scenario_id": 1,
+   "path": "retrieve",
+   "tts_mode": "streaming",
+   "log": "logs\\v2_llm_tts\\v2llm_streaming_retrieve_s001.jsonl"
+  },
+  {
+   "scenario_id": 2,
+   "path": "skip",
+   "tts_mode": "streaming",
+   "log": "logs\\v2_llm_tts\\v2llm_streaming_skip_s002.jsonl"
+  },
+  {
+   "scenario_id": 2,
+   "path": "skip",
+   "tts_mode": "batch",
+   "log": "logs\\v2_llm_tts\\v2llm_batch_skip_s002.jsonl"
+  },
+  {
+   "scenario_id": 2,
+   "path": "retrieve",
+   "tts_mode": "batch",
+   "log": "logs\\v2_llm_tts\\v2llm_batch_retrieve_s002.jsonl"
+  },
+  {
+   "scenario_id": 2,
+   "path": "retrieve",
+   "tts_mode": "streaming",
+   "log": "logs\\v2_llm_tts\\v2llm_streaming_retrieve_s002.jsonl"
+  },
+  {
+   "scenario_id": 3,
+   "path": "skip",
+   "tts_mode": "batch",
+   "log": "logs\\v2_llm_tts\\v2llm_batch_skip_s003.jsonl"
+  },
+  {
+   "scenario_id": 3,
+   "path": "retrieve",
+   "tts_mode": "streaming",
+   "log": "logs\\v2_llm_tts\\v2llm_streaming_retrieve_s003.jsonl"
+  },
+  {
+   "scenario_id": 3,
+   "path": "retrieve",
+   "tts_mode": "batch",
+   "log": "logs\\v2_llm_tts\\v2llm_batch_retrieve_s003.jsonl"
+  },
+  {
+   "scenario_id": 3,
+   "path": "skip",
+   "tts_mode": "streaming",
+   "log": "logs\\v2_llm_tts\\v2llm_streaming_skip_s003.jsonl"
+  },
+  {
+   "scenario_id": 4,
+   "path": "retrieve",
+   "tts_mode": "batch",
+   "log": "logs\\v2_llm_tts\\v2llm_batch_retrieve_s004.jsonl"
+  },
+  {
+   "scenario_id": 4,
+   "path": "retrieve",
+   "tts_mode": "streaming",
+   "log": "logs\\v2_llm_tts\\v2llm_streaming_retrieve_s004.jsonl"
+  },
+  {
+   "scenario_id": 4,
+   "path": "skip",
+   "tts_mode": "batch",
+   "log": "logs\\v2_llm_tts\\v2llm_batch_skip_s004.jsonl"
+  },
+  {
+   "scenario_id": 4,
+   "path": "skip",
+   "tts_mode": "streaming",
+   "log": "logs\\v2_llm_tts\\v2llm_streaming_skip_s004.jsonl"
+  },
+  {
+   "scenario_id": 5,
+   "path": "skip",
+   "tts_mode": "streaming",
+   "log": "logs\\v2_llm_tts\\v2llm_streaming_skip_s005.jsonl"
+  },
+  {
+   "scenario_id": 5,
+   "path": "retrieve",
+   "tts_mode": "streaming",
+   "log": "logs\\v2_llm_tts\\v2llm_streaming_retrieve_s005.jsonl"
+  },
+  {
+   "scenario_id": 5,
+   "path": "skip",
+   "tts_mode": "batch",
+   "log": "logs\\v2_llm_tts\\v2llm_batch_skip_s005.jsonl"
+  },
+  {
+   "scenario_id": 5,
+   "path": "retrieve",
+   "tts_mode": "batch",
+   "log": "logs\\v2_llm_tts\\v2llm_batch_retrieve_s005.jsonl"
+  },
+  {
+   "scenario_id": 6,
+   "path": "retrieve",
+   "tts_mode": "streaming",
+   "log": "logs\\v2_llm_tts\\v2llm_streaming_retrieve_s006.jsonl"
+  },
+  {
+   "scenario_id": 6,
+   "path": "skip",
+   "tts_mode": "streaming",
+   "log": "logs\\v2_llm_tts\\v2llm_streaming_skip_s006.jsonl"
+  },
+  {
+   "scenario_id": 6,
+   "path": "retrieve",
+   "tts_mode": "batch",
+   "log": "logs\\v2_llm_tts\\v2llm_batch_retrieve_s006.jsonl"
+  },
+  {
+   "scenario_id": 6,
+   "path": "skip",
+   "tts_mode": "batch",
+   "log": "logs\\v2_llm_tts\\v2llm_batch_skip_s006.jsonl"
+  },
+  {
+   "scenario_id": 7,
+   "path": "skip",
+   "tts_mode": "streaming",
+   "log": "logs\\v2_llm_tts\\v2llm_streaming_skip_s007.jsonl"
+  },
+  {
+   "scenario_id": 7,
+   "path": "skip",
+   "tts_mode": "batch",
+   "log": "logs\\v2_llm_tts\\v2llm_batch_skip_s007.jsonl"
+  },
+  {
+   "scenario_id": 7,
+   "path": "retrieve",
+   "tts_mode": "batch",
+   "log": "logs\\v2_llm_tts\\v2llm_batch_retrieve_s007.jsonl"
+  },
+  {
+   "scenario_id": 7,
+   "path": "retrieve",
+   "tts_mode": "streaming",
+   "log": "logs\\v2_llm_tts\\v2llm_streaming_retrieve_s007.jsonl"
+  },
+  {
+   "scenario_id": 8,
+   "path": "skip",
+   "tts_mode": "streaming",
+   "log": "logs\\v2_llm_tts\\v2llm_streaming_skip_s008.jsonl"
+  },
+  {
+   "scenario_id": 8,
+   "path": "retrieve",
+   "tts_mode": "streaming",
+   "log": "logs\\v2_llm_tts\\v2llm_streaming_retrieve_s008.jsonl"
+  },
+  {
+   "scenario_id": 8,
+   "path": "retrieve",
+   "tts_mode": "batch",
+   "log": "logs\\v2_llm_tts\\v2llm_batch_retrieve_s008.jsonl"
+  },
+  {
+   "scenario_id": 8,
+   "path": "skip",
+   "tts_mode": "batch",
+   "log": "logs\\v2_llm_tts\\v2llm_batch_skip_s008.jsonl"
+  },
+  {
+   "scenario_id": 9,
+   "path": "skip",
+   "tts_mode": "streaming",
+   "log": "logs\\v2_llm_tts\\v2llm_streaming_skip_s009.jsonl"
+  },
+  {
+   "scenario_id": 9,
+   "path": "retrieve",
+   "tts_mode": "batch",
+   "log": "logs\\v2_llm_tts\\v2llm_batch_retrieve_s009.jsonl"
+  },
+  {
+   "scenario_id": 9,
+   "path": "retrieve",
+   "tts_mode": "streaming",
+   "log": "logs\\v2_llm_tts\\v2llm_streaming_retrieve_s009.jsonl"
+  },
+  {
+   "scenario_id": 9,
+   "path": "skip",
+   "tts_mode": "batch",
+   "log": "logs\\v2_llm_tts\\v2llm_batch_skip_s009.jsonl"
+  },
+  {
+   "scenario_id": 10,
+   "path": "retrieve",
+   "tts_mode": "streaming",
+   "log": "logs\\v2_llm_tts\\v2llm_streaming_retrieve_s010.jsonl"
+  },
+  {
+   "scenario_id": 10,
+   "path": "skip",
+   "tts_mode": "batch",
+   "log": "logs\\v2_llm_tts\\v2llm_batch_skip_s010.jsonl"
+  },
+  {
+   "scenario_id": 10,
+   "path": "retrieve",
+   "tts_mode": "batch",
+   "log": "logs\\v2_llm_tts\\v2llm_batch_retrieve_s010.jsonl"
+  },
+  {
+   "scenario_id": 10,
+   "path": "skip",
+   "tts_mode": "streaming",
+   "log": "logs\\v2_llm_tts\\v2llm_streaming_skip_s010.jsonl"
+  },
+  {
+   "scenario_id": 11,
+   "path": "skip",
+   "tts_mode": "batch",
+   "log": "logs\\v2_llm_tts\\v2llm_batch_skip_s011.jsonl"
+  },
+  {
+   "scenario_id": 11,
+   "path": "retrieve",
+   "tts_mode": "batch",
+   "log": "logs\\v2_llm_tts\\v2llm_batch_retrieve_s011.jsonl"
+  },
+  {
+   "scenario_id": 11,
+   "path": "skip",
+   "tts_mode": "streaming",
+   "log": "logs\\v2_llm_tts\\v2llm_streaming_skip_s011.jsonl"
+  },
+  {
+   "scenario_id": 11,
+   "path": "retrieve",
+   "tts_mode": "streaming",
+   "log": "logs\\v2_llm_tts\\v2llm_streaming_retrieve_s011.jsonl"
+  },
+  {
+   "scenario_id": 12,
+   "path": "retrieve",
+   "tts_mode": "streaming",
+   "log": "logs\\v2_llm_tts\\v2llm_streaming_retrieve_s012.jsonl"
+  },
+  {
+   "scenario_id": 12,
+   "path": "skip",
+   "tts_mode": "batch",
+   "log": "logs\\v2_llm_tts\\v2llm_batch_skip_s012.jsonl"
+  },
+  {
+   "scenario_id": 12,
+   "path": "retrieve",
+   "tts_mode": "batch",
+   "log": "logs\\v2_llm_tts\\v2llm_batch_retrieve_s012.jsonl"
+  },
+  {
+   "scenario_id": 12,
+   "path": "skip",
+   "tts_mode": "streaming",
+   "log": "logs\\v2_llm_tts\\v2llm_streaming_skip_s012.jsonl"
+  },
+  {
+   "scenario_id": 13,
+   "path": "retrieve",
+   "tts_mode": "streaming",
+   "log": "logs\\v2_llm_tts\\v2llm_streaming_retrieve_s013.jsonl"
+  },
+  {
+   "scenario_id": 13,
+   "path": "skip",
+   "tts_mode": "batch",
+   "log": "logs\\v2_llm_tts\\v2llm_batch_skip_s013.jsonl"
+  },
+  {
+   "scenario_id": 13,
+   "path": "skip",
+   "tts_mode": "streaming",
+   "log": "logs\\v2_llm_tts\\v2llm_streaming_skip_s013.jsonl"
+  },
+  {
+   "scenario_id": 13,
+   "path": "retrieve",
+   "tts_mode": "batch",
+   "log": "logs\\v2_llm_tts\\v2llm_batch_retrieve_s013.jsonl"
+  },
+  {
+   "scenario_id": 14,
+   "path": "retrieve",
+   "tts_mode": "streaming",
+   "log": "logs\\v2_llm_tts\\v2llm_streaming_retrieve_s014.jsonl"
+  },
+  {
+   "scenario_id": 14,
+   "path": "retrieve",
+   "tts_mode": "batch",
+   "log": "logs\\v2_llm_tts\\v2llm_batch_retrieve_s014.jsonl"
+  },
+  {
+   "scenario_id": 14,
+   "path": "skip",
+   "tts_mode": "streaming",
+   "log": "logs\\v2_llm_tts\\v2llm_streaming_skip_s014.jsonl"
+  },
+  {
+   "scenario_id": 14,
+   "path": "skip",
+   "tts_mode": "batch",
+   "log": "logs\\v2_llm_tts\\v2llm_batch_skip_s014.jsonl"
+  },
+  {
+   "scenario_id": 15,
+   "path": "skip",
+   "tts_mode": "streaming",
+   "log": "logs\\v2_llm_tts\\v2llm_streaming_skip_s015.jsonl"
+  },
+  {
+   "scenario_id": 15,
+   "path": "skip",
+   "tts_mode": "batch",
+   "log": "logs\\v2_llm_tts\\v2llm_batch_skip_s015.jsonl"
+  },
+  {
+   "scenario_id": 15,
+   "path": "retrieve",
+   "tts_mode": "batch",
+   "log": "logs\\v2_llm_tts\\v2llm_batch_retrieve_s015.jsonl"
+  },
+  {
+   "scenario_id": 15,
+   "path": "retrieve",
+   "tts_mode": "streaming",
+   "log": "logs\\v2_llm_tts\\v2llm_streaming_retrieve_s015.jsonl"
+  },
+  {
+   "scenario_id": 16,
+   "path": "retrieve",
+   "tts_mode": "streaming",
+   "log": "logs\\v2_llm_tts\\v2llm_streaming_retrieve_s016.jsonl"
+  },
+  {
+   "scenario_id": 16,
+   "path": "skip",
+   "tts_mode": "batch",
+   "log": "logs\\v2_llm_tts\\v2llm_batch_skip_s016.jsonl"
+  },
+  {
+   "scenario_id": 16,
+   "path": "skip",
+   "tts_mode": "streaming",
+   "log": "logs\\v2_llm_tts\\v2llm_streaming_skip_s016.jsonl"
+  },
+  {
+   "scenario_id": 16,
+   "path": "retrieve",
+   "tts_mode": "batch",
+   "log": "logs\\v2_llm_tts\\v2llm_batch_retrieve_s016.jsonl"
+  },
+  {
+   "scenario_id": 17,
+   "path": "skip",
+   "tts_mode": "streaming",
+   "log": "logs\\v2_llm_tts\\v2llm_streaming_skip_s017.jsonl"
+  },
+  {
+   "scenario_id": 17,
+   "path": "retrieve",
+   "tts_mode": "streaming",
+   "log": "logs\\v2_llm_tts\\v2llm_streaming_retrieve_s017.jsonl"
+  },
+  {
+   "scenario_id": 17,
+   "path": "skip",
+   "tts_mode": "batch",
+   "log": "logs\\v2_llm_tts\\v2llm_batch_skip_s017.jsonl"
+  },
+  {
+   "scenario_id": 17,
+   "path": "retrieve",
+   "tts_mode": "batch",
+   "log": "logs\\v2_llm_tts\\v2llm_batch_retrieve_s017.jsonl"
+  },
+  {
+   "scenario_id": 18,
+   "path": "retrieve",
+   "tts_mode": "batch",
+   "log": "logs\\v2_llm_tts\\v2llm_batch_retrieve_s018.jsonl"
+  },
+  {
+   "scenario_id": 18,
+   "path": "retrieve",
+   "tts_mode": "streaming",
+   "log": "logs\\v2_llm_tts\\v2llm_streaming_retrieve_s018.jsonl"
+  },
+  {
+   "scenario_id": 18,
+   "path": "skip",
+   "tts_mode": "streaming",
+   "log": "logs\\v2_llm_tts\\v2llm_streaming_skip_s018.jsonl"
+  },
+  {
+   "scenario_id": 18,
+   "path": "skip",
+   "tts_mode": "batch",
+   "log": "logs\\v2_llm_tts\\v2llm_batch_skip_s018.jsonl"
+  },
+  {
+   "scenario_id": 19,
+   "path": "retrieve",
+   "tts_mode": "streaming",
+   "log": "logs\\v2_llm_tts\\v2llm_streaming_retrieve_s019.jsonl"
+  },
+  {
+   "scenario_id": 19,
+   "path": "skip",
+   "tts_mode": "batch",
+   "log": "logs\\v2_llm_tts\\v2llm_batch_skip_s019.jsonl"
+  },
+  {
+   "scenario_id": 19,
+   "path": "skip",
+   "tts_mode": "streaming",
+   "log": "logs\\v2_llm_tts\\v2llm_streaming_skip_s019.jsonl"
+  },
+  {
+   "scenario_id": 19,
+   "path": "retrieve",
+   "tts_mode": "batch",
+   "log": "logs\\v2_llm_tts\\v2llm_batch_retrieve_s019.jsonl"
+  },
+  {
+   "scenario_id": 20,
+   "path": "skip",
+   "tts_mode": "streaming",
+   "log": "logs\\v2_llm_tts\\v2llm_streaming_skip_s020.jsonl"
+  },
+  {
+   "scenario_id": 20,
+   "path": "retrieve",
+   "tts_mode": "streaming",
+   "log": "logs\\v2_llm_tts\\v2llm_streaming_retrieve_s020.jsonl"
+  },
+  {
+   "scenario_id": 20,
+   "path": "retrieve",
+   "tts_mode": "batch",
+   "log": "logs\\v2_llm_tts\\v2llm_batch_retrieve_s020.jsonl"
+  },
+  {
+   "scenario_id": 20,
+   "path": "skip",
+   "tts_mode": "batch",
+   "log": "logs\\v2_llm_tts\\v2llm_batch_skip_s020.jsonl"
+  },
+  {
+   "scenario_id": 21,
+   "path": "retrieve",
+   "tts_mode": "streaming",
+   "log": "logs\\v2_llm_tts\\v2llm_streaming_retrieve_s021.jsonl"
+  },
+  {
+   "scenario_id": 21,
+   "path": "retrieve",
+   "tts_mode": "batch",
+   "log": "logs\\v2_llm_tts\\v2llm_batch_retrieve_s021.jsonl"
+  },
+  {
+   "scenario_id": 21,
+   "path": "skip",
+   "tts_mode": "batch",
+   "log": "logs\\v2_llm_tts\\v2llm_batch_skip_s021.jsonl"
+  },
+  {
+   "scenario_id": 21,
+   "path": "skip",
+   "tts_mode": "streaming",
+   "log": "logs\\v2_llm_tts\\v2llm_streaming_skip_s021.jsonl"
+  },
+  {
+   "scenario_id": 22,
+   "path": "skip",
+   "tts_mode": "batch",
+   "log": "logs\\v2_llm_tts\\v2llm_batch_skip_s022.jsonl"
+  },
+  {
+   "scenario_id": 22,
+   "path": "retrieve",
+   "tts_mode": "batch",
+   "log": "logs\\v2_llm_tts\\v2llm_batch_retrieve_s022.jsonl"
+  },
+  {
+   "scenario_id": 22,
+   "path": "skip",
+   "tts_mode": "streaming",
+   "log": "logs\\v2_llm_tts\\v2llm_streaming_skip_s022.jsonl"
+  },
+  {
+   "scenario_id": 22,
+   "path": "retrieve",
+   "tts_mode": "streaming",
+   "log": "logs\\v2_llm_tts\\v2llm_streaming_retrieve_s022.jsonl"
+  },
+  {
+   "scenario_id": 23,
+   "path": "skip",
+   "tts_mode": "streaming",
+   "log": "logs\\v2_llm_tts\\v2llm_streaming_skip_s023.jsonl"
+  },
+  {
+   "scenario_id": 23,
+   "path": "retrieve",
+   "tts_mode": "batch",
+   "log": "logs\\v2_llm_tts\\v2llm_batch_retrieve_s023.jsonl"
+  },
+  {
+   "scenario_id": 23,
+   "path": "skip",
+   "tts_mode": "batch",
+   "log": "logs\\v2_llm_tts\\v2llm_batch_skip_s023.jsonl"
+  },
+  {
+   "scenario_id": 23,
+   "path": "retrieve",
+   "tts_mode": "streaming",
+   "log": "logs\\v2_llm_tts\\v2llm_streaming_retrieve_s023.jsonl"
+  },
+  {
+   "scenario_id": 24,
+   "path": "retrieve",
+   "tts_mode": "streaming",
+   "log": "logs\\v2_llm_tts\\v2llm_streaming_retrieve_s024.jsonl"
+  },
+  {
+   "scenario_id": 24,
+   "path": "skip",
+   "tts_mode": "batch",
+   "log": "logs\\v2_llm_tts\\v2llm_batch_skip_s024.jsonl"
+  },
+  {
+   "scenario_id": 24,
+   "path": "skip",
+   "tts_mode": "streaming",
+   "log": "logs\\v2_llm_tts\\v2llm_streaming_skip_s024.jsonl"
+  },
+  {
+   "scenario_id": 24,
+   "path": "retrieve",
+   "tts_mode": "batch",
+   "log": "logs\\v2_llm_tts\\v2llm_batch_retrieve_s024.jsonl"
+  },
+  {
+   "scenario_id": 25,
+   "path": "retrieve",
+   "tts_mode": "streaming",
+   "log": "logs\\v2_llm_tts\\v2llm_streaming_retrieve_s025.jsonl"
+  },
+  {
+   "scenario_id": 25,
+   "path": "skip",
+   "tts_mode": "batch",
+   "log": "logs\\v2_llm_tts\\v2llm_batch_skip_s025.jsonl"
+  },
+  {
+   "scenario_id": 25,
+   "path": "skip",
+   "tts_mode": "streaming",
+   "log": "logs\\v2_llm_tts\\v2llm_streaming_skip_s025.jsonl"
+  },
+  {
+   "scenario_id": 25,
+   "path": "retrieve",
+   "tts_mode": "batch",
+   "log": "logs\\v2_llm_tts\\v2llm_batch_retrieve_s025.jsonl"
+  },
+  {
+   "scenario_id": 26,
+   "path": "skip",
+   "tts_mode": "streaming",
+   "log": "logs\\v2_llm_tts\\v2llm_streaming_skip_s026.jsonl"
+  },
+  {
+   "scenario_id": 26,
+   "path": "retrieve",
+   "tts_mode": "batch",
+   "log": "logs\\v2_llm_tts\\v2llm_batch_retrieve_s026.jsonl"
+  },
+  {
+   "scenario_id": 26,
+   "path": "skip",
+   "tts_mode": "batch",
+   "log": "logs\\v2_llm_tts\\v2llm_batch_skip_s026.jsonl"
+  },
+  {
+   "scenario_id": 26,
+   "path": "retrieve",
+   "tts_mode": "streaming",
+   "log": "logs\\v2_llm_tts\\v2llm_streaming_retrieve_s026.jsonl"
+  },
+  {
+   "scenario_id": 27,
+   "path": "retrieve",
+   "tts_mode": "streaming",
+   "log": "logs\\v2_llm_tts\\v2llm_streaming_retrieve_s027.jsonl"
+  },
+  {
+   "scenario_id": 27,
+   "path": "skip",
+   "tts_mode": "batch",
+   "log": "logs\\v2_llm_tts\\v2llm_batch_skip_s027.jsonl"
+  },
+  {
+   "scenario_id": 27,
+   "path": "retrieve",
+   "tts_mode": "batch",
+   "log": "logs\\v2_llm_tts\\v2llm_batch_retrieve_s027.jsonl"
+  },
+  {
+   "scenario_id": 27,
+   "path": "skip",
+   "tts_mode": "streaming",
+   "log": "logs\\v2_llm_tts\\v2llm_streaming_skip_s027.jsonl"
+  },
+  {
+   "scenario_id": 28,
+   "path": "retrieve",
+   "tts_mode": "batch",
+   "log": "logs\\v2_llm_tts\\v2llm_batch_retrieve_s028.jsonl"
+  },
+  {
+   "scenario_id": 28,
+   "path": "skip",
+   "tts_mode": "streaming",
+   "log": "logs\\v2_llm_tts\\v2llm_streaming_skip_s028.jsonl"
+  },
+  {
+   "scenario_id": 28,
+   "path": "retrieve",
+   "tts_mode": "streaming",
+   "log": "logs\\v2_llm_tts\\v2llm_streaming_retrieve_s028.jsonl"
+  },
+  {
+   "scenario_id": 28,
+   "path": "skip",
+   "tts_mode": "batch",
+   "log": "logs\\v2_llm_tts\\v2llm_batch_skip_s028.jsonl"
+  },
+  {
+   "scenario_id": 29,
+   "path": "skip",
+   "tts_mode": "streaming",
+   "log": "logs\\v2_llm_tts\\v2llm_streaming_skip_s029.jsonl"
+  },
+  {
+   "scenario_id": 29,
+   "path": "retrieve",
+   "tts_mode": "batch",
+   "log": "logs\\v2_llm_tts\\v2llm_batch_retrieve_s029.jsonl"
+  },
+  {
+   "scenario_id": 29,
+   "path": "skip",
+   "tts_mode": "batch",
+   "log": "logs\\v2_llm_tts\\v2llm_batch_skip_s029.jsonl"
+  },
+  {
+   "scenario_id": 29,
+   "path": "retrieve",
+   "tts_mode": "streaming",
+   "log": "logs\\v2_llm_tts\\v2llm_streaming_retrieve_s029.jsonl"
+  },
+  {
+   "scenario_id": 30,
+   "path": "skip",
+   "tts_mode": "streaming",
+   "log": "logs\\v2_llm_tts\\v2llm_streaming_skip_s030.jsonl"
+  },
+  {
+   "scenario_id": 30,
+   "path": "skip",
+   "tts_mode": "batch",
+   "log": "logs\\v2_llm_tts\\v2llm_batch_skip_s030.jsonl"
+  },
+  {
+   "scenario_id": 30,
+   "path": "retrieve",
+   "tts_mode": "batch",
+   "log": "logs\\v2_llm_tts\\v2llm_batch_retrieve_s030.jsonl"
+  },
+  {
+   "scenario_id": 30,
+   "path": "retrieve",
+   "tts_mode": "streaming",
+   "log": "logs\\v2_llm_tts\\v2llm_streaming_retrieve_s030.jsonl"
+  },
+  {
+   "scenario_id": 31,
+   "path": "skip",
+   "tts_mode": "batch",
+   "log": "logs\\v2_llm_tts\\v2llm_batch_skip_s031.jsonl"
+  },
+  {
+   "scenario_id": 31,
+   "path": "retrieve",
+   "tts_mode": "batch",
+   "log": "logs\\v2_llm_tts\\v2llm_batch_retrieve_s031.jsonl"
+  },
+  {
+   "scenario_id": 31,
+   "path": "retrieve",
+   "tts_mode": "streaming",
+   "log": "logs\\v2_llm_tts\\v2llm_streaming_retrieve_s031.jsonl"
+  },
+  {
+   "scenario_id": 31,
+   "path": "skip",
+   "tts_mode": "streaming",
+   "log": "logs\\v2_llm_tts\\v2llm_streaming_skip_s031.jsonl"
+  },
+  {
+   "scenario_id": 32,
+   "path": "retrieve",
+   "tts_mode": "streaming",
+   "log": "logs\\v2_llm_tts\\v2llm_streaming_retrieve_s032.jsonl"
+  },
+  {
+   "scenario_id": 32,
+   "path": "retrieve",
+   "tts_mode": "batch",
+   "log": "logs\\v2_llm_tts\\v2llm_batch_retrieve_s032.jsonl"
+  },
+  {
+   "scenario_id": 32,
+   "path": "skip",
+   "tts_mode": "streaming",
+   "log": "logs\\v2_llm_tts\\v2llm_streaming_skip_s032.jsonl"
+  },
+  {
+   "scenario_id": 32,
+   "path": "skip",
+   "tts_mode": "batch",
+   "log": "logs\\v2_llm_tts\\v2llm_batch_skip_s032.jsonl"
+  },
+  {
+   "scenario_id": 33,
+   "path": "retrieve",
+   "tts_mode": "batch",
+   "log": "logs\\v2_llm_tts\\v2llm_batch_retrieve_s033.jsonl"
+  },
+  {
+   "scenario_id": 33,
+   "path": "retrieve",
+   "tts_mode": "streaming",
+   "log": "logs\\v2_llm_tts\\v2llm_streaming_retrieve_s033.jsonl"
+  },
+  {
+   "scenario_id": 33,
+   "path": "skip",
+   "tts_mode": "batch",
+   "log": "logs\\v2_llm_tts\\v2llm_batch_skip_s033.jsonl"
+  },
+  {
+   "scenario_id": 33,
+   "path": "skip",
+   "tts_mode": "streaming",
+   "log": "logs\\v2_llm_tts\\v2llm_streaming_skip_s033.jsonl"
+  },
+  {
+   "scenario_id": 34,
+   "path": "skip",
+   "tts_mode": "streaming",
+   "log": "logs\\v2_llm_tts\\v2llm_streaming_skip_s034.jsonl"
+  },
+  {
+   "scenario_id": 34,
+   "path": "retrieve",
+   "tts_mode": "streaming",
+   "log": "logs\\v2_llm_tts\\v2llm_streaming_retrieve_s034.jsonl"
+  },
+  {
+   "scenario_id": 34,
+   "path": "skip",
+   "tts_mode": "batch",
+   "log": "logs\\v2_llm_tts\\v2llm_batch_skip_s034.jsonl"
+  },
+  {
+   "scenario_id": 34,
+   "path": "retrieve",
+   "tts_mode": "batch",
+   "log": "logs\\v2_llm_tts\\v2llm_batch_retrieve_s034.jsonl"
+  },
+  {
+   "scenario_id": 35,
+   "path": "retrieve",
+   "tts_mode": "batch",
+   "log": "logs\\v2_llm_tts\\v2llm_batch_retrieve_s035.jsonl"
+  },
+  {
+   "scenario_id": 35,
+   "path": "skip",
+   "tts_mode": "batch",
+   "log": "logs\\v2_llm_tts\\v2llm_batch_skip_s035.jsonl"
+  },
+  {
+   "scenario_id": 35,
+   "path": "retrieve",
+   "tts_mode": "streaming",
+   "log": "logs\\v2_llm_tts\\v2llm_streaming_retrieve_s035.jsonl"
+  },
+  {
+   "scenario_id": 35,
+   "path": "skip",
+   "tts_mode": "streaming",
+   "log": "logs\\v2_llm_tts\\v2llm_streaming_skip_s035.jsonl"
+  },
+  {
+   "scenario_id": 36,
+   "path": "skip",
+   "tts_mode": "streaming",
+   "log": "logs\\v2_llm_tts\\v2llm_streaming_skip_s036.jsonl"
+  },
+  {
+   "scenario_id": 36,
+   "path": "retrieve",
+   "tts_mode": "batch",
+   "log": "logs\\v2_llm_tts\\v2llm_batch_retrieve_s036.jsonl"
+  },
+  {
+   "scenario_id": 36,
+   "path": "retrieve",
+   "tts_mode": "streaming",
+   "log": "logs\\v2_llm_tts\\v2llm_streaming_retrieve_s036.jsonl"
+  },
+  {
+   "scenario_id": 36,
+   "path": "skip",
+   "tts_mode": "batch",
+   "log": "logs\\v2_llm_tts\\v2llm_batch_skip_s036.jsonl"
+  },
+  {
+   "scenario_id": 37,
+   "path": "retrieve",
+   "tts_mode": "batch",
+   "log": "logs\\v2_llm_tts\\v2llm_batch_retrieve_s037.jsonl"
+  },
+  {
+   "scenario_id": 37,
+   "path": "skip",
+   "tts_mode": "batch",
+   "log": "logs\\v2_llm_tts\\v2llm_batch_skip_s037.jsonl"
+  },
+  {
+   "scenario_id": 37,
+   "path": "skip",
+   "tts_mode": "streaming",
+   "log": "logs\\v2_llm_tts\\v2llm_streaming_skip_s037.jsonl"
+  },
+  {
+   "scenario_id": 37,
+   "path": "retrieve",
+   "tts_mode": "streaming",
+   "log": "logs\\v2_llm_tts\\v2llm_streaming_retrieve_s037.jsonl"
+  },
+  {
+   "scenario_id": 38,
+   "path": "skip",
+   "tts_mode": "batch",
+   "log": "logs\\v2_llm_tts\\v2llm_batch_skip_s038.jsonl"
+  },
+  {
+   "scenario_id": 38,
+   "path": "retrieve",
+   "tts_mode": "streaming",
+   "log": "logs\\v2_llm_tts\\v2llm_streaming_retrieve_s038.jsonl"
+  },
+  {
+   "scenario_id": 38,
+   "path": "skip",
+   "tts_mode": "streaming",
+   "log": "logs\\v2_llm_tts\\v2llm_streaming_skip_s038.jsonl"
+  },
+  {
+   "scenario_id": 38,
+   "path": "retrieve",
+   "tts_mode": "batch",
+   "log": "logs\\v2_llm_tts\\v2llm_batch_retrieve_s038.jsonl"
+  },
+  {
+   "scenario_id": 39,
+   "path": "skip",
+   "tts_mode": "streaming",
+   "log": "logs\\v2_llm_tts\\v2llm_streaming_skip_s039.jsonl"
+  },
+  {
+   "scenario_id": 39,
+   "path": "retrieve",
+   "tts_mode": "batch",
+   "log": "logs\\v2_llm_tts\\v2llm_batch_retrieve_s039.jsonl"
+  },
+  {
+   "scenario_id": 39,
+   "path": "retrieve",
+   "tts_mode": "streaming",
+   "log": "logs\\v2_llm_tts\\v2llm_streaming_retrieve_s039.jsonl"
+  },
+  {
+   "scenario_id": 39,
+   "path": "skip",
+   "tts_mode": "batch",
+   "log": "logs\\v2_llm_tts\\v2llm_batch_skip_s039.jsonl"
+  },
+  {
+   "scenario_id": 40,
+   "path": "retrieve",
+   "tts_mode": "streaming",
+   "log": "logs\\v2_llm_tts\\v2llm_streaming_retrieve_s040.jsonl"
+  },
+  {
+   "scenario_id": 40,
+   "path": "skip",
+   "tts_mode": "batch",
+   "log": "logs\\v2_llm_tts\\v2llm_batch_skip_s040.jsonl"
+  },
+  {
+   "scenario_id": 40,
+   "path": "retrieve",
+   "tts_mode": "batch",
+   "log": "logs\\v2_llm_tts\\v2llm_batch_retrieve_s040.jsonl"
+  },
+  {
+   "scenario_id": 40,
+   "path": "skip",
+   "tts_mode": "streaming",
+   "log": "logs\\v2_llm_tts\\v2llm_streaming_skip_s040.jsonl"
+  },
+  {
+   "scenario_id": 41,
+   "path": "retrieve",
+   "tts_mode": "streaming",
+   "log": "logs\\v2_llm_tts\\v2llm_streaming_retrieve_s041.jsonl"
+  },
+  {
+   "scenario_id": 41,
+   "path": "skip",
+   "tts_mode": "streaming",
+   "log": "logs\\v2_llm_tts\\v2llm_streaming_skip_s041.jsonl"
+  },
+  {
+   "scenario_id": 41,
+   "path": "retrieve",
+   "tts_mode": "batch",
+   "log": "logs\\v2_llm_tts\\v2llm_batch_retrieve_s041.jsonl"
+  },
+  {
+   "scenario_id": 41,
+   "path": "skip",
+   "tts_mode": "batch",
+   "log": "logs\\v2_llm_tts\\v2llm_batch_skip_s041.jsonl"
+  },
+  {
+   "scenario_id": 42,
+   "path": "skip",
+   "tts_mode": "batch",
+   "log": "logs\\v2_llm_tts\\v2llm_batch_skip_s042.jsonl"
+  },
+  {
+   "scenario_id": 42,
+   "path": "skip",
+   "tts_mode": "streaming",
+   "log": "logs\\v2_llm_tts\\v2llm_streaming_skip_s042.jsonl"
+  },
+  {
+   "scenario_id": 42,
+   "path": "retrieve",
+   "tts_mode": "streaming",
+   "log": "logs\\v2_llm_tts\\v2llm_streaming_retrieve_s042.jsonl"
+  },
+  {
+   "scenario_id": 42,
+   "path": "retrieve",
+   "tts_mode": "batch",
+   "log": "logs\\v2_llm_tts\\v2llm_batch_retrieve_s042.jsonl"
+  },
+  {
+   "scenario_id": 43,
+   "path": "skip",
+   "tts_mode": "batch",
+   "log": "logs\\v2_llm_tts\\v2llm_batch_skip_s043.jsonl"
+  },
+  {
+   "scenario_id": 43,
+   "path": "retrieve",
+   "tts_mode": "streaming",
+   "log": "logs\\v2_llm_tts\\v2llm_streaming_retrieve_s043.jsonl"
+  },
+  {
+   "scenario_id": 43,
+   "path": "retrieve",
+   "tts_mode": "batch",
+   "log": "logs\\v2_llm_tts\\v2llm_batch_retrieve_s043.jsonl"
+  },
+  {
+   "scenario_id": 43,
+   "path": "skip",
+   "tts_mode": "streaming",
+   "log": "logs\\v2_llm_tts\\v2llm_streaming_skip_s043.jsonl"
+  },
+  {
+   "scenario_id": 44,
+   "path": "retrieve",
+   "tts_mode": "batch",
+   "log": "logs\\v2_llm_tts\\v2llm_batch_retrieve_s044.jsonl"
+  },
+  {
+   "scenario_id": 44,
+   "path": "skip",
+   "tts_mode": "batch",
+   "log": "logs\\v2_llm_tts\\v2llm_batch_skip_s044.jsonl"
+  },
+  {
+   "scenario_id": 44,
+   "path": "retrieve",
+   "tts_mode": "streaming",
+   "log": "logs\\v2_llm_tts\\v2llm_streaming_retrieve_s044.jsonl"
+  },
+  {
+   "scenario_id": 44,
+   "path": "skip",
+   "tts_mode": "streaming",
+   "log": "logs\\v2_llm_tts\\v2llm_streaming_skip_s044.jsonl"
+  },
+  {
+   "scenario_id": 45,
+   "path": "retrieve",
+   "tts_mode": "batch",
+   "log": "logs\\v2_llm_tts\\v2llm_batch_retrieve_s045.jsonl"
+  },
+  {
+   "scenario_id": 45,
+   "path": "skip",
+   "tts_mode": "batch",
+   "log": "logs\\v2_llm_tts\\v2llm_batch_skip_s045.jsonl"
+  },
+  {
+   "scenario_id": 45,
+   "path": "retrieve",
+   "tts_mode": "streaming",
+   "log": "logs\\v2_llm_tts\\v2llm_streaming_retrieve_s045.jsonl"
+  },
+  {
+   "scenario_id": 45,
+   "path": "skip",
+   "tts_mode": "streaming",
+   "log": "logs\\v2_llm_tts\\v2llm_streaming_skip_s045.jsonl"
+  },
+  {
+   "scenario_id": 46,
+   "path": "retrieve",
+   "tts_mode": "streaming",
+   "log": "logs\\v2_llm_tts\\v2llm_streaming_retrieve_s046.jsonl"
+  },
+  {
+   "scenario_id": 46,
+   "path": "skip",
+   "tts_mode": "batch",
+   "log": "logs\\v2_llm_tts\\v2llm_batch_skip_s046.jsonl"
+  },
+  {
+   "scenario_id": 46,
+   "path": "retrieve",
+   "tts_mode": "batch",
+   "log": "logs\\v2_llm_tts\\v2llm_batch_retrieve_s046.jsonl"
+  },
+  {
+   "scenario_id": 46,
+   "path": "skip",
+   "tts_mode": "streaming",
+   "log": "logs\\v2_llm_tts\\v2llm_streaming_skip_s046.jsonl"
+  },
+  {
+   "scenario_id": 47,
+   "path": "retrieve",
+   "tts_mode": "streaming",
+   "log": "logs\\v2_llm_tts\\v2llm_streaming_retrieve_s047.jsonl"
+  },
+  {
+   "scenario_id": 47,
+   "path": "skip",
+   "tts_mode": "batch",
+   "log": "logs\\v2_llm_tts\\v2llm_batch_skip_s047.jsonl"
+  },
+  {
+   "scenario_id": 47,
+   "path": "retrieve",
+   "tts_mode": "batch",
+   "log": "logs\\v2_llm_tts\\v2llm_batch_retrieve_s047.jsonl"
+  },
+  {
+   "scenario_id": 47,
+   "path": "skip",
+   "tts_mode": "streaming",
+   "log": "logs\\v2_llm_tts\\v2llm_streaming_skip_s047.jsonl"
+  },
+  {
+   "scenario_id": 48,
+   "path": "retrieve",
+   "tts_mode": "batch",
+   "log": "logs\\v2_llm_tts\\v2llm_batch_retrieve_s048.jsonl"
+  },
+  {
+   "scenario_id": 48,
+   "path": "skip",
+   "tts_mode": "batch",
+   "log": "logs\\v2_llm_tts\\v2llm_batch_skip_s048.jsonl"
+  },
+  {
+   "scenario_id": 48,
+   "path": "skip",
+   "tts_mode": "streaming",
+   "log": "logs\\v2_llm_tts\\v2llm_streaming_skip_s048.jsonl"
+  },
+  {
+   "scenario_id": 48,
+   "path": "retrieve",
+   "tts_mode": "streaming",
+   "log": "logs\\v2_llm_tts\\v2llm_streaming_retrieve_s048.jsonl"
+  },
+  {
+   "scenario_id": 49,
+   "path": "skip",
+   "tts_mode": "streaming",
+   "log": "logs\\v2_llm_tts\\v2llm_streaming_skip_s049.jsonl"
+  },
+  {
+   "scenario_id": 49,
+   "path": "retrieve",
+   "tts_mode": "batch",
+   "log": "logs\\v2_llm_tts\\v2llm_batch_retrieve_s049.jsonl"
+  },
+  {
+   "scenario_id": 49,
+   "path": "skip",
+   "tts_mode": "batch",
+   "log": "logs\\v2_llm_tts\\v2llm_batch_skip_s049.jsonl"
+  },
+  {
+   "scenario_id": 49,
+   "path": "retrieve",
+   "tts_mode": "streaming",
+   "log": "logs\\v2_llm_tts\\v2llm_streaming_retrieve_s049.jsonl"
+  },
+  {
+   "scenario_id": 50,
+   "path": "retrieve",
+   "tts_mode": "batch",
+   "log": "logs\\v2_llm_tts\\v2llm_batch_retrieve_s050.jsonl"
+  },
+  {
+   "scenario_id": 50,
+   "path": "skip",
+   "tts_mode": "streaming",
+   "log": "logs\\v2_llm_tts\\v2llm_streaming_skip_s050.jsonl"
+  },
+  {
+   "scenario_id": 50,
+   "path": "retrieve",
+   "tts_mode": "streaming",
+   "log": "logs\\v2_llm_tts\\v2llm_streaming_retrieve_s050.jsonl"
+  },
+  {
+   "scenario_id": 50,
+   "path": "skip",
+   "tts_mode": "batch",
+   "log": "logs\\v2_llm_tts\\v2llm_batch_skip_s050.jsonl"
+  }
+ ],
+ "prefill": [
+  {
+   "ttft_ms": 943.2281999615952,
+   "total_ms": 1014.0135999536142,
+   "prompt_tokens": 957,
+   "prompt_chars": 4158,
+   "scenario_id": 49,
+   "k": 10
+  },
+  {
+   "ttft_ms": 503.9583999896422,
+   "total_ms": 508.2571000093594,
+   "prompt_tokens": 1010,
+   "prompt_chars": 4310,
+   "scenario_id": 15,
+   "k": 10
+  },
+  {
+   "ttft_ms": 387.4639999703504,
+   "total_ms": 390.3489999938756,
+   "prompt_tokens": 667,
+   "prompt_chars": 2555,
+   "scenario_id": 30,
+   "k": 5
+  },
+  {
+   "ttft_ms": 327.6518000056967,
+   "total_ms": 332.8488999977708,
+   "prompt_tokens": 79,
+   "prompt_chars": 307,
+   "scenario_id": 34,
+   "k": 0
+  },
+  {
+   "ttft_ms": 318.265900015831,
+   "total_ms": 321.7770000337623,
+   "prompt_tokens": 77,
+   "prompt_chars": 320,
+   "scenario_id": 42,
+   "k": 0
+  },
+  {
+   "ttft_ms": 367.05260002054274,
+   "total_ms": 369.6908999700099,
+   "prompt_tokens": 648,
+   "prompt_chars": 2521,
+   "scenario_id": 25,
+   "k": 5
+  },
+  {
+   "ttft_ms": 431.8898999481462,
+   "total_ms": 432.85309994826093,
+   "prompt_tokens": 1100,
+   "prompt_chars": 4473,
+   "scenario_id": 30,
+   "k": 10
+  },
+  {
+   "ttft_ms": 550.6596000050195,
+   "total_ms": 554.4358000042848,
+   "prompt_tokens": 1105,
+   "prompt_chars": 4571,
+   "scenario_id": 34,
+   "k": 10
+  },
+  {
+   "ttft_ms": 320.8211999735795,
+   "total_ms": 325.9472000063397,
+   "prompt_tokens": 78,
+   "prompt_chars": 316,
+   "scenario_id": 43,
+   "k": 0
+  },
+  {
+   "ttft_ms": 420.67219997989014,
+   "total_ms": 423.72530000284314,
+   "prompt_tokens": 1117,
+   "prompt_chars": 4476,
+   "scenario_id": 25,
+   "k": 10
+  },
+  {
+   "ttft_ms": 475.6964999833144,
+   "total_ms": 478.67360000964254,
+   "prompt_tokens": 998,
+   "prompt_chars": 4202,
+   "scenario_id": 24,
+   "k": 10
+  },
+  {
+   "ttft_ms": 313.06839996250346,
+   "total_ms": 319.08950000070035,
+   "prompt_tokens": 78,
+   "prompt_chars": 312,
+   "scenario_id": 41,
+   "k": 0
+  },
+  {
+   "ttft_ms": 313.6887000291608,
+   "total_ms": 320.1669999980368,
+   "prompt_tokens": 81,
+   "prompt_chars": 325,
+   "scenario_id": 44,
+   "k": 0
+  },
+  {
+   "ttft_ms": 312.60160001693293,
+   "total_ms": 316.2342000287026,
+   "prompt_tokens": 82,
+   "prompt_chars": 323,
+   "scenario_id": 10,
+   "k": 0
+  },
+  {
+   "ttft_ms": 440.43640000745654,
+   "total_ms": 444.06999996863306,
+   "prompt_tokens": 580,
+   "prompt_chars": 2467,
+   "scenario_id": 50,
+   "k": 5
+  },
+  {
+   "ttft_ms": 405.17839998938143,
+   "total_ms": 409.5058999955654,
+   "prompt_tokens": 657,
+   "prompt_chars": 2640,
+   "scenario_id": 41,
+   "k": 5
+  },
+  {
+   "ttft_ms": 309.7168999956921,
+   "total_ms": 313.417199999094,
+   "prompt_tokens": 82,
+   "prompt_chars": 335,
+   "scenario_id": 31,
+   "k": 0
+  },
+  {
+   "ttft_ms": 315.6412999960594,
+   "total_ms": 319.9519999907352,
+   "prompt_tokens": 84,
+   "prompt_chars": 350,
+   "scenario_id": 50,
+   "k": 0
+  },
+  {
+   "ttft_ms": 567.2476000036113,
+   "total_ms": 572.5457000080496,
+   "prompt_tokens": 1118,
+   "prompt_chars": 4574,
+   "scenario_id": 42,
+   "k": 10
+  },
+  {
+   "ttft_ms": 324.55210003536195,
+   "total_ms": 330.17740002833307,
+   "prompt_tokens": 85,
+   "prompt_chars": 347,
+   "scenario_id": 49,
+   "k": 0
+  },
+  {
+   "ttft_ms": 315.4023999813944,
+   "total_ms": 317.8479999769479,
+   "prompt_tokens": 78,
+   "prompt_chars": 310,
+   "scenario_id": 23,
+   "k": 0
+  },
+  {
+   "ttft_ms": 316.467399999965,
+   "total_ms": 333.2613999955356,
+   "prompt_tokens": 77,
+   "prompt_chars": 305,
+   "scenario_id": 1,
+   "k": 0
+  },
+  {
+   "ttft_ms": 396.0881999810226,
+   "total_ms": 401.9067999906838,
+   "prompt_tokens": 508,
+   "prompt_chars": 2060,
+   "scenario_id": 44,
+   "k": 5
+  },
+  {
+   "ttft_ms": 445.67570002982393,
+   "total_ms": 450.48990001669154,
+   "prompt_tokens": 668,
+   "prompt_chars": 2642,
+   "scenario_id": 6,
+   "k": 5
+  },
+  {
+   "ttft_ms": 412.36099996604025,
+   "total_ms": 417.1612999634817,
+   "prompt_tokens": 595,
+   "prompt_chars": 2389,
+   "scenario_id": 10,
+   "k": 5
+  },
+  {
+   "ttft_ms": 504.02390002273023,
+   "total_ms": 509.43680002819747,
+   "prompt_tokens": 1139,
+   "prompt_chars": 4601,
+   "scenario_id": 29,
+   "k": 10
+  },
+  {
+   "ttft_ms": 473.30650000367314,
+   "total_ms": 500.15400000847876,
+   "prompt_tokens": 1007,
+   "prompt_chars": 3918,
+   "scenario_id": 31,
+   "k": 10
+  },
+  {
+   "ttft_ms": 541.5776000008918,
+   "total_ms": 547.2278000088409,
+   "prompt_tokens": 1085,
+   "prompt_chars": 4448,
+   "scenario_id": 1,
+   "k": 10
+  },
+  {
+   "ttft_ms": 390.81039995653555,
+   "total_ms": 394.1068999702111,
+   "prompt_tokens": 521,
+   "prompt_chars": 2138,
+   "scenario_id": 23,
+   "k": 5
+  },
+  {
+   "ttft_ms": 308.48010000772774,
+   "total_ms": 312.392899999395,
+   "prompt_tokens": 531,
+   "prompt_chars": 2376,
+   "scenario_id": 15,
+   "k": 5
+  },
+  {
+   "ttft_ms": 447.12969998363405,
+   "total_ms": 453.5046999808401,
+   "prompt_tokens": 1108,
+   "prompt_chars": 4446,
+   "scenario_id": 23,
+   "k": 10
+  },
+  {
+   "ttft_ms": 450.6214000284672,
+   "total_ms": 454.46979999542236,
+   "prompt_tokens": 1052,
+   "prompt_chars": 4495,
+   "scenario_id": 36,
+   "k": 10
+  },
+  {
+   "ttft_ms": 345.4648000188172,
+   "total_ms": 351.48080001818016,
+   "prompt_tokens": 678,
+   "prompt_chars": 2755,
+   "scenario_id": 34,
+   "k": 5
+  },
+  {
+   "ttft_ms": 412.9102000151761,
+   "total_ms": 417.24630002863705,
+   "prompt_tokens": 1010,
+   "prompt_chars": 4254,
+   "scenario_id": 10,
+   "k": 10
+  },
+  {
+   "ttft_ms": 313.6612999951467,
+   "total_ms": 316.8870999943465,
+   "prompt_tokens": 543,
+   "prompt_chars": 2287,
+   "scenario_id": 49,
+   "k": 5
+  },
+  {
+   "ttft_ms": 482.0496999891475,
+   "total_ms": 488.3426000014879,
+   "prompt_tokens": 1054,
+   "prompt_chars": 4384,
+   "scenario_id": 43,
+   "k": 10
+  },
+  {
+   "ttft_ms": 343.0894000339322,
+   "total_ms": 345.5270000267774,
+   "prompt_tokens": 77,
+   "prompt_chars": 313,
+   "scenario_id": 15,
+   "k": 0
+  },
+  {
+   "ttft_ms": 316.0341000184417,
+   "total_ms": 318.6009000055492,
+   "prompt_tokens": 648,
+   "prompt_chars": 2565,
+   "scenario_id": 43,
+   "k": 5
+  },
+  {
+   "ttft_ms": 324.23519995063543,
+   "total_ms": 328.70779995573685,
+   "prompt_tokens": 549,
+   "prompt_chars": 2315,
+   "scenario_id": 24,
+   "k": 5
+  },
+  {
+   "ttft_ms": 320.39439998334274,
+   "total_ms": 368.6141999787651,
+   "prompt_tokens": 77,
+   "prompt_chars": 313,
+   "scenario_id": 24,
+   "k": 0
+  },
+  {
+   "ttft_ms": 391.2191000417806,
+   "total_ms": 391.7566000018269,
+   "prompt_tokens": 509,
+   "prompt_chars": 2225,
+   "scenario_id": 42,
+   "k": 5
+  },
+  {
+   "ttft_ms": 524.2824999731965,
+   "total_ms": 525.7454999955371,
+   "prompt_tokens": 1051,
+   "prompt_chars": 4355,
+   "scenario_id": 48,
+   "k": 10
+  },
+  {
+   "ttft_ms": 399.7129999916069,
+   "total_ms": 400.2940999926068,
+   "prompt_tokens": 81,
+   "prompt_chars": 326,
+   "scenario_id": 29,
+   "k": 0
+  },
+  {
+   "ttft_ms": 340.52569995401427,
+   "total_ms": 341.0960999899544,
+   "prompt_tokens": 78,
+   "prompt_chars": 320,
+   "scenario_id": 36,
+   "k": 0
+  },
+  {
+   "ttft_ms": 442.59220000822097,
+   "total_ms": 443.08730005286634,
+   "prompt_tokens": 1098,
+   "prompt_chars": 4432,
+   "scenario_id": 41,
+   "k": 10
+  },
+  {
+   "ttft_ms": 363.81900002015755,
+   "total_ms": 369.52410003868863,
+   "prompt_tokens": 533,
+   "prompt_chars": 2114,
+   "scenario_id": 31,
+   "k": 5
+  },
+  {
+   "ttft_ms": 314.8145999875851,
+   "total_ms": 319.3153999745846,
+   "prompt_tokens": 1010,
+   "prompt_chars": 4254,
+   "scenario_id": 18,
+   "k": 10
+  },
+  {
+   "ttft_ms": 303.9341000257991,
+   "total_ms": 307.27099999785423,
+   "prompt_tokens": 641,
+   "prompt_chars": 2562,
+   "scenario_id": 1,
+   "k": 5
+  },
+  {
+   "ttft_ms": 436.66200002189726,
+   "total_ms": 442.46819999534637,
+   "prompt_tokens": 1081,
+   "prompt_chars": 4281,
+   "scenario_id": 44,
+   "k": 10
+  },
+  {
+   "ttft_ms": 420.8710999810137,
+   "total_ms": 424.3102000327781,
+   "prompt_tokens": 1094,
+   "prompt_chars": 4561,
+   "scenario_id": 6,
+   "k": 10
+  },
+  {
+   "ttft_ms": 311.54379999497905,
+   "total_ms": 314.72590001067147,
+   "prompt_tokens": 647,
+   "prompt_chars": 2647,
+   "scenario_id": 36,
+   "k": 5
+  },
+  {
+   "ttft_ms": 413.7011999846436,
+   "total_ms": 418.28059998806566,
+   "prompt_tokens": 1029,
+   "prompt_chars": 4447,
+   "scenario_id": 50,
+   "k": 10
+  },
+  {
+   "ttft_ms": 312.2647000127472,
+   "total_ms": 315.3656999929808,
+   "prompt_tokens": 595,
+   "prompt_chars": 2389,
+   "scenario_id": 18,
+   "k": 5
+  },
+  {
+   "ttft_ms": 345.9401999716647,
+   "total_ms": 348.4943999792449,
+   "prompt_tokens": 84,
+   "prompt_chars": 342,
+   "scenario_id": 48,
+   "k": 0
+  },
+  {
+   "ttft_ms": 313.23510000947863,
+   "total_ms": 317.84249999327585,
+   "prompt_tokens": 660,
+   "prompt_chars": 2630,
+   "scenario_id": 29,
+   "k": 5
+  },
+  {
+   "ttft_ms": 328.8835000130348,
+   "total_ms": 333.15820002462715,
+   "prompt_tokens": 79,
+   "prompt_chars": 324,
+   "scenario_id": 30,
+   "k": 0
+  },
+  {
+   "ttft_ms": 322.5772000150755,
+   "total_ms": 329.29699996020645,
+   "prompt_tokens": 82,
+   "prompt_chars": 323,
+   "scenario_id": 18,
+   "k": 0
+  },
+  {
+   "ttft_ms": 312.17829999513924,
+   "total_ms": 316.9439999619499,
+   "prompt_tokens": 597,
+   "prompt_chars": 2408,
+   "scenario_id": 48,
+   "k": 5
+  },
+  {
+   "ttft_ms": 306.83730001328513,
+   "total_ms": 308.15709999296814,
+   "prompt_tokens": 81,
+   "prompt_chars": 322,
+   "scenario_id": 6,
+   "k": 0
+  },
+  {
+   "ttft_ms": 413.0294999922626,
+   "total_ms": 415.56320001836866,
+   "prompt_tokens": 76,
+   "prompt_chars": 308,
+   "scenario_id": 25,
+   "k": 0
+  }
+ ],
+ "requests_used": 261
+}

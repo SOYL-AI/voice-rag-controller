@@ -26,6 +26,7 @@ without touching this file's overall shape.
 
 import argparse
 import asyncio
+import os
 import sys
 import time
 from pathlib import Path
@@ -42,6 +43,15 @@ _REPO_ROOT = Path(__file__).resolve().parent.parent
 if str(_REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(_REPO_ROOT))
 
+# research v2: torch's default intra-op thread count (16 on the dev laptop)
+# oversubscribes the CPU and made the v1 bge-small query embedding take
+# ~0.65 s median / ~3 s p90 inside E2 runs instead of ~20 ms. Opt-in fix so
+# v1 runs stay reproducible: VOICE_RAG_TORCH_THREADS=4.
+if os.environ.get("VOICE_RAG_TORCH_THREADS"):
+    import torch as _torch
+
+    _torch.set_num_threads(int(os.environ["VOICE_RAG_TORCH_THREADS"]))
+
 from retrieval.rewrite import rewrite_query
 from controller.decide import decide
 from controller.baseline import Ctx, get_baseline
@@ -49,9 +59,15 @@ import controller.baselines  # noqa: F401 -- import-for-side-effect: registers e
 from controller.timing import (
     MechanismContext,
     PartialSignalWatcher,
+    forecast_should_dispatch,
+    is_query_ready,
+    load_forecast_predictor,
+    load_timing_config,
+    lookup_prediction,
     mechanism_launch_fields,
     mechanism_result_fields,
     plan_simulated_speech,
+    resolve_expected_latency_ms,
     resolve_policy,
 )
 from eventlog.log_writer import LogWriter, now_ms
@@ -62,6 +78,7 @@ from retrieval.search import search as retrieval_search
 from audio.config import load_config
 from audio.stt import StreamingSTT
 from audio.tts import StreamingTTS, split_into_clauses
+from pipeline.streaming import generate_and_speak_streaming
 from audio.audio_loop import (
     generate_mic_stream,
     generate_synthetic_speech_stream,
@@ -264,6 +281,8 @@ def retrieve(
     turn_id: int,
     mechanism: MechanismContext = None,
     rewrite_precomputed: bool = False,
+    retriever=None,
+    query_meta: Optional[dict] = None,
 ) -> list:
     """
     Embeds the query and searches the FAISS index built from
@@ -290,22 +309,37 @@ def retrieve(
     """
     launch_ms = now_ms()
     launched_payload = {"query": query, "rewrite_precomputed": rewrite_precomputed}
+    # research v2 (additive): where the query came from (frozen /
+    # full_transcript / live_partial, see run_conversation) and which
+    # retrieval latency profile served it.
+    if query_meta:
+        launched_payload.update(query_meta)
+    if retriever is not None:
+        launched_payload["retrieval_profile"] = retriever.profile
     if mechanism is not None:
         launched_payload.update(mechanism_launch_fields(mechanism, launch_ms))
     log_writer.log_event("system", "retrieval_launched", launched_payload, turn_id)
 
-    results = retrieval_search(query, k=3)
+    if retriever is not None:
+        results = retriever.search(query, k=3)
+    else:
+        results = retrieval_search(query, k=3)
     finish_ms = now_ms()
     passages = [r["text"] for r in results]
-    scores = [r["distance"] for r in results]
+    scores = [r["distance"] if "distance" in r else r.get("score") for r in results]
     # filenames: the source document each passage came from
     # (retrieval/search.py already returns this per hit — see its
     # "filename" key). Logged alongside passages/scores so hit@k is
     # computable from the log without re-running retrieval; harness/
     # metrics.py's hit_at_k_per_turn() reads it back out.
-    filenames = [r["filename"] for r in results]
+    filenames = [r.get("filename") or r.get("doc_id") for r in results]
 
     result_payload = {"passages": passages, "scores": scores, "filenames": filenames}
+    if retriever is not None:
+        result_payload["retrieval_profile"] = retriever.profile
+        timing = getattr(retriever, "last_timing", None)
+        if timing:
+            result_payload["retrieval_timing_ms"] = timing
     if mechanism is not None:
         result_payload.update(mechanism_result_fields(mechanism, launch_ms, finish_ms))
     log_writer.log_event("system", "retrieval_result", result_payload, turn_id)
@@ -323,6 +357,9 @@ def run_retrieval_pipeline(
     turn_start_ms: Optional[int] = None,
     baseline_prices: Optional[dict] = None,
     signals: Optional[dict] = None,
+    retriever=None,
+    query_meta: Optional[dict] = None,
+    skip_rewrite: bool = False,
 ) -> tuple:
     """
     The controller-decide + query-rewrite + retrieve sequence — unchanged
@@ -408,7 +445,12 @@ def run_retrieval_pipeline(
         print("  retrieved:      skipped (controller decided not to retrieve)")
         return action, []
 
-    if frozen_query is None:
+    if frozen_query is None and skip_rewrite:
+        # research v2 live-partial path without a rewrite: the (partial)
+        # transcript is the query, verbatim.
+        rewritten_query = transcript_snapshot
+        print(f"  query (no rewrite): {rewritten_query}")
+    elif frozen_query is None:
         rewritten_query = rewrite_query([], transcript_snapshot)
         print(f"  rewritten query: {rewritten_query}")
     else:
@@ -421,6 +463,8 @@ def run_retrieval_pipeline(
         turn_id,
         mechanism=mechanism,
         rewrite_precomputed=frozen_query is not None,
+        retriever=retriever,
+        query_meta=query_meta,
     )
     print(f"  retrieved:      {len(passages)} passage(s)  (timing_trigger={mechanism.trigger})")
     return action, passages
@@ -474,6 +518,9 @@ async def _trigger_live_early_retrieval(
     if policy == "immediate":
         partial_text = await watcher.first_ready_partial
         trigger = "immediate"
+    elif policy == "forecast":
+        partial_text = (await watcher.forecast_partial)["text"]
+        trigger = "forecast"
     else:
         partial_text = await watcher.repeated_ready_partial
         trigger = "fixed_early_proxy"
@@ -546,6 +593,7 @@ def generate_answer(
     turn_id: int,
     question: str,
     seed: Optional[int] = None,
+    on_delta=None,
 ) -> str:
     """
     Calls the real llm/client.py generate_answer(): builds the RAG prompt
@@ -560,7 +608,7 @@ def generate_answer(
     docstring). Default None: unchanged generation behavior.
     """
     return llm_generate_answer(
-        passages, log_writer, turn_id, question=question, seed=seed
+        passages, log_writer, turn_id, question=question, seed=seed, on_delta=on_delta
     )
 
 
@@ -574,6 +622,7 @@ async def speak(
     turn_id: int,
     live: bool,
     playback_block_ms: int,
+    simulate_playback: bool = True,
 ) -> None:
     """
     Real version: audio/tts.py's StreamingTTS, synthesizing with piper.
@@ -598,7 +647,7 @@ async def speak(
                 first_audio_logged = True
             play_pcm_audio(pcm, sample_rate=22050, block_ms=playback_block_ms)
     else:
-        await tts.speak(answer, log_writer, turn_id)
+        await tts.speak(answer, log_writer, turn_id, simulate_playback=simulate_playback)
 
     print(f'  system speaks: "{answer}"')
 
@@ -616,6 +665,14 @@ async def run_conversation(
     baseline: Optional[str] = None,
     baseline_prices: Optional[dict] = None,
     signals: Optional[dict] = None,
+    speech_trace: Optional[dict] = None,
+    query_source: Optional[str] = None,
+    live_rewrite: bool = True,
+    retrieval_profile: Optional[str] = None,
+    retriever=None,
+    tts_mode: Optional[str] = None,
+    simulate_playback: bool = True,
+    log_dir: str = "logs",
 ) -> Path:
     """
     Runs one full conversation through every stage above, in order,
@@ -727,7 +784,37 @@ async def run_conversation(
     baseline= — see run_retrieval_pipeline()'s docstring for how it
     becomes Ctx.signals. Default None leaves every other caller of
     run_conversation() unaffected: Ctx.signals stays exactly
-    {"tracker_slots": ...} as before this parameter existed.
+    {"tracker_slots": ...} as before this parameter existed. research v2
+    also reads signals["timing"] / signals["retrieval"] (CONTRACTS §6) for
+    the forecast policy, whatever `baseline` is.
+
+    research v2 additions (all default to the v1 behaviour above):
+
+    speech_trace: a CONTRACTS §4 speech trace for `question`'s item. When
+    given (or when the policy is `forecast`, or query_source is
+    `live_partial`, on the text path), the turn runs trace-driven: partials
+    are replayed at their real t_ms, user_end fires at vad_user_end_ms and
+    the policy dispatches on the partial stream (see _run_trace_turn).
+    Without a trace one is synthesized from `question` at the configured
+    speaking rate (simulator/v1_text_traces.make_trace, no VAD hang so the
+    timeline matches the v1 text path).
+
+    query_source: what retrieval runs on when it is dispatched early.
+    `live_partial` (the trace path's default unless frozen_query is given):
+    the partial transcript available at dispatch, through the live rewrite
+    (live_rewrite=True) or verbatim. `full_transcript`: the final
+    transcript (the v1 text path's oracle behaviour). `frozen`: frozen_query
+    (E2). Logged as retrieval_launched.query_source.
+
+    retrieval_profile / retriever: serve retrieval from a
+    retrieval/profiles.py Retriever (faiss | faiss_rerank | remote_api)
+    instead of the v1 retrieval/search.py module.
+
+    tts_mode: `batch` (v1: synthesize after llm_final) or `streaming` (TTS
+    starts on the first complete clause, pipeline/streaming.py). Default
+    from VOICE_RAG_TTS_MODE, else config pipeline.tts_mode, else batch.
+    simulate_playback=False skips sleeping through simulated audio
+    playback after first audio (measurement runs; TTFA unaffected).
     """
     if baseline is not None and question is None:
         raise ValueError(
@@ -738,10 +825,21 @@ async def run_conversation(
         )
 
     cfg = load_config()
-    log_writer = LogWriter(conversation_id=conversation_id)
+    log_writer = LogWriter(conversation_id=conversation_id, log_dir=log_dir)
     turn_id = 1  # Week 1's canned conversation is a single turn.
     policy = resolve_policy()
     turn_start_ms = now_ms()
+
+    tts_mode = tts_mode or os.environ.get("VOICE_RAG_TTS_MODE") or _pipeline_cfg().get("tts_mode", "batch")
+    if tts_mode not in ("batch", "streaming"):
+        raise ValueError(f"tts_mode must be 'batch' or 'streaming', got {tts_mode!r}")
+    if retriever is None and retrieval_profile is not None:
+        from retrieval.profiles import make_retriever
+
+        retriever = make_retriever(retrieval_profile)
+    use_trace_path = question is not None and (
+        speech_trace is not None or policy == "forecast" or query_source == "live_partial"
+    )
 
     # Built once, not per turn: StreamingSTT/StreamingTTS lazily load
     # faster-whisper, Silero VAD, and piper on first use, which is too
@@ -757,11 +855,22 @@ async def run_conversation(
             # happen, so the timing policies below have real signals to
             # trigger on without editing audio/stt.py. See
             # controller/timing.py's PartialSignalWatcher.
-            watcher = PartialSignalWatcher(log_writer, turn_id)
+            forecast_ctx = None
+            if policy == "forecast":
+                timing_cfg = load_timing_config()
+                expected_ms, _src = resolve_expected_latency_ms(signals, timing_cfg["forecast"])
+                forecast_ctx = {
+                    "predictor": load_forecast_predictor(timing_cfg["forecast"]),
+                    "expected_latency_ms": expected_ms,
+                    "partial_interval_ms": cfg["stt"].get("partial_interval_ms", 400),
+                    "forecast_cfg": timing_cfg["forecast"],
+                    "onset_ms": turn_start_ms,
+                }
+            watcher = PartialSignalWatcher(log_writer, turn_id, forecast=forecast_ctx)
 
             early_task = None
             mechanism = None
-            if policy in ("immediate", "fixed_early_proxy"):
+            if policy in ("immediate", "fixed_early_proxy", "forecast"):
                 transcribe_task = asyncio.create_task(
                     transcribe(audio_stream, stt, watcher, turn_id)
                 )
@@ -818,6 +927,23 @@ async def run_conversation(
                 action, passages = run_retrieval_pipeline(
                     transcript, log_writer, turn_id, late_mechanism, force_retrieve, frozen_query
                 )
+        elif use_trace_path:
+            transcript, action, passages = await _run_trace_turn(
+                question=question,
+                speech_trace=speech_trace,
+                policy=policy,
+                log_writer=log_writer,
+                turn_id=turn_id,
+                turn_start_ms=turn_start_ms,
+                force_retrieve=force_retrieve,
+                frozen_query=frozen_query,
+                query_source=query_source,
+                live_rewrite=live_rewrite,
+                baseline=baseline,
+                baseline_prices=baseline_prices,
+                signals=signals,
+                retriever=retriever,
+            )
         else:
             # Text path: no audio, no STT — the given question *is* the
             # transcript. immediate/fixed_early_proxy need a real
@@ -921,20 +1047,35 @@ async def run_conversation(
                     baseline, turn_start_ms, baseline_prices, signals,
                 )
 
-        answer = generate_answer(passages, log_writer, turn_id, transcript, seed=seed)
         # Text mode always speaks non-live (simulated playback, no
         # hardware) regardless of `live`, matching the headless default —
         # there's no captured audio turn here for live playback to pair
         # against.
         speak_live = live if question is None else False
-        await speak(
-            answer,
-            tts,
-            log_writer,
-            turn_id,
-            speak_live,
-            cfg["tts"]["playback_block_ms"],
-        )
+        if tts_mode == "streaming":
+            answer = await generate_and_speak_streaming(
+                lambda on_delta: generate_answer(
+                    passages, log_writer, turn_id, transcript, seed=seed, on_delta=on_delta
+                ),
+                tts,
+                log_writer,
+                turn_id,
+                live=speak_live,
+                simulate_playback=simulate_playback,
+                playback_block_ms=cfg["tts"]["playback_block_ms"],
+            )
+            print(f'  system speaks (streamed): "{answer}"')
+        else:
+            answer = generate_answer(passages, log_writer, turn_id, transcript, seed=seed)
+            await speak(
+                answer,
+                tts,
+                log_writer,
+                turn_id,
+                speak_live,
+                cfg["tts"]["playback_block_ms"],
+                simulate_playback=simulate_playback,
+            )
     finally:
         # Always close, even if a stage above raises — otherwise whatever
         # is still sitting in the writer thread's queue never reaches
@@ -942,6 +1083,191 @@ async def run_conversation(
         log_writer.close()
 
     return log_writer._path
+
+
+# ---------------------------------------------------------------------------
+# research v2: trace-driven text path
+# ---------------------------------------------------------------------------
+def _pipeline_cfg() -> dict:
+    """configs/config.yaml's optional `pipeline:` section ({} if absent)."""
+    try:
+        import yaml
+
+        cfg_file = Path(os.environ.get("VOICE_RAG_CONFIG") or (_REPO_ROOT / "configs" / "config.yaml"))
+        with open(cfg_file, "r", encoding="utf-8") as fh:
+            return (yaml.safe_load(fh) or {}).get("pipeline") or {}
+    except FileNotFoundError:
+        return {}
+
+
+def synthesize_trace_for(question: str) -> dict:
+    """A simulated §4 trace for `question` matching the v1 text path's
+    timeline (configured words_per_minute, STT partial cadence, no VAD hang
+    so user_end lands at speech end exactly as plan_simulated_speech does)."""
+    from simulator.v1_text_traces import make_trace
+
+    timing_cfg = load_timing_config()
+    wpm = float(timing_cfg["simulated_speech"]["words_per_minute"])
+    interval = int(load_config()["stt"].get("partial_interval_ms", 400))
+    return make_trace("adhoc", question, f"text-timing-wpm{int(wpm)}", wpm,
+                      partial_interval_ms=interval, silence_hang_ms=0)
+
+
+async def _sleep_until(turn_start_ms: int, t_ms: float) -> None:
+    delay = (turn_start_ms + t_ms - now_ms()) / 1000.0
+    if delay > 0:
+        await asyncio.sleep(delay)
+
+
+async def _run_trace_turn(
+    question: str,
+    speech_trace: Optional[dict],
+    policy: str,
+    log_writer: LogWriter,
+    turn_id: int,
+    turn_start_ms: int,
+    force_retrieve: Optional[bool],
+    frozen_query: Optional[str],
+    query_source: Optional[str],
+    live_rewrite: bool,
+    baseline: Optional[str],
+    baseline_prices: Optional[dict],
+    signals: Optional[dict],
+    retriever,
+) -> tuple:
+    """
+    Replay a speech trace in real wall-clock time and let `policy` dispatch
+    retrieval on the partial stream, exactly as the live STT path would:
+
+      immediate          first query-ready partial
+      fixed_early_proxy  first query-ready partial that repeats the previous
+                         one (the live path's pause proxy)
+      forecast           controller/timing.py's forecast rule on the
+                         remaining-speech prediction for each partial
+      sentence_end       never early; retrieval at user_end
+
+    Retrieval runs on the query selected by query_source (module docstring
+    of run_conversation): by default the live partial, so partial-query
+    degradation is real rather than structurally zero. user_end is logged at
+    the trace's vad_user_end_ms, with the true speech end in its payload so
+    TTFA can also be measured from the end of speech.
+    """
+    trace = speech_trace or synthesize_trace_for(question)
+    final_text = (trace.get("asr_final") or {}).get("text") or question
+    words = trace.get("words") or []
+    speech_end_ms = float(words[-1]["end_ms"]) if words else float(trace.get("duration_ms") or 0)
+    user_end_rel = float(trace.get("vad_user_end_ms") or speech_end_ms)
+    partial_interval_ms = float(trace.get("partial_interval_ms") or 300)
+    if query_source is None:
+        query_source = "frozen" if frozen_query is not None else "live_partial"
+    if query_source not in ("frozen", "full_transcript", "live_partial"):
+        raise ValueError(f"query_source must be frozen|full_transcript|live_partial, got {query_source!r}")
+    if query_source == "frozen" and frozen_query is None:
+        raise ValueError("query_source='frozen' needs frozen_query")
+
+    timing_cfg = load_timing_config()
+    fc_cfg = timing_cfg["forecast"]
+    qr_cfg = timing_cfg["query_ready"]
+    predictor = None
+    predictions = ((signals or {}).get("timing") or {}).get("predicted_remaining_speech_ms")
+    expected_ms, expected_src = (None, None)
+    if policy == "forecast":
+        expected_ms, expected_src = resolve_expected_latency_ms(signals, fc_cfg)
+        if predictions is None:
+            predictor = load_forecast_predictor(fc_cfg)
+
+    def planned_user_end():
+        return turn_start_ms + int(user_end_rel)
+
+    def planned_window():
+        return (turn_start_ms, turn_start_ms + int(speech_end_ms))
+
+    early_task = None
+    last_text = None
+    for p in sorted(trace.get("partials") or [], key=lambda x: x["t_ms"]):
+        if p["t_ms"] >= user_end_rel:
+            break
+        await _sleep_until(turn_start_ms, p["t_ms"])
+        text = p.get("text", "")
+        log_writer.log_event("user", "asr_partial", {"text": text}, turn_id)
+        if early_task is not None or policy == "sentence_end":
+            last_text = text
+            continue
+
+        fire, extra = False, {}
+        if policy == "immediate":
+            fire = is_query_ready(text, qr_cfg)
+        elif policy == "fixed_early_proxy":
+            fire = text == last_text and is_query_ready(text, qr_cfg)
+        elif policy == "forecast":
+            key = fc_cfg.get("remaining_quantile", "q50")
+            if predictions is not None:
+                r = lookup_prediction(predictions, p["t_ms"], "remaining_ms" if key == "q50" else f"remaining_{key}_ms")
+            elif predictor is not None:
+                r = predictor.predict(text, p["t_ms"])[key]
+            else:
+                r = None
+            fire, reason = forecast_should_dispatch(text, r, expected_ms, partial_interval_ms, fc_cfg, qr_cfg)
+            extra = {
+                "predicted_remaining_ms": None if r is None else round(float(r), 1),
+                "expected_retrieval_latency_ms": round(float(expected_ms), 1),
+                "expected_latency_source": expected_src,
+                "forecast_reason": reason,
+            }
+        last_text = text
+        if not fire:
+            continue
+
+        if query_source == "live_partial":
+            snapshot, fq, skip = text, None, not live_rewrite
+        elif query_source == "full_transcript":
+            snapshot, fq, skip = final_text, None, False
+        else:
+            snapshot, fq, skip = final_text, frozen_query, False
+        meta = {
+            "query_source": query_source,
+            "partial_word_count": len(text.split()),
+            "partial_t_ms": p["t_ms"],
+            **extra,
+        }
+        mechanism = MechanismContext(
+            policy=policy, trigger=policy,
+            user_end_ms_getter=planned_user_end, speech_window_ms_getter=planned_window,
+        )
+        early_task = asyncio.create_task(
+            asyncio.to_thread(
+                run_retrieval_pipeline,
+                snapshot, log_writer, turn_id, mechanism, force_retrieve, fq,
+                baseline, turn_start_ms, baseline_prices, signals,
+                retriever, meta, skip,
+            )
+        )
+
+    await _sleep_until(turn_start_ms, user_end_rel)
+    log_writer.log_event(
+        "user", "user_end",
+        {"speech_end_offset_ms": round(speech_end_ms - user_end_rel, 1)},
+        turn_id,
+    )
+    log_writer.log_event("user", "asr_final", {"text": final_text}, turn_id)
+    print(f'  user says:      "{final_text}"')
+
+    if early_task is not None:
+        action, passages = await early_task
+    else:
+        mechanism = MechanismContext(
+            policy=policy,
+            trigger="sentence_end" if policy == "sentence_end" else f"{policy}_no_signal_fallback",
+            user_end_ms_getter=planned_user_end, speech_window_ms_getter=planned_window,
+        )
+        fq = frozen_query if query_source == "frozen" else None
+        meta = {"query_source": "frozen" if fq is not None else "full_transcript"}
+        action, passages = run_retrieval_pipeline(
+            final_text, log_writer, turn_id, mechanism, force_retrieve, fq,
+            baseline, turn_start_ms, baseline_prices, signals,
+            retriever, meta, False,
+        )
+    return final_text, action, passages
 
 
 if __name__ == "__main__":

@@ -88,7 +88,7 @@ from eventlog.log_writer import now_ms  # noqa: E402 -- read-only import, see Pa
 
 _DEFAULT_CONFIG_PATH = _REPO_ROOT / "configs" / "config.yaml"
 
-VALID_POLICIES = {"sentence_end", "immediate", "fixed_early_proxy"}
+VALID_POLICIES = {"sentence_end", "immediate", "fixed_early_proxy", "forecast"}
 
 # Mirrors configs/config.yaml's controller.timing — kept in sync the same
 # way controller/decide.py's _DEFAULT_DECISION_CFG mirrors controller.decision.
@@ -104,6 +104,20 @@ _DEFAULT_TIMING_CFG = {
     "query_ready": {
         "min_words": 4,
         "require_content_word": True,
+    },
+    # research v2: the pre-registered forecast-timed policy. See
+    # forecast_should_dispatch() below.
+    "forecast": {
+        "rule": "jit",                 # "jit" | "earliest"
+        "remaining_quantile": "q50",   # which predictor quantile to trust
+        "latency_quantile": "p50",     # which retrieval-latency quantile to hide
+        "margin_ms": 0,                # extra safety margin on top of the latency
+        "extra_latency_ms": 0,         # e.g. a live query rewrite before retrieval
+        "retrieval_profile": "faiss",
+        "predictor_path": None,        # saved RemainingSpeechPredictor JSON
+        # used only when neither signals["retrieval"] nor the latency
+        # profile artifact is available (E2 in-pipeline median)
+        "fallback_expected_latency_ms": 672,
     },
 }
 
@@ -204,6 +218,10 @@ def load_timing_config(path: Optional[str] = None) -> dict:
     merged["query_ready"] = {
         **_DEFAULT_TIMING_CFG["query_ready"],
         **(timing_cfg.get("query_ready") or {}),
+    }
+    merged["forecast"] = {
+        **_DEFAULT_TIMING_CFG["forecast"],
+        **(timing_cfg.get("forecast") or {}),
     }
     return merged
 
@@ -358,6 +376,154 @@ def plan_simulated_speech(transcript: str, path: Optional[str] = None) -> Speech
 
 
 # ---------------------------------------------------------------------------
+# research v2: the forecast-timed policy
+# ---------------------------------------------------------------------------
+# The pre-registration named a "forecast-timed" policy: retrieve during the
+# predicted user-still-talking window. E2 shipped fixed_early_proxy instead
+# (a fixed fraction of the modeled speech, no forecast). `forecast` is the
+# real thing, driven by two measured signals:
+#
+#   R(t)  predicted remaining speech at partial t
+#         (controller/remaining_speech.py; signals["timing"]
+#         ["predicted_remaining_speech_ms"])
+#   L     expected retrieval latency of the active retrieval profile
+#         (signals["retrieval"], from retrieval/latency_profiles_v2.json),
+#         plus margin_ms and any extra pre-retrieval work
+#         (extra_latency_ms, e.g. a live query rewrite)
+#
+# Dispatch rules (both behind the same query_ready content gate as the E2
+# policies, and both falling back to sentence_end when never triggered):
+#
+#   jit       (default) dispatch at the first query-ready partial where
+#             waiting one more partial interval would leave less predicted
+#             speech than the latency to hide: R(t) - dt < L, i.e.
+#             R(t) < L + dt. This is the last partial at which remaining
+#             speech is still predicted to cover the retrieval latency
+#             (R(t) >= L, unless it was already too late at the first
+#             ready partial). It buys as much query content as possible
+#             without exposing latency: the information-vs-overlap
+#             trade-off (C2) resolved by the forecast.
+#   earliest  dispatch at the first query-ready partial with R(t) >= L, or
+#             at the first query-ready partial at all if R(t) < L there
+#             (nothing left to hide by waiting). Equivalent to a gated
+#             reactive policy; kept as an ablation.
+#
+# fixed_early_proxy is untouched (v1 reproducibility).
+
+
+def forecast_should_dispatch(
+    text: str,
+    predicted_remaining_ms: Optional[float],
+    expected_latency_ms: float,
+    partial_interval_ms: float,
+    forecast_cfg: Optional[dict] = None,
+    query_ready_cfg: Optional[dict] = None,
+) -> Tuple[bool, str]:
+    """Decision for one partial. Returns (dispatch, reason)."""
+    cfg = {**_DEFAULT_TIMING_CFG["forecast"], **(forecast_cfg or {})}
+    qr_cfg = query_ready_cfg if query_ready_cfg is not None else _DEFAULT_TIMING_CFG["query_ready"]
+    if not is_query_ready(text, qr_cfg):
+        return False, "query_not_ready"
+    if predicted_remaining_ms is None:
+        # No forecast available: behave like the gated reactive policy.
+        return True, "no_forecast_signal"
+    budget = (
+        float(expected_latency_ms)
+        + float(cfg.get("margin_ms", 0) or 0)
+        + float(cfg.get("extra_latency_ms", 0) or 0)
+    )
+    rule = cfg.get("rule", "jit")
+    if rule == "jit":
+        if predicted_remaining_ms < budget + float(partial_interval_ms):
+            return True, "jit:remaining<latency+interval"
+        return False, "jit:waiting_for_more_query"
+    if rule == "earliest":
+        return True, ("earliest:hideable" if predicted_remaining_ms >= budget else "earliest:not_hideable")
+    raise ValueError(f"unknown forecast rule {rule!r}")
+
+
+def lookup_prediction(predictions: Optional[List[dict]], t_ms: float, key: str = "remaining_ms") -> Optional[float]:
+    """The latest prediction entry at or before t_ms (CONTRACTS §6 list)."""
+    best = None
+    for p in predictions or []:
+        if p["t_ms"] <= t_ms + 1e-6 and (best is None or p["t_ms"] >= best["t_ms"]):
+            best = p
+    if best is None:
+        return None
+    return best.get(key, best.get("remaining_ms"))
+
+
+def forecast_dispatch(
+    partials: List[dict],
+    predict,
+    expected_latency_ms: float,
+    partial_interval_ms: float,
+    forecast_cfg: Optional[dict] = None,
+    query_ready_cfg: Optional[dict] = None,
+    onset_ms: float = 0.0,
+) -> Optional[dict]:
+    """
+    Offline/trace version of the forecast policy: the first partial (in time
+    order) at which forecast_should_dispatch() fires, or None (dispatch at
+    user_end). `predict` is a callable (text, elapsed_ms) -> remaining ms,
+    a precomputed signals["timing"]["predicted_remaining_speech_ms"] list,
+    or None (no forecast signal).
+    """
+    for p in sorted(partials, key=lambda x: x["t_ms"]):
+        if callable(predict):
+            r = predict(p.get("text", ""), p["t_ms"] - onset_ms)
+        elif predict is None:
+            r = None
+        else:
+            r = lookup_prediction(predict, p["t_ms"])
+        ok, reason = forecast_should_dispatch(
+            p.get("text", ""), r, expected_latency_ms, partial_interval_ms, forecast_cfg, query_ready_cfg
+        )
+        if ok:
+            return {"t_ms": p["t_ms"], "text": p.get("text", ""), "predicted_remaining_ms": r, "reason": reason}
+    return None
+
+
+def resolve_expected_latency_ms(signals: Optional[dict] = None, forecast_cfg: Optional[dict] = None) -> Tuple[float, str]:
+    """
+    L for the forecast policy: signals["retrieval"] if the caller passed it,
+    else the measured latency-profile artifact for the configured profile,
+    else the configured fallback. Returns (latency_ms, source).
+    """
+    cfg = {**_DEFAULT_TIMING_CFG["forecast"], **(forecast_cfg or {})}
+    q = cfg.get("latency_quantile", "p50")
+    r = (signals or {}).get("retrieval") or {}
+    if (r.get("latency_quantiles_ms") or {}).get(q) is not None:
+        return float(r["latency_quantiles_ms"][q]), f"signals.retrieval.{q}"
+    if r.get("expected_latency_ms") is not None:
+        return float(r["expected_latency_ms"]), "signals.retrieval.expected"
+    try:
+        from retrieval.profiles import retrieval_signals
+
+        sig = retrieval_signals(cfg.get("retrieval_profile", "faiss"), expected_quantile=q)
+        return float(sig["expected_latency_ms"]), f"latency_profiles_v2:{sig['latency_profile']}.{q}"
+    except Exception:
+        return float(cfg.get("fallback_expected_latency_ms", 672)), "config_fallback"
+
+
+def load_forecast_predictor(forecast_cfg: Optional[dict] = None):
+    """The configured RemainingSpeechPredictor, or None if none is configured/available."""
+    cfg = {**_DEFAULT_TIMING_CFG["forecast"], **(forecast_cfg or {})}
+    path = os.environ.get("VOICE_RAG_REMAINING_SPEECH_MODEL") or cfg.get("predictor_path")
+    if not path:
+        return None
+    p = Path(path)
+    if not p.is_absolute():
+        p = _REPO_ROOT / p
+    if not p.exists():
+        print(f"[controller/timing] WARNING: forecast predictor {p} not found; forecast degrades to gated reactive.")
+        return None
+    from controller.remaining_speech import RemainingSpeechPredictor
+
+    return RemainingSpeechPredictor.load(p)
+
+
+# ---------------------------------------------------------------------------
 # Live/synthetic-audio path: observing the real asr_partial/user_end signals
 # ---------------------------------------------------------------------------
 class PartialSignalWatcher:
@@ -380,7 +546,13 @@ class PartialSignalWatcher:
     anything that wants the raw signal.
     """
 
-    def __init__(self, inner, turn_id, query_ready_cfg: Optional[dict] = None):
+    def __init__(
+        self,
+        inner,
+        turn_id,
+        query_ready_cfg: Optional[dict] = None,
+        forecast: Optional[dict] = None,
+    ):
         self._inner = inner
         self._turn_id = turn_id
         self._loop = asyncio.get_running_loop()
@@ -391,6 +563,12 @@ class PartialSignalWatcher:
         self.repeated_partial: asyncio.Future = self._loop.create_future()
         self.first_ready_partial: asyncio.Future = self._loop.create_future()
         self.repeated_ready_partial: asyncio.Future = self._loop.create_future()
+        # research v2 forecast policy (optional): dict with keys
+        #   predictor (RemainingSpeechPredictor or None), expected_latency_ms,
+        #   partial_interval_ms, forecast_cfg, onset_ms
+        # forecast_partial resolves to {"text","t_ms","predicted_remaining_ms","reason"}.
+        self._forecast = forecast
+        self.forecast_partial: asyncio.Future = self._loop.create_future()
         self.user_end_ms: Optional[int] = None
         self._last_partial_text: Optional[str] = None
         self._growth_waiters: List[Tuple[str, asyncio.Future]] = []
@@ -422,6 +600,22 @@ class PartialSignalWatcher:
                 self.repeated_partial.set_result(text)
             if is_repeat and ready and not self.repeated_ready_partial.done():
                 self.repeated_ready_partial.set_result(text)
+
+            if self._forecast is not None and not self.forecast_partial.done():
+                fc = self._forecast
+                t_ms = now_ms()
+                elapsed = t_ms - fc.get("onset_ms", t_ms)
+                predictor = fc.get("predictor")
+                key = (fc.get("forecast_cfg") or {}).get("remaining_quantile", "q50")
+                r = predictor.predict(text, elapsed)[key] if predictor is not None else None
+                ok, reason = forecast_should_dispatch(
+                    text, r, fc["expected_latency_ms"], fc["partial_interval_ms"],
+                    fc.get("forecast_cfg"), self._query_ready_cfg,
+                )
+                if ok:
+                    self.forecast_partial.set_result(
+                        {"text": text, "t_ms": t_ms, "predicted_remaining_ms": r, "reason": reason}
+                    )
 
             # Proxy-assumption-invalidation signal: a later partial that's
             # grown past a given baseline means speech continued past the

@@ -31,6 +31,27 @@ the same core fields:
 | `tts_first_audio` | The first sound of the reply goes out | (none) — **this is the TTFA anchor** |
 | `barge_in` | The user interrupts while the system is speaking | (none) |
 
+## Event types (research v2 additions)
+
+Additive only: every Week 1 event keeps its meaning and payload. A log
+reader that ignores these still computes the same TTFA.
+
+| `event_type` | When it fires | Key payload fields |
+|--------------|---------------|--------------------|
+| `llm_first_clause` | Streaming TTS only: the first complete clause of the answer is available from the token stream (TTS can start on it) | `text`, `n_chars`, `clause_index` (0) |
+| `tts_clause_ready` | Streaming TTS only: one clause has been synthesized and is ready to play | `clause_index`, `text`, `synth_ms`, `audio_ms` |
+
+Payload additions on existing events (all optional, additive):
+
+- `retrieval_launched`: `query_source` (`frozen` \| `full_transcript` \|
+  `live_partial`), `partial_word_count`, `partial_t_ms`, `retrieval_profile`,
+  and for the `forecast` timing policy `predicted_remaining_ms`,
+  `expected_retrieval_latency_ms`.
+- `retrieval_result`: `retrieval_profile`, `retrieval_timing_ms` (component
+  timings from the retriever, when available).
+- `tts_first_audio`: `tts_mode` (`batch` \| `streaming`) when logged by the
+  streaming path.
+
 More event types will be added in later weeks. Add them here first, then in code.
 
 ## The one hard rule

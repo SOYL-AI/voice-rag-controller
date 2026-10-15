@@ -312,9 +312,14 @@ class VLLMClient:
             return False
         return True
 
-    def generate(self, messages, log_writer=None, turn_id=None, **overrides):
+    def generate(self, messages, log_writer=None, turn_id=None, on_delta=None, **overrides):
         """
         Stream one completion. Returns a Generation.
+
+        on_delta, when given, is called as on_delta(text) with every content
+        delta the moment it arrives (from this calling thread). This is what
+        streaming TTS (pipeline/streaming.py) consumes; logging and the
+        returned Generation are unchanged whether or not it is set.
 
         Pass log_writer + turn_id to emit llm_first_token and llm_final. Leave
         them out for calls that shouldn't appear in the conversation timeline
@@ -387,6 +392,8 @@ class VLLMClient:
 
             if delta:
                 pieces.append(delta)
+                if on_delta is not None:
+                    on_delta(delta)
 
         gen.text = "".join(pieces)
         gen.final_ms = now_ms()
@@ -425,10 +432,31 @@ class MockClient:
     def health_check(self) -> bool:
         return True
 
-    def generate(self, messages, log_writer=None, turn_id=None, **overrides):
+    def generate(self, messages, log_writer=None, turn_id=None, on_delta=None, **overrides):
+        """
+        on_delta: same contract as VLLMClient.generate. The mock's timing
+        (time to first token, per-token decode time) defaults to the
+        historical 90 ms / 12 ms and can be overridden per call with
+        mock_ttft_s / mock_token_s, or in config under llm.mock.ttft_s /
+        llm.mock.token_s, so streaming code paths can be exercised with
+        realistic timing without any endpoint.
+        """
         gen_cfg = dict(self.cfg.get("generation") or {})
         gen_cfg.update(overrides)
         lp_cfg = self.cfg.get("logprobs") or {}
+        # Simulated latency. Defaults keep the original behaviour (90 ms /
+        # 12 ms). Config llm.mock.ttft_s / per_token_s (a bulk caller such as
+        # llm/experiment1_v2 --backend mock sets them to 0 so thousands of
+        # calls stay fast); per-call mock_ttft_s / mock_token_s override both
+        # (streaming tests use realistic timing without an endpoint).
+        mock_cfg = self.cfg.get("mock") or {}
+        o_ttft = overrides.pop("mock_ttft_s", None)
+        o_tok = overrides.pop("mock_token_s", None)
+        ttft_s = float(o_ttft if o_ttft is not None else mock_cfg.get("ttft_s", 0.09))
+        per_token_s = float(
+            o_tok if o_tok is not None
+            else mock_cfg.get("per_token_s", mock_cfg.get("token_s", 0.012))
+        )
 
         answer = overrides.pop("mock_answer", None) or self.CANNED_ANSWER
         seed_material = json.dumps(messages, sort_keys=True, default=str)
@@ -439,13 +467,6 @@ class MockClient:
         rng = random.Random(seed)
 
         gen = Generation(text="", model=self.model, start_ms=now_ms())
-
-        # Simulated latency. Defaults keep the original behaviour; a bulk
-        # caller (llm/experiment1_v2 --backend mock) sets llm.mock.ttft_s /
-        # per_token_s to 0 so a plumbing run over thousands of calls stays fast.
-        mock_cfg = self.cfg.get("mock") or {}
-        ttft_s = float(mock_cfg.get("ttft_s", 0.09))
-        per_token_s = float(mock_cfg.get("per_token_s", 0.012))
 
         # Simulate the server thinking before the first token appears. Real
         # TTFT for an 8B on a single card is roughly this order of magnitude.
@@ -491,6 +512,8 @@ class MockClient:
 
             gen.tokens.append(token_info)
             pieces.append(tok)
+            if on_delta is not None:
+                on_delta(tok)
             if per_token_s > 0:
                 time.sleep(per_token_s)  # per-token decode time
 
@@ -560,6 +583,8 @@ def generate_answer(
     question: str = "",
     client=None,
     seed: int = None,
+    on_delta=None,
+    **extra_overrides,
 ) -> str:
     """
     Generate the spoken answer, logging llm_first_token and llm_final.
@@ -580,6 +605,11 @@ def generate_answer(
         client = _DEFAULT_CLIENT
 
     overrides = {} if seed is None else {"seed": seed}
+    # on_delta: forwarded to client.generate() for streaming TTS (see
+    # pipeline/streaming.py). extra_overrides: e.g. the mock's timing knobs.
+    overrides.update(extra_overrides)
+    if on_delta is not None:
+        overrides["on_delta"] = on_delta
     gen = client.generate(
         build_messages(question, passages),
         log_writer=log_writer,
