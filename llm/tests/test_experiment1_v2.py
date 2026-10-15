@@ -738,6 +738,76 @@ class LabelingKitTests(unittest.TestCase):
                                                 "--out", str(tmp / "x.csv")]), 1)
 
 
+class NullAuthoredLabelTests(unittest.TestCase):
+    """d1_open has retrieval_needed_authored = null by design (CONTRACTS.md)."""
+
+    def _null_dataset(self, tmp: Path) -> Path:
+        items_path = _make_dataset(tmp, traces=False)
+        rows = common.read_jsonl(items_path)
+        for n, row in enumerate(rows):
+            row.update(dataset="d1_open", retrieval_needed_authored=None, org=None, domain="open_domain",
+                       item_type="popqa" if n % 4 else "multihop",
+                       meta={**row["meta"], "log10_pop": float(n % 7)})
+        items_path.write_text("".join(json.dumps(r) + "\n" for r in rows), encoding="utf-8")
+        return items_path
+
+    def test_null_authored_is_not_applicable_everywhere(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            tmp = Path(tmp)
+            items = self._null_dataset(tmp)
+            self.assertTrue(all(i["retrieval_needed_authored"] is None for i in common.load_items(items)))
+            self.assertNotIn("authored", analyze.label_maps(common.load_items(items), None))
+            root = tmp / "results"
+            out = root / "mistral7b_v03"
+            self.assertEqual(run.main(["--items", str(items), "--split", "dev", "--backend", "mock",
+                                       "--model", "mistral7b_v03", "--out-dir", str(out),
+                                       "--seeds", "11,23,37,53,71", "--limit", "16"]), 0)
+            # alias match only, LLM judges on a stratified subsample of 12 answers
+            self.assertEqual(label.main(["--items", str(items), "--split", "dev", "--model",
+                                         "mistral7b_v03", "--results-dir", str(out),
+                                         "--judge-backend", "mock", "--judge-subsample", "12",
+                                         "--cache-dir", str(tmp / "jc")]), 0)
+            labels = common.load_json(out / "labels_dev.json")
+            self.assertEqual(labels["meta"]["authored_labels"],
+                             "not applicable (dataset has no authored labels)")
+            judged = [d for d in labels["draws"] if d["judges"]]
+            self.assertGreaterEqual(len(judged), 12)
+            self.assertLess(len(judged), len(labels["draws"]))
+            self.assertEqual(labels["agreement"]["closed_book"]["alias vs judge:primary"]["n"], len(judged))
+            self.assertTrue(all(v["empirical_need"] is not None for v in labels["items"].values()))
+            # alias-only labelling also works
+            self.assertEqual(label.main(["--items", str(items), "--split", "dev", "--model",
+                                         "mistral7b_v03", "--results-dir", str(out), "--judges",
+                                         "none"]), 0)
+            self.assertEqual(analyze.main(["--items", str(items), "--split", "dev", "--results-root",
+                                           str(root), "--bootstrap", "20", "--no-figures"]), 0)
+            analysis = common.load_json(root / "analysis_dev" / "analysis_dev.json")
+            model = analysis["models"]["mistral7b_v03"]
+            self.assertNotIn("authored", model["auc_full"]["mean_entropy_nats"])
+            self.assertIn("empirical", model["auc_full"]["mean_entropy_nats"])
+            self.assertEqual(model["authored_vs_empirical"],
+                             "not applicable (dataset has no authored labels)")
+            self.assertEqual(model["calibration_label"], "empirical")
+            self.assertEqual(model["labels_not_applicable"], ["authored"])
+            # even when authored is requested, it falls back to empirical
+            self.assertEqual(analyze.main(["--items", str(items), "--split", "dev", "--results-root",
+                                           str(root), "--bootstrap", "20", "--no-figures",
+                                           "--calibration-label", "authored"]), 0)
+            analysis = common.load_json(root / "analysis_dev" / "analysis_dev.json")
+            self.assertEqual(analysis["models"]["mistral7b_v03"]["calibration_label"], "empirical")
+
+    def test_judge_subsample_refused_for_judge_graded_dataset(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            tmp = Path(tmp)
+            items = _make_dataset(tmp, traces=False)  # v1_e1: graded by judge:primary
+            out = tmp / "o"
+            run.main(["--items", str(items), "--split", "dev", "--backend", "mock", "--out-dir",
+                      str(out), "--seeds", "11", "--limit", "4", "--no-text-prefixes"])
+            self.assertEqual(label.main(["--items", str(items), "--split", "dev", "--model",
+                                         "mistral7b_v03", "--results-dir", str(out), "--judge-backend",
+                                         "mock", "--judge-subsample", "3"]), 1)
+
+
 class EndToEndMockSmoke(unittest.TestCase):
     """v1 dataset -> v2 schema -> run (mock, text + plumbing ASR prefixes,
     lexical retrieval) -> label (mock judges) -> analyze -> judge validation."""

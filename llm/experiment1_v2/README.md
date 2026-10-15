@@ -134,6 +134,22 @@ kappa) and the primary judge's self-consistency across its samples.
 Correctness of record: `d1_open` uses a normalized alias match; `d2_support`
 uses the primary judge with key facts.
 
+d1_open dev has 1,566 items × 5 draws = 7,830 answers. Judging all of them
+with k=3 gpt-6.1-sol samples would run into the Azure rate limit for hours.
+Two options:
+- `label.py --judges none`: labels from alias match only.
+- `label.py --judge-subsample 400`: alias labels for every answer, plus both
+  LLM judges on a seeded subsample stratified by item_type × popularity
+  tercile × alias verdict, for the agreement check.
+
+The subsample is refused for judge-graded datasets, where it would leave
+labels incomplete.
+
+d1_open has no authored label (`retrieval_needed_authored: null` by design).
+Every authored-label path (AUC, authored-vs-empirical agreement, calibration
+on authored) is skipped and reported as not applicable. Calibration then
+uses the empirical label, never a defaulted authored one.
+
 **Empirical need** (PREREG_V2 §1) means the answer to the full question is
 wrong in at least 3 of 5 closed-book draws:
 - draws with no valid judge majority are excluded, and the label is

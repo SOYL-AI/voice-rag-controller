@@ -110,8 +110,54 @@ def empirical_need(n_wrong: int, n_scored: int, n_draws: int, rule: dict):
     return None
 
 
-def grade_draws(records, items_by_id, judges, cfg, cache_dir, workers) -> list:
-    """One row per graded draw: alias match + each judge's verdict."""
+def draw_key(record) -> tuple:
+    return (record["item_id"], record["draw_seed"], record.get("condition", "closed_book"))
+
+
+def popularity_of(item):
+    if item.get("popularity") is not None:
+        return float(item["popularity"])
+    value = (item.get("meta") or {}).get("log10_pop")
+    return None if value is None else float(value)
+
+
+def judge_subsample(records, items_by_id, n: int, seed: int) -> set:
+    """Draw keys of a stratified random subsample for the LLM judges.
+
+    For datasets graded by alias match (d1_open), the judges serve only as
+    an agreement check, and grading every answer with k=3 gpt-6.1-sol
+    samples would run into the Azure rate limit for hours. Strata are
+    item_type x popularity tercile x alias verdict, allocated in proportion
+    to their size with at least one draw each, seeded."""
+    import random  # noqa: PLC0415
+
+    pops = sorted(p for p in (popularity_of(items_by_id[r["item_id"]]) for r in records) if p is not None)
+    cuts = [pops[len(pops) // 3], pops[2 * len(pops) // 3]] if len(pops) >= 3 else None
+
+    def stratum(record):
+        item = items_by_id[record["item_id"]]
+        pop = popularity_of(item)
+        tercile = None if pop is None or cuts is None else sum(pop >= c for c in cuts)
+        alias = alias_match(answer_text(record), item_aliases(item))
+        return (item.get("item_type"), tercile, alias)
+
+    groups: dict = {}
+    for record in sorted(records, key=draw_key):
+        groups.setdefault(stratum(record), []).append(record)
+    rng = random.Random(seed)
+    chosen = set()
+    total = len(records)
+    for key in sorted(groups, key=str):
+        members = groups[key]
+        take = max(1, round(n * len(members) / total))
+        for record in rng.sample(members, min(take, len(members))):
+            chosen.add(draw_key(record))
+    return chosen
+
+
+def grade_draws(records, items_by_id, judges, cfg, cache_dir, workers, judge_keys=None) -> list:
+    """One row per graded draw: alias match + each judge's verdict. With
+    `judge_keys`, only those draws are sent to the LLM judges."""
     contexts = cfg["labels"]["judge_context"]
 
     def one(record):
@@ -122,6 +168,8 @@ def grade_draws(records, items_by_id, judges, cfg, cache_dir, workers) -> list:
             "condition": record.get("condition", "closed_book"), "answer": answer,
             "alias_correct": alias_match(answer, item_aliases(item)), "judges": {},
         }
+        if judge_keys is not None and draw_key(record) not in judge_keys:
+            return row
         for role, judge in judges.items():
             verdict = judges_mod.grade(
                 judge, item_id=item["id"], question=item["question"],
@@ -166,7 +214,7 @@ def correctness(row: dict, source: str):
     if source.startswith("judge:"):
         role = source.split(":", 1)[1]
         if role not in row["judges"]:
-            raise ValueError(f"correctness source {source!r} needs the {role} judge enabled")
+            return None  # not judged (judge disabled, or outside the judge subsample)
         return row["judges"][role]["answer_correct"]
     raise ValueError(f"unknown correctness source {source!r}")
 
@@ -230,6 +278,8 @@ def build_labels(items, rows, cfg, source_by_dataset, rule, roles) -> dict:
 
 
 def agreement_report(rows, roles) -> dict:
+    # Only draws every enabled judge graded (all of them, unless subsampled).
+    rows = [r for r in rows if all(role in r["judges"] for role in roles)]
     methods = {"alias": [r["alias_correct"] for r in rows]}
     for role in roles:
         methods[f"judge:{role}"] = [r["judges"][role]["answer_correct"] for r in rows]
@@ -313,6 +363,11 @@ def parse_args(argv=None):
     p.add_argument("--config", type=Path, default=common.DEFAULT_CONFIG)
     p.add_argument("--no-retrieval", action="store_true", help="ignore retrieval records")
     p.add_argument("--allow-real-judge-on-mock", action="store_true")
+    p.add_argument("--judge-subsample", type=int,
+                   help="send only a stratified random subsample of N answers to the LLM "
+                   "judges (agreement check). Allowed only when correctness is alias match "
+                   "(d1_open); use --judges none to skip the judges entirely")
+    p.add_argument("--judge-subsample-seed", type=int, default=20261015)
     return p.parse_args(argv)
 
 
@@ -339,7 +394,8 @@ def main(argv=None) -> int:
     if not args.no_retrieval:
         records += [r for r in common.read_jsonl(retrieval_path) if is_full_text(r)]
     backends = {r.get("backend") for r in records}
-    if "mock" in backends and args.judge_backend == "azure" and not args.allow_real_judge_on_mock:
+    if ("mock" in backends and args.judge_backend == "azure" and args.judges.strip().lower() != "none"
+            and not args.allow_real_judge_on_mock):
         print("REFUSED: these are mock-backend answers; grading them with a paid judge is "
               "pointless. Use --judge-backend mock.", file=sys.stderr)
         return 1
@@ -374,9 +430,19 @@ def main(argv=None) -> int:
                   file=sys.stderr)
             return 1
 
+    judge_keys = None
+    if args.judge_subsample and roles:
+        judged_sources = {source_for(ds) for ds in {i["dataset"] for i in items}}
+        if any(s.startswith("judge:") for s in judged_sources):
+            print("REFUSED: --judge-subsample would leave judge-graded labels incomplete; it is "
+                  "only for alias-graded datasets (d1_open).", file=sys.stderr)
+            return 1
+        judge_keys = judge_subsample(records, items_by_id, args.judge_subsample,
+                                     args.judge_subsample_seed)
     print(f"[label] grading {len(records)} answers ({common.rel(rdir)}) with alias match"
-          + "".join(f" + {r}={judges[r].spec.identity_string()}" for r in roles))
-    rows = grade_draws(records, items_by_id, judges, cfg, cache_dir, args.workers)
+          + "".join(f" + {r}={judges[r].spec.identity_string()}" for r in roles)
+          + (f" (judges on a stratified subsample of {len(judge_keys)})" if judge_keys else ""))
+    rows = grade_draws(records, items_by_id, judges, cfg, cache_dir, args.workers, judge_keys)
     rule = cfg["labels"]["need_rule"]
     graded_ids = {r["item_id"] for r in rows}
     labelled_items = [i for i in items if i["id"] in graded_ids]
@@ -414,6 +480,14 @@ def main(argv=None) -> int:
             "n_items": len(labels),
             "n_closed_book_draws": len(closed),
             "n_retrieval_draws": len(grounded),
+            "judge_subsample": None if judge_keys is None else {
+                "n_requested": args.judge_subsample, "n_judged": len(judge_keys),
+                "seed": args.judge_subsample_seed,
+                "strata": "item_type x popularity tercile x alias verdict, proportional, >= 1 each",
+            },
+            "authored_labels": ("present" if any(i.get("retrieval_needed_authored") is not None
+                                                 for i in labelled_items)
+                                else "not applicable (dataset has no authored labels)"),
         },
         "agreement": {
             "closed_book": agreement_report(closed, roles),
@@ -429,12 +503,17 @@ def main(argv=None) -> int:
     common.atomic_write_json(rdir / f"labels_{args.split}.{judges_cfg['prompt_version']}.json", output)
 
     need = [v["empirical_need"] for v in labels.values() if v["empirical_need"] is not None]
-    authored = [v["label_authored"] for v in labels.values() if v["empirical_need"] is not None]
-    print(f"[label] {len(labels)} items; empirical need {sum(need)}/{len(need)}; "
-          f"authored need {sum(authored)}/{len(authored)}")
-    print(f"[label] authored vs empirical: {agreement(authored, need)}")
+    # Authored labels can be null by design (d1_open): only items with both count.
+    both = [(v["label_authored"], v["empirical_need"]) for v in labels.values()
+            if v["empirical_need"] is not None and v["label_authored"] is not None]
+    print(f"[label] {len(labels)} items; empirical need {sum(need)}/{len(need)}")
+    if both:
+        print(f"[label] authored need {sum(a for a, _ in both)}/{len(both)}; authored vs empirical: "
+              f"{agreement([a for a, _ in both], [e for _, e in both])}")
+    else:
+        print("[label] authored vs empirical: not applicable (no authored labels)")
     for name, stats in output["agreement"]["closed_book"].items():
-        if name not in ("parse_failures", "self_consistency"):
+        if name not in ("parse_failures", "self_consistency") and stats["n"]:
             print(f"[label] {name}: {stats['agree']}/{stats['n']} kappa={stats['cohen_kappa']}")
     print(f"[label] parse failures: {output['agreement']['closed_book']['parse_failures']}")
     for role, sc in output["agreement"]["closed_book"]["self_consistency"].items():

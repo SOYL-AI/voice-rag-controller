@@ -126,8 +126,13 @@ def latency_model(probe_records, run_records) -> dict:
 
 
 def label_maps(items, labels) -> dict:
-    authored = {i["id"]: bool(i["retrieval_needed_authored"]) for i in items}
-    out = {"authored": authored}
+    # Authored labels are null by design on d1_open (CONTRACTS.md): null items
+    # are left out, and with none at all the "authored" label does not exist,
+    # so every authored-label path (AUC, agreement, calibration) is skipped
+    # and reported as not applicable. Never bool(None) -> False.
+    authored = {i["id"]: bool(i["retrieval_needed_authored"]) for i in items
+                if i.get("retrieval_needed_authored") is not None}
+    out = {"authored": authored} if authored else {}
     if labels:
         out["empirical"] = {k: v["empirical_need"] for k, v in labels["items"].items()
                             if v.get("empirical_need") is not None}
@@ -828,13 +833,16 @@ def analyze_model(inp, items, cfg_a, headline, n_boot) -> dict:
         print(f"[analyze] WARNING {result['model_key']}: no latency probe and too few unqueued "
               "calls; belief-ready timings include server queueing. Run run.py --latency-probe.")
         lat_model = None
-    if "empirical" in lmaps:
+    if "authored" not in lmaps:
+        result["authored_vs_empirical"] = "not applicable (dataset has no authored labels)"
+    if "empirical" in lmaps and "authored" in lmaps:
         both = [i for i in lmaps["empirical"] if i in lmaps["authored"]]
         from simulator.judge_validation.score_judges import agreement  # noqa: PLC0415
         result["authored_vs_empirical"] = agreement(
             [lmaps["authored"][i] for i in both], [lmaps["empirical"][i] for i in both])
-        result["empirical_base_rate"] = (float(np.mean([lmaps["empirical"][i] for i in both]))
-                                         if both else None)
+    if "empirical" in lmaps:
+        result["empirical_base_rate"] = (float(np.mean(list(lmaps["empirical"].values())))
+                                         if lmaps["empirical"] else None)
 
     for signal in all_signals:
         entry = {}
@@ -959,8 +967,13 @@ def main(argv=None) -> int:
         result = analyze_model(inp, items, cfg_a, headline, n_boot)
         lmaps = label_maps(items, inp["labels"])
         lmaps_any = lmaps_any or lmaps
-        label_kind = cal_label if cal_label in lmaps else "authored"
+        # Requested label if present; else empirical; authored only as a last
+        # resort (before labelling) and never when it does not exist (d1_open).
+        label_kind = next((k for k in (cal_label, "empirical", "authored") if k in lmaps), None)
         result["calibration_label"] = label_kind
+        result["labels_not_applicable"] = sorted({"authored", "empirical"} - set(lmaps))
+        if label_kind is None:
+            print(f"[analyze] {key}: no labels available; calibration skipped.")
         result["gains"] = gains(inp["labels"], cluster_of(items), n_boot)
         b_star = ((result["gains"] or {}).get(label_kind) or {}).get("break_even_belief")
         result["calibrations"] = {}
@@ -979,7 +992,7 @@ def main(argv=None) -> int:
             inputs["self_assessment_sha256"] = common.sha256_file(inp["self_assessment_path"])
         # (artifact name, writer, block, effective slopes that must be > 0)
         candidates = []
-        for signal in cal_signals:
+        for signal in (cal_signals if label_kind else []):
             cal = calibration_block(inp["records"], signal, lmaps[label_kind], cluster_of(items), cfg_a)
             pcal = prefix_calibration_block(inp["records"], signal, lmaps[label_kind],
                                             cluster_of(items), cfg_a)
