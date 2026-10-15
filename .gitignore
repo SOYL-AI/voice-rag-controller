@@ -264,6 +264,10 @@ datasets/v2/*/speech/audio/
 .venv-v2/
 .scratch/
 
+# research v2 speech: local tool venvs, scratch and downloaded TTS/ASR models
+.venv-speech/
+.venv-parler/
+audio/v2/models/
 # local agent worktrees
 .claude/
 # energy/: worktree-local venv and model cache are never committed

@@ -37,7 +37,7 @@ datasets/v2/<dataset_name>/
     corpus.jsonl           # one document/passage per line, schema §3
     splits.json            # {"dev": [ids], "test": [ids], "seed": ..., "method": ...}
     README.md              # provenance, licence, construction, stats
-    speech/traces/<voice_id>.jsonl   # schema §4 (committed)
+    speech/traces/<condition>.jsonl  # schema §4 (committed), one per voice x rate x noise
     speech/audio/...       # .wav files — NOT committed (gitignored)
 llm/experiment1_v2/        # E1-v2 code + results (schema §5)
 controller/baselines/      # v2 controllers live next to v1 ones (new files)
@@ -137,26 +137,47 @@ either file; `retrieval/build_index_v2.py` does. D1 uses this form.
 Passages should be ≤ ~350 words so they fit the existing bge-small + FAISS
 chunking.
 
-## 4. Speech trace schema (`speech/traces/<voice_id>.jsonl`)
+## 4. Speech trace schema (`speech/traces/<condition>.jsonl`)
 
-One line per item rendered with that voice:
+One file per **condition** = voice x speaking rate x noise, named
+`<voice_id>__<wpm>wpm__<noise>.jsonl` (`<voice_id>__natural__<noise>.jsonl` for
+uncontrolled-rate human recordings), one line per item:
 
 ```json
 {
   "item_id": "...", "voice_id": "piper-en_US-lessac-medium", "accent": "en-US|en-IN|en-GB",
-  "wpm_target": 150, "noise": "clean|cafe_10dB|street_5dB", "tts_engine": "...",
-  "audio_path": "speech/audio/<voice_id>/<item_id>.wav", "duration_ms": 3120,
+  "wpm_target": 150, "wpm_actual": 148.2, "noise": "clean|babble_10dB|babble_5dB",
+  "noise_meta": {"type": "babble", "snr_db": 10, "n_talkers": 6, "seed": 123} | null,
+  "tts_engine": "piper-tts 1.x", "length_scale": 1.94,
+  "audio_path": "<name>/speech/audio/<voice_id>/<wpm>wpm/<noise>/<item_id>.wav",
+  "duration_ms": 3120, "lead_ms": 540, "file_ms": 6200,
   "words": [{"w": "What's", "start_ms": 0, "end_ms": 310}],
-  "partials": [{"t_ms": 400, "text": "What's the", "stable": false}],
-  "asr_final": {"t_ms": 3500, "text": "..."},
-  "vad_user_end_ms": 3180,
-  "asr_model": "faster-whisper-<size>", "partial_interval_ms": 300
+  "partials": [{"t_ms": 400, "available_ms": 610, "compute_ms": 205.3, "audio_ms": 368,
+                "text": "What's the", "stable": false, "stable_prefix_words": 0}],
+  "n_empty_partials": 1,
+  "asr_final": {"t_ms": 3980, "available_ms": 4350, "compute_ms": 370.1, "text": "..."},
+  "vad_user_end_ms": 3980, "endpoint_reason": "vad|stream_end", "vad_onset_ms": 30,
+  "asr_model": "faster-whisper-<size>", "asr_settings": {...}, "partial_interval_ms": 400,
+  "word_timing": {"method": "ctc_forced_alignment", "model": "..."},
+  "replay_wall_ms": 2500.0, "trace_version": "v2-speech-1"
 }
 ```
 
-- `t_ms` is milliseconds from speech onset, on one clock.
+- `t_ms` is milliseconds from speech onset (forced-aligned start of the first
+  word), on one clock shared by `words`, `partials`, `asr_final` and the VAD
+  fields. `duration_ms` is first-word start to last-word end.
+- `t_ms` of a partial is the audio time at which the ASR was run on the audio
+  received so far; **`available_ms`** is when its text exists for a consumer:
+  `max(t_ms, previous available_ms) + compute_ms` (one serial ASR worker,
+  compute measured on the host that produced the trace). Controllers and the
+  latency simulation must act on a partial no earlier than `available_ms`.
+- `vad_user_end_ms` is the Silero-VAD end of turn with the live thresholds;
+  `null` (with `endpoint_reason: "stream_end"`) if no endpoint fired before the
+  audio ended. The live pipeline ends the turn at the first endpoint, so an
+  endpoint inside a pause truncates `asr_final` - that is kept, not repaired.
 - `partials` must be what the real streaming ASR emitted, including errors
   and revisions. Never write the reference transcript into a partial.
+- Producer: `audio/v2/trace.py`; method: `docs/research_v2/SPEECH.md`.
 
 ## 5. Signal record schema (E1-v2: `llm/experiment1_v2/results/*.jsonl`)
 
