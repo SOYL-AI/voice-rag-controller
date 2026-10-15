@@ -1,0 +1,361 @@
+{
+ "build_report": {
+  "seed": 20261014,
+  "popqa_source_rows": 14267,
+  "popqa_pool_filter_drops": {
+   "duplicate_question_text": 2080,
+   "relation:color": 34,
+   "subject_needs_disambiguator": 5658
+  },
+  "popqa_eligible_pool": 6495,
+  "popqa_pop_bin_edges_s_pop": [
+   137.0,
+   390.0,
+   1443.0,
+   10608.0
+  ],
+  "popqa_target": 5000,
+  "popqa_quota_by_bin": {
+   "0": {
+    "author": 72,
+    "capital": 23,
+    "capital of": 5,
+    "composer": 14,
+    "country": 217,
+    "director": 42,
+    "father": 23,
+    "genre": 42,
+    "occupation": 100,
+    "place of birth": 141,
+    "producer": 14,
+    "religion": 28,
+    "screenwriter": 23,
+    "sport": 156
+   },
+   "1": {
+    "author": 95,
+    "capital": 27,
+    "capital of": 8,
+    "composer": 27,
+    "country": 120,
+    "director": 81,
+    "father": 61,
+    "genre": 76,
+    "mother": 10,
+    "occupation": 86,
+    "place of birth": 104,
+    "producer": 40,
+    "religion": 36,
+    "screenwriter": 60,
+    "sport": 74
+   },
+   "2": {
+    "author": 111,
+    "capital": 43,
+    "capital of": 30,
+    "composer": 45,
+    "country": 84,
+    "director": 80,
+    "father": 72,
+    "genre": 102,
+    "mother": 20,
+    "occupation": 61,
+    "place of birth": 62,
+    "producer": 49,
+    "religion": 30,
+    "screenwriter": 74,
+    "sport": 40
+   },
+   "3": {
+    "author": 71,
+    "capital": 77,
+    "capital of": 44,
+    "composer": 50,
+    "country": 65,
+    "director": 79,
+    "father": 87,
+    "genre": 85,
+    "mother": 35,
+    "occupation": 48,
+    "place of birth": 32,
+    "producer": 68,
+    "religion": 43,
+    "screenwriter": 88,
+    "sport": 30
+   },
+   "4": {
+    "author": 33,
+    "capital": 230,
+    "capital of": 48,
+    "composer": 46,
+    "country": 26,
+    "director": 49,
+    "father": 94,
+    "genre": 69,
+    "mother": 52,
+    "occupation": 31,
+    "place of birth": 12,
+    "producer": 60,
+    "religion": 62,
+    "screenwriter": 63,
+    "sport": 26
+   }
+  },
+  "popqa_attempted": 5634,
+  "popqa_gold_check_drops": {
+   "no_alias_in_subject_article": 522,
+   "wiki_article_is_disambiguation_page": 89,
+   "wiki_article_missing": 23
+  },
+  "popqa_gold_check_drops_by_bin": {
+   "0": 174,
+   "1": 132,
+   "2": 131,
+   "3": 101,
+   "4": 96
+  },
+  "hotpot_source_rows": 7405,
+  "hotpot_pool_filter_drops": {
+   "question_over_30_words": 128,
+   "yes_no_answer": 458
+  },
+  "hotpot_eligible_pool": {
+   "bridge": 5790,
+   "comparison": 1029
+  },
+  "hotpot_gold_check_drops": {},
+  "negative_fetch_stats": {
+   "name_negative_pages": 14700,
+   "name_negative_unusable": 6871,
+   "relation_negative_pages": 10000,
+   "relation_negative_unusable": 193
+  },
+  "corpus_jsonl_sha256": "724624b9f1a09f27300095d41624ab7761de762cf1838541b488560fd8314ed1"
+ },
+ "items_by_type_split": {
+  "multihop/dev": 87,
+  "multihop/test": 213,
+  "popqa/dev": 1479,
+  "popqa/test": 3521
+ },
+ "popqa_by_pop_bin_split": {
+  "bin0/dev": 300,
+  "bin0/test": 700,
+  "bin1/dev": 293,
+  "bin1/test": 707,
+  "bin2/dev": 286,
+  "bin2/test": 714,
+  "bin3/dev": 314,
+  "bin3/test": 686,
+  "bin4/dev": 286,
+  "bin4/test": 714
+ },
+ "popqa_relation_by_pop_bin": {
+  "author": [
+   85,
+   103,
+   118,
+   78,
+   41
+  ],
+  "capital": [
+   31,
+   35,
+   50,
+   84,
+   238
+  ],
+  "capital of": [
+   6,
+   12,
+   37,
+   51,
+   56
+  ],
+  "composer": [
+   18,
+   35,
+   52,
+   57,
+   54
+  ],
+  "country": [
+   230,
+   128,
+   91,
+   72,
+   33
+  ],
+  "director": [
+   55,
+   89,
+   87,
+   86,
+   56
+  ],
+  "father": [
+   31,
+   69,
+   79,
+   94,
+   101
+  ],
+  "genre": [
+   49,
+   84,
+   109,
+   92,
+   76
+  ],
+  "mother": [
+   1,
+   13,
+   26,
+   42,
+   59
+  ],
+  "occupation": [
+   113,
+   93,
+   68,
+   55,
+   38
+  ],
+  "place of birth": [
+   153,
+   111,
+   69,
+   37,
+   17
+  ],
+  "producer": [
+   17,
+   47,
+   56,
+   74,
+   67
+  ],
+  "religion": [
+   21,
+   33,
+   32,
+   48,
+   61
+  ],
+  "screenwriter": [
+   33,
+   67,
+   80,
+   94,
+   70
+  ],
+  "sport": [
+   157,
+   81,
+   46,
+   36,
+   33
+  ]
+ },
+ "popqa_pop_by_bin": {
+  "bin0": {
+   "n": 1000,
+   "mean": 80.67,
+   "min": 3,
+   "p50": 80,
+   "p90": 124,
+   "max": 136
+  },
+  "bin1": {
+   "n": 1000,
+   "mean": 236.63,
+   "min": 137,
+   "p50": 226,
+   "p90": 345,
+   "max": 388
+  },
+  "bin2": {
+   "n": 1000,
+   "mean": 793.48,
+   "min": 390,
+   "p50": 739,
+   "p90": 1270,
+   "max": 1442
+  },
+  "bin3": {
+   "n": 1000,
+   "mean": 4262.07,
+   "min": 1443,
+   "p50": 3403,
+   "p90": 8405,
+   "max": 10574
+  },
+  "bin4": {
+   "n": 1000,
+   "mean": 136333.86,
+   "min": 10608,
+   "p50": 49453,
+   "p90": 266712,
+   "max": 15101521
+  }
+ },
+ "multihop_by_type_split": {
+  "bridge/dev": 41,
+  "bridge/test": 109,
+  "comparison/dev": 46,
+  "comparison/test": 104
+ },
+ "question_words_popqa": {
+  "n": 5000,
+  "mean": 7.02,
+  "min": 4,
+  "p50": 7,
+  "p90": 9,
+  "max": 18
+ },
+ "gold_docs_per_item_popqa": {
+  "n": 5000,
+  "mean": 2.48,
+  "min": 1,
+  "p50": 1,
+  "p90": 5,
+  "max": 20
+ },
+ "question_words_multihop": {
+  "n": 300,
+  "mean": 13.91,
+  "min": 6,
+  "p50": 13,
+  "p90": 21,
+  "max": 30
+ },
+ "gold_docs_per_item_multihop": {
+  "n": 300,
+  "mean": 2.0,
+  "min": 2,
+  "p50": 2,
+  "p90": 2,
+  "max": 2
+ },
+ "corpus_passages_by_source": {
+  "hotpotqa": 2942,
+  "wikipedia": 46752
+ },
+ "corpus_passages_by_role": {
+  "hotpot_distractor": 2344,
+  "hotpot_supporting": 598,
+  "name_negative": 17354,
+  "popqa_subject": 28574,
+  "relation_negative": 21603
+ },
+ "corpus_wikipedia_articles": 21622,
+ "corpus_passage_words": {
+  "n": 49694,
+  "mean": 182.11,
+  "min": 4,
+  "p50": 178,
+  "p90": 319,
+  "max": 350
+ },
+ "corpus_total": 49694
+}
