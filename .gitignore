@@ -283,3 +283,8 @@ datasets/v2/*/index/
 .venv-*/
 # d1_open corpus is committed gzipped (corpus.jsonl.gz); the plain copy is rebuilt locally
 datasets/v2/d1_open/corpus.jsonl
+
+# research v2: E3-v2 Phase A cells (large, regenerable; provenance in manifest_*.json)
+simulator/e3v2_phase_a/
+simulator/e3v2_phase_a_mock/
+d1_index_build.log
