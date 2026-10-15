@@ -3,6 +3,10 @@
 logs/
 logs/*.jsonl
 
+# E1-v2 mock-backend output (plumbing only, never data) and local scratch.
+llm/experiment1_v2/results_mock/
+.tmp_e1v2/
+
 # Downloaded model weights (Piper ONNX models)
 audio/models/
 *.onnx
