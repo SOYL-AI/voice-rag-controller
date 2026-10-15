@@ -40,7 +40,6 @@ import sys
 import time
 from pathlib import Path
 
-import numpy as np
 
 REPO_ROOT = Path(__file__).resolve().parent.parent
 PREREG_FROZEN = REPO_ROOT / "docs" / "research_v2" / "PREREG_FROZEN"

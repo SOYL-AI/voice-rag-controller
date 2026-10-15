@@ -4,15 +4,17 @@ D1 is public open-domain QA where the need for retrieval varies continuously
 with entity popularity:
 
 * PopQA (Mallen et al., ACL 2023; MIT licence), stratified by log subject
-  popularity, restricted to relation types whose questions stay unambiguous
-  when spoken.
+  popularity (equal counts per quantile bin), restricted to items whose
+  question stays unambiguous when spoken (the subject is the primary
+  Wikipedia referent of its name and the question string is unique).
 * HotpotQA distractor dev (Yang et al., EMNLP 2018; CC BY-SA 4.0), bridge and
   comparison questions with non-yes/no answers.
 
 The retrieval corpus is the subject's Wikipedia article for every PopQA item
-(chunked to <= 350-word passages), hard-negative Wikipedia articles (similar
-names from Wikipedia search, plus other PopQA subjects sharing the relation),
-and all ten HotpotQA context paragraphs of every sampled HotpotQA item.
+(chunked to <= 350-word passages), hard negatives (lead sections of
+similarly named Wikipedia pages from Wikipedia search, and of other PopQA
+subjects sharing the relation), and all ten HotpotQA context paragraphs of
+every sampled HotpotQA item.
 
 Everything is deterministic given the seed and the cached raw fetches.
 Raw downloads are cached under `<out>/.cache/` (gitignored); a rebuild with
@@ -22,8 +24,13 @@ byte-for-byte.
 Usage (from the repo root, any Python >= 3.9 with `requests`):
 
     set PYTHONUTF8=1
-    python datasets/v2/build_d1_open.py                # fetch + build
+    python datasets/v2/build_d1_open.py                # fetch + build (5,000 PopQA items)
     python datasets/v2/build_d1_open.py --offline      # rebuild from cache
+    python datasets/v2/build_d1_open.py --n-popqa 1000 --out <dir>   # smaller pilot build
+
+Items also carry `meta.bin_rank` (rank of the item inside its popularity bin
+under the seeded hash order), so "bin_rank < k" selects a nested pilot subset
+of k items per bin from the full build.
 
 No model is run by this script.
 """
@@ -64,20 +71,20 @@ USER_AGENT = (
 )
 
 # --- PopQA filtering -------------------------------------------------------
-# Relations about creative works: 63-76% of their subjects need a Wikipedia
-# disambiguator ("Doomwatch (film)", "Issues (Korn album)"), and spoken
-# titles lose quotes/italics/capitalisation ("Who was the director of Home?"),
-# so the spoken question does not identify the referent. `color` has 34 items
-# whose answers are multi-valued (flags have several colours).
+# Spoken questions lose quotes, italics and capitalisation, so a subject is
+# kept only if it is the primary Wikipedia referent of its name (its
+# `s_wiki_title` has no parenthetical disambiguator such as "(film)") and its
+# question string occurs once in PopQA (duplicated strings point at different
+# entities). This item-level rule removes 63-76% of the creative-work
+# relations (director, screenwriter, producer, composer, genre, author) and
+# 3-14% of the others. Only `color` is dropped as a whole relation: 34 items
+# whose answers are multi-valued and ill-defined (flags have several colours).
 DROPPED_RELATIONS = {
-    "director": "creative-work title; 76% of subjects need a disambiguator",
-    "screenwriter": "creative-work title; 75% of subjects need a disambiguator",
-    "producer": "creative-work title; 75% of subjects need a disambiguator",
-    "composer": "creative-work title; 71% of subjects need a disambiguator",
-    "genre": "creative-work title; 66% of subjects need a disambiguator; multi-valued answer",
-    "author": "creative-work title; 63% of subjects need a disambiguator",
     "color": "multi-valued, ill-defined answer (e.g. flag colours); 34 items",
 }
+# Relations whose gold answer is one of several valid values; flagged in
+# item meta so closed-book scoring can treat them leniently or exclude them.
+MULTI_VALUED_RELATIONS = {"genre", "occupation"}
 N_POP_BINS = 5
 # Leave headroom in each (bin, relation) cell for items dropped by the
 # gold-passage check when computing quotas.
@@ -90,10 +97,13 @@ HOTPOT_TYPE_QUOTA = {"bridge": 150, "comparison": 150}
 # --- Corpus / chunking -----------------------------------------------------
 MAX_WORDS = 350
 SECTION_BREAK_MIN_WORDS = 120  # break at a section boundary once a passage has this many words
-GOLD_ARTICLE_MAX_PASSAGES = 40
-NEG_ARTICLE_MAX_PASSAGES = 5
+MIN_PASSAGE_WORDS = 40  # shorter passages are folded into the previous one when it fits
+GOLD_ARTICLE_MAX_PASSAGES = 20
+NEG_LEAD_MAX_PASSAGES = 2
 N_NAME_NEGATIVES = 3
+N_NAME_SEARCH = 6
 N_RELATION_NEGATIVES = 2
+N_RELATION_CANDIDATES = 4
 WIKI_LICENCE = "CC BY-SA 4.0 (Wikipedia text)"
 HOTPOT_LICENCE = "CC BY-SA 4.0 (HotpotQA)"
 POPQA_LICENCE = "MIT (PopQA)"
@@ -238,7 +248,17 @@ def chunk_article(extract: str):
         cur_n += w
     if cur:
         passages.append({"section": cur_sec, "text": "\n".join(cur)})
-    return passages
+    # Fold short fragments (e.g. a tail section of one list line) into the
+    # previous passage when that stays within MAX_WORDS.
+    merged = []
+    for p in passages:
+        if (merged and n_words(p["text"]) < MIN_PASSAGE_WORDS
+                and n_words(merged[-1]["text"]) + n_words(p["text"]) <= MAX_WORDS):
+            merged[-1] = {"section": merged[-1]["section"],
+                          "text": merged[-1]["text"] + "\n" + p["text"]}
+        else:
+            merged.append(p)
+    return merged
 
 
 # --- HTTP with on-disk cache -----------------------------------------------
@@ -304,6 +324,7 @@ class Wiki:
     def __init__(self, fetcher: Fetcher):
         self.f = fetcher
         self._articles = {}
+        self._leads = {}
 
     def _q(self, params):
         base = {"format": "json", "formatversion": "2", "maxlag": "5"}
@@ -333,12 +354,64 @@ class Wiki:
         self._articles[title] = out
         return out
 
-    def search(self, query: str, limit: int = 10):
-        data = self._q({
-            "action": "query", "list": "search", "srsearch": query, "srlimit": str(limit),
-            "srnamespace": "0", "srprop": "",
-        })
-        return [(h["title"], h["pageid"]) for h in data.get("query", {}).get("search", [])]
+    @staticmethod
+    def _page(pg):
+        if not pg or pg.get("missing") or pg.get("invalid") or not pg.get("extract", "").strip():
+            return None
+        return {
+            "pageid": pg["pageid"], "title": pg["title"], "revid": pg.get("lastrevid"),
+            "disambiguation": "disambiguation" in (pg.get("pageprops") or {}),
+            "extract": pg["extract"], "index": pg.get("index"),
+        }
+
+    def _query_all(self, params):
+        """Run a query, following `continue`, and merge the returned pages."""
+        pages, extra, cont = {}, {"normalized": [], "redirects": []}, {}
+        for _ in range(50):
+            data = self._q({**params, **cont})
+            q = data.get("query", {})
+            for k in extra:
+                extra[k].extend(q.get(k, []))
+            for pg in q.get("pages", []):
+                key = pg.get("pageid", pg.get("title"))
+                if key in pages:
+                    pages[key].update({k: v for k, v in pg.items() if v})
+                else:
+                    pages[key] = dict(pg)
+            if "continue" not in data:
+                break
+            cont = data["continue"]
+        return list(pages.values()), extra
+
+    LEAD_PARAMS = {"action": "query", "prop": "extracts|info|pageprops", "ppprop": "disambiguation",
+                   "exintro": "1", "explaintext": "1", "exlimit": "20"}
+
+    def leads(self, titles):
+        """Lead-section extracts for many titles, 20 per request (follows redirects)."""
+        todo = sorted({t for t in titles if t not in self._leads and "|" not in t})
+        for i in range(0, len(todo), 20):
+            batch = todo[i:i + 20]
+            pages, extra = self._query_all({**self.LEAD_PARAMS, "redirects": "1",
+                                            "titles": "|".join(batch)})
+            by_title = {pg.get("title"): pg for pg in pages}
+            for t in batch:
+                cur = t
+                for k in ("normalized", "redirects"):
+                    for m in extra[k]:
+                        if m["from"] == cur:
+                            cur = m["to"]
+                self._leads[t] = self._page(by_title.get(cur))
+            if (i // 20) % 50 == 0:
+                log(f"  lead batches {i // 20 + 1}/{(len(todo) + 19) // 20} "
+                    f"(net={self.f.n_net} cache={self.f.n_cache})")
+        return {t: self._leads.get(t) for t in titles}
+
+    def search_leads(self, query: str, limit: int = N_NAME_SEARCH):
+        """Wikipedia search results with their lead extracts, in rank order (one request)."""
+        pages, _ = self._query_all({**self.LEAD_PARAMS, "generator": "search", "gsrsearch": query,
+                                    "gsrlimit": str(limit), "gsrnamespace": "0"})
+        out = [self._page(pg) for pg in pages]
+        return sorted((p for p in out if p), key=lambda p: (p["index"] or 0, p["pageid"]))
 
 
 # --- PopQA -----------------------------------------------------------------
@@ -606,15 +679,9 @@ def sample_hotpot(rows, report):
 
 
 # --- negatives -------------------------------------------------------------
-def name_negatives(row, wiki: Wiki, gold_pageid: int):
-    out = []
-    for title, pageid in wiki.search(row["subj"], limit=10):
-        if len(out) >= N_NAME_NEGATIVES:
-            break
-        if pageid == gold_pageid or "(disambiguation)" in title or title.startswith("List of"):
-            continue
-        out.append(title)
-    return out
+def usable_negative(page, gold_pageid: int) -> bool:
+    return (page is not None and not page["disambiguation"] and page["pageid"] != gold_pageid
+            and "(disambiguation)" not in page["title"] and not page["title"].startswith("List of"))
 
 
 def relation_negative_candidates(row, by_prop_obj, by_prop):
@@ -626,6 +693,78 @@ def relation_negative_candidates(row, by_prop_obj, by_prop):
     return [r["s_wiki_title"] for r in same_obj + same_prop]
 
 
+def chi2_sf(x: float, df: int) -> float:
+    """Upper tail of the chi-square distribution (regularised gamma series)."""
+    if x <= 0:
+        return 1.0
+    a, z = df / 2.0, x / 2.0
+    term = total = 1.0 / a
+    n = 0
+    while term > 1e-15 * total and n < 10000:
+        n += 1
+        term *= z / (a + n)
+        total += term
+    lower = math.exp(-z + a * math.log(z) - math.lgamma(a)) * total
+    return max(0.0, 1.0 - lower)
+
+
+def check_and_balance_splits(items, stratum):
+    """Report dev/test balance per stratum; rebalance only badly unbalanced strata."""
+    p = SPLIT_DEV_THRESHOLD / 1000.0
+
+    def table(its):
+        t = collections.defaultdict(lambda: {"dev": 0, "test": 0})
+        for it in its:
+            t[stratum(it)][it["split"]] += 1
+        return t
+
+    def family(k):
+        return k.rsplit("_", 1)[0] if k.startswith("multihop") else "popqa"
+
+    def homogeneity(t, keys):
+        dev = sum(t[k]["dev"] for k in keys)
+        n = sum(t[k]["dev"] + t[k]["test"] for k in keys)
+        x2 = 0.0
+        for k in keys:
+            nk = t[k]["dev"] + t[k]["test"]
+            for col, tot in (("dev", dev), ("test", n - dev)):
+                e = nk * tot / n
+                x2 += (t[k][col] - e) ** 2 / e if e else 0.0
+        return x2, len(keys) - 1
+
+    t = table(items)
+    families = collections.defaultdict(list)
+    for k in sorted(t):
+        families[family(k)].append(k)
+    bad = set()
+    fam_report = {}
+    for fam, keys in families.items():
+        x2, df = homogeneity(t, keys)
+        pval = chi2_sf(x2, df) if df > 0 else 1.0
+        fam_report[fam] = {"chi2": round(x2, 3), "df": df, "p": round(pval, 4)}
+        for k in keys:
+            nk = t[k]["dev"] + t[k]["test"]
+            z = (t[k]["dev"] / nk - p) / math.sqrt(p * (1 - p) / nk)
+            if abs(z) > 2 or pval < 0.05:
+                bad.add(k)
+    adjusted = sorted(bad)
+    for k in adjusted:
+        members = sorted((it for it in items if stratum(it) == k),
+                         key=lambda it: (sha_int(it["id"]) % 1000, it["id"]))
+        n_dev = round(p * len(members))
+        for i, it in enumerate(members):
+            it["split"] = "dev" if i < n_dev else "test"
+    t = table(items)
+    report = {}
+    for k in sorted(t):
+        d, te = t[k]["dev"], t[k]["test"]
+        z = (d / (d + te) - p) / math.sqrt(p * (1 - p) / (d + te))
+        report[k] = {"dev": d, "test": te, "dev_frac": round(d / (d + te), 3), "z": round(z, 2),
+                     "rebalanced": k in bad}
+    report["homogeneity_before_adjustment"] = fam_report
+    return report, adjusted
+
+
 # --- main ------------------------------------------------------------------
 def main():
     ap = argparse.ArgumentParser(description=__doc__.split("\n\n")[0])
@@ -634,7 +773,7 @@ def main():
     ap.add_argument("--offline", action="store_true", help="use cached raw fetches only")
     ap.add_argument("--min-interval", type=float, default=0.2,
                     help="minimum seconds between network requests (serial)")
-    ap.add_argument("--n-popqa", type=int, default=1000)
+    ap.add_argument("--n-popqa", type=int, default=5000)
     ap.add_argument("--hotpot-json", type=Path, default=None,
                     help="optional local hotpot_dev_distractor_v1.json instead of the HF rows API")
     args = ap.parse_args()
@@ -657,6 +796,7 @@ def main():
 
     # 3. Corpus: gold articles, negatives, HotpotQA paragraphs.
     corpus = {}
+    page_docs = collections.defaultdict(list)
 
     def add_article(art, passages, max_passages, role):
         ids = []
@@ -670,10 +810,19 @@ def main():
                     "meta": {"pageid": art["pageid"], "revid": art["revid"], "section": p["section"],
                              "passage_index": i, "roles": []},
                 }
+                page_docs[art["pageid"]].append(doc_id)
             if role not in corpus[doc_id]["meta"]["roles"]:
                 corpus[doc_id]["meta"]["roles"].append(role)
             ids.append(doc_id)
         return ids
+
+    by_bin = collections.defaultdict(list)
+    for r in popqa:
+        by_bin[r["_bin"]].append(r)
+    for members in by_bin.values():
+        members.sort(key=lambda r: order_key("popqa", r["id"]))
+        for rank, r in enumerate(members):
+            r["_bin_rank"] = rank
 
     gold_pageids = set()
     for r in popqa:
@@ -687,30 +836,49 @@ def main():
             by_prop_obj[(r["prop"], r["obj"])].append(r)
             by_prop[r["prop"]].append(r)
 
+    def add_negative(page, role):
+        if page["pageid"] in page_docs:  # already present (e.g. another item's gold article)
+            for doc_id in page_docs[page["pageid"]]:
+                if role not in corpus[doc_id]["meta"]["roles"]:
+                    corpus[doc_id]["meta"]["roles"].append(role)
+            return
+        add_article(page, chunk_article(page["extract"]), NEG_LEAD_MAX_PASSAGES, role)
+
     neg_stats = collections.Counter()
+    # Name negatives: lead sections of the top Wikipedia search hits for the subject name.
     for n, r in enumerate(popqa, 1):
         gp = r["_article"]["pageid"]
-        for title in name_negatives(r, wiki, gp):
-            art = wiki.article(title)
-            if art is None or art["disambiguation"] or art["pageid"] == gp:
+        got = 0
+        for page in wiki.search_leads(r["subj"]):
+            if got >= N_NAME_NEGATIVES:
+                break
+            if not usable_negative(page, gp):
                 neg_stats["name_negative_unusable"] += 1
                 continue
-            add_article(art, chunk_article(art["extract"]), NEG_ARTICLE_MAX_PASSAGES, "name_negative")
-            neg_stats["name_negative_articles"] += 1
+            add_negative(page, "name_negative")
+            neg_stats["name_negative_pages"] += 1
+            got += 1
+        if n % 250 == 0:
+            log(f"  name negatives for {n}/{len(popqa)} items (corpus={len(corpus)}, "
+                f"net={fetcher.n_net} cache={fetcher.n_cache})")
+    # Relation negatives: lead sections of other PopQA subjects with the same
+    # relation (same object first), fetched 20 titles per request.
+    rel_cands = {r["id"]: relation_negative_candidates(r, by_prop_obj, by_prop)[:N_RELATION_CANDIDATES]
+                 for r in popqa}
+    leads = wiki.leads([t for c in rel_cands.values() for t in c])
+    for r in popqa:
+        gp = r["_article"]["pageid"]
         got = 0
-        for title in relation_negative_candidates(r, by_prop_obj, by_prop)[:N_RELATION_NEGATIVES + 3]:
+        for title in rel_cands[r["id"]]:
             if got >= N_RELATION_NEGATIVES:
                 break
-            art = wiki.article(title)
-            if art is None or art["disambiguation"] or art["pageid"] == gp:
+            page = leads.get(title)
+            if not usable_negative(page, gp):
                 neg_stats["relation_negative_unusable"] += 1
                 continue
-            add_article(art, chunk_article(art["extract"]), NEG_ARTICLE_MAX_PASSAGES, "relation_negative")
-            neg_stats["relation_negative_articles"] += 1
+            add_negative(page, "relation_negative")
+            neg_stats["relation_negative_pages"] += 1
             got += 1
-        if n % 50 == 0:
-            log(f"  negatives for {n}/{len(popqa)} items (corpus={len(corpus)}, "
-                f"net={fetcher.n_net} cache={fetcher.n_cache})")
     report["negative_fetch_stats"] = dict(sorted(neg_stats.items()))
 
     for h in hotpot:
@@ -751,6 +919,8 @@ def main():
                 # gold_doc_ids = every subject-article passage containing an alias;
                 # primary = the first of them in article order (usually the lead).
                 "primary_gold_doc_id": r["_gold_ids"][0],
+                "bin_rank": r["_bin_rank"],
+                "multi_valued_answer": r["prop"] in MULTI_VALUED_RELATIONS,
                 "subject_wikidata": r["s_uri"], "object_wikidata": r["o_uri"],
             },
         })
@@ -777,19 +947,17 @@ def main():
             return f"popqa_bin{it['meta']['pop_bin']}"
         return f"multihop_{it['meta']['hotpot_type']}"
 
-    strat = collections.defaultdict(lambda: {"dev": 0, "test": 0})
-    for it in items:
-        strat[stratum(it)][it["split"]] += 1
-    strat_report = {}
-    for k in sorted(strat):
-        d, t = strat[k]["dev"], strat[k]["test"]
-        strat_report[k] = {"dev": d, "test": t, "dev_frac": round(d / (d + t), 3)}
+    strat_report, adjusted = check_and_balance_splits(items, stratum)
     splits = {
         "dev": [it["id"] for it in items if it["split"] == "dev"],
         "test": [it["id"] for it in items if it["split"] == "test"],
         "seed": SEED,
-        "method": "sha256(id) mod 1000 < 300 -> dev, else test (CONTRACTS.md section 7); "
-                  "no per-stratum adjustment was needed (see stratification)",
+        "method": ("sha256(id) mod 1000 < 300 -> dev, else test (CONTRACTS.md section 7). "
+                   "A stratum is rebalanced only if badly unbalanced (|z| > 2 against 0.30, or "
+                   "chi-square homogeneity p < 0.05 within its family); rebalancing assigns the "
+                   "round(0.3 n) items with the smallest sha256(id) mod 1000 to dev. "
+                   + ("Rebalanced strata: " + ", ".join(adjusted) if adjusted
+                      else "No stratum met the criterion; no adjustment was made.")),
         "stratification": strat_report,
     }
 
