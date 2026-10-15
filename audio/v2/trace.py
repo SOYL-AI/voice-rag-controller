@@ -36,8 +36,21 @@ word), so word times, partial times and the VAD endpoint share one clock.
   partials[].stable       text identical to the previous partial (normalised)
   partials[].stable_prefix_words  words shared with the previous partial's prefix
   asr_final.{t_ms, compute_ms, available_ms}  same convention; t_ms = VAD endpoint
-  vad_user_end_ms         VAD end-of-turn (null when no endpoint before the file ends)
-  endpoint_reason         "vad" | "stream_end"
+  vad_user_end_ms         VAD end-of-turn (null when the VAD never confirmed one)
+  user_end_ms             the turn end every consumer should use: vad_user_end_ms, or the
+                          fallback below when the VAD never fired
+  endpoint_reason         "vad" | "fallback_timeout" | "stream_end" (no partial text at all)
+  endpoint_rule           for fallback_timeout: "no_new_partial" | "no_text_change"
+
+Fallback end of turn (VAD never fired, e.g. under babble)
+---------------------------------------------------------
+Evaluated online over the emitted partials: the turn ends at the first of
+  * last partial's t_ms + silence_hang_ms (no new non-empty partial for the hang), or
+  * last text change + FALLBACK_NO_CHANGE_MS (2.0 s with no change of the
+    normalised partial text).
+Partials after that moment are dropped (the live turn would be over; their
+count is kept in n_partials_after_end), and asr_final is the beam-5 pass over
+the speech audio up to that moment.
   vad_onset_ms            first VAD speech frame
 Compute times depend on GPU load: run one trace process per GPU when the
 timings matter (several shards on one GPU inflate compute_ms).
@@ -68,7 +81,8 @@ from audio.v2.asr import load_streaming_stt, stt_config  # noqa: E402
 from audio.v2.items import dataset_name_for, load_items, shard, speech_root  # noqa: E402
 from audio.v2.render import SR, audio_dir, read_wav16  # noqa: E402
 
-TRACE_VERSION = "v2-speech-1"
+TRACE_VERSION = "v2-speech-2"  # 2: fallback end of turn, user_end_ms
+FALLBACK_NO_CHANGE_MS = 2000
 MIC_BLOCK = 512           # audio_loop.generate_mic_stream block size
 PARTIAL_WINDOW_S = 8      # StreamingSTT: partials see the last 8 s of speech
 LIVE_VAD_THRESHOLD = 0.3  # audio_loop.py passes vad_threshold=0.3 for live turns
@@ -76,6 +90,30 @@ LIVE_VAD_THRESHOLD = 0.3  # audio_loop.py passes vad_threshold=0.3 for live turn
 
 def _words(text: str) -> list[str]:
     return [w for w in re.sub(r"[^\w' ]", " ", text.lower()).split() if w]
+
+
+def fallback_end(partials: list[dict], hang_ms: float, no_change_ms: float = FALLBACK_NO_CHANGE_MS):
+    """Online fallback end of turn over emitted partials (times on the trace clock).
+    Returns (t_ms, rule) or (None, None) when there is no partial."""
+    if not partials:
+        return None, None
+    change_t = partials[0]["t_ms"]
+    prev = _words(partials[0]["text"])
+    for a, b in zip(partials, partials[1:]):
+        cands = []
+        if b["t_ms"] - a["t_ms"] > hang_ms:
+            cands.append((a["t_ms"] + hang_ms, "no_new_partial"))
+        if b["t_ms"] > change_t + no_change_ms:
+            cands.append((change_t + no_change_ms, "no_text_change"))
+        if cands:
+            t, rule = min(cands)
+            return int(round(t)), rule
+        w = _words(b["text"])
+        if w != prev:
+            change_t, prev = b["t_ms"], w
+    t, rule = min((partials[-1]["t_ms"] + hang_ms, "no_new_partial"),
+                  (change_t + no_change_ms, "no_text_change"))
+    return int(round(t)), rule
 
 
 def _lcp(a: list[str], b: list[str]) -> int:
@@ -188,8 +226,20 @@ class Replayer:
                 endpoint = ("vad", now)
                 break
 
+        rule, n_after = None, 0
         if endpoint is None and speech_buffer:
-            endpoint = ("stream_end", n_blocks * blk_ms)
+            fb, rule = fallback_end(partials, self.hang)
+            if fb is None:
+                endpoint = ("stream_end", n_blocks * blk_ms)
+            else:
+                end_file = fb + onset_ms
+                kept = [p for p in partials if p["t_ms"] <= fb]
+                n_after = len(partials) - len(kept)
+                partials = kept
+                busy_until = max([p["available_ms"] + onset_ms for p in kept] + [-1e9])
+                a = int(round(vad_onset * SR / 1000))
+                speech_buffer = [x[a: max(a + 1, int(round(end_file * SR / 1000)))]]
+                endpoint = ("fallback_timeout", end_file)
         if endpoint is not None:
             text, c = self._transcribe(np.concatenate(speech_buffer), 5, True)
             start = max(endpoint[1], busy_until)
@@ -198,7 +248,10 @@ class Replayer:
         return {
             "partials": partials, "n_empty_partials": n_empty, "asr_final": final,
             "vad_user_end_ms": rel(endpoint[1]) if endpoint and endpoint[0] == "vad" else None,
+            "user_end_ms": rel(endpoint[1]) if endpoint else None,
             "endpoint_reason": endpoint[0] if endpoint else "no_speech",
+            "endpoint_rule": rule if endpoint and endpoint[0] == "fallback_timeout" else None,
+            "n_partials_after_end": n_after,
             "vad_onset_ms": rel(vad_onset) if vad_onset is not None else None,
         }
 
@@ -279,6 +332,45 @@ def finalize(path: Path):
         os.replace(tmp, path)
 
 
+def upgrade_fallback(path: Path, name: str, rep: "Replayer") -> int:
+    """Apply the fallback end of turn to v2-speech-1 records with no VAD endpoint:
+    truncate partials at the fallback and redo the final pass on the audio up to it."""
+    if not path.exists():
+        return 0
+    n = 0
+    with file_lock(path):
+        recs = [json.loads(l) for l in path.read_text(encoding="utf-8").splitlines() if l.strip()]
+        for r in recs:
+            if "user_end_ms" in r:
+                continue
+            r["user_end_ms"] = r["vad_user_end_ms"]
+            r["endpoint_rule"], r["n_partials_after_end"] = None, 0
+            if r["endpoint_reason"] == "stream_end":
+                fb, rule = fallback_end(r["partials"], rep.hang)
+                if fb is not None:
+                    vid, wpm, noise = r["voice_id"], r["wpm_target"], r["noise"]
+                    x = read_wav16(audio_dir(name, vid, wpm, noise) / f"{r['item_id']}.wav")
+                    onset = r["lead_ms"]
+                    kept = [p for p in r["partials"] if p["t_ms"] <= fb]
+                    r["n_partials_after_end"] = len(r["partials"]) - len(kept)
+                    r["partials"] = kept
+                    a = int(round((r["vad_onset_ms"] + onset) * SR / 1000))
+                    b = int(round((fb + onset) * SR / 1000))
+                    text, c = rep._transcribe(x[a:max(a + 1, b)], 5, True)
+                    busy = max([p["available_ms"] for p in kept] + [fb])
+                    r["asr_final"] = {"t_ms": fb, "available_ms": int(round(busy + c)),
+                                      "compute_ms": round(c, 1), "text": text}
+                    r["user_end_ms"], r["endpoint_reason"], r["endpoint_rule"] = fb, "fallback_timeout", rule
+            r["trace_version"] = TRACE_VERSION
+            n += 1
+        tmp = path.with_name(path.name + f".{os.getpid()}.part")
+        with open(tmp, "w", encoding="utf-8", newline="\n") as fh:
+            for r in recs:
+                fh.write(json.dumps(r, ensure_ascii=False) + "\n")
+        os.replace(tmp, path)
+    return n
+
+
 def build_record(name, item, vid, wpm, noise, side, res, rep, wall_ms):
     onset = side["speech_onset_ms_in_file"]
     words = [{"w": w["w"], "start_ms": w["start_ms"] - onset, "end_ms": w["end_ms"] - onset}
@@ -296,7 +388,9 @@ def build_record(name, item, vid, wpm, noise, side, res, rep, wall_ms):
         "words": words,
         "partials": res["partials"], "n_empty_partials": res["n_empty_partials"],
         "asr_final": res["asr_final"],
-        "vad_user_end_ms": res["vad_user_end_ms"], "endpoint_reason": res["endpoint_reason"],
+        "vad_user_end_ms": res["vad_user_end_ms"], "user_end_ms": res["user_end_ms"],
+        "endpoint_reason": res["endpoint_reason"], "endpoint_rule": res["endpoint_rule"],
+        "n_partials_after_end": res["n_partials_after_end"],
         "vad_onset_ms": res["vad_onset_ms"],
         "asr_model": f"faster-whisper-{rep.cfg['stt']['model_size']}",
         "asr_settings": rep.settings(),
@@ -326,6 +420,8 @@ def main(argv=None):
     ap.add_argument("--vad-threshold", type=float, default=LIVE_VAD_THRESHOLD)
     ap.add_argument("--partial-interval-ms", type=int, default=None)
     ap.add_argument("--traces-dir", default=None, help="default: datasets/v2/<name>/speech/traces")
+    ap.add_argument("--upgrade-fallback", action="store_true",
+                    help="only apply the fallback end-of-turn rule to existing v2-speech-1 traces")
     ap.add_argument("--retrace-over-ms", type=float, default=None,
                     help="re-trace items whose slowest ASR call took longer than this (host stalls)")
     a = ap.parse_args(argv)
@@ -343,6 +439,11 @@ def main(argv=None):
                    a.partial_interval_ms)
     print(f"{name}: {len(todo)} items x {len(conds)} conditions; ASR {rep.settings()['model_size']} "
           f"on {a.device}, partial every {rep.interval} ms", flush=True)
+    if a.upgrade_fallback:
+        for cond in conds:
+            n = upgrade_fallback(out_dir / f"{cond}.jsonl", name, rep)
+            print(f"  {cond}: {n} records upgraded", flush=True)
+        return
     for cond in conds:
         vid, wpm, noise = V.parse_condition(cond)
         path = out_dir / f"{cond}.jsonl"
