@@ -476,15 +476,102 @@ def run_dataset(args, ds: str) -> dict:
     return results
 
 
+def write_predictions(phase_a: Path, datasets: Sequence[str], out_path: Path) -> dict:
+    """docs/research_v2/v2_predictions.json from the per-dataset dev analyses.
+    Every quantity PREREG_V2 §3 names, per dataset x condition x composite
+    profile x belief-quantile price; plus an item-weighted pool of the
+    datasets' PRIMARY conditions per (profile, belief quantile) — lambda_l
+    differs by dataset at the same quantile, so the pool is by quantile."""
+    cells, inputs = [], {}
+    for ds in datasets:
+        res = e1common.load_json(Path(phase_a) / ds / "analysis" / "dev_analysis.json")
+        inputs[ds] = {"primary_condition": res["primary_condition"], "g": res["g"], "g_text150": res["g_text150"],
+                      "calibration": res["calibration"], "sa_lag_ms": res["sa_lag_ms"],
+                      "calibration_artifact": f"controller/baselines/e3v2_calibration_{ds}_{MODEL_KEY}_{SIGNAL_X}.json",
+                      "belief_transitions_artifact": f"controller/baselines/belief_transitions_v2_{ds}.json"}
+        for cond, cr in res["conditions"].items():
+            for prof, pr in cr["profiles"].items():
+                grid = {r["quantile"]: r for r in cr["price_grid"][prof]}
+                for row in pr.get("contrasts", []):
+                    g = grid.get(row["belief_quantile"], {})
+                    cells.append({"dataset": ds, "condition": cond,
+                                  "condition_role": "primary" if cond == res["primary_condition"] else "secondary",
+                                  "profile": prof, "belief_quantile": row["belief_quantile"],
+                                  "b_cut": g.get("b_cut"), "lambda_l": g.get("lambda_l"), "lambda_c": LAMBDA_C,
+                                  **{k: row[k] for k in ("d_star", "delta_commit", "se_commit", "delta_speculative",
+                                                         "se_speculative", "interaction", "se_interaction", "z_commit",
+                                                         "m3", "q_hat", "w_bar", "n_items",
+                                                         "d_star_speculative_dev_utilities")}})
+                for q, g in grid.items():
+                    if not g["feasible"]:
+                        cells.append({"dataset": ds, "condition": cond, "profile": prof, "belief_quantile": q,
+                                      "b_cut": g["b_cut"], "lambda_l": g["lambda_l"],
+                                      "note": "infeasible price (lambda_l <= 0 at this belief quantile)"})
+    pooled = []
+    prim = [c for c in cells if c.get("condition_role") == "primary" and "delta_commit" in c]
+    for prof in PROFILES:
+        for q in QUANTILES:
+            rows = [c for c in prim if c["profile"] == prof and c["belief_quantile"] == q]
+            if len(rows) < 2:
+                continue
+            w = [c["n_items"]["paired"] for c in rows]
+            W = float(sum(w))
+
+            def pool(key, se_key):
+                vals = [c[key] for c in rows]
+                ses = [c[se_key] for c in rows]
+                if any(v is None for v in vals):
+                    return None, None
+                m = sum(wi * v for wi, v in zip(w, vals)) / W
+                se = None if any(x is None for x in ses) else math.sqrt(sum((wi / W) ** 2 * x ** 2
+                                                                            for wi, x in zip(w, ses)))
+                return m, se
+
+            dc, sc = pool("delta_commit", "se_commit")
+            ds_, ss = pool("delta_speculative", "se_speculative")
+            it, si = pool("interaction", "se_interaction")
+            pooled.append({"profile": prof, "belief_quantile": q, "datasets": [c["dataset"] for c in rows],
+                           "n_items": int(W), "delta_commit": dc, "se_commit": sc, "delta_speculative": ds_,
+                           "se_speculative": ss, "interaction": it, "se_interaction": si,
+                           "m3": None if dc is None else 0.5 * max(dc, 0.0),
+                           "z_commit": (dc / sc) if (dc is not None and sc) else None,
+                           "lambda_l_by_dataset": {c["dataset"]: c["lambda_l"] for c in rows},
+                           "d_star_by_dataset": {c["dataset"]: c["d_star"] for c in rows}})
+    doc = {
+        "_comment": ("DEV-ONLY predicted gaps for PREREG_V2 §3, computed by python -m simulator.e3v2_dev_analysis "
+                     "from Phase A cells (real Mistral-7B generations, real grading) and Phase B on dev. Nothing is "
+                     "selected or frozen here: the primary (profile, price), D*[SPEC] and m3 are fixed at freeze."),
+        "generated_at_utc": e1common.now_utc(), "git_commit": e1common.git_commit(), "split": "dev",
+        "definitions": {
+            "delta_commit": "mean_i [U_i(Ours-v2[COMMIT]) - U_i(B9+)]",
+            "delta_speculative": "mean_i [U_i(Ours-v2[SPEC]) - U_i(D*[SPEC])], D*[SPEC] = dev-best of B9+, SPEC, SPEC-theta",
+            "interaction": "mean_i [Delta_i[COMMIT] - Delta_i[SPEC]] on the same items",
+            "m3": "1/2 max(Delta[COMMIT], 0) on dev (PREREG_V2 §3 P3 margin)",
+            "U_i": "Q - lambda_l (TTFA - skip TTFA)/1000 - lambda_c n_retrievals, mean over 5 seeds",
+            "se": "paired cluster bootstrap over items (pair_id clusters for d2_support), B=2000",
+            "price_grid": "lambda_l = (b_q (g+ + g-) - g- - lambda_c) / ((E[L] + pi)/1000), b_q = dev end-of-turn belief quantile",
+        },
+        "inputs": inputs, "cells": cells, "pooled_primary": pooled,
+    }
+    e1common.atomic_write_json(out_path, doc)
+    return doc
+
+
 def main(argv=None) -> int:
     ap = argparse.ArgumentParser(description=__doc__.split("\n\n")[0])
     ap.add_argument("--dataset", required=True, help="d2_support | d1_open | both comma-separated")
     ap.add_argument("--e1-results", default=str(_REPO_ROOT / "llm" / "experiment1_v2" / "results"))
     ap.add_argument("--phase-a", default=str(_REPO_ROOT / "simulator" / "e3v2_phase_a"))
     ap.add_argument("--primary-condition", default=None)
+    ap.add_argument("--write-predictions", action="store_true",
+                    help="only aggregate existing dev analyses into docs/research_v2/v2_predictions.json")
     ap.add_argument("--g-plus", type=float, default=None, help=argparse.SUPPRESS)
     ap.add_argument("--g-minus", type=float, default=None, help=argparse.SUPPRESS)
     args = ap.parse_args(argv)
+    if args.write_predictions:
+        write_predictions(Path(args.phase_a), args.dataset.split(","),
+                          _REPO_ROOT / "docs" / "research_v2" / "v2_predictions.json")
+        return 0
     for ds in args.dataset.split(","):
         run_dataset(args, ds)
     return 0
