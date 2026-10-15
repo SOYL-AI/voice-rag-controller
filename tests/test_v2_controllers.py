@@ -304,6 +304,35 @@ def test_tune_v2_equal_budget_and_artifact_roundtrip(tmp_path):
     assert b8.policy == art["unpriced"]["b8"]["chosen"]["timing"]
 
 
+def test_b9plus_timing_rules_and_tuning():
+    from controller.tune_v2 import tune_b9plus_timing, tune_spec_trigger
+    cfg = syn_cfg(rho={"scale": 0.0})  # isolate timing: an early query loses nothing
+    ret ={"latency_profile": "x", "latency_quantiles_ms": {"p50": 700}}
+    long_turn = synthetic_turn("long", [0.9] * 8, 0.9, interval_ms=300.0, retrieval=ret,
+                               prices={"lambda_l": 0.5, "lambda_c": 0.05})
+    early = get_controller_v2("b9plus_v2", cfg=cfg, timing_rule={"kind": "early"}).decide_turn(long_turn)
+    late = get_controller_v2("b9plus_v2", cfg=cfg, timing_rule={"kind": "late"}).decide_turn(long_turn)
+    assert early.dispatch_t_ms == 300 and late.timing_label == "sentence_end"
+    # threshold: R_hat at the first ready partial is 2400 ms here
+    hi = get_controller_v2("b9plus_v2", cfg=cfg, timing_rule={"kind": "r_threshold", "r0": 1000,
+                                                             "early_exposed_ms": 0.0}).decide_turn(long_turn)
+    lo = get_controller_v2("b9plus_v2", cfg=cfg, timing_rule={"kind": "r_threshold", "r0": 5000,
+                                                             "early_exposed_ms": 0.0}).decide_turn(long_turn)
+    assert hi.dispatch_t_ms == 300 and lo.dispatch_t_ms == 2700
+    with pytest.raises(ValueError):
+        get_controller_v2("b9plus_v2", cfg=cfg, timing_rule={"kind": "sometimes"})
+
+    turns, cells, labels, items = synthetic_dataset(20, seed=3)
+    store = CellStore(cells)
+    lm = load_latency_model(cfg)
+    price = {"lambda_l": 0.4, "lambda_c": 0.05}
+    out = tune_b9plus_timing(list(turns.values()), store, [11, 23], "faiss", price, cfg, lm)
+    assert out["n_evaluated"] == len(out["candidates"]) <= 23
+    assert out["dev_utility"] == max(c["dev_utility"] for c in out["candidates"])
+    spec = tune_spec_trigger(list(turns.values()), store, [11, 23], "faiss", price, cfg, lm)
+    assert spec["chosen"] in ("immediate", "forecast") and spec["n_evaluated"] == 4
+
+
 def test_quantile_grid():
     g = quantile_grid([1, 2, 3, 4, 5], 5)
     assert g == [1, 2, 3, 4, 5]

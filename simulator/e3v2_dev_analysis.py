@@ -58,7 +58,8 @@ from controller.baselines._objective_v2 import (  # noqa: E402
 )
 from controller.remaining_speech import RemainingSpeechPredictor, speech_end_ms  # noqa: E402
 from controller.sequential_v2 import TurnCtx, end_of_turn_ms  # noqa: E402
-from controller.tune_v2 import tune_all  # noqa: E402
+from controller.tune_v2 import tune_all, tune_b9plus_timing, tune_spec_trigger  # noqa: E402
+from controller.sequential_v2 import PRICED_V2  # noqa: E402
 from llm.experiment1_v2 import common as e1common  # noqa: E402
 from llm.experiment1_v2.prefixes import normalize_text, spoken_word_fraction  # noqa: E402
 from simulator.e3v2_decide import (  # noqa: E402
@@ -428,8 +429,23 @@ def run_dataset(args, ds: str) -> dict:
             if not prices:
                 cond_res["profiles"][prof] = {"note": "no feasible price"}
                 continue
-            recs = run_architectures(turns, store, list(ALL_CONTROLLERS), prices, SEEDS, [prof], cfg, lm,
+            # PREREG §4.5 per-price tuning on dev: B9+'s timing rule and the
+            # shared SPEC / SPEC-theta trigger; priced controllers then run one
+            # price at a time with their tuned parameters, unpriced ones once.
+            unpriced = [n for n in ALL_CONTROLLERS if n not in PRICED_V2]
+            priced = [n for n in ALL_CONTROLLERS if n in PRICED_V2]
+            recs = run_architectures(turns, store, unpriced, [], SEEDS, [prof], cfg, lm,
                                      ("commit", "speculative"), "dev", labels, gold)
+            tuning = {}
+            for pr in prices:
+                b9p = tune_b9plus_timing(turns, store, SEEDS, prof, pr, cfg, lm)
+                trig = tune_spec_trigger(turns, store, SEEDS, prof, pr, cfg, lm)
+                tuning[f"{pr['lambda_l']:g}"] = {"b9plus_timing_rule": b9p, "spec_trigger": trig}
+                params = {"b9plus_v2": {"timing_rule": b9p["chosen"]},
+                          "b10_speculative_v2": {"timing": trig["chosen"]},
+                          "b11_speculative_gated_v2": {"timing": trig["chosen"]}}
+                recs += run_architectures(turns, store, priced, [pr], SEEDS, [prof], cfg, lm,
+                                          ("commit", "speculative"), "dev", labels, gold, controller_params=params)
             write_records(recs, out / "phase_b" / slug(cond) / prof)
             contrasts = boundary_contrasts(recs, "dev")
             prof_rows = []
@@ -460,6 +476,12 @@ def run_dataset(args, ds: str) -> dict:
                     .append((r["outcome"]["answer_correct"], r["outcome"]["retrievals"], r["outcome"]["ttfa_ms"]))
             cond_res["profiles"][prof] = {
                 "contrasts": prof_rows,
+                "tuning": {lam: {"b9plus_timing_rule": t["b9plus_timing_rule"]["chosen"],
+                                 "b9plus_n_evaluated": t["b9plus_timing_rule"]["n_evaluated"],
+                                 "b9plus_candidates": t["b9plus_timing_rule"]["candidates"],
+                                 "spec_trigger": t["spec_trigger"]["chosen"],
+                                 "spec_candidates": t["spec_trigger"]["candidates"]}
+                           for lam, t in tuning.items()},
                 "mean_utility": {f"{a}|{b}|{l}": float(np.mean(v)) for (a, b, l), v in util.items()},
                 "operating_points": {f"{a}|{b}|{l}": {"accuracy": float(np.mean([x[0] for x in v])),
                                                       "retrieval_rate": float(np.mean([x[1] for x in v])),

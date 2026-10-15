@@ -212,6 +212,71 @@ def empirical_quality(turns, store: CellStore, labels, seeds) -> Optional[dict]:
     return out
 
 
+def _mean_utility(records: List[dict]) -> float:
+    vals = [r["realized_utility"] for r in records if r.get("realized_utility") is not None]
+    return sum(vals) / len(vals) if vals else float("-inf")
+
+
+def tune_b9plus_timing(turns: Sequence[TurnCtx], store: CellStore, seeds: Sequence[int], profile: str,
+                       prices: dict, cfg: dict, lm, n_grid: int = 21) -> dict:
+    """
+    PREREG_V2 §4.5: B9+'s timing rule, tuned on dev at one (profile, price)
+    by mean realised utility over {early, late, R_hat-threshold on a
+    n_grid-point quantile grid}. The early branch of a threshold rule is
+    priced at the dev-mean realised exposure of the turns it sends early.
+    """
+    import numpy as np
+
+    from controller.baselines._objective_v2 import latency_dist_for, policy_fires
+    from controller.sequential_v2 import end_of_turn_ms
+
+    ccfg = {**cfg, "architecture": "commit"}
+    r_hat, exposed = [], []
+    for t in turns:
+        ctx = with_profile(t, profile, ccfg)
+        lat = latency_dist_for(ctx.signals["retrieval"], ccfg)
+        end = end_of_turn_ms(ctx, ccfg)
+        obs = next(o for o in build_steps(ctx, ccfg) if policy_fires("immediate", o, ccfg, lat))
+        if obs.is_final or obs.remaining_ms is None:
+            continue
+        r_hat.append(float(obs.remaining_ms))
+        exposed.append(lat.expected_exposed_ms(max(0.0, end - obs.available_ms)))
+    r_hat, exposed = np.asarray(r_hat), np.asarray(exposed)
+    candidates = [{"kind": "early"}, {"kind": "late"}]
+    if r_hat.size:
+        for r0 in np.quantile(r_hat, np.linspace(0.0, 1.0, n_grid)):
+            sel = r_hat > r0
+            if sel.any():
+                candidates.append({"kind": "r_threshold", "r0": float(r0),
+                                   "early_exposed_ms": float(exposed[sel].mean()),
+                                   "early_fraction": float(sel.mean())})
+    scores = []
+    for rule in candidates:
+        ctrl = get_controller_v2("b9plus_v2", cfg=ccfg, timing_rule=rule)
+        recs = run_phase_b(turns, store, {"b9plus_v2": ctrl}, [prices], seeds, [profile], ccfg, lm)
+        scores.append(_mean_utility(recs))
+    best = max(range(len(candidates)), key=lambda i: (scores[i], -i))
+    return {"chosen": candidates[best], "dev_utility": scores[best], "n_evaluated": len(candidates),
+            "candidates": [{**c, "dev_utility": s} for c, s in zip(candidates, scores)]}
+
+
+def tune_spec_trigger(turns: Sequence[TurnCtx], store: CellStore, seeds: Sequence[int], profile: str,
+                      prices: dict, cfg: dict, lm, triggers: Sequence[str] = ("immediate", "forecast")) -> dict:
+    """PREREG_V2 §4.5: the SHARED SPEC / SPEC-theta trigger, tuned on dev:
+    the trigger under which the better of the two has the higher mean
+    realised utility (D*[SPEC] is the better of them)."""
+    scfg = {**cfg, "architecture": "speculative"}
+    rows = []
+    for trig in triggers:
+        ctrls = {n: get_controller_v2(n, cfg=scfg, timing=trig)
+                 for n in ("b10_speculative_v2", "b11_speculative_gated_v2")}
+        recs = run_phase_b(turns, store, ctrls, [prices], seeds, [profile], scfg, lm)
+        per = {n: _mean_utility([r for r in recs if r["baseline"] == n]) for n in ctrls}
+        rows.append({"trigger": trig, "dev_utility": per, "best": max(per.values())})
+    best = max(range(len(rows)), key=lambda i: (rows[i]["best"], -i))
+    return {"chosen": rows[best]["trigger"], "n_evaluated": 2 * len(rows), "candidates": rows}
+
+
 def tune_all(turns: Sequence[TurnCtx], store: CellStore, seeds: Sequence[int], profiles: Sequence[str],
              cfg: dict, labels: Optional[Dict[str, bool]], gold: Dict[str, List[str]],
              budget: Optional[int] = None, latency_model=None) -> dict:
