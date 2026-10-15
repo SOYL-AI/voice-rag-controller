@@ -270,6 +270,15 @@ rem 2. FAISS index + dev retrieval check (~80 min on 8 CPU threads; streamed in 
     --eval-items datasets\v2\d1_open\items.jsonl --split dev
 ```
 
+Without the `.cache/`, recover the plain corpus from the committed gzip. The
+shared `retrieval/v2_index.py` reads only plain JSONL; its defaults (bge-small,
+title + text, IndexFlatL2) match the numbers above.
+
+```bat
+.venv-e2\Scripts\python -c "import gzip,shutil; shutil.copyfileobj(gzip.open('datasets/v2/d1_open/corpus.jsonl.gz','rb'), open('datasets/v2/d1_open/corpus.jsonl','wb'))"
+.venv-e2\Scripts\python -m retrieval.v2_index build --corpus datasets\v2\d1_open\corpus.jsonl --out .scratch\index_d1_open
+```
+
 Reproducibility notes:
 
 - With `.cache/` present, `--offline` reproduces `items.jsonl`,
