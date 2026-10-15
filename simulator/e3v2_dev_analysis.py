@@ -102,7 +102,12 @@ def fold_of(item_id: str, k: int = 5) -> int:
 def load_inputs(ds: str, e1_results: Path, phase_a: Path):
     e1dir = e1_results / ds / MODEL_KEY
     sa = {}
-    for r in e1common.read_jsonl(e1dir / "self_assessment_dev.jsonl"):
+    # Phase A's own self-assessment file (E1-v2's records plus the same frozen
+    # probe run on the ASR partials E1-v2 did not cover) when present.
+    sa_path = phase_a / "sa" / "self_assessment_dev.jsonl"
+    if not sa_path.exists():
+        sa_path = e1dir / "self_assessment_dev.jsonl"
+    for r in e1common.read_jsonl(sa_path):
         sa[(r["item_id"], normalize_text(r["prefix_text"]))] = float(r[SIGNAL])
     lat = [float(r["ttft_ms"]) for r in e1common.read_jsonl(e1dir / "self_assessment_latency_dev.jsonl")
            if r.get("ttft_ms") is not None and not r.get("timing_synthetic")]
