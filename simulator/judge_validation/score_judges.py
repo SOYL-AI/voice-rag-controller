@@ -179,6 +179,7 @@ def load_v2_labels(path: Path) -> list:
             "answer": row["answer"],
             "key_facts": _parse_list(row.get("key_facts")),
             "aliases": _parse_list(row.get("aliases")),
+            "core_facts": _parse_list(row.get("core_facts")) or None,
             "history": json.loads(row["history"]) if isinstance(row.get("history"), str)
             and row["history"].strip().startswith("[") else (row.get("history") or []),
             "label_a": a, "label_b": b, "label_adjudicated": adjudicated,
@@ -303,6 +304,7 @@ def validate_v2(labels_path: Path, roles=("primary", "secondary"), backend="azur
             reference=case["reference"], answer=case["answer"], key_facts=case["key_facts"],
             aliases=case["aliases"], context=contexts.get(case["dataset"], contexts["default"]),
             cache_dir=cache_dir, dataset=case["dataset"], history=case["history"],
+            core_facts=case["core_facts"],
         )
         return verdict
 

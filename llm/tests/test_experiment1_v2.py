@@ -540,6 +540,49 @@ class JudgeTests(unittest.TestCase):
         self.assertNotEqual(judges.cache_key(j1, **kw), judges.cache_key(j2, **kw))
         self.assertNotEqual(judges.cache_key(j2, **kw), judges.cache_key(j2, **dict(kw, history=["x"])))
 
+    def test_r3_core_facts_prompt_key_and_fallback(self):
+        from llm.experiment1_v2 import rubrics
+
+        r3 = rubrics.get_rubric("e1v2-r3")
+        self.assertNotEqual(r3.sha256, rubrics.get_rubric("e1v2-r2").sha256)
+        self.assertEqual(r3.texts["default"], rubrics.get_rubric("e1v2-r2").texts["default"])
+        text = r3.user_prompt(dataset="d2_support", question="Fuse?", reference="13 A; if it blows...",
+                              answer="13 A", key_facts=["a 13 amp fuse", "blowing again means a fault"],
+                              core_facts=["a 13 amp fuse"])
+        self.assertIn("states EVERY core fact", text)
+        self.assertIn("Core facts:\n- a 13 amp fuse", text)
+        self.assertIn("Supplementary facts (may be omitted, must not be contradicted):\n"
+                      "- blowing again means a fault", text)
+        self.assertNotIn("Key facts:", text)
+        fallback = r3.user_prompt(dataset="d2_support", question="q", reference="r", answer="a",
+                                  key_facts=["f1", "f2"], core_facts=None)
+        self.assertIn("Core facts:\n- f1\n\nSupplementary facts", fallback)
+        # d1_open under r3 keeps r1's text, no core-fact block
+        self.assertNotIn("Core facts", r3.user_prompt(dataset="d1_open", question="q", reference="r",
+                                                       answer="a"))
+        cfg3 = dict(self.CFG, prompt_version="e1v2-r3")
+        j3 = judges.AzureChatJudge(judges.resolve_spec("primary", cfg3, self.ENV), transport=lambda m, p: None)
+        j2 = judges.AzureChatJudge(judges.resolve_spec("primary", dict(self.CFG, prompt_version="e1v2-r2"),
+                                                       self.ENV), transport=lambda m, p: None)
+        kw = dict(item_id="i", question="q", reference="r", answer="a", key_facts=["f1", "f2"],
+                  aliases=[], context="customer-support", dataset="d2_support")
+        self.assertNotEqual(judges.cache_key(j3, **kw, core_facts=["f1"]),
+                            judges.cache_key(j3, **kw, core_facts=["f2"]))
+        self.assertEqual(judges.cache_key(j3, **kw, core_facts=None),  # fallback == explicit first fact
+                         judges.cache_key(j3, **kw, core_facts=["f1"]))
+        self.assertEqual(judges.cache_key(j2, **kw, core_facts=["f2"]),  # r2 keys ignore core facts
+                         judges.cache_key(j2, **kw))
+        self.assertEqual(judges.load_judges_config()["prompt_version"], "e1v2-r3")
+
+    def test_label_warns_on_missing_core_facts(self):
+        items = [{"id": "a", "dataset": "d2_support", "meta": {"key_facts": ["x"], "core_facts": ["x"]}},
+                 {"id": "b", "dataset": "d2_support", "meta": {"key_facts": ["y"]}},
+                 {"id": "c", "dataset": "d1_open", "meta": {}}]
+        self.assertEqual(label.core_fact_warnings(items, "e1v2-r3"), ["b"])
+        self.assertEqual(label.core_fact_warnings(items, "e1v2-r2"), [])
+        self.assertEqual(label.item_core_facts(items[0]), ["x"])
+        self.assertIsNone(label.item_core_facts(items[1]))
+
     def test_rubric_hash_tracks_file_text(self):
         from llm.experiment1_v2 import rubrics
 
@@ -646,7 +689,7 @@ class StatsTests(unittest.TestCase):
 
 # ---------------------------------------------------------------------------
 class LabelingKitTests(unittest.TestCase):
-    def _fixture(self, tmp: Path):
+    def _fixture(self, tmp: Path, with_core=True):
         items, draws = [], []
         types = ["general", "org_specific", "counter_prior", "ambiguous"]
         for n in range(60):
@@ -655,7 +698,8 @@ class LabelingKitTests(unittest.TestCase):
                     "expected_answer": f"Answer {n}.", "answer_aliases": [],
                     "retrieval_needed_authored": n % 2 == 0, "item_type": types[n % 4],
                     "history": [{"role": "user", "content": "hi"}] if n % 5 == 0 else [],
-                    "meta": {"key_facts": [f"fact {n}a", f"fact {n}b"]}}
+                    "meta": {"key_facts": [f"fact {n}a", f"fact {n}b"],
+                             **({"core_facts": [f"fact {n}a"]} if with_core else {})}}
             items.append(item)
             for seed in (11, 23, 37):
                 p = (n + seed) % 3 != 0
@@ -671,6 +715,28 @@ class LabelingKitTests(unittest.TestCase):
         labels_path = tmp / "labels.json"
         labels_path.write_text(json.dumps(labels), encoding="utf-8")
         return items_path, labels_path
+
+    def test_build_refused_without_core_facts(self):
+        from simulator.judge_validation.v2_labeling import build_kit
+
+        with tempfile.TemporaryDirectory() as tmp:
+            tmp = Path(tmp)
+            items_path, labels_path = self._fixture(tmp, with_core=False)
+            out = tmp / "kit"
+            self.assertEqual(build_kit.main(["--labels", str(labels_path), "--items", str(items_path),
+                                             "--n", "30", "--out-dir", str(out)]), 2)
+            self.assertFalse((out / "sheet_annotator_A.csv").exists())
+            # same sample with or without core facts (sample depends on labels + seed only)
+            self.assertEqual(build_kit.main(["--labels", str(labels_path), "--items", str(items_path),
+                                             "--n", "30", "--out-dir", str(out), "--allow-missing-core"]), 0)
+            (tmp / "c").mkdir()
+            items_core, _ = self._fixture(tmp / "c", with_core=True)
+            out2 = tmp / "kit2"
+            build_kit.main(["--labels", str(labels_path), "--items", str(items_core), "--n", "30",
+                            "--out-dir", str(out2)])
+            import csv
+            ids = lambda p: sorted(r["case_id"] for r in csv.DictReader(open(p, encoding="utf-8-sig")))  # noqa: E731
+            self.assertEqual(ids(out / "kit_master_DO_NOT_SHARE.csv"), ids(out2 / "kit_master_DO_NOT_SHARE.csv"))
 
     def test_build_merge_and_gate(self):
         import csv
@@ -692,6 +758,11 @@ class LabelingKitTests(unittest.TestCase):
             for hidden in ("primary_r2", "secondary_r2", "item_type", "stratum", "path", "judges_agree"):
                 self.assertNotIn(hidden, a[0])
             self.assertEqual(set(build_kit.SHEET_COLUMNS), set(a[0]))
+            self.assertNotIn("key_facts", a[0])
+            row = a[0]
+            n = row["case_id"].split("-")[1].split("#")[0].lstrip("0") or "0"
+            self.assertEqual(row["core_facts"], f"- fact {n}a")
+            self.assertEqual(row["supplementary_facts"], f"- fact {n}b")
             self.assertTrue(all(r["verdict"] == "" for r in a))
             self.assertEqual(sum(r["gate_subset"] == "prompt_dev" for r in master), 15)
             per_item = {}

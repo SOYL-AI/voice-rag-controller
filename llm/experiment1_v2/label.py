@@ -72,6 +72,23 @@ def item_key_facts(item: dict) -> list:
     return list(item.get("key_facts") or (item.get("meta") or {}).get("key_facts") or [])
 
 
+def item_core_facts(item: dict):
+    """meta.core_facts (r3), or None when the item is not annotated (the
+    rubric then falls back to the first key fact; see core_fact_warnings)."""
+    facts = item.get("core_facts") or (item.get("meta") or {}).get("core_facts")
+    return list(facts) if facts else None
+
+
+def core_fact_warnings(items, rubric_version: str) -> list:
+    """Item ids graded under a core-fact rubric without meta.core_facts."""
+    from llm.experiment1_v2.rubrics import get_rubric  # noqa: PLC0415
+
+    rubric = get_rubric(rubric_version)
+    if rubric is None:
+        return []
+    return [i["id"] for i in items if rubric.uses_core_facts(i["dataset"]) and not item_core_facts(i)]
+
+
 def answer_text(record: dict) -> str:
     if record.get("condition") == "retrieval":
         return record.get("grounded_answer") or ""
@@ -177,6 +194,7 @@ def grade_draws(records, items_by_id, judges, cfg, cache_dir, workers, judge_key
                 key_facts=item_key_facts(item), aliases=item.get("answer_aliases") or [],
                 context=contexts.get(item["dataset"], contexts["default"]), cache_dir=cache_dir,
                 dataset=item["dataset"], history=item.get("history") or [],
+                core_facts=item_core_facts(item),
             )
             row["judges"][role] = {
                 "answer_correct": verdict["answer_correct"] if verdict["parsed_ok"] else None,
@@ -430,6 +448,13 @@ def main(argv=None) -> int:
                   file=sys.stderr)
             return 1
 
+    graded_items = [items_by_id[i] for i in sorted({r["item_id"] for r in records})]
+    no_core = core_fact_warnings(graded_items, judges_cfg["prompt_version"]) if roles else []
+    if no_core:
+        print(f"[label] WARNING: {len(no_core)} item(s) have no meta.core_facts; rubric "
+              f"{judges_cfg['prompt_version']} grades them against their FIRST key fact "
+              f"(e.g. {no_core[:3]}).", file=sys.stderr)
+
     judge_keys = None
     if args.judge_subsample and roles:
         judged_sources = {source_for(ds) for ds in {i["dataset"] for i in items}}
@@ -485,6 +510,8 @@ def main(argv=None) -> int:
                 "seed": args.judge_subsample_seed,
                 "strata": "item_type x popularity tercile x alias verdict, proportional, >= 1 each",
             },
+            "core_facts_fallback": {"n_items": len(no_core), "item_ids": no_core,
+                                    "rule": "graded against key_facts[0] (no meta.core_facts)"},
             "authored_labels": ("present" if any(i.get("retrieval_needed_authored") is not None
                                                  for i in labelled_items)
                                 else "not applicable (dataset has no authored labels)"),

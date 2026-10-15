@@ -1,7 +1,7 @@
 {
   "_comment": "Judge registry for E1-v2. Identity (deployment, model id, API version) and credentials come from the environment ONLY; this file names the variables, never their values. Request parameters are per judge because reasoning-model deployments reject a temperature override and take max_completion_tokens instead of max_tokens. Every request parameter here can be overridden by the matching *_TEMPERATURE / *_TOKEN_PARAM / *_MAX_TOKENS / *_REASONING_EFFORT / *_SEED / *_SAMPLES environment variable (value 'none' omits the parameter). The exact parameters sent are recorded on every verdict.",
-  "prompt_version": "e1v2-r2",
-  "_prompt_versions": "e1v2-r2 (rubrics/e1v2-r2/*.txt) is current; e1v2-reasoned-strip-r1 (built in judges.py) is kept to reproduce the first d2_support dev grading. Select with label.py --rubric.",
+  "prompt_version": "e1v2-r3",
+  "_prompt_versions": "e1v2-r3 (rubrics/e1v2-r3/*.txt, core facts) is current; e1v2-r2 (every key fact) and e1v2-reasoned-strip-r1 (built in judges.py) are kept to reproduce the earlier d2_support dev gradings. Select with label.py --rubric.",
   "judges": {
     "primary": {
       "label": "gpt6",

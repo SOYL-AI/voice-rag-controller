@@ -29,6 +29,12 @@ Sampling:
     agreement can be re-weighted to the pool.
   * Partition: cases ranked by sha256(case_id); the lowest 1/3 (100 of 300)
     are prompt_dev, the rest holdout. Fixed before any judge is re-run.
+
+Rubric: annotators label under r3 (core facts). The sheets show the core
+facts apart from the supplementary ones, and the build is refused while any
+sampled item lacks meta.core_facts. The sample depends only on the labels
+file and the seed, so re-running after the core-fact annotation is merged
+reproduces the same 300 answers.
 """
 
 from __future__ import annotations
@@ -49,12 +55,25 @@ if str(_REPO) not in sys.path:
 from llm.experiment1_v2 import common  # noqa: E402
 
 HERE = Path(__file__).resolve().parent
+# Annotators label under rubric r3: the sheet shows the core facts (must all
+# be stated) apart from the supplementary ones (may be omitted, must not be
+# contradicted).
+ANNOTATION_RUBRIC = "e1v2-r3"
 SHEET_COLUMNS = ["row", "case_id", "domain", "company", "conversation_before", "question",
-                 "reference_answer", "key_facts", "candidate_answer", "verdict", "notes"]
+                 "reference_answer", "core_facts", "supplementary_facts", "candidate_answer",
+                 "verdict", "notes"]
 MASTER_COLUMNS = ["case_id", "dataset", "item_id", "draw_seed", "condition", "path", "item_type",
-                  "domain", "org", "question", "history", "reference", "key_facts", "aliases",
-                  "answer", "stratum", "judges_agree", "primary_r2", "secondary_r2", "weight",
-                  "gate_subset"]
+                  "domain", "org", "question", "history", "reference", "key_facts", "core_facts",
+                  "aliases", "answer", "stratum", "judges_agree", "primary_r2", "secondary_r2",
+                  "weight", "gate_subset"]
+
+
+def core_and_supplementary(item: dict) -> tuple:
+    """(core facts or None if not annotated, supplementary facts)."""
+    meta = item.get("meta") or {}
+    key = list(meta.get("key_facts") or [])
+    core = list(meta.get("core_facts") or []) or None
+    return core, [f for f in key if not core or f not in core]
 
 
 def history_text(history) -> str:
@@ -155,6 +174,8 @@ def main(argv=None) -> int:
     p.add_argument("--n-prompt-dev", type=int)
     p.add_argument("--seed", type=int, default=20261015)
     p.add_argument("--out-dir", type=Path, default=HERE)
+    p.add_argument("--allow-missing-core", action="store_true",
+                   help="testing only: show key_facts[0] as the core fact when not annotated")
     args = p.parse_args(argv)
     labels = common.load_json(args.labels)
     meta = labels["meta"]
@@ -170,6 +191,13 @@ def main(argv=None) -> int:
     for c in chosen:
         c["case_id"] = case_id(c["draw"])
     partition(chosen, args.n_prompt_dev if args.n_prompt_dev is not None else round(len(chosen) / 3))
+    missing_core = sorted({c["item"]["id"] for c in chosen if core_and_supplementary(c["item"])[0] is None})
+    if missing_core and not args.allow_missing_core:
+        print(f"REFUSED: {len(missing_core)} sampled item(s) have no meta.core_facts (e.g. "
+              f"{missing_core[:3]}). Annotators label under {ANNOTATION_RUBRIC}, which needs the "
+              "core facts; re-run once the core-fact annotation is merged (the same seed gives "
+              "the same sample).", file=sys.stderr)
+        return 2
 
     master = []
     for c in sorted(chosen, key=lambda c: c["case_id"]):
@@ -182,6 +210,8 @@ def main(argv=None) -> int:
             "question": item["question"], "history": json.dumps(item.get("history") or []),
             "reference": item["expected_answer"],
             "key_facts": json.dumps((item.get("meta") or {}).get("key_facts") or []),
+            "core_facts": json.dumps(core_and_supplementary(item)[0]
+                                     or ((item.get("meta") or {}).get("key_facts") or [])[:1]),
             "aliases": json.dumps(item.get("answer_aliases") or []), "answer": c["answer"],
             "stratum": c["stratum"], "judges_agree": c["agree"],
             "primary_r2": c["primary"], "secondary_r2": c["secondary"],
@@ -196,7 +226,9 @@ def main(argv=None) -> int:
             "row": n + 1, "case_id": r["case_id"], "domain": r["domain"], "company": r["org"],
             "conversation_before": history_text(json.loads(r["history"])), "question": r["question"],
             "reference_answer": r["reference"],
-            "key_facts": "\n".join(f"- {f}" for f in json.loads(r["key_facts"])),
+            "core_facts": "\n".join(f"- {f}" for f in json.loads(r["core_facts"])),
+            "supplementary_facts": "\n".join(f"- {f}" for f in json.loads(r["key_facts"])
+                                             if f not in json.loads(r["core_facts"])),
             "candidate_answer": r["answer"], "verdict": "", "notes": "",
         } for n, r in enumerate(rows)]
         write_csv(args.out_dir / f"sheet_annotator_{name}.csv", SHEET_COLUMNS, sheet)
@@ -214,6 +246,10 @@ def main(argv=None) -> int:
         "labels_file": common.rel(args.labels), "labels_sha256": common.sha256_file(args.labels),
         "items_sha256": common.sha256_file(items_path),
         "judge_prompt_version": meta["judges"]["primary"]["prompt_version"],
+        "sampling_note": "strata use the judge agreement in the labels file above; the same "
+                         "seed and labels file give the same sample",
+        "annotation_rubric": ANNOTATION_RUBRIC,
+        "core_facts_missing": missing_core,
         "dataset": meta["dataset"], "paths": sorted({r["path"] for r in master}),
     }
     common.atomic_write_json(args.out_dir / "kit_manifest.json", manifest)

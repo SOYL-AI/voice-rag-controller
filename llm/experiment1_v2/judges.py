@@ -50,7 +50,7 @@ from dataclasses import dataclass, field
 from pathlib import Path
 
 from llm.experiment1_v2 import common
-from llm.experiment1_v2.rubrics import get_rubric, rubric_sha256
+from llm.experiment1_v2.rubrics import core_facts_or_fallback, get_rubric, rubric_sha256
 from simulator.judge_core import JUDGE_INSTRUCTIONS, _is_retryable, parse_verdict
 
 
@@ -423,44 +423,49 @@ def make_judges(roles, backend: str, judges_cfg: dict = None, env=None) -> dict:
 # Grading with a cache
 # ---------------------------------------------------------------------------
 def cache_key(judge, *, item_id, question, reference, answer, key_facts, aliases, context,
-              dataset=None, history=None) -> str:
+              dataset=None, history=None, core_facts=None) -> str:
     parts = [
         json.dumps(judge.identity, sort_keys=True),
         json.dumps(judge.spec.request, sort_keys=True),
         item_id, question, reference, json.dumps(key_facts or []), json.dumps(aliases or []),
         context, answer,
     ]
-    if get_rubric(judge.spec.prompt_version) is not None:
+    rubric = get_rubric(judge.spec.prompt_version)
+    if rubric is not None:
         # File rubrics also see the dataset (which rubric text) and the
         # history; r1 keys stay byte-identical so its cache remains valid.
         parts += [dataset or "", json.dumps(history or [], sort_keys=True)]
+        if rubric.uses_core_facts(dataset):
+            # r3 only (r2 keys unchanged): the core facts actually graded against.
+            parts.append(json.dumps(core_facts_or_fallback(core_facts, key_facts, reference)))
     return common.sha256_text(*parts)
 
 
 def render_prompt(judge, *, question, reference, answer, key_facts=None, aliases=None,
-                  context="general", dataset=None, history=None) -> tuple:
+                  context="general", dataset=None, history=None, core_facts=None) -> tuple:
     """(system, user) for this judge's rubric version."""
     rubric = get_rubric(judge.spec.prompt_version)
     if rubric is None:
         return system_prompt(context), user_prompt(question, reference, answer, key_facts, aliases)
     return system_prompt(context), rubric.user_prompt(
         dataset=dataset, question=question, reference=reference, answer=answer,
-        key_facts=key_facts, aliases=aliases, history=history)
+        key_facts=key_facts, aliases=aliases, history=history, core_facts=core_facts)
 
 
 def grade(judge, *, item_id, question, reference, answer, key_facts=None, aliases=None,
-          context="general", cache_dir: Path = None, dataset=None, history=None) -> dict:
+          context="general", cache_dir: Path = None, dataset=None, history=None,
+          core_facts=None) -> dict:
     """One verdict, cached by (judge identity incl. rubric hash + request
-    config + item + reference + answer [+ dataset, history for file
-    rubrics]). The answer is stripped before both the key and the prompt
+    config + item + reference + answer [+ dataset, history, and for r3 the
+    core facts]). The answer is stripped before both the key and the prompt
     (the v4 'strip' fix)."""
     answer = (answer or "").strip()
     key = cache_key(judge, item_id=item_id, question=question, reference=reference, answer=answer,
                     key_facts=key_facts, aliases=aliases, context=context, dataset=dataset,
-                    history=history)
+                    history=history, core_facts=core_facts)
     system, user = render_prompt(judge, question=question, reference=reference, answer=answer,
                                  key_facts=key_facts, aliases=aliases, context=context,
-                                 dataset=dataset, history=history)
+                                 dataset=dataset, history=history, core_facts=core_facts)
     # Identical answers across seeds share a key; serialise them so the
     # judge is called once and nobody reads a file mid-replace (Windows).
     with _key_lock(key):
