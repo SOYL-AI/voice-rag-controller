@@ -22,7 +22,7 @@ def _doc(domain, slug, org, n, extra):
 
 
 def _item(domain, org, lid, pid, itype, q, gold=(), facts=("A fact",), hist=()):
-    meta = {"key_facts": list(facts)}
+    meta = {"key_facts": list(facts), "core_facts": list(facts)[:1]}
     if itype == "counter_prior":
         meta["common_prior"] = "the usual answer"
     if itype == "ambiguous":
@@ -107,6 +107,8 @@ def test_validator_catches_errors(tmp_path):
     items[1]["question"] = "Alpha Telco, how long does a refund take to show up?"   # names org
     items[3]["meta"]["key_facts"] = ["99 working days"]                            # unsupported number
     items[5]["question"] = "How long " + "really " * 10 + "does it take?"           # length mismatch
+    items[7]["meta"]["core_facts"] = ["a paraphrase that is not a key fact"]        # core not verbatim
+    del items[9]["meta"]["core_facts"]                                               # core missing
     with (raw / "telecom" / "alpha_tel" / "items.jsonl").open("w", encoding="utf-8") as fh:
         for r in items:
             fh.write(json.dumps(r) + "\n")
@@ -116,6 +118,8 @@ def test_validator_catches_errors(tmp_path):
     assert "names the organisation" in msgs
     assert "'99' not found" in msgs
     assert "length mismatch" in msgs
+    assert "core_facts not verbatim in key_facts" in msgs
+    assert "core_facts must be a non-empty list" in msgs
 
 
 def test_history_shapes_normalised_and_one_general_per_group(tmp_path):

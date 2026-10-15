@@ -22,7 +22,7 @@ school-level trivia. As a result, the model's uncertainty was close to binary.
   `raw/PART_B_NOTES.md`.
 - **Human verification is pending.** `verification_sample.csv` is a stratified
   20% sample with blank columns for a reviewer: is the label correct, is the
-  answer correct, and notes. Until that review is done, all labels count as
+  answer correct, are the core facts correct, and notes. Until that review is done, all labels count as
   *authored* labels.
 - **Labels.** `retrieval_needed_authored` is the author's judgement.
   Experiment E1-v2 produces the empirical label (wrong when answered closed-book
@@ -31,6 +31,7 @@ school-level trivia. As a result, the model's uncertainty was close to binary.
 - **Automated validation.** `build_d2_support.py` refuses to build when any
   check fails:
   - schema
+  - core facts form a non-empty, verbatim subset of the key facts
   - every number, amount, date, time and capitalised name in a key fact
     appears verbatim in a gold document
   - pair-group integrity: exactly one general item per group
@@ -88,6 +89,40 @@ Per organisation the mix is either:
 for `org_specific` / `counter_prior` / `ambiguous` / `general`. Every item
 carries `meta.key_facts`: the facts a correct answer must contain and must not
 contradict. For retrieval-needed items these are copied from the gold document.
+
+**Core facts.** `meta.core_facts` is a non-empty, verbatim subset of
+`meta.key_facts`, and the validator enforces this.
+
+- **Definition.** A key fact is *core* if, without it, the caller's literal
+  question is not answered, or is answered wrongly. Everything else is
+  supplementary: extra conditions, advice, follow-up steps, contact details
+  and rationale.
+- **By type:**
+  - `general`: usually one core fact, the direct answer.
+  - `org_specific` and `counter_prior`: the org value or values asked for,
+    plus any condition that flips the answer when the question doesn't settle
+    it.
+  - `ambiguous`: the org-specific detail that makes the generic answer wrong.
+- **Questions that ask several things** ("how much, and how long"): one fact
+  per thing asked is core.
+- **Example.** In "How many amps should the fuse be?", "13 amp fuse" is core,
+  and "a fuse that blows again suggests a fault" is supplementary.
+- **Judging.** A judge should require all core facts. A supplementary fact
+  counts against an answer only if the answer contradicts it.
+- **Provenance.** Core facts were annotated per item from the question,
+  history, expected answer and gold documents only, without looking at any
+  model output. An item with a single key fact takes it as its core fact.
+
+| type | items | 1 core | 2 core | 3 core | share of key facts marked core |
+|---|---:|---:|---:|---:|---:|
+| `org_specific` | 240 | 179 | 58 | 3 | 75% |
+| `counter_prior` | 132 | 101 | 31 | 0 | 62% |
+| `ambiguous` | 72 | 31 | 38 | 3 | 75% |
+| `general` | 276 | 232 | 44 | 0 | 65% |
+| all | 720 | 543 | 171 | 6 | 69% (903 of 1,311) |
+
+The human verification sheet has a `core_facts` column and a
+`core_facts_correct (Y/N)` column for checking this annotation.
 
 **Pair groups.** Each `pair_id` names one pair group, which holds:
 

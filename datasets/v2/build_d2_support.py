@@ -496,6 +496,16 @@ def validate_items(b: OrgBundle, report: Report, all_org_names: list) -> None:
         if not isinstance(kf, list) or not kf or not all(isinstance(k, str) and k.strip() for k in kf):
             report.error(where, "meta.key_facts must be a non-empty list of strings")
             kf = []
+        # core_facts: the key facts without which the caller's literal question is not answered
+        cf = meta.get("core_facts")
+        if not isinstance(cf, list) or not cf or not all(isinstance(c, str) and c.strip() for c in cf):
+            report.error(where, "meta.core_facts must be a non-empty list of strings")
+        else:
+            not_in = [c for c in cf if c not in kf]
+            if not_in:
+                report.error(where, f"meta.core_facts not verbatim in key_facts: {not_in}")
+            if len(set(cf)) != len(cf):
+                report.error(where, "meta.core_facts has duplicates")
         note = str(meta.get("note", "")).strip()
         if itype == "counter_prior" and not (str(meta.get("common_prior", "")).strip() or note):
             report.error(where, "counter_prior needs meta.common_prior (or meta.note)")
@@ -844,6 +854,14 @@ def compute_stats(items: list, corpus: list, report: Report) -> dict:
                                "min": min(v), "max": max(v)} for k, v in qlen.items() if v},
         "doc_words": {"mean": round(statistics.mean(doc_words), 1), "min": min(doc_words), "max": max(doc_words)} if doc_words else {},
         "docs_per_org": dict(Counter(f"{d['domain']}/{d['org']}" for d in corpus)),
+        "core_facts": {
+            t: {"n_core_per_item": dict(sorted(Counter(len(i["meta"].get("core_facts", [])) for i in items
+                                                       if i["item_type"] == t).items())),
+                "frac_key_facts_core": round(
+                    sum(len(i["meta"].get("core_facts", [])) for i in items if i["item_type"] == t)
+                    / max(1, sum(len(i["meta"]["key_facts"]) for i in items if i["item_type"] == t)), 3)}
+            for t in ITEM_TYPES
+        },
         "validator": {"errors": len(report.errors), "warnings": len(report.warnings)},
     }
 
@@ -887,8 +905,9 @@ def write_verification_sample(items: list, corpus: list, path: Path, frac: float
         chosen.extend(members[:k])
     chosen.sort(key=lambda it: it["id"])
     cols = ["id", "split", "domain", "org", "item_type", "retrieval_needed_authored", "pair_id",
-            "history", "question", "expected_answer", "key_facts", "prior_or_plausible_wrong",
-            "gold_doc_ids", "gold_doc_excerpt", "label_correct (Y/N)", "answer_correct (Y/N)", "notes"]
+            "history", "question", "expected_answer", "key_facts", "core_facts", "prior_or_plausible_wrong",
+            "gold_doc_ids", "gold_doc_excerpt", "label_correct (Y/N)", "answer_correct (Y/N)",
+            "core_facts_correct (Y/N)", "notes"]
     with path.open("w", encoding="utf-8-sig", newline="") as fh:
         w = csv.writer(fh)
         w.writerow(cols)
@@ -898,9 +917,9 @@ def write_verification_sample(items: list, corpus: list, path: Path, frac: float
             w.writerow([
                 it["id"], it["split"], it["domain"], it["org"], it["item_type"],
                 it["retrieval_needed_authored"], it["pair_id"] or "", hist, it["question"],
-                it["expected_answer"], " ; ".join(m.get("key_facts", [])),
+                it["expected_answer"], " ; ".join(m.get("key_facts", [])), " ; ".join(m.get("core_facts", [])),
                 m.get("common_prior") or m.get("plausible_wrong_answer") or m.get("note") or "",
-                " ".join(it["gold_doc_ids"]), gold_excerpt(it, docs_by_id), "", "", "",
+                " ".join(it["gold_doc_ids"]), gold_excerpt(it, docs_by_id), "", "", "", "",
             ])
     return len(chosen)
 
