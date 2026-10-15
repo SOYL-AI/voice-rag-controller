@@ -184,7 +184,9 @@ def fig_llm_local(local):
     ax[0].set_ylabel("GPU net energy, J")
     ax[0].legend(frameon=False)
     ctxs = list(next(iter(local["models"].values()))["coefficients"]["decode"].keys())
-    ax[1].set_xticks(np.arange(len(ctxs)) + 0.27, [f"context {c}" for c in ctxs])
+    ax[1].set_xticks(np.arange(len(ctxs)) + 0.27 * (len(local["models"]) - 1) / 2,
+                     [f"context {c} tokens" for c in ctxs])
+    ax[1].legend(frameon=False)
     ax[1].set_ylabel("GPU net energy per decoded token, J")
     ax[1].grid(axis="x", visible=False)
     fig.tight_layout()
