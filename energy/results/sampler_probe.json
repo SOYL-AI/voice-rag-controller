@@ -1,0 +1,91 @@
+{
+  "rates": {
+    "20": {
+      "achieved_hz_idle": 19.91391240873544,
+      "achieved_hz_load": 20.022624972917217,
+      "nvml_power_update_ms": 498.38659999659285,
+      "nvml_energy_update_ms": null,
+      "rapl_update_ms": 50.29805001686327,
+      "load_gpu_j_power": 229.07577749722236,
+      "load_gpu_j_counter": 239.88400000007823,
+      "load_rel_diff_power_vs_counter": -0.04505603751334956,
+      "load_gpu_mean_w": 33.64773484453286,
+      "idle_gpu_w": 22.296911252403408,
+      "idle_cpu_w": 36.798317755469924
+    },
+    "50": {
+      "achieved_hz_idle": 49.40161602962063,
+      "achieved_hz_load": 49.92585051063466,
+      "nvml_power_update_ms": 501.957449974725,
+      "nvml_energy_update_ms": null,
+      "rapl_update_ms": 20.397050015162677,
+      "load_gpu_j_power": 194.91196415692914,
+      "load_gpu_j_counter": 207.09899999992922,
+      "load_rel_diff_power_vs_counter": -0.05884642534731814,
+      "load_gpu_mean_w": 28.70254567355492,
+      "idle_gpu_w": 26.7744645012373,
+      "idle_cpu_w": 34.85051438314707
+    },
+    "100": {
+      "achieved_hz_idle": 93.65023300114954,
+      "achieved_hz_load": 96.2900351274029,
+      "nvml_power_update_ms": 501.6604000120424,
+      "nvml_energy_update_ms": null,
+      "rapl_update_ms": 10.56894997600466,
+      "load_gpu_j_power": 206.414801010448,
+      "load_gpu_j_counter": 217.62199999997392,
+      "load_rel_diff_power_vs_counter": -0.051498465180575784,
+      "load_gpu_mean_w": 29.96238364895484,
+      "idle_gpu_w": 25.856424232935673,
+      "idle_cpu_w": 29.613600362296193
+    },
+    "200": {
+      "achieved_hz_idle": 142.89072917486757,
+      "achieved_hz_load": 157.11939767857362,
+      "nvml_power_update_ms": 499.91199997020885,
+      "nvml_energy_update_ms": null,
+      "rapl_update_ms": 10.365850001107901,
+      "load_gpu_j_power": 199.59115409881082,
+      "load_gpu_j_counter": 213.5950000002049,
+      "load_rel_diff_power_vs_counter": -0.06556261102263929,
+      "load_gpu_mean_w": 29.335716622907828,
+      "idle_gpu_w": 25.227422164394717,
+      "idle_cpu_w": 30.16095113085664
+    }
+  },
+  "counter_polling_idle": {
+    "0": {
+      "counter_slope_w": 24.974890127563796,
+      "mean_reported_power_w": 21.391180952380953
+    },
+    "1": {
+      "counter_slope_w": 25.349437685802446,
+      "mean_reported_power_w": 21.2365
+    },
+    "10": {
+      "counter_slope_w": 58.028215818345,
+      "mean_reported_power_w": 23.230527272727265
+    },
+    "100": {
+      "counter_slope_w": 175.5108700413524,
+      "mean_reported_power_w": 25.2156875
+    }
+  },
+  "device": {
+    "gpu": {
+      "name": "NVIDIA GeForce RTX 4060 Laptop GPU",
+      "driver": "592.82",
+      "nvml": "13.592.82",
+      "temperature_c": 68,
+      "pstate": 3,
+      "sm_clock_mhz": 2100,
+      "mem_clock_mhz": 7001,
+      "sm_clock_max_mhz": 3105,
+      "mem_clock_max_mhz": 8001,
+      "enforced_power_limit_w": 34.061,
+      "default_power_limit_w": 35.0,
+      "energy_counter_supported": true
+    },
+    "cpu_rapl": true
+  }
+}
