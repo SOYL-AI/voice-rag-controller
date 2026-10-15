@@ -192,8 +192,11 @@ def load_items(path: Path) -> list:
             raise ValueError(f"{path}: item {row.get('id')!r} missing {missing}")
         if row["id"] in seen:
             raise ValueError(f"{path}: duplicate item id {row['id']!r}")
-        if not isinstance(row["retrieval_needed_authored"], bool):
-            raise ValueError(f"{path}: retrieval_needed_authored must be bool ({row['id']})")
+        # d1_open has no authored label by design (CONTRACTS.md: null; it relies
+        # on the empirical closed-book label), so null is valid; anything else
+        # that is not a bool is a schema error.
+        if row["retrieval_needed_authored"] is not None and not isinstance(row["retrieval_needed_authored"], bool):
+            raise ValueError(f"{path}: retrieval_needed_authored must be bool or null ({row['id']})")
         seen.add(row["id"])
     return rows
 
