@@ -57,6 +57,15 @@ def load_items(path, split: str = "all") -> list[dict]:
     return out
 
 
+def filter_ids(items: list[dict], ids_file: str | None) -> list[dict]:
+    """Keep the items listed in a json file ({"ids": [...]} or a plain list), in file order."""
+    if not ids_file:
+        return items
+    data = json.loads(Path(ids_file).read_text(encoding="utf-8"))
+    keep = set(data["ids"] if isinstance(data, dict) else data)
+    return [r for r in items if r["item_id"] in keep]
+
+
 def shard(items: list[dict], spec: str | None) -> list[dict]:
     """--shard k/n keeps every n-th item starting at k (0-based)."""
     if not spec:
