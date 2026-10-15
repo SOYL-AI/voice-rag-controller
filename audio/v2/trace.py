@@ -78,7 +78,7 @@ if str(_REPO_ROOT) not in sys.path:
 
 from audio.v2 import voices as V  # noqa: E402
 from audio.v2.asr import load_streaming_stt, stt_config  # noqa: E402
-from audio.v2.items import dataset_name_for, load_items, shard, speech_root  # noqa: E402
+from audio.v2.items import dataset_name_for, filter_ids, load_items, shard, speech_root  # noqa: E402
 from audio.v2.render import SR, audio_dir, read_wav16  # noqa: E402
 
 TRACE_VERSION = "v2-speech-2"  # 2: fallback end of turn, user_end_ms
@@ -411,6 +411,7 @@ def main(argv=None):
     ap.add_argument("--conditions", nargs="+", default=None,
                     help="explicit condition ids <voice>__<wpm>wpm__<noise> (overrides the three lists)")
     ap.add_argument("--limit", type=int)
+    ap.add_argument("--ids", default=None, help="json file with the item ids to keep (e.g. grid_subset.json)")
     ap.add_argument("--shard")
     ap.add_argument("--render-missing", action="store_true",
                     help="render audio that is not there yet (otherwise such items are skipped)")
@@ -427,7 +428,7 @@ def main(argv=None):
     a = ap.parse_args(argv)
 
     name = a.name or dataset_name_for(Path(a.items))
-    items_all = load_items(a.items, a.split)
+    items_all = filter_ids(load_items(a.items, a.split), a.ids)
     if a.limit:
         items_all = items_all[: a.limit]
     todo = shard(items_all, a.shard)
