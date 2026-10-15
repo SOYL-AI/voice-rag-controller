@@ -158,6 +158,21 @@ The human labelling kit for the §2.4 gate is in
 | primary | `VOICE_RAG_JUDGE_DEPLOYMENT` (gpt-6.1-sol), `VOICE_RAG_JUDGE_API_VERSION` (2025-04-01-preview) | no temperature (rejected), `max_completion_tokens` 2000, `reasoning_effort` medium, seed 20261015, k=3 seeded samples with a majority vote |
 | secondary | `AZURE_OPENAI_DEPLOYMENT` (gpt-4o), `AZURE_OPENAI_API_VERSION` | v4 settings: temperature 0, `max_tokens` 300, one sample |
 
+**Spend cap** (`spend.py`; `python -m llm.experiment1_v2.spend` prints the
+ledger).
+- **The ledger:** every real judge call is booked to one shared ledger at
+  the main checkout's `llm/experiment1_v2/results/_spend_ledger.json`
+  (gitignored, lock-file protected). It records actual usage (prompt +
+  completion tokens, reasoning included) × price.
+- **gpt-6.1-sol:** starts from the Azure-metrics baseline (28,710,941 in +
+  3,142,391 out to 2026-10-16 = $88.85). The cap is **INR 20,000**
+  (`VOICE_RAG_JUDGE_CAP_INR`; rate `VOICE_RAG_JUDGE_INR_PER_USD`, default 88).
+  Before each call a worst-case estimate (the prompt, plus the full
+  completion budget) is reserved. If it could breach the cap, the call
+  raises `JudgeBudgetExceeded` and is not made; `label.py` then stops with
+  exit code 4 and resumes from the cache when re-run.
+- **gpt-4o:** tracked and reported at $2.50 / $10.00, with no cap.
+
 **Deployment pool.** Set `VOICE_RAG_JUDGE_DEPLOYMENTS=gpt-6.1-sol,gpt-6.1-sol-dz`
 to spread the primary judge over several deployments of the same model
 version. A single `VOICE_RAG_JUDGE_DEPLOYMENT` still works.

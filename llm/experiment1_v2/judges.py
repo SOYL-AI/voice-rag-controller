@@ -51,6 +51,7 @@ from pathlib import Path
 
 from llm.experiment1_v2 import common
 from llm.experiment1_v2.rubrics import core_facts_or_fallback, get_rubric, rubric_sha256
+from llm.experiment1_v2.spend import JudgeBudgetExceeded, budget_from_config  # noqa: F401
 from simulator.judge_core import JUDGE_INSTRUCTIONS, _is_retryable, parse_verdict
 
 
@@ -326,8 +327,16 @@ class AzureChatJudge:
 
     MAX_COOLDOWN_S = 60.0
 
-    def __init__(self, spec: JudgeSpec, transport=None, sleep=time.sleep, clock=time.monotonic):
+    def __init__(self, spec: JudgeSpec, transport=None, sleep=time.sleep, clock=time.monotonic,
+                 budget="auto"):
         self.spec = spec
+        # Spend ledger + hard cap (spend.py). "auto": every REAL judge (no
+        # injected transport) is budgeted from judges.json, whoever builds it;
+        # tests inject a transport and pass their own budget (or none).
+        if budget == "auto":
+            budget = (budget_from_config(spec.role, load_judges_config())
+                      if transport is None else None)
+        self.budget = budget
         # transport: None (real SDK clients), one callable for every
         # deployment, or {deployment: callable}.
         if transport is None:
@@ -427,11 +436,20 @@ class AzureChatJudge:
         transient = adapted = rate_limited = 0
         while True:
             params = self._params(seed)
+            # Hard spend cap: reserve a worst-case estimate first; raises
+            # JudgeBudgetExceeded (no call made) if it could breach the cap.
+            estimate = rid = None
+            if self.budget is not None:
+                estimate = self.budget.estimate_usd(len(system) + len(user),
+                                                    int(self.spec.request.get("max_output_tokens") or 300))
+                rid = self.budget.reserve(estimate)
             deployment = self._acquire()
             limited = False
             try:
                 reply = self._transports[deployment](messages, params)
             except Exception as error:  # noqa: BLE001 -- classified below
+                if rid is not None:
+                    self.budget.release(rid)
                 limited = _is_rate_limit(error)
                 self._release(deployment, limited)
                 if adapted < 3 and self._adapt(error):
@@ -456,6 +474,11 @@ class AzureChatJudge:
             if not isinstance(reply, dict):  # (text, model[, usage]) test transports
                 reply = {"text": reply[0], "model": reply[1],
                          "usage": reply[2] if len(reply) > 2 else None}
+            if rid is not None:
+                usage = reply.get("usage") or {}
+                # completion_tokens includes the reasoning tokens.
+                self.budget.commit(rid, usage.get("prompt_tokens"), usage.get("completion_tokens"),
+                                   estimate_usd=estimate)
             served = reply.get("model")
             with self._lock:
                 self._served[deployment] += 1
@@ -541,7 +564,8 @@ def make_judges(roles, backend: str, judges_cfg: dict = None, env=None) -> dict:
                                   flip_rate=0.05 if role == "primary" else 0.1,
                                   samples=int(request.get("samples") or 1), seed=request.get("seed"))
         elif backend == "azure":
-            out[role] = AzureChatJudge(resolve_spec(role, judges_cfg, env))
+            out[role] = AzureChatJudge(resolve_spec(role, judges_cfg, env),
+                                       budget=budget_from_config(role, judges_cfg, env))
         else:
             raise ValueError(f"unknown judge backend {backend!r}")
     return out
