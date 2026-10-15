@@ -158,6 +158,20 @@ The human labelling kit for the §2.4 gate is in
 | primary | `VOICE_RAG_JUDGE_DEPLOYMENT` (gpt-6.1-sol), `VOICE_RAG_JUDGE_API_VERSION` (2025-04-01-preview) | no temperature (rejected), `max_completion_tokens` 2000, `reasoning_effort` medium, seed 20261015, k=3 seeded samples with a majority vote |
 | secondary | `AZURE_OPENAI_DEPLOYMENT` (gpt-4o), `AZURE_OPENAI_API_VERSION` | v4 settings: temperature 0, `max_tokens` 300, one sample |
 
+**Deployment pool.** Set `VOICE_RAG_JUDGE_DEPLOYMENTS=gpt-6.1-sol,gpt-6.1-sol-dz`
+to spread the primary judge over several deployments of the same model
+version. A single `VOICE_RAG_JUDGE_DEPLOYMENT` still works.
+- **Routing:** each call goes to the deployment with the fewest calls in
+  flight; a 429 cools that deployment down (1 s doubling to 60 s), so traffic
+  moves to the other.
+- **Cache:** the judge identity and cache key exclude the deployment, so
+  verdicts are shared across the pool. Older deployment-named cache entries
+  are still found.
+- **Provenance:** every sample records the serving `deployment` and the
+  returned model string.
+- **Safety:** a deployment that returns a different model version stops the
+  run (`JudgeModelMismatch`).
+
 You can override any request parameter with `VOICE_RAG_JUDGE[2]_{TEMPERATURE,
 TOKEN_PARAM,MAX_TOKENS,REASONING_EFFORT,SEED,SAMPLES}`. Every verdict records:
 - the judge identity;

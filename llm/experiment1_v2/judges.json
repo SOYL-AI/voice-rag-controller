@@ -8,6 +8,7 @@
       "provider": "azure_openai",
       "_note": "GPT-6.1-sol on Azure (deployment and api version from env; 2025-04-01-preview verified). It is a reasoning model: max_tokens and any non-default temperature are rejected, so temperature is never sent and sampling is stochastic. reasoning_effort and seed are pinned and each answer is graded by `samples` independent draws (seed, seed+1, ...) with a majority vote; every draw is recorded so self-consistency can be reported. The completion budget covers reasoning tokens.",
       "env": {
+        "deployments": ["VOICE_RAG_JUDGE_DEPLOYMENTS"],
         "deployment": ["VOICE_RAG_JUDGE_DEPLOYMENT"],
         "api_version": ["VOICE_RAG_JUDGE_API_VERSION"],
         "model_id": ["VOICE_RAG_JUDGE_MODEL"],
@@ -30,6 +31,7 @@
       "provider": "azure_openai",
       "_note": "The validated v4 'reasoned + strip' judge used for the real E3 sweep (azure-openai/gpt-4o@2025-01-01-preview). Falls back to the AZURE_OPENAI_* variables the E3 runner reads.",
       "env": {
+        "deployments": ["VOICE_RAG_JUDGE2_DEPLOYMENTS"],
         "deployment": ["VOICE_RAG_JUDGE2_DEPLOYMENT", "AZURE_OPENAI_DEPLOYMENT"],
         "api_version": ["VOICE_RAG_JUDGE2_API_VERSION", "AZURE_OPENAI_API_VERSION"],
         "model_id": ["VOICE_RAG_JUDGE2_MODEL"],

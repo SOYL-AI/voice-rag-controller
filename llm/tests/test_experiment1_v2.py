@@ -372,7 +372,7 @@ class JudgeTests(unittest.TestCase):
             if "max_tokens" in params:
                 raise RuntimeError("Unsupported parameter: 'max_tokens' is not supported with this "
                                    "model. Use 'max_completion_tokens' instead.")
-            return "CONFLICT: none\nVERDICT: YES", "gpt-6-sol-2026-08"
+            return "CONFLICT: none\nVERDICT: YES", "gpt-6.1-sol-2026-09-29"
 
         env = dict(self.ENV, VOICE_RAG_JUDGE_TEMPERATURE="0", VOICE_RAG_JUDGE_TOKEN_PARAM="max_tokens")
         judge = judges.AzureChatJudge(judges.resolve_spec("primary", self.CFG, env), transport=transport)
@@ -385,7 +385,7 @@ class JudgeTests(unittest.TestCase):
                                                       "seed": 20261015})
             self.assertEqual([s["sent_params"]["seed"] for s in verdict["samples"]],
                              [20261015, 20261016, 20261017])
-            self.assertEqual(verdict["response_model"], "gpt-6-sol-2026-08")
+            self.assertEqual(verdict["response_model"], "gpt-6.1-sol-2026-09-29")
             self.assertEqual(verdict["judge"]["model_id"], "gpt-6.1-sol-2026-09-29")
             self.assertEqual(len(judge.adaptations), 2)
             on_disk = "".join(p.read_text(encoding="utf-8") for p in Path(tmp).rglob("*.json"))
@@ -433,7 +433,7 @@ class JudgeTests(unittest.TestCase):
 
         def transport(messages, params):
             seeds.append(params["seed"])
-            return {"text": next(replies), "model": "m", "usage": None, "response_id": f"r{len(seeds)}",
+            return {"text": next(replies), "model": "gpt-6.1-sol-2026-09-29", "usage": None, "response_id": f"r{len(seeds)}",
                     "finish_reason": "stop", "request_body": {"model": "x", **params}}
 
         judge = judges.AzureChatJudge(judges.resolve_spec("primary", self.CFG, self.ENV), transport=transport)
@@ -493,6 +493,108 @@ class JudgeTests(unittest.TestCase):
         self.assertEqual(judges.AzureChatJudge(spec, transport=lambda m, p: None)._params(),
                          {"max_tokens": 300, "temperature": 0})
         self.assertEqual(judges.sample_seeds(spec.request), [None])
+
+    # -- deployment pools --------------------------------------------------
+    POOL_ENV = dict(ENV, VOICE_RAG_JUDGE_DEPLOYMENTS="gpt-6.1-sol,gpt-6.1-sol-dz")
+    MODEL = "gpt-6.1-sol-2026-09-29"
+    KW = dict(item_id="i", question="q", reference="r", answer="a", key_facts=["f"], aliases=[],
+              context="customer-support", dataset="d2_support", core_facts=["f"])
+
+    def test_pool_resolution_and_single_deployment_compat(self):
+        pool = judges.resolve_spec("primary", self.CFG, self.POOL_ENV)
+        self.assertEqual(pool.pool, ("gpt-6.1-sol", "gpt-6.1-sol-dz"))
+        single = judges.resolve_spec("primary", self.CFG, self.ENV)  # VOICE_RAG_JUDGE_DEPLOYMENT only
+        self.assertEqual(single.pool, ("gpt-6.1-sol",))
+        self.assertNotIn("deployment", pool.identity())
+
+    def test_cache_key_is_invariant_across_deployments(self):
+        def judge(env):
+            return judges.AzureChatJudge(judges.resolve_spec("primary", self.CFG, env),
+                                         transport=lambda m, p: None)
+
+        keys = {judges.cache_key(judge(env), **self.KW) for env in (
+            self.ENV, self.POOL_ENV, dict(self.ENV, VOICE_RAG_JUDGE_DEPLOYMENT="gpt-6.1-sol-dz"),
+            dict(self.ENV, VOICE_RAG_JUDGE_DEPLOYMENTS="gpt-6.1-sol-dz,gpt-6.1-sol"))}
+        self.assertEqual(len(keys), 1)
+        self.assertEqual(judge(self.ENV).spec.slug(), judge(self.POOL_ENV).spec.slug())
+        # ... while the model version still splits it
+        other = judge(dict(self.POOL_ENV, VOICE_RAG_JUDGE_MODEL="gpt-6.1-sol-2026-12-01"))
+        self.assertNotIn(judges.cache_key(other, **self.KW), keys)
+
+    def test_pre_pool_cache_entries_still_hit(self):
+        calls = []
+        with tempfile.TemporaryDirectory() as tmp:
+            # A verdict cached before pools, under the deployment-named identity.
+            old = judges.AzureChatJudge(judges.resolve_spec("primary", self.CFG, self.ENV),
+                                        transport=lambda m, p: None)
+            legacy_key, legacy_slug = judges.legacy_cache_keys(old, **dict(self.KW, answer="a"))[0]
+            for index, seed in enumerate((20261015, 20261016, 20261017)):
+                sk = common.sha256_text(legacy_key, index, seed)
+                path = Path(tmp) / legacy_slug / f"{sk[:40]}.json"
+                path.parent.mkdir(parents=True, exist_ok=True)
+                path.write_text(json.dumps({"sample_index": index, "seed": seed, "answer_correct": True,
+                                            "parsed_ok": True, "judge_raw": "VERDICT: YES"}),
+                                encoding="utf-8")
+            pooled = judges.AzureChatJudge(judges.resolve_spec("primary", self.CFG, self.POOL_ENV),
+                                           transport=lambda m, p: calls.append(1))
+            verdict = judges.grade(pooled, cache_dir=Path(tmp), **self.KW)
+            self.assertEqual(calls, [])  # served from the legacy cache, no API call
+            self.assertTrue(verdict["cache_hit"] and verdict["answer_correct"])
+
+    def test_model_version_mismatch_is_refused(self):
+        spec = judges.resolve_spec("primary", self.CFG, self.POOL_ENV)
+        transports = {"gpt-6.1-sol": lambda m, p: ("VERDICT: YES", self.MODEL),
+                      "gpt-6.1-sol-dz": lambda m, p: ("VERDICT: YES", "gpt-6.1-sol-2026-12-01")}
+        judge = judges.AzureChatJudge(spec, transport=transports)
+        with self.assertRaises(judges.JudgeModelMismatch):
+            for _ in range(4):  # rotation reaches the mismatched deployment
+                judge.complete("s", "u", seed=1)
+        self.assertTrue(judges.model_matches("gpt-4o", "gpt-4o-2024-11-20"))  # unversioned id + version
+        self.assertTrue(judges.model_matches(self.MODEL, self.MODEL))
+        self.assertFalse(judges.model_matches(self.MODEL, "gpt-6.1-sol-2026-12-01"))
+
+    def test_pool_fails_over_on_rate_limit(self):
+        class RateLimited(Exception):
+            status_code = 429
+
+        now = [0.0]
+        sleeps = []
+        hits = {"gpt-6.1-sol": 0, "gpt-6.1-sol-dz": 0}
+
+        def limited(messages, params):
+            hits["gpt-6.1-sol"] += 1
+            raise RateLimited("429 Too Many Requests")
+
+        def ok(messages, params):
+            hits["gpt-6.1-sol-dz"] += 1
+            return "CONFLICT: none\nVERDICT: YES", self.MODEL
+
+        spec = judges.resolve_spec("primary", self.CFG, self.POOL_ENV)
+        judge = judges.AzureChatJudge(spec, transport={"gpt-6.1-sol": limited, "gpt-6.1-sol-dz": ok},
+                                      sleep=lambda s: (sleeps.append(s), now.__setitem__(0, now[0] + s)),
+                                      clock=lambda: now[0])
+        replies = [judge.complete("s", "u", seed=i) for i in range(5)]
+        self.assertTrue(all(r["deployment"] == "gpt-6.1-sol-dz" for r in replies))
+        self.assertEqual(hits["gpt-6.1-sol-dz"], 5)
+        self.assertLessEqual(hits["gpt-6.1-sol"], 2)  # cooled down after its 429s, traffic moved
+        self.assertEqual(sleeps, [])                  # never had to wait: the other deployment was free
+        self.assertGreaterEqual(judge.pool_stats()["gpt-6.1-sol"]["rate_limited_streak"], 1)
+
+        # Both deployments rate-limited: waits for the earliest cooldown, then succeeds.
+        flaky = {"n": 0}
+
+        def flaky_ok(messages, params):
+            flaky["n"] += 1
+            if flaky["n"] <= 2:
+                raise RateLimited("429")
+            return "VERDICT: NO", self.MODEL
+
+        judge2 = judges.AzureChatJudge(spec, transport={"gpt-6.1-sol": flaky_ok, "gpt-6.1-sol-dz": flaky_ok},
+                                       sleep=lambda s: (sleeps.append(s), now.__setitem__(0, now[0] + s)),
+                                       clock=lambda: now[0])
+        reply = judge2.complete("s", "u", seed=1)
+        self.assertEqual(reply["rate_limited_retries"], 2)
+        self.assertTrue(sleeps)  # had to wait once both were cooling down
 
     def test_errors_are_redacted(self):
         def transport(messages, params):
