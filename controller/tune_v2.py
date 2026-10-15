@@ -279,7 +279,7 @@ def tune_spec_trigger(turns: Sequence[TurnCtx], store: CellStore, seeds: Sequenc
 
 def tune_all(turns: Sequence[TurnCtx], store: CellStore, seeds: Sequence[int], profiles: Sequence[str],
              cfg: dict, labels: Optional[Dict[str, bool]], gold: Dict[str, List[str]],
-             budget: Optional[int] = None, latency_model=None) -> dict:
+             budget: Optional[int] = None, latency_model=None, plan_all_b8: bool = False) -> dict:
     budget = int(budget if budget is not None else cfg["tuning"]["budget"])
     lm = latency_model if latency_model is not None else load_latency_model(cfg)
     acc_profile = profiles[0]  # accuracy does not depend on the latency profile
@@ -315,6 +315,18 @@ def tune_all(turns: Sequence[TurnCtx], store: CellStore, seeds: Sequence[int], p
         acc = _eval(f"b1_v2_{policy}", {}, turns, store, seeds, acc_profile, cfg, lm)
         hidden = [constants["profiles"][p][policy]["hidden_ms"] for p in constants["profiles"]]
         timing_scores[policy] = {**acc, "mean_hidden_ms": sum(hidden) / max(1, len(hidden))}
+    if plan_all_b8:
+        # Lazy-evaluation PLANNING only (store records the cells it is asked
+        # for): B8's final combination is chosen from outcomes, so every
+        # (trigger, grid threshold, timing) combination is decided once here
+        # and its cells are recorded.
+        for trig, param in (("b4", "theta"), ("b5", "threshold"), ("b6", "threshold")):
+            extra = {"model": unpriced["b5"]["chosen"].get("model")} if trig == "b5" else {}
+            for value in unpriced[trig].get("grid") or []:
+                for policy in POLICIES_V2:
+                    _eval("b8_v2", {"trigger": trig, "timing": policy,
+                                    "trigger_params": {**extra, param: value}},
+                          turns, store, seeds, acc_profile, cfg, lm)
     tol = float(cfg["tuning"].get("equal_accuracy_tolerance", 0.02))
     floor = timing_scores["sentence_end"]["accuracy"] - tol
     eligible = [p for p in POLICIES_V2 if timing_scores[p]["accuracy"] >= floor]

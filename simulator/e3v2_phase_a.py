@@ -233,6 +233,80 @@ def answer_params() -> dict:
 
 
 # ---------------------------------------------------------------------------
+# Grading under PREREG_V2 §2.2-2.3 (k = 1 primary, 30% secondary subsample)
+# ---------------------------------------------------------------------------
+SECONDARY_FRACTION = 0.30
+SECONDARY_SEED = 20261016
+K1_MAX_EXTRA = 3  # an unparsed sample draws the next one, up to 3 more
+
+
+def grade_primary_k1(judge, cache_dir, **kw) -> dict:
+    """
+    One primary verdict (k = 1). The verdict key is the judge's configured
+    key (judges.json, k = 3 request), so sample index 0 of an answer already
+    graded at k = 3 is found in the cache and reused as the k = 1 verdict
+    (PI decision 2026-10-16). A new answer draws only index 0, cached under
+    the same key; an unparsed sample draws index 1, 2, 3 until one parses.
+    """
+    from llm.experiment1_v2 import judges as J
+
+    kw = dict(kw, answer=(kw.get("answer") or "").strip())
+    key = J.cache_key(judge, **kw)
+    legacy = J.legacy_cache_keys(judge, **kw)
+    system, user = J.render_prompt(
+        judge, question=kw["question"], reference=kw["reference"], answer=kw["answer"],
+        key_facts=kw.get("key_facts"), aliases=kw.get("aliases"), context=kw.get("context", "general"),
+        dataset=kw.get("dataset"), history=kw.get("history"), core_facts=kw.get("core_facts"))
+    base = judge.spec.request.get("seed")
+    used = []
+    with J._key_lock(key):
+        for index in range(1 + K1_MAX_EXTRA):
+            seed = None if base is None else int(base) + index
+            path, sample_key, cached = J._cached_sample(cache_dir, judge, key, legacy, index, seed)
+            hit = cached is not None
+            if not hit:
+                reply = judge.complete(system, user, seed=seed)
+                correct, parsed_ok = J.parse_verdict(reply["text"])
+                cached = {"sample_index": index, "seed": seed,
+                          "answer_correct": correct if parsed_ok else None, "parsed_ok": parsed_ok,
+                          "judge_raw": reply["text"], "sample_key": sample_key, "extra_sample": index >= 1,
+                          "deployment": reply.get("deployment"), "response_model": reply.get("response_model"),
+                          "response_id": reply.get("response_id"), "finish_reason": reply.get("finish_reason"),
+                          "sent_params": reply.get("sent_params"), "request_body": reply.get("request_body"),
+                          "request_body_captured": reply.get("request_body_captured"),
+                          "usage": reply.get("usage"), "graded_at_utc": e1common.now_utc()}
+                if path is not None:
+                    e1common.atomic_write_json(path, cached)
+            used.append({"sample_index": index, "cache_hit": hit, "parsed_ok": cached.get("parsed_ok"),
+                         "answer_correct": cached.get("answer_correct"), "usage": cached.get("usage"),
+                         "deployment": cached.get("deployment"), "response_model": cached.get("response_model")})
+            if cached.get("parsed_ok"):
+                break
+    verdict = next((u["answer_correct"] for u in used if u["parsed_ok"]), None)
+    return {"answer_correct": verdict, "parsed_ok": verdict is not None, "k": 1, "n_samples": len(used),
+            "judge_key": key, "samples": used}
+
+
+def secondary_subsample(rows: List[dict], items: Dict[str, dict], fraction: float = SECONDARY_FRACTION,
+                        seed: int = SECONDARY_SEED) -> set:
+    """Stratified random subsample of graded answer keys (strata: dataset x
+    item_type x primary verdict), fixed seed (PREREG_V2 §2.3)."""
+    import random
+
+    strata = defaultdict(list)
+    for r in rows:
+        it = items[r["item_id"]]
+        strata[(it.get("dataset"), it.get("item_type"), r.get("primary"))].append(r["key"])
+    rng = random.Random(seed)
+    out = set()
+    for key in sorted(strata, key=str):
+        keys = sorted(strata[key])
+        rng.shuffle(keys)
+        out.update(keys[: int(round(fraction * len(keys)))])
+    return out
+
+
+# ---------------------------------------------------------------------------
 # The runner
 # ---------------------------------------------------------------------------
 class PhaseA:
@@ -257,6 +331,33 @@ class PhaseA:
         if wanted is None or TEXT_CONDITION in wanted:
             self.conditions[TEXT_CONDITION] = {i["id"]: text_trace(i) for i in self.items}
         self.conditions.update(load_trace_conditions(self.ds, set(self.by_id), wanted))
+        # LAZY OUTCOME EVALUATION (PREREG_V2 §4.8): with --required-cells only
+        # the (item, condition, path, query_variant) cells some controller
+        # chose are generated, graded and stored (all seeds of each).
+        self.required = None
+        if getattr(args, "required_cells", None):
+            blob = e1common.load_json(Path(args.required_cells))
+            self.required = {tuple(c) for c in blob["cells"]}
+        self._required_keys = None
+
+    def final_text(self, cond: str, item_id: str) -> str:
+        return normalize_text(self.conditions[cond][item_id]["asr_final"]["text"])
+
+    def required_answer_keys(self) -> set:
+        """Answer/skip keys (all seeds) of the required cells."""
+        if self.required is None:
+            return set()
+        if self._required_keys is None:
+            keys = set()
+            for item_id, cond, path, variant in self.required:
+                if cond not in self.conditions or item_id not in self.conditions[cond]:
+                    continue
+                final = self.final_text(cond, item_id)
+                for seed in self.seeds:
+                    keys.add(sha("answer", item_id, seed, final, variant) if path == "retrieve"
+                             else sha("skip", item_id, seed, final))
+            self._required_keys = keys
+        return self._required_keys
 
     # -- paths ---------------------------------------------------------------
     def f(self, name: str) -> Path:
@@ -285,6 +386,10 @@ class PhaseA:
                 out[key]["judges"] = {role: {k: v.get(k) for k in ("answer_correct", "parsed_ok", "n_samples",
                                                                     "self_consistency", "unanimous", "judge_key")}
                                       for role, v in (d.get("judges") or {}).items()}
+                # k = 1 (PREREG_V2 §2.2): the verdict of record is sample index 0
+                samples = ((d.get("judges") or {}).get("primary") or {}).get("samples") or []
+                first = next((x for x in samples if x.get("sample_index") == 0 and x.get("parsed_ok")), None)
+                out[key]["primary_k1"] = None if first is None else first.get("answer_correct")
         return out
 
     # -- stage 1: rewrites ---------------------------------------------------
@@ -377,7 +482,7 @@ class PhaseA:
         done = self.done_keys("answers")
         jobs = []
         for key, u in self.answer_units().items():
-            if key in done:
+            if key in done or (self.required is not None and key not in self.required_answer_keys()):
                 continue
             item = self.by_id[u["item_id"]]
             msgs = e1_build_messages(item, u["final_text"], self.e1cfg, passages=self.passages(u["doc_ids"]))
@@ -406,7 +511,7 @@ class PhaseA:
         done = self.done_keys("skip_answers")
         jobs = []
         for key, u in self.skip_units().items():
-            if u["reuse_e1"] or key in done:
+            if u["reuse_e1"] or key in done or (self.required is not None and key not in self.required_answer_keys()):
                 continue
             msgs = e1_build_messages(self.by_id[u["item_id"]], u["final_text"], self.e1cfg)
             jobs.append({"key": key, "messages": msgs, "seed": u["seed"], **self.params,
@@ -416,62 +521,120 @@ class PhaseA:
         return jobs
 
     # -- stage 5: grading ----------------------------------------------------
-    def grade(self, workers: int, judge_backend: str) -> dict:
-        from llm.experiment1_v2 import judges as judges_mod
-        from llm.experiment1_v2.label import grade_draws
-
-        done = self.done_keys("grades")
-        todo = []
+    def _grading_todo(self) -> List[dict]:
+        out = []
         for name, cond in (("answers", "retrieval"), ("skip_answers", "closed_book")):
             if not self.f(name).exists():
                 continue
             for r in e1common.read_jsonl(self.f(name)):
-                if r["key"] in done:
+                if self.required is not None and r["key"] not in self.required_answer_keys():
                     continue
-                rec = {"item_id": r["item_id"], "draw_seed": r["seed"], "condition": cond,
-                       "grounded_answer": r["text"], "closed_book_answer": r["text"], "_key": r["key"]}
-                todo.append(rec)
-        if not todo:
-            return {"graded": 0}
+                out.append({"key": r["key"], "item_id": r["item_id"], "seed": r["seed"], "condition": cond,
+                            "answer": r["text"]})
+        return out
+
+    def _judge_kw(self, item: dict, answer: str) -> dict:
+        from llm.experiment1_v2.label import item_core_facts, item_key_facts
+        ctx = self.e1cfg["labels"]["judge_context"]
+        return {"item_id": item["id"], "question": item["question"], "reference": item["expected_answer"],
+                "answer": answer, "key_facts": item_key_facts(item), "aliases": item.get("answer_aliases") or [],
+                "context": ctx.get(item["dataset"], ctx["default"]), "dataset": item["dataset"],
+                "history": item.get("history") or [], "core_facts": item_core_facts(item)}
+
+    def grade(self, workers: int, judge_backend: str) -> dict:
+        """PREREG_V2 §2.2-2.3: alias for every answer; the primary judge at
+        k = 1 (reusing sample 0 of any k = 3 verdict) where the dataset is
+        judge-graded; the secondary judge only on a stratified 30% subsample
+        of the primary-graded answers."""
+        from concurrent.futures import ThreadPoolExecutor
+
+        from llm.experiment1_v2 import judges as judges_mod
+        from llm.experiment1_v2.label import alias_match, item_aliases
+
         source = self.e1cfg["labels"]["correctness_source"].get(self.ds,
                                                                  self.e1cfg["labels"]["correctness_source"]["default"])
-        roles = [] if source == "alias" else ["primary", "secondary"]
-        judges = judges_mod.make_judges(roles, judge_backend) if roles else {}
+        done = self.done_keys("grades_k1")
+        todo = [r for r in self._grading_todo() if r["key"] not in done]
         cache_dir = self.out / "judge_cache"
         t0 = time.perf_counter()
-        n = 0
-        with e1common.JsonlAppender(self.f("grades")) as w:
-            for start in range(0, len(todo), 200):
-                batch = todo[start:start + 200]
-                rows = grade_draws(batch, self.by_id, judges, self.e1cfg, cache_dir, workers)
-                for rec, row in zip(batch, rows):
-                    w.write({"key": rec["_key"], "item_id": rec["item_id"], "seed": rec["draw_seed"],
-                             "alias_correct": row["alias_correct"],
-                             "judges": {role: {k: v.get(k) for k in ("answer_correct", "parsed_ok", "n_samples",
-                                                                      "self_consistency", "unanimous",
-                                                                      "judge_key", "response_model")}
-                                        for role, v in row["judges"].items()},
-                             "correctness_source": source})
-                n += len(batch)
-                print(f"  [grade] {n}/{len(todo)} ({n / max(1e-9, time.perf_counter() - t0):.2f}/s)")
-        return {"graded": n, "wall_s": time.perf_counter() - t0, "correctness_source": source}
+        stats = Counter()
+        primary = judges_mod.make_judges(["primary"], judge_backend)["primary"] if source != "alias" else None
+
+        def one(rec):
+            item = self.by_id[rec["item_id"]]
+            row = {"key": rec["key"], "item_id": rec["item_id"], "seed": rec["seed"], "condition": rec["condition"],
+                   "alias_correct": alias_match(rec["answer"], item_aliases(item)), "correctness_source": source}
+            if primary is not None:
+                v = grade_primary_k1(primary, cache_dir, **self._judge_kw(item, rec["answer"]))
+                row["primary"] = v["answer_correct"]
+                row["primary_detail"] = {k: v[k] for k in ("k", "n_samples", "judge_key", "samples")}
+            return row
+
+        with e1common.JsonlAppender(self.f("grades_k1")) as w:
+            with ThreadPoolExecutor(max_workers=max(1, workers)) as pool:
+                for n, row in enumerate(pool.map(one, todo), 1):
+                    w.write(row)
+                    stats["graded"] += 1
+                    if primary is not None:
+                        stats["new_calls"] += sum(not s_["cache_hit"] for s_ in row["primary_detail"]["samples"])
+                    if n % 200 == 0:
+                        print(f"  [grade k=1] {n}/{len(todo)} ({n / max(1e-9, time.perf_counter() - t0):.2f}/s)")
+        stats["primary_wall_s"] = time.perf_counter() - t0
+        if source != "alias":
+            stats.update(self._grade_secondary(workers, judge_backend))
+        return dict(stats)
+
+    def _grade_secondary(self, workers: int, judge_backend: str) -> dict:
+        from concurrent.futures import ThreadPoolExecutor
+
+        from llm.experiment1_v2 import judges as judges_mod
+
+        rows = [r for r in e1common.read_jsonl(self.f("grades_k1")) if r.get("primary") is not None]
+        if self.required is not None:
+            rows = [r for r in rows if r["key"] in self.required_answer_keys()]
+        chosen = secondary_subsample(rows, self.by_id)
+        done = self.done_keys("grades_secondary")
+        texts = {}
+        for name in ("answers", "skip_answers"):
+            if self.f(name).exists():
+                texts.update({r["key"]: r["text"] for r in e1common.read_jsonl(self.f(name))})
+        todo = [r for r in rows if r["key"] in chosen and r["key"] not in done]
+        judge = judges_mod.make_judges(["secondary"], judge_backend)["secondary"]
+        cache_dir = self.out / "judge_cache"
+
+        def one(r):
+            item = self.by_id[r["item_id"]]
+            v = judges_mod.grade(judge, cache_dir=cache_dir, **self._judge_kw(item, texts[r["key"]]))
+            return {"key": r["key"], "item_id": r["item_id"], "primary": r["primary"],
+                    "secondary": v["answer_correct"] if v["parsed_ok"] else None, "cache_hit": v.get("cache_hit"),
+                    "judge_key": v["judge_key"]}
+
+        n_hit = 0
+        with e1common.JsonlAppender(self.f("grades_secondary")) as w:
+            with ThreadPoolExecutor(max_workers=max(1, workers)) as pool:
+                for row in pool.map(one, todo):
+                    w.write(row)
+                    n_hit += bool(row["cache_hit"])
+        return {"secondary_subsample": len(chosen), "secondary_graded_now": len(todo),
+                "secondary_cache_hits": n_hit}
 
     # -- stage 6: the store --------------------------------------------------
     @staticmethod
-    def _correct(source: str, alias, judges: dict):
+    def _correct(source: str, alias, primary_k1):
+        """Verdict of record: alias match (d1_open) or the primary judge at
+        k = 1 (d2_support). An unparsed primary verdict is unresolved and the
+        cell is excluded (PREREG_V2 §4.4); there is no secondary fallback."""
         if source == "alias":
             return bool(alias), "alias"
-        role = source.split(":", 1)[1]
-        v = (judges.get(role) or {}).get("answer_correct")
-        if v is not None:
-            return bool(v), source
-        sec = (judges.get("secondary") or {}).get("answer_correct")
-        return (None, "unresolved") if sec is None else (bool(sec), "judge:secondary(fallback)")
+        if primary_k1 is None:
+            return None, "unresolved"
+        return bool(primary_k1), f"{source}(k=1)"
 
     def build_store(self) -> dict:
         source = self.e1cfg["labels"]["correctness_source"].get(self.ds,
                                                                  self.e1cfg["labels"]["correctness_source"]["default"])
-        grades = {r["key"]: r for r in e1common.read_jsonl(self.f("grades"))} if self.f("grades").exists() else {}
+        grades = {r["key"]: r for r in e1common.read_jsonl(self.f("grades_k1"))} \
+            if self.f("grades_k1").exists() else {}
         answers = {r["key"]: r for r in e1common.read_jsonl(self.f("answers"))} if self.f("answers").exists() else {}
         skips = {r["key"]: r for r in e1common.read_jsonl(self.f("skip_answers"))} \
             if self.f("skip_answers").exists() else {}
@@ -481,25 +644,30 @@ class PhaseA:
         for row in rows:
             tr = self.conditions[row["condition"]][row["item_id"]]
             final = normalize_text(tr["asr_final"]["text"])
+            if self.required is not None and \
+                    (row["item_id"], row["condition"], "retrieve", row["query_variant"]) not in self.required:
+                continue
             for seed in self.seeds:
                 key = sha("answer", row["item_id"], seed, final, row["query_variant"])
                 a, g = answers.get(key), grades.get(key)
                 if a is None or g is None:
                     stats["retrieve_cell_missing"] += 1
                     continue
-                correct, how = self._correct(source, g["alias_correct"], g["judges"])
+                correct, how = self._correct(source, g["alias_correct"], g.get("primary"))
                 stats[f"retrieve_{how}"] += 1
                 cells.append({"kind": "cell", "item_id": row["item_id"], "seed": seed,
                               "condition": row["condition"], "path": "retrieve",
                               "query_variant": row["query_variant"], "answer_correct": correct,
                               "correctness_source": how, "alias_correct": g["alias_correct"],
-                              "judges": g["judges"], "answer": a["text"], "retrieved_doc_ids": row["retrieved_doc_ids"],
+                              "answer": a["text"], "retrieved_doc_ids": row["retrieved_doc_ids"],
                               "n_prompt_tokens": round(a["prompt_chars"] / 4.103, 1),
                               "n_tokens": a["n_tokens"], "finish_reason": a["finish_reason"],
                               "ttft_ms": a["ttft_ms"], "gen_ms": a["gen_ms"], "answer_key": key})
         for (cond, item_id), _ in {(c, i): 1 for c, ts in self.conditions.items() for i in ts}.items():
             tr = self.conditions[cond][item_id]
             final = normalize_text(tr["asr_final"]["text"])
+            if self.required is not None and (item_id, cond, "skip", "none") not in self.required:
+                continue
             for seed in self.seeds:
                 key = sha("skip", item_id, seed, final)
                 u = self._skip_units.get(key) if hasattr(self, "_skip_units") else None
@@ -508,7 +676,7 @@ class PhaseA:
                     u = self._skip_units.get(key)
                 if u["reuse_e1"]:
                     e = u["e1"]
-                    correct, how = self._correct(source, e.get("alias_correct"), e.get("judges") or {})
+                    correct, how = self._correct(source, e.get("alias_correct"), e.get("primary_k1"))
                     text, nt, fr, origin = e["answer"], e.get("n_tokens"), e.get("finish_reason"), "e1_reused"
                     chars = None
                 else:
@@ -516,7 +684,7 @@ class PhaseA:
                     if a is None or g is None:
                         stats["skip_cell_missing"] += 1
                         continue
-                    correct, how = self._correct(source, g["alias_correct"], g["judges"])
+                    correct, how = self._correct(source, g["alias_correct"], g.get("primary"))
                     text, nt, fr, origin, chars = a["text"], a["n_tokens"], a["finish_reason"], "regenerated", \
                         a["prompt_chars"]
                 stats[f"skip_{origin}"] += 1
@@ -526,6 +694,20 @@ class PhaseA:
                               "answer": text, "origin": origin, "n_tokens": nt, "finish_reason": fr,
                               "n_prompt_tokens": None if chars is None else round(chars / 4.103, 1),
                               "answer_key": key})
+        # Skip prompt tokens for every (item, condition), computed from the
+        # closed-book prompt without generating (lazy evaluation needs them for
+        # the skip counterfactual's TTFA); skip cells use the same number.
+        skip_prompts = []
+        for cond, traces in self.conditions.items():
+            for item_id in traces:
+                msgs = e1_build_messages(self.by_id[item_id], self.final_text(cond, item_id), self.e1cfg)
+                skip_prompts.append({"kind": "skip_prompt", "item_id": item_id, "condition": cond,
+                                     "n_prompt_tokens": round(sum(len(m["content"]) for m in msgs) / 4.103, 1)})
+        tok = {(r["item_id"], r["condition"]): r["n_prompt_tokens"] for r in skip_prompts}
+        for c in cells:
+            if c["path"] == "skip":
+                c["n_prompt_tokens"] = tok[(c["item_id"], c["condition"])]
+        rows = rows + skip_prompts
         unresolved = [c for c in cells if c["answer_correct"] is None]
         path = self.out / f"store_{self.args.split}.jsonl"
         tmp = path.with_suffix(".jsonl.tmp")
@@ -556,12 +738,15 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
     ap.add_argument("--index-dir", default=None)
     ap.add_argument("--out", default=str(DEFAULT_OUT))
     ap.add_argument("--env-file", default=None, help="load credentials from this .env (values never printed)")
-    ap.add_argument("--concurrency", type=int, default=32)
+    ap.add_argument("--concurrency", type=int, default=128)  # PI 2026-10-16: Modal autoscales past 64 in flight
     ap.add_argument("--judge-workers", type=int, default=4)
     ap.add_argument("--judge-backend", default="azure")
     ap.add_argument("--backend", default="vllm", help="vllm | mock (plumbing only; never data)")
     ap.add_argument("--stages", default="rewrite,retrieve,answer,skip,grade,store")
     ap.add_argument("--limit", type=int, default=None)
+    ap.add_argument("--required-cells", default=None,
+                    help="lazy outcome evaluation: JSON {cells: [[item, condition, path, query_variant], ...]} "
+                         "from simulator/e3v2_lazy.py plan; only these cells are generated, graded and stored")
     ap.add_argument("--dry-run", action="store_true")
     args = ap.parse_args(argv)
 

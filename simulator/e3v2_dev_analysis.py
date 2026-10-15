@@ -99,23 +99,27 @@ def fold_of(item_id: str, k: int = 5) -> int:
 # ---------------------------------------------------------------------------
 # Inputs
 # ---------------------------------------------------------------------------
-def load_inputs(ds: str, e1_results: Path, phase_a: Path):
+def load_inputs(ds: str, e1_results: Path, phase_a: Path, split: str = "dev"):
+    """Inputs for one split. The self-assessment LATENCY is always the dev
+    measurement (a frozen shared estimate); labels are optional off dev (they
+    only feed the oracle)."""
     e1dir = e1_results / ds / MODEL_KEY
     sa = {}
     # Phase A's own self-assessment file (E1-v2's records plus the same frozen
     # probe run on the ASR partials E1-v2 did not cover) when present.
-    sa_path = phase_a / "sa" / "self_assessment_dev.jsonl"
+    sa_path = phase_a / "sa" / f"self_assessment_{split}.jsonl"
     if not sa_path.exists():
-        sa_path = e1dir / "self_assessment_dev.jsonl"
+        sa_path = e1dir / f"self_assessment_{split}.jsonl"
     for r in e1common.read_jsonl(sa_path):
         sa[(r["item_id"], normalize_text(r["prefix_text"]))] = float(r[SIGNAL])
     lat = [float(r["ttft_ms"]) for r in e1common.read_jsonl(e1dir / "self_assessment_latency_dev.jsonl")
            if r.get("ttft_ms") is not None and not r.get("timing_synthetic")]
     sa_lag = float(np.median(lat)) if lat else 0.0
-    labels_doc = e1common.load_json(e1dir / "labels_dev.json")
+    labels_path = e1dir / f"labels_{split}.json"
+    labels_doc = e1common.load_json(labels_path) if labels_path.exists() else {"items": {}, "meta": {}}
     labels = {i: v.get("empirical_need") for i, v in labels_doc["items"].items()}
     ent = defaultdict(lambda: defaultdict(list))
-    for r in e1common.read_jsonl(e1dir / "signals_dev.jsonl"):
+    for r in e1common.read_jsonl(e1dir / f"signals_{split}.jsonl"):
         s = r.get("signals") or {}
         key = (r["item_id"], normalize_text((r.get("prefix") or {}).get("text", "")))
         for name in ("mean_entropy_nats", "max_entropy_nats"):
@@ -125,7 +129,7 @@ def load_inputs(ds: str, e1_results: Path, phase_a: Path):
             ent[key]["min_token_prob"].append(math.exp(-float(s["negative_min_logprob"])))
     entropy = {k: {n: float(np.mean(v)) for n, v in d.items()} for k, d in ent.items()}
     traces = defaultdict(dict)
-    for tr in e1common.read_jsonl(phase_a / "conditions_dev.jsonl"):
+    for tr in e1common.read_jsonl(phase_a / f"conditions_{split}.jsonl"):
         traces[tr["condition"]][tr["item_id"]] = tr
     items = {}
     paths = e1common.resolve_dataset_paths(ds)
@@ -355,18 +359,24 @@ def cluster_bootstrap_se(per_item: Dict[str, float], cluster_of: Dict[str, str],
 # ---------------------------------------------------------------------------
 # Driver
 # ---------------------------------------------------------------------------
-def run_dataset(args, ds: str) -> dict:
+def run_dataset(args, ds: str, record: Optional[set] = None) -> dict:
+    """The dev analysis. With `record` (a set) it is the LAZY-EVALUATION
+    PLAN: the identical pipeline runs against a store that records every
+    cell it is asked for and answers missing ones with a placeholder; all
+    outputs go to analysis_plan/ and no artifact is overwritten."""
     t0 = time.perf_counter()
     phase_a = Path(args.phase_a) / ds
-    out = phase_a / "analysis"
+    plan = record is not None
+    out = phase_a / ("analysis_plan" if plan else "analysis")
     out.mkdir(parents=True, exist_ok=True)
     inp = load_inputs(ds, Path(args.e1_results), phase_a)
-    store = CellStore.load(phase_a / "store_dev.jsonl")
+    store = CellStore.load(phase_a / "store_dev.jsonl", recording=record)
     dev_items = sorted({i for traces in inp["traces"].values() for i in traces})
     print(f"[{ds}] {len(dev_items)} dev items, conditions {list(inp['traces'])}, SA lag {inp['sa_lag_ms']:.0f} ms")
 
     cal = fit_calibration(inp, ds)
-    cal_path = _REPO_ROOT / "controller" / "baselines" / f"e3v2_calibration_{ds}_{MODEL_KEY}_{SIGNAL_X}.json"
+    art_dir = out if plan else _REPO_ROOT / "controller" / "baselines"
+    cal_path = art_dir / f"e3v2_calibration_{ds}_{MODEL_KEY}_{SIGNAL_X}.json"
     e1common.atomic_write_json(cal_path, {**cal, "generated_by": "python -m simulator.e3v2_dev_analysis",
                                           "fitted_at_utc": e1common.now_utc(), "split": "dev"})
     print(f"[{ds}] calibration: {cal['calibration']} oof AUC {cal['diagnostics']['auc_oof_grouped5']:.3f}")
@@ -374,6 +384,10 @@ def run_dataset(args, ds: str) -> dict:
     signals_by_cond, seqs = {}, []
     for cond, traces in inp["traces"].items():
         rows = build_signals(inp, cond, oof_remaining(traces))
+        # the remaining-speech predictor a frozen (test) run applies: fitted
+        # on ALL dev traces of this condition
+        RemainingSpeechPredictor.fit(list(traces.values()), model="qr").save(
+            out / f"remaining_speech_{slug(cond)}.json")
         signals_by_cond[cond] = rows
         seqs += belief_sequences(rows, cal)
         with open(out / f"signals_{slug(cond)}_dev.jsonl", "w", encoding="utf-8") as fh:
@@ -383,7 +397,7 @@ def run_dataset(args, ds: str) -> dict:
         "kind": "fitted", "generated_by": "python -m simulator.e3v2_dev_analysis", "dataset": ds,
         "split": "dev", "n_sequences": len(seqs), "calibration": str(cal_path.name),
         "fitted_at_utc": e1common.now_utc()})
-    trans_path = _REPO_ROOT / "controller" / "baselines" / f"belief_transitions_v2_{ds}.json"
+    trans_path = art_dir / f"belief_transitions_v2_{ds}.json"
     e1common.atomic_write_json(trans_path, trans.to_json())
 
     primary = args.primary_condition or next(c for c in inp["traces"] if c != "text150") \
@@ -413,7 +427,8 @@ def run_dataset(args, ds: str) -> dict:
         turns = [TurnCtx(item_id=r["item_id"], signals=r["signals"], condition=cond,
                          transcript_final=r["transcript_final"]) for r in rows]
         lm = load_latency_model(cfg)
-        est = tune_all(turns, store, SEEDS, list(PROFILES), cfg, labels, gold, budget=21, latency_model=lm)
+        est = tune_all(turns, store, SEEDS, list(PROFILES), cfg, labels, gold, budget=21, latency_model=lm,
+                       plan_all_b8=plan)
         est_path = out / f"estimates_{slug(cond)}_dev.json"
         e1common.atomic_write_json(est_path, est)
         cfg = load_e3v2_config(overrides={**overrides, "estimates_artifact": str(est_path)})
@@ -498,6 +513,14 @@ def run_dataset(args, ds: str) -> dict:
                 f"dS={r['delta_speculative']:+.4f} I={r['interaction']:+.4f} D*S={r['d_star']['speculative']}"
                 for r in prof_rows))
         results["conditions"][cond] = cond_res
+        # The frozen bundle a test run would apply (nothing here is chosen:
+        # the primary profile/price, D*[SPEC] and m3 are fixed at freeze).
+        bundle = {"dataset": ds, "condition": cond, "split_fitted": "dev",
+                  "overrides": {**overrides, "estimates_artifact": str(est_path)},
+                  "price_grid": grid, "sa_lag_ms": inp["sa_lag_ms"],
+                  "remaining_speech_predictor": str(out / f"remaining_speech_{slug(cond)}.json"),
+                  "tuned": {prof: (cond_res["profiles"].get(prof) or {}).get("tuning", {}) for prof in PROFILES}}
+        e1common.atomic_write_json(out / f"bundle_{slug(cond)}.json", bundle)
     results["wall_s"] = time.perf_counter() - t0
     e1common.atomic_write_json(out / "dev_analysis.json", results)
     return results
