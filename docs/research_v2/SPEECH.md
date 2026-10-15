@@ -67,11 +67,53 @@ voice_id = `<engine>-<model>[-spk_<speaker>]`; a condition adds the rate and
 noise: `<voice_id>__<wpm>wpm__<noise>` (`__natural__` for human recordings).
 Registry and licences: `audio/v2/voices.py`.
 
-__VOICES__
+Default rendering set (6 voices, 2 per accent; all local piper, CPU):
+
+| voice_id | accent | sex | natural wpm | length_scale 130/150/180 | accent screen top-1 = label | training-data licence |
+|---|---|---|---|---|---|---|
+| piper-en_US-lessac-medium | en-US | F | 247 | 2.20 / 1.88 / 1.56 | 12/20 us | Blizzard 2013 Lessac (research) |
+| piper-en_US-hfc_male-medium | en-US | M | 270 | 2.15 / 1.81 / 1.48 | 14/20 us | CC BY-NC-SA 4.0 |
+| piper-en_GB-cori-medium | en-GB | F | 222 | 1.97 / 1.65 / 1.30 | 17/20 england | public domain (LibriVox) |
+| piper-en_GB-northern_english_male-medium | en-GB | M | 262 | 2.42 / 2.05 / 1.67 | 20/20 england | CC BY-SA 4.0 |
+| piper-en_US-l2arctic-medium-spk_SVBI | en-IN | F | 242 | 2.16 / 1.87 / 1.47 | 14/20 indian | CC BY-NC 4.0 (L2-ARCTIC) |
+| piper-en_US-arctic-medium-spk_ksp | en-IN | M | 217 | 1.87 / 1.56 / 1.29 | 15/20 indian | CMU ARCTIC (permissive) |
+
+Calibrated rates hit the target within +-5 wpm on the calibration sentences
+(`audio/v2/voice_calibration.json`). **Primary voice** for single-condition
+runs: `piper-en_US-hfc_male-medium` (lowest final WER of the two en-US voices
+on the v1 scenarios: 3.6 % vs 6.6 % at 150 wpm clean).
 
 ### en-IN
 
-__ENIN__
+* **Accent screen** (`audio/v2/accent_screen.py`, results in
+  `docs/research_v2/speech_accent_screen.json`): every candidate voice reads the
+  20 calibration sentences and an independent accent-ID model
+  (`Jzuluaga/accent-id-commonaccent_ecapa`, SpeechBrain ECAPA, CommonAccent, 16
+  English accents, MIT) classifies each render. Controls behave: US voices
+  12-16/20 "us", British voices 17-20/20 "england". Indian candidates:
+  CMU ARCTIC Indian speakers ksp, gka, slp 15/20 "indian", aup 14/20;
+  L2-ARCTIC Hindi-L1 speakers SVBI 14/20, RRBI 10/20, TNI 7/20, ASI 3/20; the
+  VCTK Indian speakers in piper's VCTK model (p248, p251, p376) 0-2/20 - the
+  multi-speaker model has averaged their accent away. We use ksp (M) and SVBI
+  (F), from two different models. The classifier is a proxy, not a listening
+  test; a 10-minute listening check by an Indian-English speaker is still
+  advisable before the paper says "Indian-accented".
+* **AI4Bharat Indic Parler-TTS** (`ai4bharat/indic-parler-tts`): Apache-2.0,
+  ~0.9 B parameters, supports English with named Indian speakers; fits an 8 GB
+  GPU in fp16. **Not evaluated here**: the Hugging Face repo is gated
+  (licence click-through; anonymous download returns 401) and no HF token is
+  configured on this host. The adapter is written (`ParlerEngine` +
+  `tts_worker.py --engine parler`, voices `parler-indic-spk_Thoma`,
+  `parler-indic-spk_Mary`, status `needs_auth`). A second blocker on this host:
+  installing parler-tts into a venv inside this deep worktree path fails on
+  Windows' 260-character path limit (a transformers file path is too long), so
+  create the venv at a short path, e.g. `C:\venvs\parler`, and set
+  `VOICE_RAG_PARLER_PYTHON`. To enable: accept the licence on the model page,
+  `huggingface-cli login`, set the voice status to `active`, then run the
+  accent screen on it (extend `accent_screen.py` to the parler engine) and
+  compare with ksp/SVBI.
+* **Svarah** (real Indian-accented English, see 8b) is the right source for
+  human en-IN speech.
 
 ### Cloud adapter
 
@@ -190,7 +232,19 @@ Protocol:
 
 ### 8b. Public human-spoken question sets
 
-__PUBLIC__
+Checked through the Hugging Face API and the datasets-server row preview; nothing
+was downloaded.
+
+| set | what | size | licence / access | usable for our items? |
+|---|---|---|---|---|
+| **HeySQuAD human** (`yijingwu/HeySQuAD_human`, Wu et al. 2023) | SQuAD (incl. 2.0 unanswerable) questions read aloud by crowd workers; fields: audio, question, ASR `transcription`, context, answers | 76,148 questions (train 72k, validation 4,158); 14.6 GB parquet, validation 0.71 GB | CC BY 4.0, ungated | Not for d1_open/d2_support items (different questions), but usable as a **third, human-spoken QA set**: validation questions with their SQuAD contexts as the corpus. Caveats from the preview: the bundled `transcription` is an ASR output with many errors (it is not the reference - the `question` field is); at least one previewed row's audio did not match its question, so audio/question agreement must be checked (run our replay and drop items with very high final WER). Accents are not documented (mostly US crowd workers). |
+| **Svarah** (`ai4bharat/Svarah`, Javed et al. 2023) | Indian-accented English: 9.6 h, 117 speakers, 65 districts, 19 states, 19 L1s; read speech and spontaneous task-oriented speech (ordering groceries, payments, pensions, passports) | ~1.1 GB | CC BY 4.0, but gated (contact-sharing agreement + HF token) | Not our questions, so it cannot give paired human readings of our items. Useful (a) to validate en-IN ASR behaviour (WER, revisions, end-of-turn) of the replay on real Indian speech vs our TTS en-IN voices, and (b) its task-oriented utterances are close to d2_support's service domain. Needs the gate accepted first. |
+
+Recommendation: record our own ~200 questions per speaker with
+`record_prompts.py` (2-4 speakers, at least 2 en-IN) on d2_support dev items -
+that is the only way to get human readings *of our items*; use Svarah to check
+that the TTS en-IN voices are not much easier for the ASR than real Indian
+speech; treat HeySQuAD as optional external validity.
 
 ## 9. Throughput and the full run
 
