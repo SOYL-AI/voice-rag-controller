@@ -78,10 +78,10 @@ def martingale_paths(chain):
 
 
 def prop4_setup(lambda_c):
-    cfg = cfg_with(architecture="speculative",
-                   rho={"kind": "power", "scale": 0.0, "power": 2.0, "not_ready": 1.0, "table": None},
-                   quality={"g_plus": 0.72, "g_minus": 0.59},
-                   nonhideable_increment_ms=400.0)
+    shared = dict(rho={"kind": "power", "scale": 0.0, "power": 2.0, "not_ready": 1.0, "table": None},
+                  quality={"g_plus": 0.72, "g_minus": 0.59}, nonhideable_increment_ms=400.0)
+    cfg = cfg_with(architecture="speculative", **shared)
+    commit_cfg = cfg_with(architecture="commit", **shared)
     chain = martingale_chain()
     paths = martingale_paths(chain)
     assert abs(sum(w for w, _, _ in paths) - 1.0) < 1e-12
@@ -89,7 +89,9 @@ def prop4_setup(lambda_c):
              for i, (_, bs, bf) in enumerate(paths)]
     constants = estimate_policy_constants(turns, cfg)
     ctrls = {
-        "ours_v2": get_controller_v2("ours_v2", cfg=cfg, transitions=chain, lookahead_steps=6),
+        # "ours_v2" here is the joint-COMMIT controller (Ours-v2[COMMIT])
+        "ours_v2": get_controller_v2("ours_v2", cfg=commit_cfg, transitions=chain, lookahead_steps=6),
+        "ours_v2_spec": get_controller_v2("ours_v2", cfg=cfg, transitions=chain, lookahead_steps=6),
         "b10_speculative_v2": get_controller_v2("b10_speculative_v2", cfg=cfg, timing="immediate"),
         "b9plus_v2": get_controller_v2("b9plus_v2", cfg=cfg, policy_constants=constants),
         "b9_v2": get_controller_v2("b9_v2", cfg=cfg, policy_constants=constants),
@@ -129,6 +131,30 @@ def test_prop4prime_joint_gain_bounded_by_spec_compute(lam_c):
             assert value - eu["b10_speculative_v2"] <= bound + 1e-12, (lam, name, value, eu, bound)
 
 
+def test_ours_spec_equals_spec_when_compute_is_free():
+    """Prop. 4': rho = 0, lambda_c = 0 -> SPEC is optimal, and the joint
+    speculative controller (exact under its model) attains the same value."""
+    cfg, paths, turns, ctrls = prop4_setup(0.0)
+    for lam in LAMBDA_L_GRID:
+        eu = expected_utilities(cfg, paths, turns, ctrls, lam, 0.0)
+        assert eu["ours_v2_spec"] == pytest.approx(eu["b10_speculative_v2"], abs=1e-9), (lam, eu)
+
+
+@pytest.mark.parametrize("lam_c", [0.0, 0.05, 0.2])
+def test_ours_spec_dominates_commit_and_spec(lam_c):
+    cfg, paths, turns, ctrls = prop4_setup(lam_c)
+    bound = lam_c * (1.0 + waste_at(0.25, False, cfg))
+    strict_over_commit = 0
+    for lam in LAMBDA_L_GRID:
+        eu = expected_utilities(cfg, paths, turns, ctrls, lam, lam_c)
+        for name, value in eu.items():
+            assert eu["ours_v2_spec"] >= value - 1e-12, (lam, name, eu)
+        assert eu["ours_v2_spec"] - eu["b10_speculative_v2"] <= bound + 1e-12
+        strict_over_commit += eu["ours_v2_spec"] > eu["ours_v2"] + 1e-6
+    if lam_c == 0.0:
+        assert strict_over_commit >= 2  # discarding has value
+
+
 def test_spec_dispatches_unconditionally_and_decides_use_on_final_belief():
     cfg = cfg_with(architecture="speculative", nonhideable_increment_ms=400.0)
     b10 = get_controller_v2("b10_speculative_v2", cfg=cfg)
@@ -159,24 +185,33 @@ def test_speculation_is_refused_under_commit():
 # ---------------------------------------------------------------------------
 def _priced_utilities(pi):
     cfg = cfg_with(architecture="speculative", nonhideable_increment_ms=pi)
-    turn = synthetic_turn("pi", [0.55] * 6, 0.6, retrieval=SPREAD,
+    commit_cfg = cfg_with(architecture="commit", nonhideable_increment_ms=pi)
+    turn = synthetic_turn("pi", [0.55] * 6, 0.97, retrieval=SPREAD,
                           prices={"lambda_l": 0.8, "lambda_c": 0.05})
     constants = estimate_policy_constants([turn], cfg)
     out = {}
-    for name in ("ours_v2", "b9_v2", "b9plus_v2", "b10_speculative_v2"):
+    for name, c in (("ours_v2", commit_cfg), ("b9_v2", cfg), ("b9plus_v2", cfg),
+                    ("b10_speculative_v2", cfg), ("ours_v2_spec", cfg)):
+        reg = "ours_v2" if name == "ours_v2_spec" else name
         kw = {"policy_constants": constants} if name in ("b9_v2", "b9plus_v2") else {}
-        dec = get_controller_v2(name, cfg=cfg, **kw).decide_turn(turn)
-        # the utility each controller evaluated at the point where it priced
-        # latency: Ours at step 0, B9/B9+ at the trigger, SPEC at the use step
+        dec = get_controller_v2(reg, cfg=c, **kw).decide_turn(turn)
+        # the utility each controller evaluated where it priced latency:
+        # Ours[COMMIT] at step 0, B9/B9+ at the trigger, SPEC and Ours[SPEC]
+        # at the end-of-turn use decision
         rec = dec.trace[0] if name == "ours_v2" else [t for t in dec.trace if t.u_retrieve is not None][-1]
-        out[name] = (rec.k, rec.u_retrieve)
+        out[name] = (rec.k, rec.u_retrieve, dec.used is not None)  # (point, value, speculated?)
     return out
 
 
 def test_nonhideable_cost_shifts_every_priced_controller_identically():
     base, more = _priced_utilities(0.0), _priced_utilities(500.0)
+    # SPEC always reaches a use decision; Ours[SPEC] ends at the end-of-turn
+    # step either way (use decision, or commit decision if it never
+    # speculated) — both linear in pi. Its choice must not flip with pi here.
+    assert base["b10_speculative_v2"][2]
     for name in base:
         assert base[name][0] == more[name][0], name  # same decision point
+        assert base[name][2] == more[name][2], name  # speculated in both or in neither
         assert base[name][1] - more[name][1] == pytest.approx(0.8 * 0.5), name  # lambda_l * 0.5 s
 
 
