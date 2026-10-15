@@ -87,7 +87,19 @@ if MODAL_AVAILABLE:  # pragma: no cover - never executed in tests
         "RETRIEVAL_RERANK_MODEL": RERANK_MODEL,
         "RETRIEVAL_RERANK_DTYPE": RERANK_DTYPE,
         "RETRIEVAL_TORCH_THREADS": "4",
+        # The deploy-time switches are re-read when this module is imported
+        # inside the container, so they must be present there too; otherwise
+        # the container defines a different app (e.g. no secret) than the one
+        # deployed and crash-loops on "Function has N dependencies".
+        "RETRIEVAL_MODAL_BACKEND": BACKEND,
+        "RETRIEVAL_MODAL_GPU": GPU,
+        "RETRIEVAL_MODAL_RERANK_MODEL": RERANK_MODEL,
+        "RETRIEVAL_MODAL_RERANK_DTYPE": RERANK_DTYPE,
     }
+    if SECRET_NAME:
+        _env["RETRIEVAL_MODAL_SECRET"] = SECRET_NAME
+    if INDEX_DIR:
+        _env["RETRIEVAL_MODAL_INDEX_DIR"] = INDEX_DIR
     if INDEX_DIR:
         _env["RETRIEVAL_INDEX_DIR"] = REMOTE_INDEX_DIR
 
