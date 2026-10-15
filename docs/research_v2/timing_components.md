@@ -6,6 +6,53 @@ streaming TTS, the remaining-speech predictor, the `forecast` policy and the
 trace-driven latency model. The numbers come from committed artifacts. The
 file paths are given so each number can be regenerated.
 
+## 0. Statement for the v1 paper (E2/E3 latency caveats)
+
+These two corrections apply to every v1 TTFA number (E2 and E3).
+
+**(a) TTFA in E2 and E3 ended at a synthetic tone, not real speech
+synthesis.** On the run host the piper package was not installed and the
+voice model (`audio/models/en_US-lessac-medium.onnx`) was absent. In that
+case `audio/tts.py` `StreamingTTS.synthesize_clause_to_raw_pcm()` returns a
+generated sine tone and synthesizes nothing. `tts_first_audio` was
+therefore logged with no synthesis cost.
+
+Evidence:
+- `llm_final` → `tts_first_audio` has a median of 16 ms over the 750 E2
+  runs (p95 55–212 ms by policy) and a median of 0–15 ms in the 1500 E3
+  cells. Batch TTS cannot start before `llm_final`, and real synthesis
+  takes hundreds of ms.
+- With piper installed on the same laptop, the v1 subprocess path
+  (`python -m piper` per clause) costs 3–6 s per clause. A resident voice
+  costs about 0.5–0.6 s for the first clause (section 8).
+- The v1 TTFAs therefore understate a real system's TTFA by roughly the
+  first clause's synthesis time. Relative comparisons between timing
+  policies are unaffected, because all policies share the same stage.
+
+**(b) E2's 0.66 s median retrieval time was CPU contention on the run host,
+not retrieval cost.**
+
+Evidence:
+- **E2 logs.** `retrieval_launched` → `retrieval_result` had a median of
+  657 ms and a p90 of 3.2 s over 750 runs, for one bge-small query
+  embedding plus a flat FAISS search over 61 documents.
+- **Same call in isolation.** On the same machine
+  (`retrieval/latency_profiles_v2.json`) it takes 20–60 ms p50: faiss CPU
+  4 threads 41 ms, CUDA 22 ms, loopback HTTP 23 ms. The flat search
+  itself takes 0.006 ms at 61 vectors.
+- **Default thread count is load-dependent.** With torch's default 16
+  intra-op threads, an in-process run during this work measured ~1.2 s
+  p50. The artifact run measured 26 ms p50.
+- **Capped threads in the real pipeline.** With
+  `VOICE_RAG_TORCH_THREADS=4`, the 100 v2 retrieve-path runs against the
+  real endpoint measured 47 ms median / ~250 ms p95 in-pipeline
+  (`analysis/latency_breakdown/latency_breakdown_v2_endpoint.md`).
+
+Consequence for v1: E2's "exposed retrieval" share of TTFA (25–30%) and
+E3's paired retrieve−skip increment (1.27–1.57 s) are inflated by this
+contention. Of E3's increment, about 0.74–0.81 s is non-hideable and does
+not depend on the retrieval call (section 8).
+
 ## 1. TTFA breakdown of the v1 E2 runs
 
 `python -m harness.latency_breakdown --logs "logs/conv_*.jsonl" --label e2 --paper-dir paper`
@@ -234,6 +281,87 @@ FAISS flat-search component, single query, k=3, p50: 0.006 ms at 61
 vectors, 0.06 ms at 1k, 1.2 ms at 10k and about 25–41 ms at 100k (noisy
 host). 1M vectors was not run, to keep memory modest.
 
+### The whole retrieval operation: LLM rewrite + search
+
+The vector call alone (20–70 ms) leaves almost nothing for timing to hide.
+A live-partial dispatch first rewrites the partial with the LLM, using
+`retrieval/rewrite.py`'s prompt and call. The rewrite was measured on the
+batched Mistral-7B endpoint by `retrieval/measure_rewrite_latency.py`
+(`analysis/rewrite_latency_v2/`). It ran 1354 requests with 0 errors over
+query-ready prefixes and full questions from v1 and from d2_support dev,
+with conversation history:
+
+| concurrent requests | throughput | rewrite p10 / p50 / p90 / p95 / p99 (ms) | TTFT p50 | output tokens p50 |
+|---|---|---|---|---|
+| 1 | 1.1 req/s | 758 / 873 / 1161 / 1177 / 1409 | 562 | 11 |
+| 8 | 7.8 req/s | 790 / 974 / 1234 / 1368 / 1709 | 593 | 11 |
+| 32 | 18.5 req/s | 950 / 1289 / 2594 / 2834 / 3147 | 719 | 11 |
+
+Composite profiles (`retrieval/compose_profiles.py`, written into
+`retrieval/latency_profiles_v2.json`). Each is the rewrite at 8 concurrent
+requests plus the bare profile, as an independent Monte Carlo sum. Variants
+at 1 and 32 concurrent are stored as `*_c1` and `*_c32`.
+
+| profile | p10 | p50 | p90 | p95 | p99 |
+|---|---|---|---|---|---|
+| rewrite_faiss | 852 | 1044 | 1379 | 1529 | 1847 |
+| rewrite_faiss_rerank | 860 | 1043 | 1302 | 1430 | 1765 |
+| rewrite_remote (loopback) | 811 | 995 | 1246 | 1371 | 1732 |
+| rewrite_faiss at 32 concurrent | 1007 | 1391 | 2663 | 2893 | |
+
+The bare profiles stay in the artifact with `lower_bound: true`.
+
+Does the rewrite help retrieval on partials? Offline, faiss, hit@3 on the
+retrieval-needed items:
+
+- d2_support dev partials (n=447): 0.613 raw vs 0.615 rewritten.
+- d2_support full questions (n=45): 0.80 vs 0.89.
+- v1 partials (n=30): 0.73 vs 0.77.
+
+On partials the rewrite costs about 1 s and buys almost nothing. Whether
+to rewrite at dispatch at all is therefore a real design choice. The
+forecast policy defaults to `rewrite_faiss`, the composite, as its L.
+
+What this means for timing, from `LatencyModel()` with streaming TTS and
+2000 draws:
+
+| profile | dispatch | TTFA p50 (ms) | exposed retrieval, mean (ms) |
+|---|---|---|---|
+| rewrite_faiss | at end of turn | 2832 | 1085 |
+| rewrite_faiss | 0.5 s before speech end | 2332 | 584 |
+| rewrite_faiss | 1.5 s before speech end | 1762 | 10 |
+| faiss (bare) | at end of turn | 1824 | 74 |
+| faiss (bare) | 1.5 s before speech end | 1751 | 0 |
+
+With the whole operation, early dispatch is worth about 1.07 s at p50.
+With the bare vector call it is worth about 70 ms. π (about 375 ms with
+streaming TTS) is paid either way.
+
+### Remote WAN profile: deploy and measure (not deployed here)
+
+From the repository root, in `.venv-v2`, which has `modal` 1.6.1. The app
+definition imports and builds against that version.
+
+```
+modal setup                                   # once, Modal account auth
+set RETRIEVAL_MODAL_BACKEND=faiss             # CPU only is the default (RETRIEVAL_MODAL_GPU=none)
+modal deploy retrieval/modal_app.py           # bakes the v1 hotel index (same query set as the local profiles)
+python -m retrieval.measure_latency --only remote_api_wan --remote-url <printed URL> --skip-sweep
+python -m retrieval.compose_profiles --level 8   # refresh rewrite_remote with the WAN samples
+python -m harness.latency_model_v2 --e2 "logs/conv_*.jsonl" --e3 "<main checkout>/logs/e3full_*.jsonl" --v2 "logs/v2_llm_tts/*.jsonl" --prefill analysis/llm_tts_v2/measure_llm_tts.json --out-dir analysis/latency_model_v2
+```
+
+To serve the d2_support corpus instead:
+
+1. Build the index: `python -m retrieval.v2_index build --corpus datasets/v2/d2_support/corpus.jsonl --out retrieval/indexes/d2_support`.
+2. Set `RETRIEVAL_MODAL_INDEX_DIR=retrieval/indexes/d2_support` before deploying.
+
+`measure_latency` makes `remote_api_wan` the canonical `remote_api` once it
+exists. Do not commit the printed URL. To require a key, create a Modal
+secret that defines `RETRIEVAL_SERVICE_API_KEY` and set
+`RETRIEVAL_MODAL_SECRET=<name>`. The client sends the same environment
+variable as `x-api-key`.
+
 ### LLM and TTS on the real endpoint
 
 From `analysis/llm_tts_v2/measure_llm_tts.json` and `logs/v2_llm_tts/`:
@@ -278,17 +406,19 @@ and TTS mode, the hideable call (`expected_latency_ms`,
 `nonhideable_increment_quantiles_ms`). This is the shape
 `controller/baselines/_objective_v2.py` reads.
 
-The controllers' config, `controller.e3v2` in `configs/config.yaml`, still
-carries placeholders: faiss p50 672 / p90 3187, and π = 900. The measured
-replacements are:
+The controllers' config, `controller.e3v2` in `configs/config.yaml`,
+together with its mirror `_DEFAULT_E3V2_CFG` in
+`controller/baselines/_objective_v2.py`, now carries the measured values:
 
-- faiss: p10/p50/p90 = 23/41/180.
-- faiss_rerank: 57/66/75.
-- remote_api: 20/23/27 on loopback, plus WAN RTT once deployed.
-- π = 371 (streaming) or 855 (batch).
+- Bare profiles: faiss, faiss_rerank and remote_api. These are lower
+  bounds.
+- Composite profiles: rewrite_faiss, rewrite_faiss_rerank and
+  rewrite_remote.
+- `default_latency_profile: rewrite_faiss`.
+- `nonhideable_increment_ms: 371` (streaming TTS, the default), and
+  `nonhideable_increment_ms_by_tts_mode: {streaming: 371, batch: 855}`.
 
-`LatencyModel(cfg=...)` samples the measured profiles regardless of what
-that config says.
+`LatencyModel(cfg=...)` samples the measured profile samples.
 
 ### Model fidelity (`analysis/latency_model_v2/fidelity_report.md`)
 
