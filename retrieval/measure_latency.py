@@ -435,7 +435,7 @@ def run_sweep_worker(sizes: list[int], dim: int, seed: int, reps: dict) -> dict:
            "faiss_omp_threads": faiss.omp_get_max_threads(), "results": {}, "skipped": {}}
     for n in sizes:
         need = n * dim * 4
-        if avail is not None and need * 1.3 + 1.5 * 2**30 > avail:
+        if avail is not None and need * 1.3 + 0.5 * 2**30 > avail:
             out["skipped"][str(n)] = (f"needs ~{need / 2**30:.2f} GiB, only "
                                       f"{avail / 2**30:.2f} GiB available")
             continue
