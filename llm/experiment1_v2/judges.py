@@ -96,6 +96,16 @@ def user_prompt(question, reference, answer, key_facts=None, aliases=None) -> st
     return "\n\n".join(parts) + "\n"
 
 
+# Fingerprint of the prompt as rendered from its templates (PREREG_V2
+# section 2.2 fixes "prompt version ID and sha256" at freeze). Part of every
+# judge identity, so any edit to the wording changes the cache namespace.
+PROMPT_SHA256 = common.sha256_text(
+    system_prompt("{context}"),
+    user_prompt("{question}", "{reference}", "{answer}", ["{key_fact}"], ["{alias}"]),
+    user_prompt("{question}", "{reference}", "{answer}"),
+)
+
+
 # Fingerprint of the full prompt template (system line, instructions, the
 # key-facts rule and the block layout). Part of every judge identity and so
 # of every cache key; the pre-registration freezes it with prompt_version.
@@ -128,6 +138,7 @@ class JudgeSpec:
             "role": self.role, "label": self.label, "provider": self.provider,
             "deployment": self.deployment, "model_id": self.model_id,
             "api_version": self.api_version, "prompt_version": self.prompt_version,
+            "prompt_sha256": PROMPT_SHA256,
         }
 
     def identity_string(self) -> str:
@@ -197,7 +208,7 @@ def resolve_spec(role: str, judges_cfg: dict, env=None) -> JudgeSpec:
         for key, suffix in (("temperature", "TEMPERATURE"), ("token_param", "TOKEN_PARAM"),
                             ("max_output_tokens", "MAX_TOKENS"),
                             ("reasoning_effort", "REASONING_EFFORT"), ("seed", "SEED"),
-                            ("samples", "SAMPLES")):
+                            ("samples", "SAMPLES"), ("max_extra_samples", "MAX_EXTRA_SAMPLES")):
             raw = env.get(f"{prefix}_{suffix}")
             if raw is not None:
                 request[key] = _override(raw.strip())
@@ -451,10 +462,11 @@ def sample_seeds(request: dict) -> list:
     return [None if base is None else int(base) + i for i in range(k)]
 
 
-def majority(votes) -> tuple:
+def majority(votes, min_parsed: int = 1) -> tuple:
     """(verdict, parsed_ok, self_consistency) over parsed sample verdicts.
-    A tie (possible only with parse failures or an even k) is unresolved:
-    verdict False, parsed_ok False, so it is counted, never silently scored."""
+    Unresolved (verdict False, parsed_ok False) when fewer than `min_parsed`
+    samples parsed or the parsed ones tie, so it is counted, never silently
+    scored."""
     parsed = [v for v in votes if v is not None]
     if not parsed:
         return False, False, None
@@ -462,8 +474,10 @@ def majority(votes) -> tuple:
     no = len(parsed) - yes
     if yes == no:
         return False, False, 0.5
-    verdict = yes > no
-    return verdict, True, max(yes, no) / len(parsed)
+    share = max(yes, no) / len(parsed)
+    if len(parsed) < min_parsed:
+        return False, False, share
+    return yes > no, True, share
 
 
 def _grade_locked(judge, key, item_id, question, reference, answer, key_facts, aliases, context,
@@ -471,8 +485,19 @@ def _grade_locked(judge, key, item_id, question, reference, answer, key_facts, a
     """k independent samples (each cached under its own key, which includes
     its seed), then a majority vote. Every sample is kept on the record."""
     system, user = system_prompt(context), user_prompt(question, reference, answer, key_facts, aliases)
+    request = judge.spec.request
+    k = int(request.get("samples") or 1)
+    need = k // 2 + 1  # a valid majority needs this many parsed samples (2 of 3)
+    max_extra = int(request.get("max_extra_samples") or 0)
+    base = request.get("seed")
     samples = []
-    for index, seed in enumerate(sample_seeds(judge.spec.request)):
+    for index in range(k + max_extra):
+        if index >= k:
+            # PREREG_V2 section 9: fewer than 2 of 3 parsed (or a tie) ->
+            # draw up to 3 more samples until a valid majority exists.
+            if majority([s["answer_correct"] for s in samples], need)[1]:
+                break
+        seed = None if base is None else int(base) + index
         sample_key = common.sha256_text(key, index, seed)
         path = None
         if cache_dir is not None:
@@ -491,8 +516,13 @@ def _grade_locked(judge, key, item_id, question, reference, answer, key_facts, a
             "parsed_ok": parsed_ok,
             "judge_raw": reply["text"],
             "sample_key": sample_key,
+            "extra_sample": index >= k,
             "response_model": reply.get("response_model"),
+            "response_id": reply.get("response_id"),
+            "finish_reason": reply.get("finish_reason"),
             "sent_params": reply.get("sent_params"),
+            "request_body": reply.get("request_body"),
+            "request_body_captured": reply.get("request_body_captured"),
             "usage": reply.get("usage"),
             "graded_at_utc": common.now_utc(),
         }
@@ -500,13 +530,16 @@ def _grade_locked(judge, key, item_id, question, reference, answer, key_facts, a
             common.atomic_write_json(path, sample)
         sample["cache_hit"] = False
         samples.append(sample)
-    verdict, parsed_ok, consistency = majority([s["answer_correct"] for s in samples])
+    verdict, parsed_ok, consistency = majority([s["answer_correct"] for s in samples], need)
+    first_k = [s["answer_correct"] for s in samples[:k]]
     record = {
         "answer_correct": verdict,
         "parsed_ok": parsed_ok,
         "n_samples": len(samples),
+        "n_extra_samples": max(0, len(samples) - k),
         "self_consistency": consistency,
-        "unanimous": consistency == 1.0 and len(samples) > 1,
+        # Unanimity over the k planned samples (the gate's definition).
+        "unanimous": k > 1 and None not in first_k and len(set(first_k)) == 1,
         "judge_key": key,
         "judge": judge.identity,
         "request_config": judge.spec.request,

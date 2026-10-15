@@ -20,7 +20,8 @@
         "max_output_tokens": 2000,
         "reasoning_effort": "medium",
         "seed": 20261015,
-        "samples": 3
+        "samples": 3,
+        "max_extra_samples": 3
       }
     },
     "secondary": {
@@ -42,7 +43,8 @@
         "max_output_tokens": 300,
         "reasoning_effort": null,
         "seed": null,
-        "samples": 1
+        "samples": 1,
+        "max_extra_samples": 0
       }
     }
   }

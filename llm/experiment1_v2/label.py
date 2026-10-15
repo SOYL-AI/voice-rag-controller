@@ -5,7 +5,7 @@ empirical label says whether THIS MODEL actually gets it wrong closed-book:
 
     P(wrong) = fraction of the full-question closed-book draws (one per seed)
                graded incorrect
-    empirical_need = P(wrong) >= 0.5          (labels.need_threshold_p_wrong)
+    empirical_need = wrong in >= 3 of the 5 draws (labels.need_rule; PREREG_V2 s1)
 
 Grading, per dataset (config.json labels.correctness_source):
   d1_open     normalized alias match against expected_answer + answer_aliases
@@ -26,6 +26,8 @@ Labels are per model: P(wrong) is a property of the model that answered.
 from __future__ import annotations
 
 import argparse
+import json
+import math
 import re
 import string
 import sys
@@ -37,7 +39,7 @@ if __package__ in (None, ""):
 
 from llm.experiment1_v2 import common  # noqa: E402
 from llm.experiment1_v2 import judges as judges_mod  # noqa: E402
-from simulator.judge_validation.score_judges import agreement  # noqa: E402
+from simulator.judge_validation.score_judges import agreement, fleiss_kappa  # noqa: E402
 
 _ARTICLES = re.compile(r"\b(a|an|the)\b")
 _PUNCT = str.maketrans({c: " " for c in string.punctuation + "‘’“”"})
@@ -90,8 +92,22 @@ def p_wrong(values) -> dict:
     }
 
 
-def empirical_need(p, threshold: float):
-    return None if p is None else bool(p >= threshold)
+def empirical_need(n_wrong: int, n_scored: int, n_draws: int, rule: dict):
+    """PREREG_V2 section 1: needed iff the closed-book answer is wrong in at
+    least `min_wrong` of `of_draws` draws (3 of 5). Draws with no valid
+    verdict are unscored: the label is None when they could still decide it.
+    With a different number of draws (pilots) the bar is scaled
+    proportionally (ceil(n_draws * 3 / 5))."""
+    min_wrong = int(rule["min_wrong"])
+    if n_draws != int(rule["of_draws"]):
+        min_wrong = math.ceil(n_draws * rule["min_wrong"] / rule["of_draws"])
+    if n_draws == 0:
+        return None
+    if n_wrong >= min_wrong:
+        return True
+    if n_wrong + (n_draws - n_scored) < min_wrong:
+        return False
+    return None
 
 
 def grade_draws(records, items_by_id, judges, cfg, cache_dir, workers) -> list:
@@ -124,10 +140,16 @@ def grade_draws(records, items_by_id, judges, cfg, cache_dir, workers) -> list:
                 "request_config": verdict["request_config"],
                 "response_model": verdict.get("response_model"),
                 "cache_hit": verdict.get("cache_hit"),
+                "n_extra_samples": verdict.get("n_extra_samples", 0),
+                # The exact request body of each sample lives in its cache file
+                # (judge_cache/<judge>/<sample_key[:40]>.json); its hash is here.
                 "samples": [
-                    {k: s.get(k) for k in ("sample_index", "seed", "answer_correct", "parsed_ok",
-                                           "judge_raw", "response_model", "sent_params", "usage",
-                                           "sample_key")}
+                    {**{k: s.get(k) for k in (
+                        "sample_index", "seed", "extra_sample", "answer_correct", "parsed_ok",
+                        "judge_raw", "response_model", "response_id", "finish_reason",
+                        "sent_params", "usage", "sample_key", "request_body_captured")},
+                     "request_body_sha256": common.sha256_text(
+                         json.dumps(s.get("request_body"), sort_keys=True))}
                     for s in verdict["samples"]
                 ],
             }
@@ -148,8 +170,12 @@ def correctness(row: dict, source: str):
     raise ValueError(f"unknown correctness source {source!r}")
 
 
-def build_labels(items, rows, cfg, source_by_dataset, threshold, roles) -> dict:
+def build_labels(items, rows, cfg, source_by_dataset, rule, roles) -> dict:
     methods = ["alias"] + [f"judge:{r}" for r in roles]
+
+    def need_of(values):
+        s = p_wrong(values)
+        return empirical_need(s["n_wrong"], s["n_scored"], s["n_draws"], rule)
     by_item: dict = {}
     for row in rows:
         by_item.setdefault(row["item_id"], {"closed_book": [], "retrieval": []})[
@@ -170,18 +196,31 @@ def build_labels(items, rows, cfg, source_by_dataset, threshold, roles) -> dict:
             if not draws:
                 entry[condition] = None
                 continue
-            summary = p_wrong([correctness(r, source) for r in draws])
+            values = [correctness(r, source) for r in draws]
+            summary = p_wrong(values)
             summary["p_wrong_by_method"] = {
                 m: p_wrong([correctness(r, m) for r in draws])["p_wrong"] for m in methods
             }
             summary["accuracy"] = None if summary["p_wrong"] is None else 1 - summary["p_wrong"]
+            # Sensitivity analysis (PREREG_V2 section 9): an answer with no
+            # valid judge majority counted INCORRECT instead of excluded.
+            sens = p_wrong([False if v is None else v for v in values])
+            summary["p_wrong_unresolved_as_wrong"] = sens["p_wrong"]
+            summary["n_unresolved"] = summary["n_draws"] - summary["n_scored"]
             summary["seeds"] = [r["draw_seed"] for r in draws]
             entry[condition] = summary
         cb = entry["closed_book"]
-        entry["empirical_need"] = empirical_need(cb["p_wrong"] if cb else None, threshold)
-        entry["empirical_need_by_method"] = {
-            m: empirical_need(cb["p_wrong_by_method"][m], threshold) for m in methods
-        } if cb else None
+        if cb:
+            draws = sorted(groups["closed_book"], key=lambda r: r["draw_seed"])
+            values = [correctness(r, source) for r in draws]
+            entry["empirical_need"] = need_of(values)
+            entry["empirical_need_unresolved_as_wrong"] = need_of(
+                [False if v is None else v for v in values])
+            entry["empirical_need_by_method"] = {
+                m: need_of([correctness(r, m) for r in draws]) for m in methods}
+        else:
+            entry["empirical_need"] = entry["empirical_need_unresolved_as_wrong"] = None
+            entry["empirical_need_by_method"] = None
         ret = entry["retrieval"]
         entry["gain"] = (ret["accuracy"] - cb["accuracy"]) if (
             cb and ret and cb["accuracy"] is not None and ret["accuracy"] is not None) else None
@@ -226,19 +265,26 @@ def self_consistency(rows, role) -> dict:
                     [j["samples"][a]["answer_correct"] if len(j["samples"]) > a else None for j in judged],
                     [j["samples"][b]["answer_correct"] if len(j["samples"]) > b else None for j in judged])
         out["pairwise_samples"] = pairs
-    reasoning, completion = [], []
+        out["fleiss"] = fleiss_kappa([[s["answer_correct"] for s in j["samples"][:k]] for j in judged])
+        out["n_with_extra_samples"] = sum(1 for j in judged if j.get("n_samples", 0) > k)
+    reasoning, completion, finish = [], [], []
     for j in judged:
         for s in j["samples"]:
             usage = s.get("usage") or {}
             completion.append(usage.get("completion_tokens"))
             reasoning.append((usage.get("completion_tokens_details") or {}).get("reasoning_tokens"))
+            finish.append(s.get("finish_reason"))
     reasoning = [v for v in reasoning if v is not None]
     completion = [v for v in completion if v is not None]
+    known = [f for f in finish if f is not None]
     out["usage"] = {
         "samples_with_usage": len(completion),
         "completion_tokens_total": sum(completion) if completion else None,
+        "completion_tokens_max": max(completion) if completion else None,
         "reasoning_tokens_total": sum(reasoning) if reasoning else None,
         "reasoning_tokens_max": max(reasoning) if reasoning else None,
+        # PREREG_V2 2.2: max_completion_tokens is fixed so that < 1% truncate.
+        "truncation_rate": (sum(f == "length" for f in known) / len(known)) if known else None,
     }
     return out
 
@@ -326,10 +372,10 @@ def main(argv=None) -> int:
     print(f"[label] grading {len(records)} answers ({common.rel(rdir)}) with alias match"
           + "".join(f" + {r}={judges[r].spec.identity_string()}" for r in roles))
     rows = grade_draws(records, items_by_id, judges, cfg, cache_dir, args.workers)
-    threshold = float(cfg["labels"]["need_threshold_p_wrong"])
+    rule = cfg["labels"]["need_rule"]
     graded_ids = {r["item_id"] for r in rows}
     labelled_items = [i for i in items if i["id"] in graded_ids]
-    labels = build_labels(labelled_items, rows, cfg, source_for, threshold, roles)
+    labels = build_labels(labelled_items, rows, cfg, source_for, rule, roles)
 
     closed = [r for r in rows if r["condition"] == "closed_book"]
     grounded = [r for r in rows if r["condition"] == "retrieval"]
@@ -344,8 +390,10 @@ def main(argv=None) -> int:
             "model_key": args.model,
             "model": records[0]["model"],
             "llm_backend": sorted(b for b in backends if b),
-            "need_threshold_p_wrong": threshold,
-            "rule": "empirical_need = P(wrong over full-question closed-book draws) >= threshold",
+            "need_rule": rule,
+            "rule": "empirical_need = closed-book answer to the full question wrong in >= "
+                    f"{rule['min_wrong']} of {rule['of_draws']} draws (PREREG_V2 section 1); "
+                    "draws without a valid verdict are excluded (sensitivity: counted wrong)",
             "judges": {r: judges[r].identity for r in roles},
             "judge_request_config": {r: judges[r].spec.request for r in roles},
             "judge_adaptations": {r: getattr(judges[r], "adaptations", []) for r in roles},

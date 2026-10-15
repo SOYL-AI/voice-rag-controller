@@ -101,6 +101,27 @@ def agreement(a, b) -> dict:
     return out
 
 
+def fleiss_kappa(ratings) -> dict:
+    """Fleiss' kappa for binary ratings: `ratings` is a list of per-subject
+    lists of k booleans (the k judge samples on one answer). Subjects with a
+    missing rating or a different k are left out."""
+    rows = [r for r in ratings if r and None not in r]
+    if not rows:
+        return {"n": 0, "k": None, "fleiss_kappa": None}
+    k = len(rows[0])
+    rows = [r for r in rows if len(r) == k]
+    n = len(rows)
+    if k < 2:
+        return {"n": n, "k": k, "fleiss_kappa": None}
+    yes = [sum(bool(v) for v in r) for r in rows]
+    p_i = [(y * (y - 1) + (k - y) * (k - y - 1)) / (k * (k - 1)) for y in yes]
+    p_bar = sum(p_i) / n
+    p_yes = sum(yes) / (n * k)
+    p_e = p_yes ** 2 + (1 - p_yes) ** 2
+    return {"n": n, "k": k, "fleiss_kappa": None if p_e >= 1.0 else (p_bar - p_e) / (1 - p_e),
+            "observed_agreement": p_bar}
+
+
 def parse_label(value):
     if value is None:
         return None

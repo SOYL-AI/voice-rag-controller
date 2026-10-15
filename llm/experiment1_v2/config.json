@@ -45,7 +45,7 @@
     "index_dir_template": "datasets/v2/{dataset}/index"
   },
   "labels": {
-    "need_threshold_p_wrong": 0.5,
+    "need_rule": {"min_wrong": 3, "of_draws": 5},
     "correctness_source": {
       "d1_open": "alias",
       "d2_support": "judge:primary",

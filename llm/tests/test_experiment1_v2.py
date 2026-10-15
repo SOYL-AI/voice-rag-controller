@@ -250,11 +250,16 @@ class LabelTests(unittest.TestCase):
         self.assertTrue(label.alias_match("Rs. 150 late fee", ["Rs 150"]))
         self.assertFalse(label.alias_match("anything", ["", "  "]))
 
-    def test_p_wrong_and_threshold(self):
+    def test_p_wrong_and_three_of_five_rule(self):
         self.assertEqual(label.p_wrong([True, False, None, False])["p_wrong"], 2 / 3)
-        self.assertTrue(label.empirical_need(0.5, 0.5))
-        self.assertFalse(label.empirical_need(0.4, 0.5))
-        self.assertIsNone(label.empirical_need(None, 0.5))
+        rule = {"min_wrong": 3, "of_draws": 5}
+        self.assertTrue(label.empirical_need(3, 5, 5, rule))
+        self.assertFalse(label.empirical_need(2, 5, 5, rule))
+        self.assertTrue(label.empirical_need(3, 4, 5, rule))     # decided despite 1 unscored
+        self.assertFalse(label.empirical_need(0, 4, 5, rule))    # cannot reach 3
+        self.assertIsNone(label.empirical_need(2, 4, 5, rule))   # the unscored draw decides
+        self.assertTrue(label.empirical_need(2, 2, 2, rule))     # 2-seed pilot: ceil(2*3/5) = 2
+        self.assertFalse(label.empirical_need(1, 2, 2, rule))
 
     def test_build_labels_with_gain(self):
         items = [{"id": "a", "dataset": "d1_open", "retrieval_needed_authored": True}]
@@ -262,9 +267,10 @@ class LabelTests(unittest.TestCase):
                 for s, c, ok in [(1, "closed_book", False), (2, "closed_book", False),
                                  (3, "closed_book", True), (1, "retrieval", True),
                                  (2, "retrieval", True), (3, "retrieval", False)]]
-        out = label.build_labels(items, rows, {}, lambda _ds: "alias", 0.5, [])["a"]
+        out = label.build_labels(items, rows, {}, lambda _ds: "alias",
+                                 {"min_wrong": 3, "of_draws": 5}, [])["a"]
         self.assertAlmostEqual(out["closed_book"]["p_wrong"], 2 / 3)
-        self.assertTrue(out["empirical_need"])
+        self.assertTrue(out["empirical_need"])  # 3 draws: ceil(3*3/5) = 2 wrong needed
         self.assertAlmostEqual(out["gain"], 2 / 3 - 1 / 3)
 
 
@@ -381,6 +387,35 @@ class JudgeTests(unittest.TestCase):
         self.assertEqual(judges.majority([True, None, False]), (False, False, 0.5))
         self.assertEqual(judges.majority([None, None]), (False, False, None))
         self.assertEqual(judges.majority([False, False, True])[:2], (False, True))
+        self.assertEqual(judges.majority([True, None, None], min_parsed=2)[:2], (False, False))
+
+    def test_parse_failures_draw_extra_samples(self):
+        replies = iter(["garbled", "no verdict here", "VERDICT: YES", "VERDICT: YES", "VERDICT: NO"])
+        seeds = []
+
+        def transport(messages, params):
+            seeds.append(params["seed"])
+            return {"text": next(replies), "model": "m", "usage": None, "response_id": f"r{len(seeds)}",
+                    "finish_reason": "stop", "request_body": {"model": "x", **params}}
+
+        judge = judges.AzureChatJudge(judges.resolve_spec("primary", self.CFG, self.ENV), transport=transport)
+        verdict = judges.grade(judge, item_id="i", question="q", reference="r", answer="a")
+        # 3 planned (1 parsed) -> extra draws until 2 parse and agree: stops after the 4th.
+        self.assertEqual(seeds, [20261015, 20261016, 20261017, 20261018])
+        self.assertTrue(verdict["answer_correct"])
+        self.assertTrue(verdict["parsed_ok"])
+        self.assertEqual(verdict["n_extra_samples"], 1)
+        self.assertFalse(verdict["unanimous"])
+        self.assertEqual(verdict["samples"][3]["response_id"], "r4")
+        self.assertTrue(verdict["samples"][3]["request_body_captured"])
+        self.assertEqual(len(verdict["judge"]["prompt_sha256"]), 64)
+
+    def test_fleiss_kappa(self):
+        perfect = score_judges.fleiss_kappa([[True] * 3, [False] * 3, [True] * 3])
+        self.assertAlmostEqual(perfect["fleiss_kappa"], 1.0)
+        mixed = score_judges.fleiss_kappa([[True, True, False], [False, False, True]])
+        self.assertLess(mixed["fleiss_kappa"], 0.0)
+        self.assertEqual(score_judges.fleiss_kappa([[True, None, True]])["n"], 0)
 
     def test_seed_and_effort_change_the_cache_key(self):
         kw = dict(item_id="i", question="q", reference="r", answer="a", key_facts=[], aliases=[],
