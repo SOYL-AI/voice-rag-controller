@@ -62,8 +62,9 @@ class LatencyModel:
                 self.profiles[profile], int(self.cfg["latency_points"]), profile)
         return self._dists[profile]
 
-    def sample_ttfa(self, path, dispatch_ms, user_end_ms, profile, n_prompt_tokens, rng) -> dict:
-        eot = float(self.cfg["timing"]["eot_detection_ms"])
+    def sample_ttfa(self, path, dispatch_ms, user_end_ms, profile, n_prompt_tokens, rng,
+                    eot_ms=None, **_) -> dict:
+        eot = float(self.cfg["timing"]["eot_detection_ms"] if eot_ms is None else eot_ms)
         ready = float(user_end_ms) + eot
         # Draw L unconditionally so the rng stream is identical whatever the
         # path — keeps common random numbers aligned across controllers.

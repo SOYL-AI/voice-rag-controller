@@ -86,6 +86,31 @@ def test_hiding_window_includes_end_of_turn_detection():
     assert expected_exposed_ms(lat, 0.0, True, cfg) == 1000
 
 
+def test_steps_use_partial_availability_and_trace_endpoint():
+    """Real ASR traces: a partial is usable only from available_ms (ASR
+    compute), predictions likewise; the end-of-turn step is the later of VAD
+    end and the final transcript's availability; speech-elapsed at the end is
+    the actual speech end."""
+    from controller.sequential_v2 import TurnCtx, end_of_turn_ms, speech_end_ms
+    cfg = syn_cfg()
+    timing = {
+        "speech_onset_ms": 0,
+        "partials": [{"t_ms": 400, "available_ms": 700, "text": "what is the late fee"},
+                     {"t_ms": 800, "available_ms": 1200, "text": "what is the late fee on my plan"}],
+        "predicted_remaining_speech_ms": [{"t_ms": 400, "available_ms": 700, "remaining_ms": 900},
+                                          {"t_ms": 800, "available_ms": 1200, "remaining_ms": 500}],
+        "speech_end_ms": 1300, "user_end_ms": 2100,
+        "asr_final": {"t_ms": 2100, "available_ms": 2600, "text": "what is the late fee on my plan"},
+    }
+    ctx = TurnCtx(item_id="x", signals={"timing": timing,
+                                        "retrieval": {"latency_profile": "x", "latency_quantiles_ms": {"p50": 500}}})
+    steps = build_steps(ctx, cfg)
+    assert [s.available_ms for s in steps] == [700, 1200, 2600]
+    assert steps[0].remaining_ms == pytest.approx(900 - (700 - 400))  # aged from the audio time
+    assert steps[-1].speech_elapsed_ms == 1300
+    assert end_of_turn_ms(ctx, cfg) == 2600 and speech_end_ms(ctx) == 1300
+
+
 def test_rho_waste_and_frac():
     cfg = syn_cfg()
     assert estimated_frac(300, 900, False) == 0.25

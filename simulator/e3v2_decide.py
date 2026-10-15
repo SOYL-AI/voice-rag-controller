@@ -97,6 +97,8 @@ from controller.sequential_v2 import (  # noqa: E402
     TurnCtx,
     get_controller_v2,
     list_controllers_v2,
+    end_of_turn_ms,
+    speech_end_ms,
     user_end_ms,
 )
 
@@ -213,7 +215,8 @@ def _rng_for(item_id: str, seed: int, condition: str, profile: str) -> random.Ra
 
 
 def outcome_record(name: str, decision, turn: TurnCtx, seed: int, profile: str, prices: Optional[dict],
-                   store: CellStore, latency_model, split: str, architecture: str = "commit") -> dict:
+                   store: CellStore, latency_model, split: str, architecture: str = "commit",
+                   cfg: Optional[dict] = None) -> dict:
     """
     One scored record. A DISCARDED speculative dispatch (decision.used is
     False) is scored on the skip cell and the skip-path TTFA (the answer was
@@ -229,10 +232,16 @@ def outcome_record(name: str, decision, turn: TurnCtx, seed: int, profile: str, 
     else:
         variant, path = "none", "skip"
     cell = store.cell(item, seed, cond, path, variant)
-    ue = user_end_ms(turn)
+    # TTFA is measured from the end of the user's speech; the gap to the
+    # end-of-turn decision (VAD hang + final ASR) is the TRACE's actual
+    # endpoint for this turn, not a sampled one.
+    ue = speech_end_ms(turn)
+    eot_kw = {}
+    if cfg is not None:
+        eot_kw["eot_ms"] = max(0.0, end_of_turn_ms(turn, cfg) - ue)
     comps = latency_model.sample_ttfa(path, decision.dispatch_t_ms if path == "retrieve" else None,
                                       ue, profile, cell.get("n_prompt_tokens", 0),
-                                      _rng_for(item, seed, cond, profile))
+                                      _rng_for(item, seed, cond, profile), **eot_kw)
     exposed = comps.get("exposed_retrieval_ms")
     # The same item's skip-cell TTFA under the SAME latency draw (common
     # random numbers): Delta-TTFA in the realised utility is measured
@@ -240,7 +249,7 @@ def outcome_record(name: str, decision, turn: TurnCtx, seed: int, profile: str, 
     skip_cell = store.cell(item, seed, cond, "skip", "none")
     skip_ttfa = float(latency_model.sample_ttfa("skip", None, ue, profile,
                                                 skip_cell.get("n_prompt_tokens", 0),
-                                                _rng_for(item, seed, cond, profile))["ttfa_ms"])
+                                                _rng_for(item, seed, cond, profile), **eot_kw)["ttfa_ms"])
     retrievals = 1 if decision.retrieve else 0
     utility = None
     if prices is not None:
@@ -334,7 +343,7 @@ def run_phase_b(
                     decision = ctrl.decide_turn(ctx)
                     for seed in seeds:
                         records.append(outcome_record(name, decision, ctx, seed, profile, prices,
-                                                      store, latency_model, split, architecture))
+                                                      store, latency_model, split, architecture, cfg))
     return records
 
 
