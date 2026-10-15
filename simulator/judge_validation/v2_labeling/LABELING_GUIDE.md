@@ -68,6 +68,13 @@ wrong, still judge against it and say so in `notes`.
 - **Breadth:** a fact stated more broadly than the core fact ("bring ID"
   where the core fact says "original ID") is correct unless it changes the
   meaning. Note it.
+- **"Why" questions with several reasons:** often only the main reason is a
+  core fact, and the other reasons are supplementary. Mark the answer
+  **correct only if it gives the core reason**. An answer that gives only
+  other (true) reasons is **incorrect**, even when those reasons appear in
+  the reference. If you disagree with which reason was made core, still
+  follow this rule and write `core reason?` in `notes`. We measure whether
+  this rule is contentious through the agreement between the two sheets.
 - **Unsure:** pick your best verdict and write `unsure` in `notes`. Never
   leave `verdict` blank.
 

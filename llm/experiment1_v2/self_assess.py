@@ -171,6 +171,9 @@ def main(argv=None) -> int:
     p.add_argument("--limit", type=int)
     p.add_argument("--no-asr", action="store_true")
     p.add_argument("--dry-run", action="store_true")
+    p.add_argument("--latency-probe", action="store_true",
+                   help="concurrency 1, written to self_assessment_latency_<split>.jsonl: the "
+                   "unqueued latency of the self-assessment call (use with --limit)")
     args = p.parse_args(argv)
     try:
         common.check_split_allowed(args.split)
@@ -192,7 +195,10 @@ def main(argv=None) -> int:
         print("REFUSED: synthetic plumbing traces are for the mock backend only.", file=sys.stderr)
         return 1
     out_dir = args.out_dir or common.results_dir(dataset, llm_cfg["model_key"], backend_kind == "mock")
-    out_path = out_dir / f"self_assessment_{args.split}.jsonl"
+    out_path = out_dir / (f"self_assessment_latency_{args.split}.jsonl" if args.latency_probe
+                          else f"self_assessment_{args.split}.jsonl")
+    if args.latency_probe:
+        args.concurrency = 1
     sha = prompt_sha256(sa_cfg)
     done = {r["key"] for r in common.read_jsonl(out_path)}
     units = [u for u in plan(items, traces, cfg, use_asr=not args.no_asr)

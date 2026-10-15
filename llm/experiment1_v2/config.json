@@ -72,9 +72,9 @@
     }
   },
   "analysis": {
-    "headline_signals": ["mean_entropy_nats", "max_entropy_nats", "first_k_mean_entropy_nats@8", "self_assessed_need"],
+    "headline_signals": ["mean_entropy_nats", "max_entropy_nats", "first_k_mean_entropy_nats@8", "self_assessed_need", "combined_v1", "combined_fast"],
     "calibration_signal": "mean_entropy_nats",
-    "calibration_signals": ["mean_entropy_nats", "self_assessed_need"],
+    "calibration_signals": ["mean_entropy_nats", "self_assessed_need", "combined_v1", "combined_fast"],
     "calibration_label": "empirical",
     "cv_folds": 5,
     "ece_bins": 10,
