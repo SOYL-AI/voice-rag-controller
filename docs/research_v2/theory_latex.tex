@@ -210,17 +210,68 @@ defer) for every belief. It therefore loses a strictly positive amount on one
 of the two subsets.
 \end{proof}
 
+\textbf{Speculative architecture.} A retrieval prefetched at epoch $k$ costs
+$c_k=\lambda_c(1+w_k)$, which is sunk. At $K$ it is used iff
+$Y_k=b_Kg^{+}(1-\rho_k)-(1-b_K)g^{-}-\lambda_l\hat X_k>0$, where $\hat X_k$ is
+its expected exposure given the realized hiding window. Without a prefetch,
+the controller dispatches at $K$ iff
+$U_K=A_K(b_K)-\lambda_l\hat X_K-c_K>0$.
+
+The joint controller is the Snell envelope with stopping payoff
+$O_k=\mathbb E[Y_k^{+}\mid\mathcal F_k]-c_k$. SPEC always prefetches at the
+first query-ready epoch $k_0$. SPEC-$\theta$ prefetches at $k_0$ iff the
+belief-only option value, computed with dev-mean exposures $\bar X$, exceeds
+the belief-only value of not prefetching.
+
+Write $c=c_{k_0}$, $Y=Y_{k_0}$, $q=\Pr(Y\le0)$ and
+$\Delta\rho=\rho_{k_0}-\min_{k>k_0}\rho_k$. Assume exposures are pathwise
+non-decreasing in the dispatch epoch.
+
 \begin{proposition}[Speculative dispatch]\label{prop:spec}
-Suppose a dispatched retrieval may go unused, $\rho\equiv0$, and $R_k$ is
-non-increasing pathwise. Then SPEC, which always dispatches at $k=1$ and uses
-the result iff $A(b_K)-\lambda_lX_1>0$, is decomposed and optimal when
-$\lambda_c=0$. For $\lambda_c>0$ it is within $\lambda_c(1+w_1)$ per turn of
-the joint optimum.
+Let $G=V^{*}_S-V_{\mathrm{SPEC}}$, and let $D_J$ be the event that the joint
+controller does not prefetch at $k_0$.
+\begin{enumerate}
+\item $G=\mathbb E[(\mathbb E[V_{k_0+1}\mid\mathcal F_{k_0}]-O_{k_0})^{+}]$.
+\item $0\le G\le c\Pr(D_J)+g^{+}\Delta\rho\,\mathbb E[b_K\mathbf 1_{D_J}]$.
+In particular $G\le\lambda_c(1+w_{k_0})$ when $\Delta\rho=0$, and SPEC is
+optimal when $\lambda_c=\Delta\rho=0$.
+\item For two epochs and $\Delta\rho=0$,
+\[
+G\le cq+\mathbb E[(c-Y)\mathbf 1\{0<Y<c\}]
++\mathbb E[(c-c_K-\lambda_l(\hat X_K-\hat X_{k_0}))^{+}\mathbf 1\{Y>0\}].
+\]
+The quantity $cq$ alone is not a bound. For example, if $Y\in(0,c)$ a.s.,
+$b_K$ is known at $k_0$ and $\lambda_l(\hat X_K-\hat X_{k_0})\ge Y$, then
+$q=0$ but $G=c-\mathbb EY>0$.
+\end{enumerate}
 \end{proposition}
 \begin{proof}
-Using a retrieval dispatched at $\tau$ exposes $X_\tau\ge X_1$, and the use
-decision is best made with $b_K$. So any policy's value is at most
-$\mathbb E(A(b_K)-\lambda_lX_1)^{+}$, which SPEC attains less its compute cost.
+(1) SPEC stops at $k_0$, whereas the optimum takes the larger of stopping and
+continuing.
+
+(2) Every later option is pathwise at most
+$Y^{+}+g^{+}b_K(\rho_{k_0}-\rho_k)$, because exposures are non-decreasing and
+$(x+d)^{+}\le x^{+}+d$ for $d\ge0$. Hence
+$\mathbb E[V_{k_0+1}\mid\mathcal F_{k_0}]\le O_{k_0}+c+g^{+}\Delta\rho\,\mathbb E[b_K\mid\mathcal F_{k_0}]$.
+
+(3) Compare SPEC with the ex-post best alternative, which is not prefetching.
+\end{proof}
+
+\begin{proposition}[Belief-gated prefetch]\label{prop:spectheta}
+Assume two epochs and $\Delta\rho=0$. Then
+\[
+0\le V^{*}_S-V_{\mathrm{SPEC}\text{-}\theta}
+\le\lambda_l\,\mathbb E\big[|\hat X_{k_0}-\bar X_{k_0}|(u^{*}+u^{\theta})\big],
+\]
+where $u$ indicates ``prefetch at $k_0$ and use''. SPEC-$\theta$ is decomposed,
+so the joint advantage under speculation is a C1-sized term.
+\end{proposition}
+\begin{proof}
+With the scalar exposure $\bar X_{k_0}$, only the belief matters and the
+optimum is SPEC-$\theta$'s gate. Replacing $\hat X_{k_0}$ by $\bar X_{k_0}$
+changes any policy's payoff by at most $\lambda_l|\hat X_{k_0}-\bar X_{k_0}|$
+on prefetch-and-use paths. SPEC-$\theta$'s realized-window use rule only
+improves on its scalar version.
 \end{proof}
 
 \textbf{C3 (partial-query risk).} Keep (A2) and (A3), and let $\rho_t$ vary.
