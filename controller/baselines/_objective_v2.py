@@ -199,9 +199,14 @@ def load_e3v2_config(path: Optional[str] = None, overrides: Optional[dict] = Non
         if fitted:
             cfg["rho"] = {**cfg["rho"], "table": fitted}
     q = cfg["quality"]
-    if float(q["g_plus"]) < 0 or float(q["g_minus"]) < 0:
-        raise ValueError("controller.e3v2.quality g_plus/g_minus must be >= 0 "
-                         "(g_minus is the MAGNITUDE of the harm on not-needed items)")
+    # g_minus is SIGNED: positive = retrieval harms not-needed items (the v1
+    # finding), negative = it helps them too (measured on d1_open ASR, where
+    # the closed-book answer to a misrecognised question fails although the
+    # text label says "not needed"). The objective stays well defined as long
+    # as the retrieve utility increases with the belief: g+ (1-rho) + g- > 0.
+    if float(q["g_plus"]) < 0 or float(q["g_plus"]) + float(q["g_minus"]) <= 0:
+        raise ValueError("controller.e3v2.quality needs g_plus >= 0 and g_plus + g_minus > 0 "
+                         "(the retrieve utility must increase with the belief)")
     if cfg.get("architecture") not in ARCHITECTURES:
         raise ValueError(f"controller.e3v2.architecture must be one of {ARCHITECTURES}, "
                          f"got {cfg.get('architecture')!r}")
