@@ -59,9 +59,31 @@ def load_streaming_stt(cfg: dict):
     """An audio.stt.StreamingSTT built from `cfg` (loads Whisper + Silero once per process)."""
     if cfg["stt"]["device"] == "cuda":
         add_cuda_dll_dirs()
+    _preload_cached_vad()
     from audio.stt import StreamingSTT
 
     return StreamingSTT(cfg=cfg, sample_rate=16000)
+
+
+def _preload_cached_vad():
+    """Load Silero VAD from the local torch.hub cache when present, so long runs do not
+    depend on GitHub being reachable (torch.hub.load of a remote repo queries it on every
+    process start; a 504 there killed one trace chunk). Same model as audio/stt.get_vad_model."""
+    import audio.stt as stt
+
+    if stt._VAD_MODEL is not None:
+        return
+    try:
+        import torch
+
+        local = Path(torch.hub.get_dir()) / "snakers4_silero-vad_master"
+        if local.is_dir():
+            model, _ = torch.hub.load(repo_or_dir=str(local), model="silero_vad", source="local",
+                                      trust_repo=True)
+            model.eval()
+            stt._VAD_MODEL = model
+    except Exception:
+        pass  # fall back to audio/stt.get_vad_model's remote load
 
 
 def whisper_for_alignment_check(device: str = "cuda"):
