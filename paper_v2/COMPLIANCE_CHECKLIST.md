@@ -22,10 +22,10 @@ Status values:
 | 12 | BibTeX `.bib` with `\cite{}` | **pass** | `references.bib`, `\bibliographystyle{IEEEtran}`, all citations through `\cite{}`. |
 | 13 | At most 15 references | **pass** | Exactly 15 entries, all cited (`check_tex.py`). |
 | 14 | No self-citations | **pass** | No entry has an author from this paper or SOYL AI. |
-| 15 | References real and accurate | **pass** | Each entry was checked against the publisher, Anthology, PMLR, ISCA or Crossref record, with the URL in a comment. The submitted bib's wrong venue for Skantze (2021) is corrected. |
+| 15 | References real and accurate | **pass** | Each entry was checked against the publisher, Anthology, PMLR, ISCA, Crossref or arXiv record, with the URL in a comment. The published venue is used where one exists (Stream RAG and MoshiRAG: PMLR v306). Four entries are arXiv-only (Galbraith, Jung, Kadavath, tau-Voice). |
 | 16 | Formal English | **pending** | Depends on author prose. The outline flags informal or overstated phrases to avoid ("dramatically", "architectural strength", "multi-timescale"). |
 | 17 | Plagiarism score < 10% | **pending** | Check the final PDF with the conference's checker. Risk: the copied v1 text (paper/, main) and `theory_formal.tex` connecting prose must be re-worded. |
-| 18 | AI-generated-content score < 10% | **pending** | All body prose is to be written by the authors (`\todo` markers; 40 remain). `theory_formal.tex` contains connecting sentences and proof wording drafted outside the author team; re-word them before submission. Run the conference's detector on the final PDF. |
+| 18 | AI-generated-content score < 10% | **pending** | All body prose is to be written by the authors (`\todo` markers; 42 remain). `theory_formal.tex` contains connecting sentences and proof wording drafted outside the author team; re-word them before submission. Run the conference's detector on the final PDF. |
 | 19 | No AI attribution in the manuscript, commits or files | **pass** | None is present in `paper_v2/` or in the commit messages on `v2/paper`. |
 | 20 | No draft markers in the submitted PDF | **pending** | Set `\finaltrue` in `macros.tex`; the build then errors on any remaining `\todo`, `\TBD` or `\PEND`. |
 | 21 | Page limit | **pending** | Check the INDICON author kit (usually 6 pages plus paid extras). The full proofs will not fit; decide on a supplementary file or an extended version. |

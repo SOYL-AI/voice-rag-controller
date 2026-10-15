@@ -91,45 +91,69 @@ Two smaller corrections:
   `v2/d2-support-a`, commit `0e99cf0`), not ≈ 0.63; 0.625 was an earlier
   part-A round.
 
-## Reference list (15 entries) and what was dropped
+## Reference list (15 entries), revised after the novelty search (2026-10-16)
 
-Kept from the submitted list (9 of 12):
-- Lewis (RAG)
-- FLARE
-- Self-RAG
-- Adaptive-RAG
-- DRAGIN
-- TurnGPT
-- VAP
-- Skantze's review. Its venue was wrong in the old bib: it is Computer
-  Speech & Language 67, 101178, not AI Magazine.
-- Bohus & Horvitz (ICMI 2011)
+A verified literature search changed the positioning:
+- **Background, not a contribution:** early and speculative retrieval on
+  partial transcripts. Stream RAG (ICML 2026) already compares fixed-interval
+  speculative calls with model-triggered calls, which correspond to our
+  speculative and commit architectures. Speculative execution for voice
+  agents is also published (Jung et al. 2026).
+- **Claimed as new:** only the formal joint-vs-decomposed analysis with the
+  boundary test, the persona finding on partial transcripts, and the
+  matched-pair spoken benchmark. Each is hedged "to our knowledge".
+- **Terminology:** never write "Speculative RAG", which names an unrelated
+  drafter/verifier method. Write "speculative prefetch".
 
-Dropped:
-- **Karpukhin et al. 2020 (DPR).** The system does not use DPR, and
-  `lewis2020rag` covers dense retrieval as a component.
-- **Cooper 1973.** It is about choosing an evaluation measure. The
-  decision-theoretic foundation the paper actually uses is value of
-  information.
-- **Rao & Daumé III 2018.** It applies EVPI to clarification questions.
-  Under the cap, the primary VoI source (Howard 1966) is preferred.
+**Required (10):** Stream RAG (Arora et al., PMLR v306), Galbraith (arXiv
+2606.20113), Jung et al. (arXiv 2610.07641), FLARE, DRAGIN, Kadavath et al.
+(P(IK)), Moskvoretskii et al. (ACL 2025), Howard 1966, Mallen et al. (PopQA),
+Yang et al. (HotpotQA).
 
-Added:
-- Howard 1966 (R1 minor)
-- Mallen et al. 2023, PopQA. It is a d1_open source and shows that retrieval
-  can hurt (g⁻ > 0).
-- Yang et al. 2018 (HotpotQA)
-- Radford et al. 2023, Whisper. v2 uses faster-whisper for the partials.
-- Guo et al. 2017 (ECE, R1.5)
-- Jiang et al. 2023 (Mistral 7B, the only generator)
+**Chosen for the remaining 5 slots:**
+- **tau-Voice** (Ray et al. 2026): the closest voice-agent benchmark; the
+  benchmark novelty claim needs it as a contrast.
+- **MoshiRAG** (Chien et al., ICML 2026): learns whether to retrieve in a
+  full-duplex speech model, with retrieval at response onset. It is the
+  closest speech system that makes the whether-decision.
+- **Adaptive-RAG**: source of the v2 B5 baseline.
+- **VAP**: audio-based turn-shift prediction, i.e. the remaining-speech
+  input R_k.
+- **Bohus & Horvitz 2011**: decision-theoretic timing in dialogue (R2's
+  originality comment).
 
-Verified alternate: Zheng et al. 2023, LLM-as-a-judge. To include it, drop
-the Mistral entry and cite the model card in a footnote. Every entry's
-verification URL is in a comment in `references.bib`.
+**Dropped this round** (verified records kept as comments at the end of
+`references.bib`):
+- **Lewis et al. 2020 (RAG).** Canonical, but no claim in the paper depends on
+  it, and the cap is binding. It is the first candidate to swap back in,
+  e.g. for Bohus & Horvitz.
+- **Self-RAG.** FLARE, DRAGIN, Adaptive-RAG and Moskvoretskii already cover
+  adaptive retrieval.
+- **TurnGPT and the Skantze review.** VAP is kept as the audio-based
+  turn-taking reference. R1 asked for TurnGPT/VAP to be cited directly
+  instead of the review; the response explains why only VAP remains.
+- **Whisper and Mistral 7B.** Identify the tools by footnote URLs (model card;
+  faster-whisper project) instead of references.
+- **Guo et al. 2017.** ECE is now defined by an equation (Eq. ece) in
+  Sec. VI-A, so no citation is needed.
+- **Earlier round:** Karpukhin (DPR), Cooper 1973 and Rao & Daumé III, for
+  the reasons given in the first revision.
+
+**Not included, verified by the coordinator:** SHANKS (ACL 2026), SKR (Wang
+et al., Findings of EMNLP 2023), Ni et al. (Findings of ACL 2024),
+RetrievalQA (Zhang et al., Findings of ACL 2024).
+
+**Verification:**
+- I fetched every entry added this round myself, and its source URL is in a
+  comment in `references.bib`: PMLR pages for Stream RAG and MoshiRAG
+  (published venues used), the ACL Anthology for Moskvoretskii, and arXiv for
+  Galbraith, Jung, Kadavath and tau-Voice. The last four have no venue
+  listed.
+- Retained entries keep their verification URLs from the first round.
 
 ## Open items for the authors (also flagged in the files)
 
-- Write every `\todo` paragraph (40 markers). Do not paste the outline
+- Write every `\todo` paragraph (42 markers). Do not paste the outline
   comments in as prose.
 - Choose the title. A title change may need the TPC chair's consent.
 - Complete the author list, order and e-mails. The corresponding-author
