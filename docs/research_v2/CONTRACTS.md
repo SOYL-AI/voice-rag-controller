@@ -158,7 +158,8 @@ uncontrolled-rate human recordings), one line per item:
   "asr_final": {"t_ms": 3980, "available_ms": 4350, "compute_ms": 370.1, "text": "..."},
   "vad_user_end_ms": 3980, "user_end_ms": 3980,
   "endpoint_reason": "vad|fallback_timeout|stream_end",
-  "endpoint_rule": null | "no_new_partial" | "no_text_change", "n_partials_after_end": 0,
+  "endpoint_rule": null | "no_text_change", "fallback_rule": "armed-2", "fallback_arm_ms": 410,
+  "n_partials_after_end": 0,
   "vad_onset_ms": 30,
   "asr_model": "faster-whisper-<size>", "asr_settings": {...}, "partial_interval_ms": 400,
   "word_timing": {"method": "ctc_forced_alignment", "model": "..."},
@@ -180,13 +181,13 @@ uncontrolled-rate human recordings), one line per item:
   truncates `asr_final` - that is kept, not repaired.
 - **`user_end_ms` is the end of turn every consumer uses.** It equals
   `vad_user_end_ms` when the VAD fired (`endpoint_reason: "vad"`). Otherwise the
-  fallback applies (`endpoint_reason: "fallback_timeout"`): evaluated online
-  over the emitted partials, the turn ends at the first of (a) last partial's
-  `t_ms` + silence hang (800 ms; `endpoint_rule: "no_new_partial"`) and (b) 2.0 s
-  after the last change of the normalised partial text (`"no_text_change"`).
-  Partials after that moment are dropped (`n_partials_after_end` counts them)
+  fallback applies (`endpoint_reason: "fallback_timeout"`, `fallback_rule:
+  "armed-2"`): armed at the first partial with >= 2 words (`fallback_arm_ms`),
+  the turn ends 2.0 s after the last change of the normalised partial text
+  (`endpoint_rule: "no_text_change"`); every ASR call counts as the user still
+  talking. Partials after that moment are dropped (`n_partials_after_end` counts them)
   and `asr_final` covers the audio up to it. `"stream_end"` remains only for
-  turns with no partial text at all. Report fallback turns separately.
+  turns where no partial ever had >= 2 words. Report fallback turns separately.
   Traces from `trace_version` v2-speech-1 lack these fields; `trace.py
   --upgrade-fallback` adds them.
 - `partials` must be what the real streaming ASR emitted, including errors

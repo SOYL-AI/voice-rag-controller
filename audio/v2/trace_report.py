@@ -62,7 +62,7 @@ def condition_metrics(recs: list[dict]) -> dict:
     f_err = f_ref = f_wrong = 0
     trans = rev_s = rev_l = items_rev = 0
     eot, lag_beyond, premature, missed = [], [], 0, 0
-    uend, n_fallback = [], 0
+    uend, n_fallback, fb_lag = [], 0, []
     comp, avail_lag, first_av, final_after, wpm, n_parts_item = [], [], [], [], [], []
     hang = None
     for r in recs:
@@ -109,7 +109,9 @@ def condition_metrics(recs: list[dict]) -> dict:
         ue = r.get("user_end_ms", r["vad_user_end_ms"])
         if ue is not None:
             uend.append(ue - speech_end)
-        n_fallback += r.get("endpoint_reason") == "fallback_timeout"
+        if r.get("endpoint_reason") == "fallback_timeout":
+            n_fallback += 1
+            fb_lag.append(r["user_end_ms"] - speech_end)
         if r["vad_user_end_ms"] is None:
             missed += 1
         else:
@@ -132,6 +134,9 @@ def condition_metrics(recs: list[dict]) -> dict:
         "user_end_median_ms": _q(uend, 50), "user_end_p90_ms": _q(uend, 90),
         "user_end_premature": float(np.mean(np.array(uend) < 0)) if uend else None,
         "fallback_share": n_fallback / n if n else None,
+        "fallback_n": n_fallback,
+        "fallback_premature_n": int(sum(x < 0 for x in fb_lag)),
+        "fallback_lag_median_ms": _q(fb_lag, 50), "fallback_lag_p90_ms": _q(fb_lag, 90),
         "compute_median_ms": _q(comp, 50), "compute_p90_ms": _q(comp, 90),
         "avail_lag_median_ms": _q(avail_lag, 50), "avail_lag_p90_ms": _q(avail_lag, 90),
         "first_partial_avail_median_ms": _q(first_av, 50),
@@ -145,6 +150,18 @@ def _fmt(v, pct=False, nd=0):
     if v is None:
         return "-"
     return f"{100 * v:.1f}%" if pct else f"{v:.{nd}f}"
+
+
+def fallback_markdown(rows: dict) -> str:
+    """Fallback-ended turns listed separately: their end-of-turn latency is structurally higher."""
+    out = ["| condition | n | fallback turns | premature | end-of-turn lag median ms | p90 ms |",
+           "|---|---|---|---|---|---|"]
+    for cond, m in rows.items():
+        if not m.get("fallback_n"):
+            continue
+        out.append(f"| {cond} | {m['n_items']} | {m['fallback_n']} | {m['fallback_premature_n']} | "
+                   f"{_fmt(m['fallback_lag_median_ms'])} | {_fmt(m['fallback_lag_p90_ms'])} |")
+    return "\n".join(out) if len(out) > 2 else "(no fallback turns)"
 
 
 def to_markdown(rows: dict) -> str:
@@ -200,7 +217,9 @@ def main(argv=None):
           f"Traces: `{tdir.relative_to(_REPO_ROOT).as_posix() if tdir.is_absolute() else tdir}`; "
           f"text normaliser: {NORMALISER}. Metric definitions: audio/v2/trace_report.py.", "",
           "## By noise", "", to_markdown(by_noise), "", "## By rate", "", to_markdown(by_rate), "",
-          "## By voice", "", to_markdown(by_voice), "", "## All conditions", "", to_markdown(rows), ""]
+          "## By voice", "", to_markdown(by_voice), "", "## All conditions", "", to_markdown(rows), "",
+          "## Fallback-ended turns (VAD never fired; listed separately, structurally later)", "",
+          fallback_markdown(rows), ""]
     stem = Path(a.out) if a.out else tdir.parent / "trace_report"
     stem.with_suffix(".json").write_text(json.dumps(
         {"normaliser": NORMALISER, "conditions": rows, "by_noise": by_noise, "by_rate": by_rate,

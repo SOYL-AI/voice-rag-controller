@@ -39,19 +39,22 @@ word), so word times, partial times and the VAD endpoint share one clock.
   vad_user_end_ms         VAD end-of-turn (null when the VAD never confirmed one)
   user_end_ms             the turn end every consumer should use: vad_user_end_ms, or the
                           fallback below when the VAD never fired
-  endpoint_reason         "vad" | "fallback_timeout" | "stream_end" (no partial text at all)
+  endpoint_reason         "vad" | "fallback_timeout" | "stream_end" (fallback never armed)
   endpoint_rule           for fallback_timeout: "no_new_partial" | "no_text_change"
 
 Fallback end of turn (VAD never fired, e.g. under babble)
 ---------------------------------------------------------
-Evaluated online over the emitted partials: the turn ends at the first of
-  * last partial's t_ms + silence_hang_ms (no new non-empty partial for the hang), or
-  * last text change + FALLBACK_NO_CHANGE_MS (2.0 s with no change of the
-    normalised partial text).
-The rules are armed only after speech onset (fallback rule "armed-1"): the VAD
-onset when the VAD detected one, otherwise the first partial with >= 2 words;
-partials before the arm time and partials with no words are ignored by both
-rules. The arm time is recorded as fallback_arm_ms.
+Rule "armed-2" (FALLBACK_RULE), evaluated online over the emitted partials:
+  * armed at the first partial with >= 2 words (fallback_arm_ms); the VAD onset is
+    not used, because under babble it fires on background talk before the user speaks;
+  * the turn ends 2.0 s (FALLBACK_NO_CHANGE_MS) after the last change of the
+    normalised partial text, counted from the arm time. There is no "no new
+    partial" rule: every ASR call, empty or not, counts as the user still talking.
+Earlier rules, kept for comparisons only (fallback_compare.py): "unarmed" (first of
+last partial + silence hang, or 2.0 s without a text change) and "armed-1" (the
+same, armed at the VAD onset or the first 2-word partial, wordless partials
+ignored). On the 1,701 v1 babble traces without a VAD endpoint, premature ends
+of turn were unarmed 349, armed-1 349, first-2-word arming 244, armed-2 7.
 Partials after that moment are dropped (the live turn would be over; their
 count is kept in n_partials_after_end), and asr_final is the beam-5 pass over
 the speech audio up to that moment.
@@ -87,7 +90,7 @@ from audio.v2.render import SR, audio_dir, read_wav16  # noqa: E402
 
 TRACE_VERSION = "v2-speech-2"  # 2: fallback end of turn, user_end_ms
 FALLBACK_NO_CHANGE_MS = 2000
-FALLBACK_RULE = "armed-1"
+FALLBACK_RULE = "armed-2"
 MIC_BLOCK = 512           # audio_loop.generate_mic_stream block size
 PARTIAL_WINDOW_S = 8      # StreamingSTT: partials see the last 8 s of speech
 LIVE_VAD_THRESHOLD = 0.3  # audio_loop.py passes vad_threshold=0.3 for live turns
@@ -97,9 +100,10 @@ def _words(text: str) -> list[str]:
     return [w for w in re.sub(r"[^\w' ]", " ", text.lower()).split() if w]
 
 
-def fallback_arm_ms(partials: list[dict], vad_onset_ms):
-    """When the fallback rules start: VAD onset if detected, else the first partial with >= 2 words."""
-    if vad_onset_ms is not None:
+def fallback_arm_ms(partials: list[dict], vad_onset_ms=None, rule: str = FALLBACK_RULE):
+    """When the fallback starts. armed-2: the first partial with >= 2 words.
+    armed-1 (comparison only): the VAD onset if detected, else the first 2-word partial."""
+    if rule == "armed-1" and vad_onset_ms is not None:
         return vad_onset_ms
     for p in partials:
         if len(_words(p["text"])) >= 2:
@@ -108,34 +112,36 @@ def fallback_arm_ms(partials: list[dict], vad_onset_ms):
 
 
 def fallback_end(partials: list[dict], hang_ms: float, no_change_ms: float = FALLBACK_NO_CHANGE_MS,
-                 arm_ms=None, armed: bool = True):
+                 arm_ms=None, rule: str = FALLBACK_RULE):
     """Online fallback end of turn over emitted partials (times on the trace clock).
-    With armed=True (rule "armed-1") only partials with words at or after arm_ms count;
-    armed=False is the original unarmed rule, kept for before/after comparisons.
-    Returns (t_ms, rule) or (None, None) when no partial counts."""
-    if armed:
+    Returns (t_ms, endpoint_rule) or (None, None) when the fallback never arms.
+    rule: "armed-2" (used), or "armed-1" / "unarmed" (comparisons only)."""
+    if rule != "unarmed":
         if arm_ms is None:
             return None, None
         partials = [p for p in partials if p["t_ms"] >= arm_ms and _words(p["text"])]
     if not partials:
         return None, None
+    use_gap = rule != "armed-2"
     change_t = partials[0]["t_ms"]
     prev = _words(partials[0]["text"])
     for a, b in zip(partials, partials[1:]):
         cands = []
-        if b["t_ms"] - a["t_ms"] > hang_ms:
+        if use_gap and b["t_ms"] - a["t_ms"] > hang_ms:
             cands.append((a["t_ms"] + hang_ms, "no_new_partial"))
         if b["t_ms"] > change_t + no_change_ms:
             cands.append((change_t + no_change_ms, "no_text_change"))
         if cands:
-            t, rule = min(cands)
-            return int(round(t)), rule
+            t, r = min(cands)
+            return int(round(t)), r
         w = _words(b["text"])
         if w != prev:
             change_t, prev = b["t_ms"], w
-    t, rule = min((partials[-1]["t_ms"] + hang_ms, "no_new_partial"),
-                  (change_t + no_change_ms, "no_text_change"))
-    return int(round(t)), rule
+    cands = [(change_t + no_change_ms, "no_text_change")]
+    if use_gap:
+        cands.append((partials[-1]["t_ms"] + hang_ms, "no_new_partial"))
+    t, r = min(cands)
+    return int(round(t)), r
 
 
 def _lcp(a: list[str], b: list[str]) -> int:
