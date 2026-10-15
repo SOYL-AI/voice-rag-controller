@@ -312,7 +312,7 @@ where $W_\tau$ is the realised hiding window. Discarding is worth 0, because the
 $$V_K=U_K^{+},\qquad V_k=\max\big(O_k,\ \mathbb E[V_{k+1}\mid\mathcal F_k]\big).$$
   This is `ours_v2._option_value` / `v_wait_spec`, an $n$-step lookahead that is exact when $n\ge$ the number of remaining epochs.
 * **SPEC (B10).** Prefetch at $k_0$ always; use iff $Y_{k_0}>0$.
-* **SPEC-θ (B11; proposed, not yet implemented).** This is **belief-gated** speculation. Prefetch at $k_0$ iff
+* **SPEC-θ (B11, `controller/baselines/b11_speculative_gated_v2.py`).** This is **belief-gated** speculation. Prefetch at $k_0$ iff
 $$\mathbb E[(A_{k_0}(b_K)-\lambda_l\bar X_{k_0})^{+}\mid b_{k_0}]-c_{k_0}>\mathbb E[(A_K(b_K)-\lambda_l\bar X_K-c_K)^{+}\mid b_{k_0}],$$
   with dev-mean scalar exposures $\bar X$. The use rule is B10's. The dispatch epoch is fixed by timing, and the gate reads only the belief and fixed scalars, so SPEC-θ is in $\Pi_D$ in exactly the sense B9+ is.
 

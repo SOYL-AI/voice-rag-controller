@@ -93,6 +93,9 @@ def prop4_setup(lambda_c):
         "ours_v2": get_controller_v2("ours_v2", cfg=commit_cfg, transitions=chain, lookahead_steps=6),
         "ours_v2_spec": get_controller_v2("ours_v2", cfg=cfg, transitions=chain, lookahead_steps=6),
         "b10_speculative_v2": get_controller_v2("b10_speculative_v2", cfg=cfg, timing="immediate"),
+        "b11_speculative_gated_v2": get_controller_v2("b11_speculative_gated_v2", cfg=cfg, transitions=chain,
+                                                      lookahead_steps=6, timing="immediate",
+                                                      policy_constants=constants),
         "b9plus_v2": get_controller_v2("b9plus_v2", cfg=cfg, policy_constants=constants),
         "b9_v2": get_controller_v2("b9_v2", cfg=cfg, policy_constants=constants),
     }
@@ -153,6 +156,50 @@ def test_ours_spec_dominates_commit_and_spec(lam_c):
         strict_over_commit += eu["ours_v2_spec"] > eu["ours_v2"] + 1e-6
     if lam_c == 0.0:
         assert strict_over_commit >= 2  # discarding has value
+
+
+@pytest.mark.parametrize("lam_c", [0.0, 0.05, 0.2])
+def test_spec_theta_sits_between_spec_and_joint(lam_c):
+    """THEORY Prop. 4'': the belief-gated decomposed prefetcher is at least as
+    good as SPEC (it may decline a prefetch whose option value is below its
+    compute) and at most as good as the joint speculative optimum. Here every
+    turn has the same timing, so its dev scalars are exact and the remaining
+    joint advantage is only the multi-epoch prefetch delay."""
+    cfg, paths, turns, ctrls = prop4_setup(lam_c)
+    bound = lam_c * (1.0 + waste_at(0.25, False, cfg))
+    gated_strictly_better = 0
+    for lam in LAMBDA_L_GRID:
+        eu = expected_utilities(cfg, paths, turns, ctrls, lam, lam_c)
+        assert eu["b11_speculative_gated_v2"] >= eu["b10_speculative_v2"] - 1e-12, (lam, eu)
+        assert eu["ours_v2_spec"] >= eu["b11_speculative_gated_v2"] - 1e-12, (lam, eu)
+        assert eu["ours_v2_spec"] - eu["b11_speculative_gated_v2"] <= bound + 1e-12
+        gated_strictly_better += eu["b11_speculative_gated_v2"] > eu["b10_speculative_v2"] + 1e-6
+    if lam_c == 0.0:
+        assert gated_strictly_better == 0  # free compute: the gate always prefetches
+    else:
+        assert gated_strictly_better >= 1  # the compute saving SPEC cannot make
+
+
+def test_spec_theta_gate_ignores_turn_timing():
+    """SPEC-theta is decomposed: its prefetch decision reads the belief and
+    dev scalars, never this turn's remaining speech."""
+    cfg = cfg_with(architecture="speculative", nonhideable_increment_ms=400.0,
+                   quality={"g_plus": 0.72, "g_minus": 0.59})
+    chain = martingale_chain()
+    prices = {"lambda_l": 0.5, "lambda_c": 0.05}
+    base = [synthetic_turn(f"g-{j}", [j / M] * 3, j / M, interval_ms=300.0, user_end_ms=1200.0, retrieval=SPREAD)
+            for j in range(1, M)]
+    constants = estimate_policy_constants(base, cfg)
+    b11 = get_controller_v2("b11_speculative_gated_v2", cfg=cfg, transitions=chain, lookahead_steps=6,
+                            timing="immediate", policy_constants=constants)
+    for j in range(1, M):
+        decisions = []
+        for user_end in (1200.0, 2400.0, 3600.0):
+            turn = synthetic_turn(f"g-{j}-{user_end}", [j / M] * 3, j / M, interval_ms=300.0,
+                                  user_end_ms=user_end, retrieval=SPREAD)
+            d = b11.decide_turn(with_prices(turn, prices))
+            decisions.append(d.used is not None)  # True/False = a speculative prefetch was made
+        assert len(set(decisions)) == 1, (j, decisions)
 
 
 def test_spec_dispatches_unconditionally_and_decides_use_on_final_belief():
@@ -339,7 +386,7 @@ def test_boundary_contrasts_delta_interaction_and_q_hat():
     for row in rows:
         pk = row["price"]
         assert row["d_star"]["commit"] == "b9plus_v2"
-        assert row["d_star"]["speculative"] in ("b9plus_v2", "b10_speculative_v2")
+        assert row["d_star"]["speculative"] in ("b9plus_v2", "b10_speculative_v2", "b11_speculative_gated_v2")
         dev_u = row["d_star_speculative_dev_utilities"]
         assert dev_u[row["d_star"]["speculative"]] == max(dev_u.values())
         o_c, d_c = item_mean("commit", "ours_v2", pk), item_mean("commit", "b9plus_v2", pk)
@@ -356,8 +403,12 @@ def test_boundary_contrasts_delta_interaction_and_q_hat():
                 and r["outcome"]["retrievals"]]
         q = sum(r["used"] is False for r in spec) / len(spec)
         assert row["q_hat"] == pytest.approx(q)
-        assert row["m"] == pytest.approx(0.05 * (1 + row["w_bar"]) * q)
+        assert row["m_c_qhat"] == pytest.approx(0.05 * (1 + row["w_bar"]) * q)  # diagnostic only
+        assert row["m3"] == pytest.approx(0.5 * max(dc, 0.0))  # P3 TOST margin on dev
     with pytest.raises(ValueError):  # D*[SPEC] must be fixed at freeze on test
         boundary_contrasts(recs, "test")
-    fixed = boundary_contrasts(recs, "test", d_star_speculative="b10_speculative_v2")
+    with pytest.raises(ValueError):  # so must m3
+        boundary_contrasts(recs, "test", d_star_speculative="b10_speculative_v2")
+    fixed = boundary_contrasts(recs, "test", d_star_speculative="b10_speculative_v2", m3=0.004)
     assert all(r["d_star"]["speculative"] == "b10_speculative_v2" for r in fixed)
+    assert all(r["m3"] == 0.004 and r["m3_source"] == "fixed" for r in fixed)
