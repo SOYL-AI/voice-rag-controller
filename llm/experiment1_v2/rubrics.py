@@ -11,6 +11,19 @@
                           Deferring, declining and key-fact-free hedges are
                           INCORRECT. The judge also sees the dialogue history.
 
+  e1v2-r3                 the second and final dev revision (PREREG_V2 2.4):
+                          d2_support is CORRECT iff the answer states every
+                          CORE fact (meta.core_facts, a verbatim subset of
+                          key_facts; paraphrase, unit/format variants and
+                          close approximations allowed) and contradicts
+                          nothing in the reference or the supplementary
+                          facts, which may be omitted. Without core_facts
+                          the first key fact stands in, with a warning.
+
+Why r3: r2's "every key fact" failed correct general answers that omitted a
+secondary fact (d2_support dev: general items needed 65/84 under r2 vs 26/84
+under r1, empirical need 201/222).
+
 Why r2: under r1 the inherited rule "omitting reference detail is correct"
 credited non-answers on support questions. gpt-6.1-sol passed vague hedges
 ("our policy typically covers burst pipes"), gpt-4o failed correct general
@@ -46,6 +59,17 @@ def _history_lines(history) -> str:
     return "\n".join(lines)
 
 
+def core_facts_or_fallback(core_facts, key_facts, reference) -> list:
+    """The core facts to grade against (r3). Without an annotation, the
+    first key fact stands in (callers log that); without key facts either,
+    the reference itself."""
+    if core_facts:
+        return list(core_facts)
+    if key_facts:
+        return [key_facts[0]]
+    return [reference]
+
+
 @dataclass(frozen=True)
 class FileRubric:
     version: str
@@ -58,12 +82,33 @@ class FileRubric:
     def requires_key_facts(self, dataset) -> bool:
         return dataset in self.texts and "KEY FACT" in self.texts[dataset]
 
+    def uses_core_facts(self, dataset) -> bool:
+        return dataset in self.texts and "CORE FACT" in self.texts[dataset]
+
     def user_prompt(self, *, dataset, question, reference, answer, key_facts=None, aliases=None,
-                    history=None) -> str:
+                    history=None, core_facts=None) -> str:
         from llm.experiment1_v2.judges import KEY_FACTS_RULE  # noqa: PLC0415 -- avoid a cycle
 
         instructions = self.instructions(dataset).rstrip("\n")
         facts = list(key_facts or [])
+        if self.uses_core_facts(dataset):
+            # r3: core facts must all be stated; the other key facts are
+            # supplementary (may be omitted, must not be contradicted).
+            core = core_facts_or_fallback(core_facts, facts, reference)
+            supplementary = [f for f in facts if f not in core]
+            parts = [instructions]
+            if history:
+                parts.append("Conversation before the question:\n" + _history_lines(history))
+            parts += [f"Question:\n{question}", f"Reference answer:\n{reference}"]
+            if aliases:
+                parts.append("Equivalent forms of the reference answer:\n"
+                             + "\n".join(f"- {a}" for a in aliases))
+            parts.append("Core facts:\n" + "\n".join(f"- {f}" for f in core))
+            if supplementary:
+                parts.append("Supplementary facts (may be omitted, must not be contradicted):\n"
+                             + "\n".join(f"- {f}" for f in supplementary))
+            parts.append(f"Candidate answer:\n{answer}")
+            return "\n\n".join(parts) + "\n"
         if self.requires_key_facts(dataset) and not facts:
             facts = [reference]  # no listed facts: the reference itself is the fact
         elif facts and not self.requires_key_facts(dataset):

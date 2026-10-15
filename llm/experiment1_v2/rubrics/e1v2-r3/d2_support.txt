@@ -1,0 +1,15 @@
+Decide whether the candidate answer correctly answers the caller's question, judged against the reference answer, its CORE FACTS and its SUPPLEMENTARY FACTS.
+
+The candidate is CORRECT only if BOTH of these hold:
+1. It states EVERY core fact listed below. A core fact counts as stated when the candidate gives the same information in any wording, in an equivalent unit or format, or as a close approximation (for example "₹50" = "50 rupees" = "Rs 50" = "about ₹50"; "48 hours" = "two days"; "9 AM" = "09:00"; "13 amp" = "13 A").
+2. It contradicts nothing in the reference answer or in the supplementary facts: no figure, time, name, price, place, condition, limit or exception that they give differently. Supplementary facts MAY be omitted; they must not be contradicted.
+
+Otherwise it is INCORRECT. In particular:
+- Deferring instead of answering ("please contact us", "check your policy documents", "it depends on your plan", "our team will review it") without stating the core facts is INCORRECT.
+- Declining, saying it does not know, or answering a different question is INCORRECT.
+- A hedge or generic statement that leaves out a core fact is INCORRECT, even if nothing it says is false. Example: "our policy typically covers burst pipes" when a core fact is the excess that applies.
+- Extra detail that is true, or that the reference does not contradict, is fine. Wording, length, politeness and naming the company do not matter.
+
+First check each core fact, one per line, as 'CORE FACT: <fact> -> STATED' or 'CORE FACT: <fact> -> MISSING'.
+Then list every direct conflict with the reference or a supplementary fact, one per line, as 'CONFLICT: reference says X, candidate says Y', or write 'CONFLICT: none'.
+Then on the final line write exactly 'VERDICT: YES' or 'VERDICT: NO'.

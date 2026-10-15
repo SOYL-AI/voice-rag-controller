@@ -32,7 +32,7 @@ if str(_REPO) not in sys.path:
 from simulator.judge_validation.score_judges import agreement, parse_label  # noqa: E402
 
 HERE = Path(__file__).resolve().parent
-OUT_COLUMNS = ["case_id", "dataset", "item_id", "question", "reference", "answer", "key_facts",
+OUT_COLUMNS = ["case_id", "dataset", "item_id", "question", "reference", "answer", "key_facts", "core_facts",
                "aliases", "history", "path", "gate_subset", "label_a", "label_b",
                "label_adjudicated", "notes_a", "notes_b", "notes_adjudication"]
 
@@ -102,7 +102,8 @@ def main(argv=None) -> int:
         rows.append({
             "case_id": cid, "dataset": m["dataset"], "item_id": m["item_id"],
             "question": m["question"], "reference": m["reference"], "answer": m["answer"],
-            "key_facts": m["key_facts"], "aliases": m["aliases"], "history": m["history"],
+            "key_facts": m["key_facts"], "core_facts": m.get("core_facts", ""),
+            "aliases": m["aliases"], "history": m["history"],
             "path": m["path"], "gate_subset": m["gate_subset"],
             "label_a": "" if la is None else int(la), "label_b": "" if lb is None else int(lb),
             "label_adjudicated": "" if cid not in adj else int(adj[cid]["verdict"]),

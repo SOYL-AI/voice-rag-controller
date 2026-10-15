@@ -99,7 +99,23 @@ artifacts.
 
 ## Judges (`judges.json`)
 
-**Rubric r2** (`rubrics/e1v2-r2/`, default) applies to both judges. A
+**Rubric r3** (`rubrics/e1v2-r3/`, default; the second and final dev
+revision allowed by PREREG_V2 §2.4) applies to both judges. A d2_support
+answer is correct iff:
+- it states every **core** fact (`meta.core_facts`, a verbatim subset of the
+  key facts; paraphrase, unit/format variants and close approximations
+  allowed);
+- it contradicts nothing in the reference or the supplementary facts, which
+  may be omitted.
+
+Deferring, declining and hedging without the core facts are incorrect. An
+item without `core_facts` is graded against its first key fact, with a
+warning; the count is recorded in the labels' `meta.core_facts_fallback`.
+r3's hash is in every cache key. r1 and r2 still reproduce their cache keys
+exactly (checked: 600/600 each).
+
+**Rubric r2** (`rubrics/e1v2-r2/`, kept for reproducibility) applied to both
+judges. A
 d2_support answer is correct iff it states **every** `meta.key_facts` item
 (paraphrase and unit/format variants allowed) **and** contradicts nothing in
 the reference. Deferring, declining and key-fact-free hedges are incorrect.
