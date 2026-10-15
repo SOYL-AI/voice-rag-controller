@@ -1,0 +1,280 @@
+domain	org_slug	local_id	item_type	old_question	new_question	answer_changed	round
+airline	saffron_kite_air	q04	general	The ticket says it's direct, so what's the difference between that and non-stop?	The ticket says it's direct, is that the same thing as non-stop?	Y	1
+airline	saffron_kite_air	q07	counter_prior	Uh, how late can I drop my bag at the counter for the Delhi flight?	What's the latest I can drop my bag at the counter for the Delhi flight?	N	1
+airline	saffron_kite_air	q10	org_specific	How early can I do the online check-in for my Saturday morning flight?	How early does the online check-in open for my Saturday morning flight, roughly?	N	1
+airline	saffron_kite_air	q19	counter_prior	Can I get a spelling mistake in my surname fixed on the booking?	Is there a way to fix a spelling mistake in my surname on the booking?	N	1
+airline	saffron_kite_air	q21	general	Is it possible to stop my baby's ears hurting when the plane's coming down?	Can I do anything to stop my baby's ears hurting when the plane's coming down?	N	1
+airline	saffron_kite_air	q23	org_specific	How much do you charge to add her to the booking?	Okay, and what would it cost to add her to the booking as well?	N	1
+airline	saffron_kite_air	q24	general	If a flight gets diverted, where do we actually end up, like what happens?	If a flight gets diverted instead of cancelled, where do we actually end up?	N	1
+airline	coralwind_airways	q04	org_specific	How many bags can I check on a domestic Economy Classic fare?	What's the checked bag allowance on a domestic Economy Classic fare?	N	1
+airline	coralwind_airways	q09	counter_prior	Can I cancel for a full refund if I only booked this morning?	I booked this morning and I've changed my mind, do I get a full refund?	Y	1
+airline	coralwind_airways	q11	general	So why does it say on my ticket that it's operated by a different airline?	Okay, and how come it says on my ticket that another airline's operating it?	N	1
+airline	coralwind_airways	q13	general	I'm flying Classic to LA, how long does jet lag usually take to wear off?	I'm flying Classic to LA, how many days does jet lag usually take to wear off?	N	1
+airline	coralwind_airways	q14	counter_prior	How long's that good for? I'm hoping to use it later this year.	And what does that mean for when it expires? I'm hoping to use it later this year.	N	1
+airline	coralwind_airways	q15	general	So what's a bassinet seat exactly? Someone said I should ask for one for the baby.	How does a bassinet seat work? Someone said I should ask for one for the baby.	N	1
+airline	coralwind_airways	q18	general	My meal on the domestic flight tasted like nothing, why's food so bland up there?	How much does flying dull your sense of taste? My meal tasted like nothing.	Y	1
+airline	coralwind_airways	q21	ambiguous	If you cancel my flight, can I just get my money back instead?	If you cancel my flight, is getting my money back an option instead?	N	1
+airline	coralwind_airways	q22	general	What does 'minimum connection time' mean? You guys mentioned it when I was booking.	What's a minimum connection time? You guys mentioned it to me when I was booking.	N	1
+airline	coralwind_airways	q26	org_specific	How many status credits do I need to get to Gold?	What does it take to reach Gold in terms of status credits?	N	1
+airline	coralwind_airways	q29	org_specific	How much is a lounge day pass in Brisbane before my Sydney flight?	What's a day pass for the lounge in Brisbane, before my Sydney flight?	N	1
+airline	saffron_kite_air	q04	general	The ticket says it's direct, is that the same thing as non-stop?	The ticket says it's direct, so will we stop anywhere on the way?	N	2
+airline	saffron_kite_air	q07	counter_prior	What's the latest I can drop my bag at the counter for the Delhi flight?	Is bag drop the same as the gate closing, for my Delhi flight?	Y	2
+airline	saffron_kite_air	q14	org_specific	What does it cost to cancel my Saver ticket a week before?	How does cancelling work on my Saver ticket if it's a week before?	N	2
+airline	saffron_kite_air	q24	general	If a flight gets diverted instead of cancelled, where do we actually end up?	How late does a flight have to be before it officially counts as delayed?	Y	2
+airline	saffron_kite_air	q25	ambiguous	What happens if I miss my flight, can I get on the next one that day?	How does it work if I miss my flight and want the next one that day?	N	2
+airline	coralwind_airways	q02	org_specific	What's the difference in checked bags between Lite and Classic on my international flight?	Is Lite the same as Classic for checked bags on my international flight?	Y	2
+airline	coralwind_airways	q04	org_specific	What's the checked bag allowance on a domestic Economy Classic fare?	Is a domestic Economy Classic fare the same as Lite for checked bags?	Y	2
+airline	coralwind_airways	q06	general	Can I keep my dive knife in my carry-on, or must it be checked?	Do I pay duty on stuff from the duty-free shop when I land?	Y	2
+airline	coralwind_airways	q17	org_specific	How much is the Young Flyer service for my daughter on a domestic flight?	How does the Young Flyer thing work for my daughter on a domestic flight?	Y	2
+airline	coralwind_airways	q30	ambiguous	Um, can I use my points to upgrade to Business on the Tokyo flight?	How does upgrading with points work for the Tokyo flight, like into Business?	Y	2
+airline	saffron_kite_air	q13	general	If I change my date, is the 'fare difference' on top of the change fee?	If I change rather than cancel, is the 'fare difference' on top of the change fee?	N	2
+automotive	arunodaya	arunodaya-001	org_specific	Um, how much is labour now for the regular yearly service on the hatchback?	Um, what's the labour on the hatchback's yearly service, and is GST on top of that?	N	C1
+automotive	arunodaya	arunodaya-003	general	How long's the engine supposed to idle on cold days before I drive off?	With the cold mornings now, how long should I let the engine idle before I drive off?	N	C1
+automotive	arunodaya	arunodaya-004	org_specific	What would you guys charge for pick up and drop if I live like twelve kilometres away?	Do I need to pay extra for the pick up service since I'm like twelve kilometres out?	Y	C1
+automotive	arunodaya	arunodaya-007	org_specific	Um, how late can I cancel my service booking with you guys before you charge me?	Um, if I can't make my service slot after all, what's the cut-off before there's a fee?	N	C1
+automotive	arunodaya	arunodaya-009	counter_prior	If the extra work comes to like eight thousand, can I just okay it over the phone?	Say they find extra work worth like eight thousand, is a quick okay on the phone enough?	N	C1
+automotive	arunodaya	arunodaya-012	counter_prior	If something breaks in the fourth year on extended warranty, I won't have to pay anything, right?	But if something breaks in year four, the extended warranty means I pay nothing, right?	N	C1
+automotive	arunodaya	arunodaya-013	org_specific	So by when should I actually buy the extended warranty, like how long after the delivery?	So do I need to buy the extended warranty right at delivery, or can I add it later?	Y	C1
+automotive	arunodaya	arunodaya-015	org_specific	How many days would the price you quote for my old car actually stay valid?	If someone values my old car for exchange, how long is that number good for?	N	C1
+automotive	arunodaya	arunodaya-023	org_specific	I booked about three weeks back, if I cancel now how much do you keep?	I booked three weeks back but want out, how much of the booking money is kept?	N	C1
+automotive	arunodaya	arunodaya-024	ambiguous	And once I cancel, how long until the booking money comes back to my account?	And if I pull out, does the booking money come back the way I paid, and when?	N	C1
+automotive	arunodaya	arunodaya-026	ambiguous	If the price goes up before my car gets delivered, do you charge me more?	If they raise prices before delivery, is it the new price I pay or the old one?	Y	C1
+automotive	arunodaya	arunodaya-027	org_specific	How long is the waiting period to get the EV right now if I book this week?	Someone said there's a long wait for the EV, is it like a few weeks or months?	N	C1
+automotive	arunodaya	arunodaya-028	general	Yeah, so what do you suggest I check on the car before I sign the papers?	Yeah, so once I'm there for delivery, what should I look over on the car before signing?	N	C1
+automotive	corriganpike	corriganpike-001	org_specific	Hey, um, how much would a full synthetic oil change be for a regular gas engine now?	Hey, um, what would a full synthetic oil change cost on a regular gas engine, and is rotation included?	N	C1
+automotive	corriganpike	corriganpike-004	counter_prior	If I come back next week to have the repair done, will the diagnostic fee come off the bill?	Say I take it home first, will the diagnostic fee still come off the repair bill later?	N	C1
+automotive	corriganpike	corriganpike-006	general	If my check engine light starts flashing, will it be okay to drive it in to you guys?	If my check engine light's flashing now, will it be okay to drive over to you?	N	C1
+automotive	corriganpike	corriganpike-009	general	When I pick up a loaner, should I take photos so I don't get hit with damage charges?	If I get one of your loaners this week, should I take photos in case of damage charges?	N	C1
+automotive	corriganpike	corriganpike-011	org_specific	What's the difference between your basic and plus prepaid maintenance plans, like price wise and what's covered?	What's the difference between the basic and plus prepaid plans, price wise and in what they cover?	N	C1
+automotive	corriganpike	corriganpike-014	org_specific	What does bumper to bumper actually mean on a certified used car from you, like how long?	Is there bumper to bumper coverage on a certified used car, and for how long?	Y	C1
+automotive	corriganpike	corriganpike-015	general	So, um, does the powertrain warranty also cover stuff like the air conditioning or the stereo, or no?	So, um, if my air conditioning dies on me, does the powertrain warranty pay for that?	N	C1
+automotive	corriganpike	corriganpike-019	counter_prior	If the prices go up before it's built, I'm still locked in at what we agreed, right?	So if the factory raises prices before it's built, the price we agreed on stays the same, right?	N	C1
+automotive	corriganpike	corriganpike-022	org_specific	Um, how do I prove my income if I'm financing, like how many pay stubs?	Um, would I need a few pay stubs to show my income on the loan, or just one?	N	C1
+automotive	corriganpike	corriganpike-024	org_specific	How much do you guys charge to store my winter tires for me over the summer?	How much to have my winter tires stored through the summer, and is that per tire?	N	C1
+automotive	corriganpike	corriganpike-025	general	Um, how much tread do I need left on my tires so they're not legally worn out here?	Um, what's the legal limit on tread for my tires before they count as worn out?	N	C1
+automotive	corriganpike	corriganpike-028	org_specific	Once the bodywork's done, how much time can my car sit there before there's a storage fee?	What if I can't collect my car as soon as the bodywork's done, does storage kick in straight away?	Y	C1
+automotive	corriganpike	corriganpike-029	org_specific	Should I just walk in for a bodywork estimate, or do I need to book one?	Can I just walk in for a bodywork estimate, or do I need to book one?	N	C1
+automotive	corriganpike	corriganpike-030	general	Yeah, I did, but does my policy mean I have to get it fixed where they say?	Yeah, I did, but is it okay to bring it to you, or must I go where they say?	Y	C1
+banking	saffronleaf_bank	q03	counter_prior	If I lose my debit card, how long will the replacement take to reach me?	I lost my debit card, so what's the wait like for the replacement to reach me?	N	1
+banking	saffronleaf_bank	q07	general	I've got like fifty thousand in savings, what does compounding actually mean for the interest?	I've got like fifty thousand in savings, how does compounding work on the interest I get?	N	1
+banking	saffronleaf_bank	q10	general	What do you mean by average monthly balance, is it just the month-end figure?	Is average monthly balance just whatever's left in my account at month end?	N	1
+banking	saffronleaf_bank	q14	org_specific	How much can I send on UPI in a single day from my account?	How much is the UPI limit on my account for a single day?	N	1
+banking	saffronleaf_bank	q16	general	Why's the rate on a fixed deposit higher than what my savings account pays?	How come an FD pays a higher rate than what my savings account gets?	N	1
+banking	saffronleaf_bank	q20	org_specific	How much is it to put a stop payment on a cheque I gave?	What's the difference in cost between stopping one cheque and a few in a row?	N	1
+banking	saffronleaf_bank	q25	general	Why did my account get charged at the ATM when no cash came out?	Why did my account get charged at the ATM the other day when no cash came out?	N	1
+banking	saffronleaf_bank	q28	ambiguous	Can I deposit cash at the branch any time it's open?	Do I have to deposit cash before a certain time, or whenever the branch is open?	Y	1
+banking	saffronleaf_bank	q30	org_specific	What happens if I miss the date for updating my KYC?	What does missing the date for my KYC update actually do to my account?	N	1
+banking	quaymark_money	q01	general	I'm on the free plan, uh, what's the difference between a direct debit and a standing order?	I'm on the free plan, uh, is a direct debit the same thing as a standing order?	Y	1
+banking	quaymark_money	q07	ambiguous	I'm on the free plan, can I use my card abroad without paying any fees?	I'm on the free plan, are there any fees for using my card abroad?	Y	1
+banking	quaymark_money	q11	org_specific	What rate are you paying on the Easy Access Saver at the moment?	Um, what rate are you paying on the Easy Access Saver at the moment?	N	1
+banking	quaymark_money	q12	general	What happens if that Confirmation of Payee check says the name on the account doesn't match?	Do I have to stop the payment if Confirmation of Payee says the name doesn't match?	Y	1
+banking	quaymark_money	q15	general	What's a chargeback, and is that different from the shop just refunding me?	Is a chargeback the same thing as the shop refunding me, or not?	Y	1
+banking	quaymark_money	q18	general	Why did a pending payment just disappear from my account, did you cancel it?	Okay, a pending payment just disappeared, so how much of that money actually left my account?	Y	1
+banking	quaymark_money	q21	counter_prior	Do you charge anything to send me a new card if I've lost mine?	Is a new card free if I've lost mine, or is there a fee?	Y	1
+banking	quaymark_money	q23	general	What's the difference between EAR and APR on an overdraft, I mean in practice?	Is the EAR on an overdraft the same as an APR, or not quite?	Y	1
+banking	quaymark_money	q25	general	Why do you need a selfie and my photo ID just to open an account?	Is there a legal reason I need a selfie and photo ID to open an account?	Y	1
+banking	quaymark_money	q27	general	They told me to move my money into a safe account, is that normal?	Okay, so they want me to move my money into a safe account today, should I?	N	1
+banking	quaymark_money	q28	org_specific	Is it possible to reach someone about fraud in the middle of the night?	Is it possible to reach your fraud team in the middle of the night?	N	1
+banking	quaymark_money	q29	general	How many digits is a sort code, and why do people need it to pay me?	Do I need my sort code as well as my account number to get paid?	Y	1
+banking	quaymark_money	q30	org_specific	What hours can I actually talk to someone on the phone on a Saturday?	How many hours is your phone line actually open on a Saturday?	N	1
+banking	quaymark_money	q01	general	I'm on the free plan, uh, is a direct debit the same thing as a standing order?	I'm on the free plan, uh, can a company take money by direct debit without asking me?	Y	2
+banking	quaymark_money	q12	general	Do I have to stop the payment if Confirmation of Payee says the name doesn't match?	If Confirmation of Payee says the name doesn't match, could I lose my money by paying?	Y	2
+banking	quaymark_money	q15	general	Is a chargeback the same thing as the shop refunding me, or not?	Can a chargeback get my money back even when the shop refuses to refund me?	Y	2
+banking	quaymark_money	q21	counter_prior	Is a new card free if I've lost mine, or is there a fee?	How does getting a new card work if I've lost mine, and is it free?	Y	2
+banking	quaymark_money	q28	org_specific	Is it possible to reach your fraud team in the middle of the night?	How does reporting fraud to you work if it happens in the middle of the night?	Y	2
+banking	saffronleaf_bank	q05	counter_prior	Um, I fly to Dubai tonight, can I just turn on international use on my card now?	Um, I fly to Dubai tonight, how does turning on international use on my card work?	N	2
+banking	saffronleaf_bank	q07	general	I've got like fifty thousand in savings, how does compounding work on the interest I get?	I've got like fifty thousand in savings, do I earn interest on the interest I've already got?	Y	2
+banking	saffronleaf_bank	q14	org_specific	How much is the UPI limit on my account for a single day?	How does the daily UPI limit work on my account, is it per payment?	Y	2
+banking	saffronleaf_bank	q19	general	How long is a cheque valid for after the date written on it?	Will the bank still pay out a cheque that's dated more than three months back?	Y	2
+banking	saffronleaf_bank	q27	general	How many characters is an IFSC code, and where do I find mine?	Do I need an IFSC code to receive money by NEFT, and where's mine?	Y	2
+ecommerce	brackenfield_home	q05	org_specific	How many days have I got to return a laptop I haven't opened?	What's the return window on a laptop if I haven't even opened it?	N	1
+ecommerce	brackenfield_home	q10	org_specific	What time do I need to order by for next-day delivery?	Why didn't my order come next day? I placed it at nine pm.	Y	1
+ecommerce	brackenfield_home	q13	counter_prior	My sofa's coming tomorrow, can I move it to next week for free?	My sofa's coming tomorrow, what happens if I move it to next week?	N	1
+ecommerce	brackenfield_home	q15	org_specific	Right, how much do you charge to plumb in a new washing machine?	What does it cost to have you plumb in a new washing machine?	N	1
+ecommerce	brackenfield_home	q16	ambiguous	Uh, will you take my old washing machine away as well?	Uh, what happens to my old washing machine when you bring the new one?	Y	1
+ecommerce	brackenfield_home	q18	org_specific	How much is it for you to wall mount a sixty-five inch TV?	What's the difference between wall mounting a sixty-five and a seventy-five inch TV?	Y	1
+ecommerce	brackenfield_home	q24	general	Um, why's the same TV a different model number at different shops?	Um, how come the same TV has another model number at other shops?	N	1
+ecommerce	brackenfield_home	q27	general	With nought percent APR, do I pay back more than the price of the sofa?	With nought percent APR, is there any interest charge on top of the sofa price?	N	1
+ecommerce	tamarind_lane	q03	org_specific	My refund for the UPI payment got processed, how long till it's in my account?	You've processed my money back to UPI, how long till it reaches my account?	N	1
+ecommerce	tamarind_lane	q06	general	How many digits is a pincode, the app keeps saying mine's invalid?	How long is a pincode supposed to be, your app won't accept mine?	N	1
+ecommerce	tamarind_lane	q10	org_specific	How much do you charge for delivery when my order's pretty small?	Why did you add a delivery charge on my order, it was pretty small?	Y	1
+ecommerce	tamarind_lane	q12	org_specific	Um, what's the extra fee if I pay cash on delivery with you guys?	Um, why does cash on delivery cost more with you guys?	N	1
+ecommerce	tamarind_lane	q19	counter_prior	My mixer jar came cracked, how soon should I report it?	My mixer jar came cracked, is there a time limit to report it?	Y	1
+ecommerce	tamarind_lane	q25	org_specific	Um, how long is a gift card good for once I buy one?	Um, what's the validity on a gift card once I buy one, then?	N	1
+ecommerce	tamarind_lane	q27	ambiguous	Is the no-cost EMI actually free on your site, or is there a catch?	What does no-cost EMI actually cost me on your site, anything?	N	1
+ecommerce	brackenfield_home	q12	general	Can I pick the exact day if I go for nominated day delivery?	What happens with nominated day delivery, do I get to pick the day?	N	1
+ecommerce	tamarind_lane	q07	org_specific	How many days does delivery usually take to a Guwahati pincode?	How many days does delivery usually take to a Guwahati pincode, roughly?	N	1
+ecommerce	brackenfield_home	q20	org_specific	What time does the Cribbs Causeway store open on a Sunday?	What time does the Cribbs Causeway store open on a Sunday morning?	N	1
+food_delivery	tiffinora	tiffinora-001	org_specific	How much is the delivery fee if the restaurant's about five kilometres from my place?	A restaurant I like is about five kilometres away, what's the fee just for bringing it over?	N	C1
+food_delivery	tiffinora	tiffinora-002	org_specific	So when it's raining really heavily, how much extra do you guys add to the delivery fee?	Do I pay a bit more for delivery when it's raining really heavily, and how much more?	N	C1
+food_delivery	tiffinora	tiffinora-005	general	Is there an easy way to work out how much five percent GST is on three hundred rupees?	If my order with you comes to three hundred rupees, what's the five percent tax on that?	N	C1
+food_delivery	tiffinora	tiffinora-006	org_specific	How much does the membership cost per month, and um, is delivery free on every order?	What's the membership per month, um, and does it cover delivery on every order or just some?	N	C1
+food_delivery	tiffinora	tiffinora-007	counter_prior	If I cancel my yearly membership halfway through, do I get any money back at all?	Will I get anything back if I quit my yearly membership halfway through, or is it all gone?	N	C1
+food_delivery	tiffinora	tiffinora-008	general	If my membership fee payment fails but the money still gets debited, will I get it back?	So if my membership fee payment to you fails but the money's still debited, will I get it back?	N	C1
+food_delivery	tiffinora	tiffinora-009	counter_prior	My order's half an hour past the time it showed, can I cancel and get a full refund?	My order's half an hour later than the app said, can I cancel for a full refund?	N	C1
+food_delivery	tiffinora	tiffinora-015	counter_prior	For a cash on delivery order, how do I pay the delivery guy if I only have UPI?	I picked cash on delivery but only have UPI, will the guy at the door take that?	N	C1
+food_delivery	tiffinora	tiffinora-016	org_specific	What's the most I can spend on one order if I want to pay cash on delivery?	Will I be able to pay cash on delivery for a big order, or only up to some amount?	N	C1
+food_delivery	tiffinora	tiffinora-017	general	If I'm paying cash on delivery, what are the signs a five hundred rupee note is fake?	If I'm paying cash on delivery, how can I tell a five hundred rupee note is fake?	N	C1
+food_delivery	tiffinora	tiffinora-023	ambiguous	So how far away can a restaurant be and still deliver to my place over here?	So how far away can a restaurant be but still deliver out to my place here?	N	C1
+food_delivery	tiffinora	tiffinora-024	org_specific	Until what time at night can I order food in Hyderabad, like is it past midnight?	Can I still order food in Hyderabad after midnight, or does it all stop then?	N	C1
+food_delivery	tiffinora	tiffinora-025	general	If I order fried rice late at night, is it fine to leave the leftovers out till morning?	If I order fried rice late at night, can I leave the leftovers out till morning?	N	C1
+food_delivery	tiffinora	tiffinora-026	counter_prior	Will I be able to add a tip for the delivery guy after the food's arrived?	If the person who brought my food was really nice, can I still tip them after they've left?	N	C1
+food_delivery	tiffinora	tiffinora-027	org_specific	How far ahead can I schedule an order, and when can I still cancel it for free?	How many days ahead can I schedule an order, and up to when can I call it off?	N	C1
+food_delivery	tiffinora	tiffinora-028	general	If I tip ten percent on a six hundred and fifty rupee order, how much is that?	For the six hundred and fifty rupee order I've just placed, um, what's a ten percent tip?	N	C1
+food_delivery	brambleway	brambleway-001	org_specific	What do I need to pay for delivery if the restaurant's about two miles away from me?	Say the restaurant's about two miles from me, what's your delivery charge going to be?	N	C1
+food_delivery	brambleway	brambleway-006	counter_prior	If I cancel the membership today, do I keep free delivery till the month runs out?	If I end my membership today, will I keep my perks till the month's up?	N	C1
+food_delivery	brambleway	brambleway-007	org_specific	So how much is it a month, and um, is there a yearly option too?	Um, what's the difference in price between paying for it monthly and yearly?	N	C1
+food_delivery	brambleway	brambleway-008	general	If the cancel button isn't working, can I get my bank to stop a monthly subscription?	If your cancel button won't work, can my card provider stop the monthly payments for me?	N	C1
+food_delivery	brambleway	brambleway-010	org_specific	Oh okay, so how much do I get charged if I cancel it now then?	Oh okay, but if I back out at this point, what do I still have to pay?	N	C1
+food_delivery	brambleway	brambleway-015	counter_prior	If I can't show ID for the beer, I'll still get the rest of my grocery shopping, right?	If I've no ID for the beer in my grocery order, will they still hand over the rest?	N	C1
+food_delivery	brambleway	brambleway-016	org_specific	What time should I order wine by for delivery in Glasgow at night?	Up in Glasgow, will I still be able to order wine at like half ten at night?	Y	C1
+food_delivery	brambleway	brambleway-020	org_specific	How late's restaurant delivery actually running in Leeds on a Saturday night?	On a Saturday night in Leeds, until when do you keep bringing restaurant food round?	N	C1
+food_delivery	brambleway	brambleway-021	org_specific	Um, how late do you run the quick grocery delivery in Bristol on a weekday?	Um, on a weekday in Bristol, when does your quick grocery delivery stop for the night?	N	C1
+food_delivery	brambleway	brambleway-023	org_specific	How long have I got to add a tip afterwards if I forgot at checkout?	I forgot to tip at checkout, but can I still add one, and for how long?	N	C1
+food_delivery	brambleway	brambleway-024	org_specific	How long will the rider wait at the door if I don't hear the buzzer?	If nobody hears the buzzer, how long will the rider hang around before they leave?	N	C1
+food_delivery	brambleway	brambleway-028	general	How much do I save with fifteen percent off a twenty four pound order?	If I get fifteen percent off a twenty four pound order with you, what does that save me?	N	C1
+food_delivery	brambleway	brambleway-030	general	Yeah, how cold does my fridge actually need to be for the chilled stuff I've brought back?	Yeah, for the chilled stuff I've just collected from you, how cold does my fridge actually need to be?	N	C1
+government	kestrelbay	kestrelbay-003	general	So who decides which council tax band my house goes in, is that you guys at the council?	So is the council tax band for my house something you set, or is it done elsewhere?	Y	C1
+government	kestrelbay	kestrelbay-004	org_specific	I live on my own now, should I be able to backdate the single person discount, and how far?	I've lived alone about a year, but can the single person discount go back that far?	Y	C1
+government	kestrelbay	kestrelbay-009	general	Should I rinse out the tins and plastic tubs before they go in my recycling bin?	Should I rinse out the tins and plastic tubs for the recycling bin first?	N	C1
+government	kestrelbay	kestrelbay-010	org_specific	If I sign up now, is the garden bin the same price for the year?	If someone joins the garden bin scheme halfway through the year, is it cheaper?	Y	C1
+government	kestrelbay	kestrelbay-011	ambiguous	Do you still collect garden waste over the winter, like in December and January?	Is garden waste still picked up in December and January, or does it stop?	N	C1
+government	kestrelbay	kestrelbay-014	general	Will I get fined if I leave an old mattress out on the pavement for someone?	If I leave my old mattress by the kerb for people to take, will I get fined?	N	C1
+government	kestrelbay	kestrelbay-015	org_specific	Is the tip at Saltmarsh Quay open on a Wednesday afternoon?	Can I take an old microwave to your Saltmarsh Quay tip on a Wednesday afternoon?	N	C1
+government	kestrelbay	kestrelbay-019	general	Will a residents' parking permit get me a space right outside the house every time?	Once I have your residents' permit, will I always get a space right outside?	N	C1
+government	kestrelbay	kestrelbay-021	general	What's the difference between a parking ticket from the council and one from a private car park?	If I get a parking ticket from you now, is it the same as a private car park one?	Y	C1
+government	kestrelbay	kestrelbay-022	counter_prior	My kid's library books are two weeks overdue, is that going to mean a fine?	My kid's library books are two weeks overdue, so will they get a fine, or not?	N	C1
+government	kestrelbay	kestrelbay-023	org_specific	Is there a limit on the number of books I can borrow at once, and for how long?	Can someone check out, like, twenty books together, and how long do they get them?	Y	C1
+government	kestrelbay	kestrelbay-025	counter_prior	How much does it cost to apply for a blue badge for my dad?	My dad needs a blue badge, but does the application cost money, or not?	Y	C1
+government	kestrelbay	kestrelbay-026	ambiguous	It's a new one, so if he applies now how long until he hears back?	It's a new one, but how long until someone gets back to him with a decision?	N	C1
+government	kestrelbay	kestrelbay-027	general	How much time can my dad park on a single yellow line with his blue badge?	If he gets a blue badge, how long can my dad park on a single yellow line?	N	C1
+government	kestrelbay	kestrelbay-028	counter_prior	There are rats in the loft, what do you charge to come and treat them?	There are rats in the loft, so do they treat those for free, or not?	Y	C1
+government	kestrelbay	kestrelbay-029	org_specific	There's a wasp nest by the back door, what would it cost to get rid of it?	There's a wasp nest by the back door, how much to have someone get rid of it?	N	C1
+government	kesarinagar	kesarinagar-001	org_specific	So what's the last date for the first half of the property tax, before I'm charged a penalty?	So when exactly is the first half of the property tax due, before it counts as late?	N	C1
+government	kesarinagar	kesarinagar-002	counter_prior	Should I pay the full year's property tax before the first due date to get the early payment discount?	Will I get a few percent off if I pay the whole year's property tax up front?	N	C1
+government	kesarinagar	kesarinagar-004	org_specific	Okay, I owe about forty thousand rupees on the tax, how much is the penalty if I'm two months late?	I'm two months late on about forty thousand rupees of tax, so what percent penalty is that?	N	C1
+government	kesarinagar	kesarinagar-005	counter_prior	Our home is still locked up and empty all year, do you give any reduction on the tax?	Our home's locked up and empty all year, but is it taxed the same as an occupied one?	Y	C1
+government	kesarinagar	kesarinagar-006	general	I paid stamp duty buying the flat, like a few lakh rupees, so do I still owe municipal tax?	Now that I've paid stamp duty on the flat, do I still owe you property tax each year?	N	C1
+government	kesarinagar	kesarinagar-010	org_specific	What would it cost for, like, five extra copies of my dad's death certificate?	I need, like, five extra copies of my dad's death certificate, what will that come to?	N	C1
+government	kesarinagar	kesarinagar-012	counter_prior	Do I have to renew my shop's trade licence every year, and when is it due?	Does a shop's trade licence need renewing every year, and by what date?	N	C1
+government	kesarinagar	kesarinagar-013	org_specific	My trade licence expired about two months ago, how much is the fine I'd need to pay if I renew it?	My trade licence ran out about two months ago, so is there a penalty, and what percent?	Y	C1
+government	kesarinagar	kesarinagar-014	general	I've already got GST registration for the shop, do I still need to pay a trade licence fee?	I've got GST registration for the shop, so do I still pay for your trade licence?	N	C1
+government	kesarinagar	kesarinagar-018	org_specific	Is there something I need to pay to connect our place to the city sewer line?	We need our house connected to the city sewer line, but is there a fee for that?	N	C1
+government	kesarinagar	kesarinagar-021	counter_prior	How much would you guys ask to come and, like, pick up our old sofa?	We need someone to, like, come and pick up our old sofa, but is that free?	Y	C1
+government	kesarinagar	kesarinagar-022	general	Can I put used sanitary pads in with the dry waste, or where should they go?	When I'm sorting the dry waste, what do I do with used sanitary pads?	Y	C1
+government	kesarinagar	kesarinagar-027	general	Is it okay if I trim the branches touching the electric wires outside our house myself?	For the branches touching the power lines by our gate, should I cut those myself?	N	C1
+government	kesarinagar	kesarinagar-029	org_specific	Okay, can I come to the ward office on a Saturday afternoon to pay my tax in cash?	Will the ward office take my tax in cash on a Saturday afternoon, or is it shut?	N	C1
+government	kesarinagar	kesarinagar-030	general	Sure, how much detail do you guys want so the repair crew can find the spot?	Sure, for the report, how much detail is enough for the crew to find the spot?	N	C1
+healthcare	varunika_hospitals	q22	general	They said we'll get a discharge summary, um, what is that exactly?	Okay, what's actually in the discharge summary, do I need it later?	Y	1
+healthcare	varunika_hospitals	q14	general	Yes, but what does cashless mean in practice, like who pays?	Yes, but how does cashless work, like who pays the hospital?	N	1
+healthcare	varunika_hospitals	q07	counter_prior	If I cancel my appointment the night before, do I get a full refund?	Is the refund the full amount if I call off my appointment the night before?	N	1
+healthcare	varunika_hospitals	q02	org_specific	How much is an OPD visit with the heart specialist at Nashik?	What's a heart specialist consult at Nashik going to cost me, roughly?	N	1
+healthcare	varunika_hospitals	q13	org_specific	And how long till we get the reports back?	And when do the reports come back after that?	N	1
+healthcare	varunika_hospitals	q09	counter_prior	Uh, how many hours do I need to fast for the fasting sugar test?	Uh, how many hours of fasting is enough for the sugar test?	N	1
+healthcare	varunika_hospitals	q20	org_specific	So how much deposit do we pay on the day of admission?	So what's the deposit we pay on the day of admission?	N	1
+healthcare	varunika_hospitals	q16	org_specific	How early do I send my insurance papers before my planned surgery?	When should my insurance papers reach you before my planned surgery?	N	1
+healthcare	varunika_hospitals	q19	general	So why do you need a photo ID for my seventy-year-old dad's admission?	Is there a reason you need a photo ID for my dad's admission?	N	1
+healthcare	varunika_hospitals	q01	general	So what's the difference between an OPD visit and an IPD one on the bill?	On the bill, how is an OPD charge different from an IPD one?	N	1
+healthcare	varunika_hospitals	q29	general	Can the doctor examine me properly on a video consultation?	How much can the doctor actually check on a video consultation?	N	1
+healthcare	varunika_hospitals	q15	ambiguous	If it's cashless, do I still pay anything when I get admitted?	On cashless, what do we actually pay ourselves when she's admitted?	Y	1
+healthcare	wrenfield_clinics	q05	counter_prior	How many hours before do I need to cancel so I don't get charged?	What does late cancellation mean on my booking, like how late is late?	N	1
+healthcare	wrenfield_clinics	q24	counter_prior	Can you see my four-month-old, she's had a rash for two days?	Is it okay to book my four-month-old in with a GP for a rash?	N	1
+healthcare	wrenfield_clinics	q03	ambiguous	If I'm running twenty minutes late, can the GP still see me?	What happens if I'm twenty minutes late, does the GP still see me?	N	1
+healthcare	wrenfield_clinics	q16	org_specific	What time can I have a blood test done at the York clinic?	What's a good time to pop into the York clinic for bloods?	N	1
+healthcare	wrenfield_clinics	q27	general	Someone told me I need a yellow fever certificate, what's that about?	Someone said I'll need a yellow fever jab, how soon before I fly?	Y	1
+healthcare	wrenfield_clinics	q20	org_specific	How much do you charge to write up a prescription my specialist recommended?	Why is there a charge to write up a prescription my specialist recommended?	N	1
+healthcare	wrenfield_clinics	q25	general	So what's a subject access request, and can I use one for my notes?	How long does a subject access request for my notes take, and is it free?	N	1
+healthcare	wrenfield_clinics	q04	general	How many days can I be off sick before I need to get a note from you?	How many days can I be off sick before I need a note from you?	N	1
+healthcare	varunika_hospitals	q06	general	If my family doctor gives me a referral letter, what's it for?	Um, if my family doctor gives me a referral letter, what's it for?	N	1
+insurance	tulsivan_health	q01	org_specific	Okay, so how much will you pay for my room, like, per day?	So what does that mean for my room, like, what's the limit per day?	N	1
+insurance	tulsivan_health	q03	general	Um, I'm on Nirantar Classic, what does a room-rent limit mean for my stay?	Um, I'm on Nirantar Classic, how come policies cap the room rent per day?	Y	1
+insurance	tulsivan_health	q05	general	He mentioned a waiting period, so what does that even mean?	He mentioned a waiting period, is there a time when I just can't claim?	Y	1
+insurance	tulsivan_health	q06	counter_prior	I'm only thirty-four, do I still have to pay a co-pay on Classic?	I'm only thirty-four, why am I being asked to pay a co-pay on Classic?	Y	1
+insurance	tulsivan_health	q12	org_specific	Uh, how soon do I need to tell you if I'm admitted in an emergency?	If I'm rushed into hospital at night, by when do I have to call you?	N	1
+insurance	tulsivan_health	q14	org_specific	Um, do you need the original bills, or can I just upload scans?	Um, do you need the original bills, or are scans enough?	N	1
+insurance	tulsivan_health	q18	general	It mentions a no-claim bonus, what's that actually do for me?	It mentions a no-claim bonus, what does that actually do for me?	N	1
+insurance	tulsivan_health	q21	general	What happens to my premium as I get older, will I pay more every year?	What happens to my premium as I get older, does that mean paying more every year?	N	1
+insurance	tulsivan_health	q24	ambiguous	If I cancel during the free-look period, do I get my full premium back?	What does the free-look period actually mean for my refund, is it the full premium?	N	1
+insurance	tulsivan_health	q25	general	Can I get out of a new policy if I change my mind?	Can I cancel a new policy in the first few days if I change my mind?	N	1
+insurance	tulsivan_health	q27	org_specific	Okay, are the branches open on Saturdays? I work all week.	Does that mean I can come on a Saturday? I work all week.	Y	1
+insurance	liwan_crest_insurance	q07	org_specific	How soon after I report it will your surveyor come and look at the car?	What's the wait for your surveyor to look at the car once I report it?	N	1
+insurance	liwan_crest_insurance	q10	general	Um, does the no-claims discount stay with me or with the car if I sell it?	Um, can I take my no-claims discount with me if I sell the car?	Y	1
+insurance	liwan_crest_insurance	q11	ambiguous	Does roadside cover me if I get stuck in sand just off the road?	Does roadside even cover me if I get stuck in sand just off the road?	N	1
+insurance	liwan_crest_insurance	q13	general	Why would I need roadside assistance if I've already got comprehensive cover?	Is there any point having roadside assistance if I've already got comprehensive cover?	Y	1
+insurance	liwan_crest_insurance	q15	general	The report says it could be a total loss, what does that mean for me?	The report says it could be a total loss, so that's not fixable then?	Y	1
+insurance	liwan_crest_insurance	q16	ambiguous	Can I cancel my car insurance halfway through and get the rest back?	Why can't I just end my car insurance halfway and get the unused part back?	Y	1
+insurance	liwan_crest_insurance	q18	counter_prior	What happens if I renew my car insurance a few days late?	Is it a big deal if I renew my car insurance a few days late?	Y	1
+insurance	liwan_crest_insurance	q23	general	I've heard I might be underinsured on contents, why would that hurt my claim?	I've heard I might be underinsured on contents, how much can that hurt my claim?	Y	1
+insurance	liwan_crest_insurance	q24	counter_prior	I booked my flights like a month ago, can I still get cancellation cover now?	I booked flights a month ago, does cancellation cover still work if I buy now?	N	1
+insurance	liwan_crest_insurance	q28	general	How long does an annual multi-trip policy last, from when exactly?	How many days does an annual multi-trip policy run, from when exactly?	Y	1
+insurance	liwan_crest_insurance	q29	org_specific	Do I need to book for the survey centre on a Saturday, or can I walk in?	Does by appointment mean I can't just walk into the survey centre on a Saturday?	Y	1
+insurance	tulsivan_health	q16	counter_prior	What usually happens to my bonus if I make one small claim this year?	What happens to my bonus if I make one small claim this year?	N	1
+insurance	tulsivan_health	q29	org_specific	What does the AYUSH cover on Nirantar Classic actually get me?	How much does the AYUSH cover on Nirantar Classic actually get me?	N	1
+insurance	liwan_crest_insurance	q17	general	What happens if I've only got third-party cover and I hit a wall?	If I've only got third-party cover and I hit a wall, am I covered?	Y	1
+insurance	liwan_crest_insurance	q21	org_specific	What's the most you'll pay for one item, like my new laptop, under contents?	How much will you pay for one item, like my new laptop, under contents?	N	1
+insurance	tulsivan_health	q16	counter_prior	What happens to my bonus if I make one small claim this year?	How does the bonus work if I make one small claim this year?	N	2
+insurance	tulsivan_health	q04	org_specific	What's the difference in waiting time for my thyroid between Classic and Plus?	Is the waiting time for my thyroid the same on Classic and Plus?	Y	2
+insurance	tulsivan_health	q14	org_specific	Um, do you need the original bills, or are scans enough?	Um, how does sending bills work, do you need the originals or are scans enough?	N	2
+insurance	tulsivan_health	q12	org_specific	If I'm rushed into hospital at night, by when do I have to call you?	If I'm rushed into hospital at night, how does letting you know work?	N	2
+insurance	tulsivan_health	q15	general	Do I need a discharge summary for my claim, what even is that?	Do I need a discharge summary to get my money back, what even is that?	N	2
+insurance	liwan_crest_insurance	q02	general	So if the repair's three thousand and the excess is four hundred, how much do you cover?	Okay, so the excess is the bit I pay, and you cover the rest of the repair?	Y	2
+insurance	liwan_crest_insurance	q07	org_specific	What's the wait for your surveyor to look at the car once I report it?	How does the survey work on your side after I report the accident?	N	2
+insurance	liwan_crest_insurance	q15	general	The report says it could be a total loss, so that's not fixable then?	The report says it could be a total loss, so do I get paid out instead?	Y	2
+insurance	liwan_crest_insurance	q21	org_specific	How much will you pay for one item, like my new laptop, under contents?	How does contents cover work for one pricey item, like my new laptop?	N	2
+insurance	liwan_crest_insurance	q14	org_specific	Why did you write my car off instead of just, um, fixing it?	How do you decide my car's a write-off and not, um, worth fixing?	N	2
+insurance	liwan_crest_insurance	q24	counter_prior	I booked flights a month ago, does cancellation cover still work if I buy now?	Is cancellation cover the same if I buy it a month after booking my flights?	Y	2
+insurance	liwan_crest_insurance	q07	org_specific	How does the survey work on your side after I report the accident?	Will someone come out to inspect my car once I've reported the accident?	N	C1
+insurance	liwan_crest_insurance	q08	general	Why does someone normally need to inspect my car before it's repaired?	Before you pay for my repair, why does the car need inspecting first?	N	C1
+insurance	liwan_crest_insurance	q16	ambiguous	Why can't I just end my car insurance halfway and get the unused part back?	But if I cancel my car insurance halfway, will I get the unused part back?	Y	C1
+insurance	liwan_crest_insurance	q21	org_specific	How does contents cover work for one pricey item, like my new laptop?	Is there a cap per item on contents, say for my new laptop?	N	C1
+insurance	liwan_crest_insurance	q24	counter_prior	Is cancellation cover the same if I buy it a month after booking my flights?	Will I still get cancellation cover if I buy it a month after booking?	N	C1
+insurance	tulsivan_health	q04	org_specific	Is the waiting time for my thyroid the same on Classic and Plus?	What's the difference between Classic and Plus on the waiting time for my thyroid?	Y	C1
+insurance	tulsivan_health	q12	org_specific	If I'm rushed into hospital at night, how does letting you know work?	If someone rushes me into hospital at night, do I need to tell you straight away?	N	C1
+insurance	tulsivan_health	q14	org_specific	Um, how does sending bills work, do you need the originals or are scans enough?	Um, do I need the original bills, or will scans be enough for the claim?	N	C1
+insurance	tulsivan_health	q16	counter_prior	How does the bonus work if I make one small claim this year?	Will I lose my bonus if I make one small claim this year?	Y	C1
+insurance	tulsivan_health	q18	general	It mentions a no-claim bonus, what does that actually do for me?	It mentions a no-claim bonus, so what do I get for not claiming?	N	C1
+insurance	tulsivan_health	q26	org_specific	Can I change my nominee over the phone, and is there a fee?	Do I need a form to change my nominee, or can someone do it by phone?	N	C1
+insurance	tulsivan_health	q27	org_specific	Does that mean I can come on a Saturday? I work all week.	But will the branch be open on a Saturday? I work all week.	N	C1
+insurance	liwan_crest_insurance	q10	general	Um, can I take my no-claims discount with me if I sell the car?	Um, can I actually take my no-claims discount with me if I sell the car?	N	C1
+insurance	tulsivan_health	q28	general	Why do you need me to name a nominee, what would they get?	Do I really need to name a nominee, and what would they get?	Y	C1
+insurance	tulsivan_health	q29	org_specific	How much does the AYUSH cover on Nirantar Classic actually get me?	How much does the AYUSH cover on Nirantar Classic get me?	N	C1
+telecom	sarovan_telecom	q01	org_specific	Uh, how much do you charge for a new SIM if mine got stolen?	Uh, what does a replacement SIM set me back if mine got stolen?	N	1
+telecom	sarovan_telecom	q04	counter_prior	So, how many days does it take to bring my number over to you?	So, how long until my number's actually working with you after I port it?	N	1
+telecom	sarovan_telecom	q07	org_specific	Okay, and the seven-day one, how much data does that give me?	And the seven-day one, what sort of data allowance comes with that?	N	1
+telecom	sarovan_telecom	q08	general	I'm flying to Dubai next week, why do calls I receive there still get charged?	I'm flying to Dubai next week, is there a charge for calls I receive there?	Y	1
+telecom	sarovan_telecom	q10	org_specific	My bill's overdue and calls are barred, do I pay a fee to get reconnected?	My bill's overdue and calls are barred, how much do I pay to get reconnected?	N	1
+telecom	sarovan_telecom	q16	general	Mostly at night, like after nine, why does it get slower then?	Mostly at night, like every day after nine, why does it get slower then?	N	1
+telecom	sarovan_telecom	q18	ambiguous	Um, if my router just dies on me, do you guys replace it free?	Um, if my router just dies on me, what happens, do you guys replace it?	N	1
+telecom	sarovan_telecom	q19	general	Upstairs in the bedroom, um, would the five gig band or the two point four reach better?	Upstairs in the bedroom, so do I need to use the two point four network there?	Y	1
+telecom	sarovan_telecom	q20	ambiguous	My fibre was down for four days last week, do I get anything back for that?	My fibre was dead for most of last week, is there any sort of compensation for that?	Y	1
+telecom	sarovan_telecom	q21	general	My fibre was down for hours last week, why does a cut cable usually take so long to fix?	My fibre was down for hours last week, is there a reason cut cables take so long to fix?	Y	1
+telecom	sarovan_telecom	q24	counter_prior	Okay, and how soon do I get my deposit back after that?	And what about my deposit, when does that come back to me?	N	1
+telecom	sarovan_telecom	q26	general	If I close my postpaid connection, will I still get one more bill after that?	If I cancel my postpaid connection, will I still get one more bill after that?	N	1
+telecom	sarovan_telecom	q27	org_specific	Are your stores open on Sunday, like what time do they close?	Are your stores open on Sundays, and like, until when exactly?	N	1
+telecom	sarovan_telecom	q28	general	What does eSIM actually mean, is it different from a normal SIM card?	Do I need a special phone for eSIM, or does any phone work?	Y	1
+telecom	sarovan_telecom	q29	org_specific	I complained about my bill ten days ago, how exactly do I escalate it?	I complained about my bill over a week ago, how do I escalate it now?	N	1
+telecom	tallowood_connect	q01	counter_prior	If I keep recharging on time, how long does my banked data hang around?	If I keep recharging without a gap, how long does my banked data hang around?	N	1
+telecom	tallowood_connect	q02	org_specific	How much banked data can I hold onto on the forty dollar recharge?	What's the most banked data I can hold onto on the forty dollar recharge?	N	1
+telecom	tallowood_connect	q06	org_specific	I'm off to Bali next month, how much is the travel pass per day there?	I'm off to Bali next month, what's the travel pass going to cost me there?	N	1
+telecom	tallowood_connect	q09	counter_prior	How much is the late fee if my postpaid bill goes overdue?	What happens if I pay my postpaid bill like a week or so late?	Y	1
+telecom	tallowood_connect	q11	general	Um, my direct debit bounced last week, why would the bank reject it?	Um, my direct debit bounced a few days ago, why would the bank reject it?	N	1
+telecom	tallowood_connect	q14	general	I'm still paying off my phone, um, how many digits is the IMEI, and where do I find it?	I'm still paying off my phone, um, where do I find the IMEI on it, for my insurance?	Y	1
+telecom	tallowood_connect	q16	general	On the home hundred plan, how long should a two gig download take?	On the home hundred plan, how much time should a two gig download take?	N	1
+telecom	tallowood_connect	q18	general	I'm moving house in three weeks, where's the best spot to put my modem?	I'm moving house in a few days, where's the best spot to put my modem?	N	1
+telecom	tallowood_connect	q20	ambiguous	My phone had no signal all weekend, do I get credit for that?	My phone had no signal all weekend, can I get something knocked off my bill?	N	1
+telecom	tallowood_connect	q21	general	It just says SOS only up the top, what does that mean?	It just shows SOS only up the top, what does that mean for calling people?	Y	1
+telecom	tallowood_connect	q23	general	Why do you guys even need my ID to activate a prepaid SIM?	Why do you guys need to see my ID just to activate a prepaid SIM?	N	1
+telecom	tallowood_connect	q24	ambiguous	I've got a new phone, how many times can I move my eSIM across?	I've got a new phone, is there a limit on moving my eSIM across?	N	1
+telecom	tallowood_connect	q25	general	Yeah, but how do I know if it even supports eSIM?	Okay, but how do I know if that phone supports eSIM at all?	N	1
+telecom	tallowood_connect	q28	org_specific	What time can I call you guys until on a Sunday?	If I ring you guys on a Sunday, until when is someone there?	N	1
+telecom	tallowood_connect	q30	general	If you can't fix my complaint, who else can I take it to?	If you guys can't fix my complaint, who else could I take it to?	N	1
+telecom	sarovan_telecom	q03	general	If my phone got stolen, how long should I wait before blocking the SIM?	If my phone got stolen, could someone run up charges on my SIM?	Y	2
+telecom	sarovan_telecom	q13	org_specific	What's the difference with Flex five forty-nine when I run out of data?	Is Flex five forty-nine the same as four ninety-nine when the data's all used up?	N	2
+telecom	sarovan_telecom	q24	counter_prior	And what about my deposit, when does that come back to me?	And the security amount from when I joined, how does that get handled?	N	2
+telecom	sarovan_telecom	q25	org_specific	Why would there be a fee if I end my fibre plan after six months?	If I end my fibre plan after six months, how does that work exactly?	N	2
+telecom	tallowood_connect	q06	org_specific	I'm off to Bali next month, what's the travel pass going to cost me there?	I'm off to Bali next month, how does the travel pass work over there?	Y	2
+telecom	tallowood_connect	q09	counter_prior	What happens if I pay my postpaid bill like a week or so late?	How does it work if my postpaid bill slips past the due date?	N	2
+telecom	tallowood_connect	q14	general	I'm still paying off my phone, um, where do I find the IMEI on it, for my insurance?	I'm still paying off my phone, um, if it gets stolen, can the thief just use it with their own SIM?	Y	2
+telecom	tallowood_connect	q16	general	On the home hundred plan, how much time should a two gig download take?	On the home hundred plan, how long should a two gig download take?	N	2
+telecom	tallowood_connect	q24	ambiguous	I've got a new phone, is there a limit on moving my eSIM across?	I've got a new phone, how does moving my eSIM across work with you?	N	2
+telecom	tallowood_connect	q26	counter_prior	If I close my prepaid account, can I get my leftover credit refunded?	If I close my prepaid account, what happens to the leftover credit on it?	N	2
