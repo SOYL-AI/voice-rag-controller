@@ -6,14 +6,16 @@ reads. Every triple is (central, low, high) in joules; the band rules:
 
 Local CPU stages (production placement):
     central = cpu_s_per_op * kappa            (attributional, measured kappa)
-    low     = cpu_s_per_op * 28 W / 22        (Core Ultra 7 155H processor
-                                               base power spread over its 22
-                                               logical CPUs: the CodeCarbon-
-                                               style TDP x utilisation share)
-    high    = 2 * central                     (judgement: a non-contended
+    low     = min(cpu_s_per_op * 28 W / 22,   (Core Ultra 7 155H processor
+                  RAPL net marginal if > 0)    base power spread over its 22
+                                               logical CPUs, i.e. the CodeCarbon-
+                                               style TDP x utilisation share; or
+                                               the measured package marginal,
+                                               which is depressed when the
+                                               package sits at its power cap)
+    high    = 1.5 * central                   (judgement: a non-contended
                                                machine runs the op at higher
-                                               clocks/voltage; RAPL marginals
-                                               were unobservable to bound it)
+                                               clocks/voltage per CPU-second)
     + any measured GPU net energy (clipped at 0) in all three.
 Local GPU stages:
     central = gpu_net mean + CPU central; low/high use the 95% CI ends of the
@@ -32,6 +34,7 @@ from energy.llm_estimate import a10g_llm_params
 HERE = Path(__file__).resolve().parent
 RES = HERE / "results"
 BASE_W_PER_CPU = 28.0 / 22.0
+HIGH_CPU_FACTOR = 1.5
 
 
 def _tri(c, lo, hi):
@@ -39,13 +42,18 @@ def _tri(c, lo, hi):
 
 
 def stage_triple(s: dict) -> dict:
+    """(central, low, high) for one measured stage; see module docstring."""
     cpu_s = s["cpu_s_per_op"]["mean"] or 0.0
     attr = s["cpu_attr_j"]["mean"] or 0.0
+    rapl = s["cpu_net_j"]["mean"]
+    cpu_low = cpu_s * BASE_W_PER_CPU
+    if rapl is not None and rapl > 0:
+        cpu_low = min(cpu_low, rapl)        # the measured package marginal, if lower
     g = s["gpu_net_j"]
     g_c = max(g["mean"] or 0.0, 0.0)
     g_lo = max(g["lo"] if g["lo"] is not None else g_c, 0.0)
     g_hi = max(g["hi"] if g["hi"] is not None else g_c, 0.0)
-    return _tri(attr + g_c, cpu_s * BASE_W_PER_CPU + g_lo, 2 * attr + g_hi)
+    return _tri(attr + g_c, cpu_low + g_lo, HIGH_CPU_FACTOR * attr + g_hi)
 
 
 def scale(t: dict, k: float) -> dict:
