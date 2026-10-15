@@ -133,8 +133,21 @@ All quantities are computed on **test items** after the freeze. Theory reference
 * **Ours-v2** (joint, THEORY §5–6).
 * **B9+**: expected-exposure pricing, with its timing rule tuned on dev over {early, late, R̂-threshold}.
 * **B9**: v1 definition.
-* **SPEC**: always dispatch at the first meaningful partial and decide use at end of turn. Included **iff the v2 pipeline can discard a dispatched retrieval** (THEORY Prop. 4′). The architecture is declared at freeze: [COMMIT | SPECULATIVE — TO FILL].
-* **D\***: the strongest decomposed rival, i.e. the member of {B9+, SPEC} with the highest dev expected utility at the primary price. It is named at freeze.
+* **SPEC** (B10): always dispatch at the first meaningful partial, then decide at end of turn, with the final belief, whether to use the passages. Every dispatch pays its retrieval compute. A discarded retrieval adds no quality and no non-hideable TTFA. SPEC is decomposed: the dispatch rule never reads the belief, and the use rule never reads the timing state.
+
+**Architectures (decided by the PI, 2026-10-16): the study tests BOTH, as a boundary test.**
+* **COMMIT:** a dispatched retrieval's passages are always used.
+* **SPECULATIVE:** a dispatched retrieval may be discarded at end of turn.
+
+Both are run on the same test items, seeds, latency profile and price. The architecture is the only thing that changes.
+* **Ours-v2[arch]** is the joint controller for that architecture.
+  * Under COMMIT, it is THEORY §5–6.
+  * Under SPECULATIVE, it is the same optimal-stopping controller with the dispatch value replaced by the option value of having the passages ready, $E[\max(U_{\text{use}}(b_{\text{end}}),0)]$, less the dispatch compute.
+* **D\*[arch]** is the strongest decomposed rival for that architecture:
+  * D\*[COMMIT] = B9+;
+  * D\*[SPECULATIVE] = whichever of {B9+, SPEC} has the higher dev expected utility at the primary price.
+  * Both are named at freeze.
+* **Δ[arch]** = $\bar D(\text{Ours-v2[arch]} - D^{*}[\text{arch}])$.
 
 **Outcome per item.** Realized utility under the corrected objective, averaged over the 5 seeds:
 
@@ -142,11 +155,29 @@ $$U=Q-\lambda_l\cdot\Delta\text{TTFA}-\lambda_c\cdot n_{\text{retrievals}},$$
 
 where $Q$ is the primary correctness and ΔTTFA is the measured TTFA increase over the same item's skip cell. The pairwise estimand is the mean paired difference $\bar D$ over test items.
 
-**Primary (single confirmatory test).**
-* $\bar D(\text{Ours-v2} - D^{*}) > 0$, with all channels active (C1+C2+C3);
+**Primary: the boundary test (three co-primary hypotheses).**
+
+Setup:
+* all channels active (C1+C2+C3);
 * pooled over d1_open and d2_support test items (item-weighted);
-* at **one latency profile and one price** fixed at freeze by the rule in §4.3: [PROFILE, PRICE TO FILL AT FREEZE];
-* one-sided α = 0.025: the 2.5th percentile of the paired cluster bootstrap (B = 10,000) must be > 0.
+* at **one latency profile and one price**, the same for both architectures, fixed at freeze by the §4.3 rule applied to Δ[COMMIT] on dev: [PROFILE, PRICE TO FILL AT FREEZE].
+
+The three hypotheses follow from THEORY Prop. 4 and Prop. 4′:
+* **P1 (joint control pays when retrieval is committed):** Δ[COMMIT] > 0.
+* **P2 (the boundary itself):** Δ[COMMIT] − Δ[SPECULATIVE] > 0, a paired interaction contrast on the same items.
+* **P3 (speculative prefetch closes the gap):** Δ[SPECULATIVE] < m.
+  * m = λ_c·(1 + w̄)·q̂ is the Prop. 4′ bound: w̄ is the dev mean waste, and q̂ is the dev fraction of SPEC dispatches whose passages end up unused.
+  * m is computed on dev and fixed at freeze: [m TO FILL AT FREEZE].
+  * This is a non-superiority test. It is passed if the 97.5th percentile of the bootstrap distribution of Δ[SPECULATIVE] is < m.
+
+How the tests are decided:
+* All three use the paired cluster bootstrap (B = 10,000, the same resamples for every contrast), one-sided.
+* **The boundary claim is supported iff P1, P2 and P3 all hold, each at one-sided α = 0.025.** This is an intersection–union test, so the conjunction needs no multiplicity adjustment.
+* Individual claims about P1, P2 or P3 alone are reported with Holm adjustment across the three (family-wise one-sided α = 0.025).
+* Every possible pattern of outcomes is reported as it falls. In particular:
+  * P1 failing means joint control did not pay off even under commit, at this scale.
+  * P3 failing would contradict Prop. 4′, so the implementation is audited first.
+  * Ties are reported as ties.
 
 **Secondary family (directional, Holm-adjusted at family-wise α = 0.05 one-sided).** Every cell of dataset × profile × channel set ∈ {C1, C1+C2, C1+C2+C3}, at the pre-specified price set, with predictions from THEORY §7:
 
@@ -266,7 +297,7 @@ Every deviation is recorded before the affected analysis is run in:
 1. At the placeholder sizes (1,344 pooled test items) the primary is underpowered: the MDE of 0.014–0.018 exceeds the predicted 0.009–0.012.
 2. **About 4,000 pooled test items** (about 5,700 in total at 30/70) give 80% power for every profile under these assumptions. `d1_open` is where N is cheap (PopQA alone has about 14k questions), so the recommendation is `d1_open` ≥ 5,000 items in total.
 3. The effect is sensitive to prefix informativeness. At prefix-noise SD 0.75, 1.5 and 3.0, giving prefix AUC 0.80, 0.76 and 0.61, the d2 × remote_api δ is 0.0034, 0.0138 and 0.0048 at the 0.65 price. **The power analysis must be re-run with the E1-v2 dev prefix curve before the freeze.**
-4. If the pipeline is speculative, SPEC is D\*, and the predicted primary effect is at most λ_c(1+w) per turn and can be negative (THEORY Prop. 4′). Under speculation, the primary must be re-derived before the freeze.
+4. Both architectures are tested (§3, P1–P3). Under SPECULATIVE the predicted Δ is at most λ_c(1+w̄)·q̂ and can be negative (THEORY Prop. 4′). **Before the freeze, the power analysis must be extended to P2 (the interaction contrast) and P3 (the non-superiority margin m), and the planned N confirmed for all three.** The boundary claim needs all three, so its power is at most the minimum of the three.
 
 ## 7. Reporting
 * Every hypothesis is reported with its verdict, the point estimate, the CI and the exclusion counts.
@@ -281,7 +312,7 @@ Every deviation is recorded before the affected analysis is run in:
 | Dataset sizes, splits and README stats filled in (§1) | Yashmita | Ryan |
 | E1-v2 dev results: signal chosen, prefix curve, $\hat g^{\pm}$, boundary-mass check (§3) | Yashmita | Ryan |
 | Judge gate passed and recorded; judge fields filled in (§2) | Yashmita | Ryan |
-| Pipeline architecture declared (commit / speculative); D\* named (§3) | Yashmita | Ryan |
+| Both architectures tested (decided 2026-10-16); D\*[COMMIT] and D\*[SPECULATIVE] named; margin m fixed (§3) | Yashmita | Ryan |
 | Latency model calibrated as TTFA increment on dev (§4.5) | Yashmita | Ryan |
 | Price grid from dev belief quantiles; primary (profile, price) selected (§4.3) | Renya | Ryan |
 | `analysis/v2_power.py` re-run with dev inputs; §6 updated | Yashmita | Ryan |
