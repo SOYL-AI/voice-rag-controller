@@ -128,6 +128,44 @@ class FirstKEntropyTests(unittest.TestCase):
         self.assertEqual(out, {"4": 40.0, "8": None})
 
 
+class SelfAssessmentTests(unittest.TestCase):
+    ITEM = {"id": "d2_support-1", "dataset": "d2_support", "org": "Sarovan Telecom",
+            "domain": "telecom", "question": "q",
+            "history": [{"role": "user", "content": "Hi, roaming?"},
+                        {"role": "assistant", "content": "Two packs."}]}
+
+    def test_prompt_is_the_frozen_probe_wording(self):
+        from llm.experiment1_v2 import self_assess
+
+        sa = common.load_config()["self_assessment"]
+        messages = self_assess.build_messages(self.ITEM, "And the seven-day", sa)
+        # Reconstructed exactly as the exploratory probe built it.
+        it = self.ITEM
+        hist = "".join(f"{t['role'].capitalize()}: {t['content']}\n" for t in it["history"])
+        probe_system = (f"You decide whether a customer-support voice agent for {it['org']}, a "
+                        f"{it['domain']} company, must look up the company's own documents before "
+                        "answering a caller.")
+        probe_user = (f"{hist}Caller (may still be mid-sentence): \"And the seven-day\"\n"
+                      f"Can this be answered correctly from general knowledge alone, without "
+                      f"{it['org']}'s own policies, prices, plans or records? Answer with one word: "
+                      "Yes or No.")
+        self.assertEqual(messages, [{"role": "system", "content": probe_system},
+                                    {"role": "user", "content": probe_user}])
+        d1 = self_assess.build_messages({"id": "x", "dataset": "d1_open", "question": "q"}, "Who", sa)
+        self.assertIn("from your own knowledge, without looking anything up?", d1[1]["content"])
+        self.assertEqual(sa["request"], {"max_tokens": 1, "temperature": 0, "top_logprobs": 20})
+
+    def test_p_no_math(self):
+        from llm.experiment1_v2 import self_assess
+
+        tops = [AlternativeLogprob("No", math.log(0.6)), AlternativeLogprob(" Yes", math.log(0.2)),
+                AlternativeLogprob("Not", math.log(0.1)), AlternativeLogprob("Maybe", math.log(0.05))]
+        out = self_assess.p_no_from_top(tops)
+        self.assertAlmostEqual(out["p_no"], 0.7 / 0.9)
+        self.assertAlmostEqual(out["yes_mass"], 0.2)
+        self.assertIsNone(self_assess.p_no_from_top([AlternativeLogprob("I", 0.0)])["p_no"])
+
+
 # ---------------------------------------------------------------------------
 class SealingTests(unittest.TestCase):
     def test_guard(self):
@@ -467,6 +505,55 @@ class JudgeTests(unittest.TestCase):
         self.assertNotIn(SENTINEL_KEY, str(ctx.exception))
         self.assertNotIn(SENTINEL_URL, str(ctx.exception))
 
+    def test_r2_rubric_prompt_and_hash(self):
+        from llm.experiment1_v2 import rubrics
+
+        r2 = rubrics.get_rubric("e1v2-r2")
+        self.assertIsNone(rubrics.get_rubric(rubrics.R1))
+        self.assertEqual(rubrics.rubric_sha256(rubrics.R1), judges.PROMPT_SHA256)  # r1 unchanged
+        self.assertEqual(judges.PROMPT_SHA256,
+                         "b6f9a66873db8d3062f166c4a41789d556c648c6c6c1c2c360f0f8935f3aca11")
+        self.assertNotEqual(r2.sha256, judges.PROMPT_SHA256)
+        # default.txt is r1's instruction text, verbatim
+        self.assertEqual(r2.texts["default"].rstrip("\n"), judges.V2_INSTRUCTIONS)
+        text = r2.user_prompt(dataset="d2_support", question="And the seven-day one?",
+                              reference="5 GB", answer="Please check the app.",
+                              key_facts=["5 GB of data"],
+                              history=[{"role": "user", "content": "Roaming packs?"},
+                                       {"role": "assistant", "content": "Two packs."}])
+        self.assertIn("states EVERY key fact", text)
+        self.assertNotIn("Omitting some of the reference's details is CORRECT", text)
+        self.assertIn("Conversation before the question:\nCaller: Roaming packs?\nAgent: Two packs.", text)
+        self.assertIn("Key facts:\n- 5 GB of data", text)
+        # d1_open under r2 keeps r1's rubric text
+        d1 = r2.user_prompt(dataset="d1_open", question="q", reference="r", answer="a")
+        self.assertTrue(d1.startswith(judges.V2_INSTRUCTIONS))
+        # identity and cache key carry the rubric
+        cfg = dict(self.CFG, prompt_version="e1v2-r2")
+        spec = judges.resolve_spec("primary", cfg, self.ENV)
+        self.assertEqual(spec.identity()["prompt_sha256"], r2.sha256)
+        j2 = judges.AzureChatJudge(spec, transport=lambda m, p: None)
+        j1 = judges.AzureChatJudge(judges.resolve_spec(
+            "primary", dict(self.CFG, prompt_version=rubrics.R1), self.ENV), transport=lambda m, p: None)
+        kw = dict(item_id="i", question="q", reference="r", answer="a", key_facts=["f"], aliases=[],
+                  context="customer-support", dataset="d2_support")
+        self.assertNotEqual(judges.cache_key(j1, **kw), judges.cache_key(j2, **kw))
+        self.assertNotEqual(judges.cache_key(j2, **kw), judges.cache_key(j2, **dict(kw, history=["x"])))
+
+    def test_rubric_hash_tracks_file_text(self):
+        from llm.experiment1_v2 import rubrics
+
+        with tempfile.TemporaryDirectory() as tmp:
+            folder = Path(tmp) / "vX"
+            folder.mkdir()
+            (folder / "default.txt").write_bytes(b"A rubric.\n")
+            with mock.patch.object(rubrics, "RUBRIC_DIR", Path(tmp)):
+                first = rubrics.load_file_rubric("vX").sha256
+                (folder / "default.txt").write_bytes(b"A rubric.\r\n")
+                self.assertEqual(rubrics.load_file_rubric("vX").sha256, first)  # CRLF-insensitive
+                (folder / "default.txt").write_bytes(b"A changed rubric.\n")
+                self.assertNotEqual(rubrics.load_file_rubric("vX").sha256, first)
+
     def test_v2_prompt_derives_from_v4(self):
         text = judges.user_prompt("Q?", "Ref", "Ans", key_facts=["fact one"], aliases=["alt"])
         self.assertIn("naming the company or organisation", text)
@@ -558,6 +645,169 @@ class StatsTests(unittest.TestCase):
 
 
 # ---------------------------------------------------------------------------
+class LabelingKitTests(unittest.TestCase):
+    def _fixture(self, tmp: Path):
+        items, draws = [], []
+        types = ["general", "org_specific", "counter_prior", "ambiguous"]
+        for n in range(60):
+            item = {"id": f"d2_support-{n:05d}", "dataset": "d2_support", "domain": "telecom",
+                    "org": "Kestrel Mobile", "question": f"Question {n}?",
+                    "expected_answer": f"Answer {n}.", "answer_aliases": [],
+                    "retrieval_needed_authored": n % 2 == 0, "item_type": types[n % 4],
+                    "history": [{"role": "user", "content": "hi"}] if n % 5 == 0 else [],
+                    "meta": {"key_facts": [f"fact {n}a", f"fact {n}b"]}}
+            items.append(item)
+            for seed in (11, 23, 37):
+                p = (n + seed) % 3 != 0
+                s = p if (n * seed) % 4 else not p
+                draws.append({"item_id": item["id"], "draw_seed": seed, "condition": "closed_book",
+                              "answer": f"answer {n} v{seed % 2}",
+                              "judges": {"primary": {"answer_correct": p},
+                                         "secondary": {"answer_correct": s}}})
+        items_path = tmp / "items.jsonl"
+        items_path.write_text("".join(json.dumps(i) + "\n" for i in items), encoding="utf-8")
+        labels = {"meta": {"split": "dev", "dataset": "d2_support",
+                           "judges": {"primary": {"prompt_version": "e1v2-r2"}}}, "draws": draws}
+        labels_path = tmp / "labels.json"
+        labels_path.write_text(json.dumps(labels), encoding="utf-8")
+        return items_path, labels_path
+
+    def test_build_merge_and_gate(self):
+        import csv
+
+        from simulator.judge_validation.v2_labeling import build_kit, merge_sheets
+
+        with tempfile.TemporaryDirectory() as tmp:
+            tmp = Path(tmp)
+            items_path, labels_path = self._fixture(tmp)
+            out = tmp / "kit"
+            self.assertEqual(build_kit.main(["--labels", str(labels_path), "--items", str(items_path),
+                                             "--n", "45", "--out-dir", str(out)]), 0)
+            read = lambda p: list(csv.DictReader(open(p, encoding="utf-8-sig", newline="")))  # noqa: E731
+            a, b = read(out / "sheet_annotator_A.csv"), read(out / "sheet_annotator_B.csv")
+            master = read(out / "kit_master_DO_NOT_SHARE.csv")
+            self.assertEqual(len(a), 45)
+            self.assertEqual({r["case_id"] for r in a}, {r["case_id"] for r in b})
+            self.assertNotEqual([r["case_id"] for r in a], [r["case_id"] for r in b])  # shuffled apart
+            for hidden in ("primary_r2", "secondary_r2", "item_type", "stratum", "path", "judges_agree"):
+                self.assertNotIn(hidden, a[0])
+            self.assertEqual(set(build_kit.SHEET_COLUMNS), set(a[0]))
+            self.assertTrue(all(r["verdict"] == "" for r in a))
+            self.assertEqual(sum(r["gate_subset"] == "prompt_dev" for r in master), 15)
+            per_item = {}
+            for r in master:
+                per_item[r["item_id"]] = per_item.get(r["item_id"], 0) + 1
+            self.assertLessEqual(max(per_item.values()), 2)
+            self.assertEqual({r["stratum"].split("|")[1] for r in master}, {"agree", "disagree"})
+            # Deterministic for a fixed seed
+            again = tmp / "kit2"
+            build_kit.main(["--labels", str(labels_path), "--items", str(items_path), "--n", "45",
+                            "--out-dir", str(again)])
+            self.assertEqual(read(again / "sheet_annotator_A.csv"), a)
+
+            def fill(rows, path, flip):
+                with open(path, "w", encoding="utf-8-sig", newline="") as handle:
+                    w = csv.DictWriter(handle, fieldnames=list(rows[0]))
+                    w.writeheader()
+                    for r in rows:
+                        n = int(r["case_id"].split("-")[1].split("#")[0])
+                        ok = n % 2 == 0
+                        w.writerow(dict(r, verdict=("correct" if ok != (flip and n % 7 == 0)
+                                                    else "incorrect")))
+
+            fill(a, out / "A_done.csv", False)
+            fill(b, out / "B_done.csv", True)
+            merged = out / "human.csv"
+            self.assertEqual(merge_sheets.main(["--a", str(out / "A_done.csv"), "--b",
+                                                str(out / "B_done.csv"), "--master",
+                                                str(out / "kit_master_DO_NOT_SHARE.csv"),
+                                                "--out", str(merged)]), 0)
+            disputes = read(out / "adjudication_needed.csv")
+            self.assertTrue(disputes)
+            cases = score_judges.load_v2_labels(merged)
+            self.assertEqual(len(cases), 45)
+            self.assertEqual(sum(c["gate_subset"] == "prompt_dev" for c in cases), 15)
+            self.assertEqual(cases[0]["key_facts"][0][:5], "fact ")
+            report = score_judges.validate_v2(merged, ("primary", "secondary"), "mock", tmp / "jc", 2)
+            self.assertEqual(report["gate"]["n_prompt_dev"], 15)
+            # a sheet with an unknown case_id is refused
+            bad = out / "bad.csv"
+            bad.write_text("case_id,verdict\nnope,correct\n", encoding="utf-8")
+            self.assertEqual(merge_sheets.main(["--a", str(bad), "--b", str(out / "B_done.csv"),
+                                                "--master", str(out / "kit_master_DO_NOT_SHARE.csv"),
+                                                "--out", str(tmp / "x.csv")]), 1)
+
+
+class NullAuthoredLabelTests(unittest.TestCase):
+    """d1_open has retrieval_needed_authored = null by design (CONTRACTS.md)."""
+
+    def _null_dataset(self, tmp: Path) -> Path:
+        items_path = _make_dataset(tmp, traces=False)
+        rows = common.read_jsonl(items_path)
+        for n, row in enumerate(rows):
+            row.update(dataset="d1_open", retrieval_needed_authored=None, org=None, domain="open_domain",
+                       item_type="popqa" if n % 4 else "multihop",
+                       meta={**row["meta"], "log10_pop": float(n % 7)})
+        items_path.write_text("".join(json.dumps(r) + "\n" for r in rows), encoding="utf-8")
+        return items_path
+
+    def test_null_authored_is_not_applicable_everywhere(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            tmp = Path(tmp)
+            items = self._null_dataset(tmp)
+            self.assertTrue(all(i["retrieval_needed_authored"] is None for i in common.load_items(items)))
+            self.assertNotIn("authored", analyze.label_maps(common.load_items(items), None))
+            root = tmp / "results"
+            out = root / "mistral7b_v03"
+            self.assertEqual(run.main(["--items", str(items), "--split", "dev", "--backend", "mock",
+                                       "--model", "mistral7b_v03", "--out-dir", str(out),
+                                       "--seeds", "11,23,37,53,71", "--limit", "16"]), 0)
+            # alias match only, LLM judges on a stratified subsample of 12 answers
+            self.assertEqual(label.main(["--items", str(items), "--split", "dev", "--model",
+                                         "mistral7b_v03", "--results-dir", str(out),
+                                         "--judge-backend", "mock", "--judge-subsample", "12",
+                                         "--cache-dir", str(tmp / "jc")]), 0)
+            labels = common.load_json(out / "labels_dev.json")
+            self.assertEqual(labels["meta"]["authored_labels"],
+                             "not applicable (dataset has no authored labels)")
+            judged = [d for d in labels["draws"] if d["judges"]]
+            self.assertGreaterEqual(len(judged), 12)
+            self.assertLess(len(judged), len(labels["draws"]))
+            self.assertEqual(labels["agreement"]["closed_book"]["alias vs judge:primary"]["n"], len(judged))
+            self.assertTrue(all(v["empirical_need"] is not None for v in labels["items"].values()))
+            # alias-only labelling also works
+            self.assertEqual(label.main(["--items", str(items), "--split", "dev", "--model",
+                                         "mistral7b_v03", "--results-dir", str(out), "--judges",
+                                         "none"]), 0)
+            self.assertEqual(analyze.main(["--items", str(items), "--split", "dev", "--results-root",
+                                           str(root), "--bootstrap", "20", "--no-figures"]), 0)
+            analysis = common.load_json(root / "analysis_dev" / "analysis_dev.json")
+            model = analysis["models"]["mistral7b_v03"]
+            self.assertNotIn("authored", model["auc_full"]["mean_entropy_nats"])
+            self.assertIn("empirical", model["auc_full"]["mean_entropy_nats"])
+            self.assertEqual(model["authored_vs_empirical"],
+                             "not applicable (dataset has no authored labels)")
+            self.assertEqual(model["calibration_label"], "empirical")
+            self.assertEqual(model["labels_not_applicable"], ["authored"])
+            # even when authored is requested, it falls back to empirical
+            self.assertEqual(analyze.main(["--items", str(items), "--split", "dev", "--results-root",
+                                           str(root), "--bootstrap", "20", "--no-figures",
+                                           "--calibration-label", "authored"]), 0)
+            analysis = common.load_json(root / "analysis_dev" / "analysis_dev.json")
+            self.assertEqual(analysis["models"]["mistral7b_v03"]["calibration_label"], "empirical")
+
+    def test_judge_subsample_refused_for_judge_graded_dataset(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            tmp = Path(tmp)
+            items = _make_dataset(tmp, traces=False)  # v1_e1: graded by judge:primary
+            out = tmp / "o"
+            run.main(["--items", str(items), "--split", "dev", "--backend", "mock", "--out-dir",
+                      str(out), "--seeds", "11", "--limit", "4", "--no-text-prefixes"])
+            self.assertEqual(label.main(["--items", str(items), "--split", "dev", "--model",
+                                         "mistral7b_v03", "--results-dir", str(out), "--judge-backend",
+                                         "mock", "--judge-subsample", "3"]), 1)
+
+
 class EndToEndMockSmoke(unittest.TestCase):
     """v1 dataset -> v2 schema -> run (mock, text + plumbing ASR prefixes,
     lexical retrieval) -> label (mock judges) -> analyze -> judge validation."""
@@ -601,6 +851,18 @@ class EndToEndMockSmoke(unittest.TestCase):
             self.assertIn("judge:primary vs judge:secondary", labels["agreement"]["closed_book"])
             self.assertEqual(labels["meta"]["judges"]["primary"]["provider"], "mock")
 
+            from llm.experiment1_v2 import self_assess
+            self.assertEqual(self_assess.main([
+                "--items", str(items), "--split", "dev", "--backend", "mock", "--model",
+                "mistral7b_v03", "--out-dir", str(out), "--limit", "12"]), 0)
+            sa_rows = common.read_jsonl(out / "self_assessment_dev.jsonl")
+            sa_texts = {(r["item_id"], r["prefix_text"]) for r in sa_rows}
+            sig_texts = {(r["item_id"], r["prefix"]["text"]) for r in records}
+            self.assertEqual(sa_texts, sig_texts)  # one call per distinct prefix text, all covered
+            self.assertEqual(self_assess.main([  # resumable: nothing left to do
+                "--items", str(items), "--split", "dev", "--backend", "mock", "--model",
+                "mistral7b_v03", "--out-dir", str(out), "--limit", "12"]), 0)
+            self.assertEqual(len(common.read_jsonl(out / "self_assessment_dev.jsonl")), len(sa_rows))
             self.assertEqual(analyze.main([
                 "--items", str(items), "--split", "dev", "--results-root", str(root),
                 "--bootstrap", "50", "--controller-artifact"]), 0)
@@ -610,7 +872,11 @@ class EndToEndMockSmoke(unittest.TestCase):
             self.assertEqual([p["word_frac"] for p in model["prefix_curve_text"]["mean_entropy_nats"]],
                              [0.3, 0.5, 0.7, 1.0])
             self.assertTrue(model["asr_curves"]["mean_entropy_nats"])
-            self.assertEqual([r["k"] for r in model["first_k"]], [4, 8, 16, "all"])
+            self.assertEqual([r["k"] for r in model["first_k"]], [4, 8, 16, "all", "self"])
+            self.assertIn("self_assessed_need", model["auc_full"])
+            # (the first 12 v1 items are all authored-needed, so only the empirical AUC exists)
+            self.assertIsNotNone(model["auc_full"]["self_assessed_need"]["empirical"]["auc"])
+            self.assertEqual(set(model["calibrations"]), {"mean_entropy_nats", "self_assessed_need"})
             wf = next(iter(model["asr_word_frac_curve"]["mean_entropy_nats"].values()))
             self.assertEqual([p["word_frac"] for p in wf["curve"]], [0.3, 0.5, 0.7, 1.0])
             self.assertIn("auc_diff", wf["paired_diff"]["authored"])

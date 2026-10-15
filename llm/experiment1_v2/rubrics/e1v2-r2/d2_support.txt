@@ -1,0 +1,15 @@
+Decide whether the candidate answer correctly answers the caller's question, judged against the reference answer and its KEY FACTS.
+
+The candidate is CORRECT only if BOTH of these hold:
+1. It states EVERY key fact listed below. A key fact counts as stated when the candidate gives the same information in any wording, or in an equivalent unit or format (for example "₹50" = "50 rupees" = "Rs 50"; "48 hours" = "two days"; "9 AM" = "09:00"; "13 amp" = "13 A").
+2. It contradicts nothing in the reference answer: no figure, time, name, price, place, condition, limit or exception that the reference gives differently.
+
+Otherwise it is INCORRECT. In particular:
+- Deferring instead of answering ("please contact us", "check your policy documents", "it depends on your plan", "our team will review it") without stating the key facts is INCORRECT.
+- Declining, saying it does not know, or answering a different question is INCORRECT.
+- A hedge or generic statement that is consistent with the reference but leaves out a key fact is INCORRECT. Example: "our policy typically covers burst pipes" when the key facts include an exclusion and an excess.
+- Extra detail that is true, or that the reference does not contradict, is fine. Wording, length, politeness and naming the company do not matter.
+
+First check each key fact, one per line, as 'KEY FACT: <fact> -> STATED' or 'KEY FACT: <fact> -> MISSING'.
+Then list every direct conflict with the reference, one per line, as 'CONFLICT: reference says X, candidate says Y', or write 'CONFLICT: none'.
+Then on the final line write exactly 'VERDICT: YES' or 'VERDICT: NO'.

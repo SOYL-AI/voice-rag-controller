@@ -179,12 +179,20 @@ def load_v2_labels(path: Path) -> list:
             "answer": row["answer"],
             "key_facts": _parse_list(row.get("key_facts")),
             "aliases": _parse_list(row.get("aliases")),
+            "history": json.loads(row["history"]) if isinstance(row.get("history"), str)
+            and row["history"].strip().startswith("[") else (row.get("history") or []),
             "label_a": a, "label_b": b, "label_adjudicated": adjudicated,
             "label": reference_label,
             "path": (row.get("path") or "").strip().lower() or None,  # retrieve | skip
         })
-    for case in cases:
-        case["gate_subset"] = gate_subset(case["case_id"])
+    explicit = {str(row.get("gate_subset") or "").strip() for row in rows}
+    for case, row in zip(cases, rows):
+        # The labelling kit writes an exact 100/200 partition (ranked by
+        # sha256 of the answer id); older files fall back to sha256 mod 3.
+        given = str(row.get("gate_subset") or "").strip()
+        case["gate_subset"] = given if given in ("prompt_dev", "holdout") else gate_subset(case["case_id"])
+    if explicit - {"", "prompt_dev", "holdout"}:
+        raise ValueError(f"unknown gate_subset values {sorted(explicit - {'', 'prompt_dev', 'holdout'})}")
     return cases
 
 
@@ -274,7 +282,7 @@ def _versus(judge_labels, cases, field):
 
 
 def validate_v2(labels_path: Path, roles=("primary", "secondary"), backend="azure",
-                cache_dir: Path = None, workers: int = 8) -> dict:
+                cache_dir: Path = None, workers: int = 8, rubric: str = None) -> dict:
     """Score the E1-v2 judges against double-labelled human cases."""
     from concurrent.futures import ThreadPoolExecutor  # noqa: PLC0415
 
@@ -283,7 +291,10 @@ def validate_v2(labels_path: Path, roles=("primary", "secondary"), backend="azur
     cfg = json.loads((_REPO / "llm" / "experiment1_v2" / "config.json").read_text(encoding="utf-8"))
     contexts = cfg["labels"]["judge_context"]
     cases = load_v2_labels(labels_path)
-    judges = v2.make_judges(roles, backend)
+    judges_cfg = v2.load_judges_config()
+    if rubric:
+        judges_cfg["prompt_version"] = rubric
+    judges = v2.make_judges(roles, backend, judges_cfg)
     cache_dir = Path(cache_dir) if cache_dir else Path(tempfile.mkdtemp(prefix="judge_v2_val_"))
 
     def run(role, case):
@@ -291,7 +302,7 @@ def validate_v2(labels_path: Path, roles=("primary", "secondary"), backend="azur
             judges[role], item_id=case["item_id"], question=case["question"],
             reference=case["reference"], answer=case["answer"], key_facts=case["key_facts"],
             aliases=case["aliases"], context=contexts.get(case["dataset"], contexts["default"]),
-            cache_dir=cache_dir,
+            cache_dir=cache_dir, dataset=case["dataset"], history=case["history"],
         )
         return verdict
 
@@ -385,11 +396,12 @@ def main(argv=None) -> int:
     parser.add_argument("--workers", type=int, default=8)
     parser.add_argument("--cache-dir", type=Path)
     parser.add_argument("--out", type=Path, help="write the v2 report JSON here")
+    parser.add_argument("--rubric", help="judge prompt version (default: judges.json, e1v2-r2)")
     args = parser.parse_args(argv)
     if args.v2_labels:
         roles = tuple(r.strip() for r in args.judges.split(",") if r.strip())
         report = validate_v2(args.v2_labels, roles, args.judge_backend, args.cache_dir,
-                             args.workers)
+                             args.workers, args.rubric)
         _print_v2(report)
         if args.out:
             args.out.parent.mkdir(parents=True, exist_ok=True)

@@ -48,7 +48,8 @@ foreach ($ds in "d1_open", "d2_support") {
   python -m llm.experiment1_v2.run --dataset $ds --split dev --backend vllm --dry-run
   python -m llm.experiment1_v2.run --dataset $ds --split dev --backend vllm --latency-probe --limit 50
   python -m llm.experiment1_v2.run --dataset $ds --split dev --backend vllm --with-retrieval
-  python -m llm.experiment1_v2.label --dataset $ds --split dev --model mistral7b_v03
+  python -m llm.experiment1_v2.self_assess --dataset $ds --split dev --backend vllm --concurrency 16
+  python -m llm.experiment1_v2.label --dataset $ds --split dev --model mistral7b_v03 --workers 4
   python -m llm.experiment1_v2.analyze --dataset $ds --split dev --controller-artifact
 }
 ```
@@ -66,7 +67,52 @@ foreach ($ds in "d1_open", "d2_support") {
   in the format `_objective.py:load_voi_calibration()` reads. It refuses mock
   results and slopes <= 0.
 
+## Self-assessed need (`self_assess.py`)
+
+Entropy of the closed-book answer is near chance on d2_support dev. In the
+support-agent persona Mistral fabricates org policies fluently, so its
+uncertainty does not track whether it needs the company's documents.
+
+The signal `self_assessed_need` asks the model directly instead. Per distinct
+prefix text it makes one deterministic call (temperature 0, max_tokens 1,
+top-20 logprobs) with the question:
+
+> Can this be answered correctly from general knowledge alone, without
+> {org}'s own policies, prices, plans or records? Answer with one word: Yes or No.
+
+d1_open uses a neutral variant. The signal is
+P(No) = mass of tokens starting "no" / (mass "yes" + mass "no"). Each
+call's own TTFT is recorded.
+
+**The wording is frozen** (`config.json` `self_assessment`, `sa-v1-frozen`).
+It was taken as-is from one exploratory probe on d2_support dev and must not
+be tuned on dev: with 222 dev items, any search over wordings would overfit.
+
+```powershell
+python -m llm.experiment1_v2.self_assess --dataset d2_support --split dev --concurrency 16
+```
+
+This writes `self_assessment_dev.jsonl`. `analyze.py` joins it to every
+record by (item, prefix text) and treats it like any other signal: AUC,
+prefix and ASR curves, a latency row, and full and prefix-aware calibration
+artifacts.
+
 ## Judges (`judges.json`)
+
+**Rubric r2** (`rubrics/e1v2-r2/`, default) applies to both judges. A
+d2_support answer is correct iff it states **every** `meta.key_facts` item
+(paraphrase and unit/format variants allowed) **and** contradicts nothing in
+the reference. Deferring, declining and key-fact-free hedges are incorrect.
+The judge also sees the dialogue history. Other datasets keep r1's text
+(`default.txt`); d1_open correctness stays alias match. r1
+(`--rubric e1v2-reasoned-strip-r1`) reproduces the first d2_support grading
+byte-for-byte. The rubric's sha256 is in every judge identity and cache key.
+
+The human labelling kit for the §2.4 gate is in
+`simulator/judge_validation/v2_labeling/`:
+- the guide: `LABELING_GUIDE.md`;
+- the sheets: `sheet_annotator_A.csv` and `sheet_annotator_B.csv`;
+- `build_kit.py` and `merge_sheets.py`.
 
 | role | deployment | settings |
 |---|---|---|
@@ -87,6 +133,22 @@ kappa) and the primary judge's self-consistency across its samples.
 
 Correctness of record: `d1_open` uses a normalized alias match; `d2_support`
 uses the primary judge with key facts.
+
+d1_open dev has 1,566 items × 5 draws = 7,830 answers. Judging all of them
+with k=3 gpt-6.1-sol samples would run into the Azure rate limit for hours.
+Two options:
+- `label.py --judges none`: labels from alias match only.
+- `label.py --judge-subsample 400`: alias labels for every answer, plus both
+  LLM judges on a seeded subsample stratified by item_type × popularity
+  tercile × alias verdict, for the agreement check.
+
+The subsample is refused for judge-graded datasets, where it would leave
+labels incomplete.
+
+d1_open has no authored label (`retrieval_needed_authored: null` by design).
+Every authored-label path (AUC, authored-vs-empirical agreement, calibration
+on authored) is skipped and reported as not applicable. Calibration then
+uses the empirical label, never a defaulted authored one.
 
 **Empirical need** (PREREG_V2 §1) means the answer to the full question is
 wrong in at least 3 of 5 closed-book draws:
