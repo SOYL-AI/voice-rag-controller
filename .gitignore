@@ -272,3 +272,10 @@ datasets/v2/*/speech/audio/
 
 # built retrieval indexes (regenerate with python -m retrieval.v2_index build)
 retrieval/indexes/
+
+# research v2: raw download caches and built FAISS indexes are reproducible, never committed
+datasets/v2/*/.cache/
+datasets/v2/*/index/
+.venv-*/
+# d1_open corpus is committed gzipped (corpus.jsonl.gz); the plain copy is rebuilt locally
+datasets/v2/d1_open/corpus.jsonl
