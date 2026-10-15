@@ -37,7 +37,7 @@
 | `d2_support` | 12-domain customer-support benchmark with matched pairs; fictional organisations | item | `pair_id` |
 
 * **Split rule.** 30% dev / 70% test, deterministic: sha256(id) mod 1000 < 300 → dev. Stratified by popularity bin (d1) or `item_type` (d2), with pair partners in the same split (`CONTRACTS.md` §7).
-* **Planned sizes.** [TO FILL AT FREEZE, from the dataset READMEs]. §6 shows the confirmatory test needs about **4,000 pooled test items**. The recommended size is `d1_open` ≥ 5,000 items in total (≥ 3,500 test).
+* **Planned sizes.** [TO FILL AT FREEZE, from the dataset READMEs]. §6.1 shows the boundary-test primary (P1 ∧ P2 ∧ P3) needs about **3,800–7,100 pooled test items, depending on the primary profile** (including a 10% allowance). The recommended size is therefore `d1_open` ≥ 6,000 items in total (≥ 4,200 test), because d1_open is where N is cheap.
 * **Need label.** The empirical label comes from E1-v2, defined as the closed-book answer being incorrect in at least 3 of 5 draws under the dataset's primary correctness metric (§2). The authored label (`retrieval_needed_authored`) is reported alongside it, never instead of it.
 
 ## 2. Correctness measurement (judge)
@@ -134,6 +134,8 @@ All quantities are computed on **test items** after the freeze. Theory reference
 * **B9+**: expected-exposure pricing, with its timing rule tuned on dev over {early, late, R̂-threshold}.
 * **B9**: v1 definition.
 * **SPEC** (B10): always dispatch at the first meaningful partial, then decide at end of turn, with the final belief, whether to use the passages. Every dispatch pays its retrieval compute. A discarded retrieval adds no quality and no non-hideable TTFA. SPEC is decomposed: the dispatch rule never reads the belief, and the use rule never reads the timing state.
+* **SPEC-θ** (B11, belief-gated speculation; THEORY §6.2): SPEC with a belief gate. At the same trigger it prefetches only if the belief-only option value of the prefetch exceeds the belief-only value of not prefetching, $E[(A(b_{\text{end}})-\lambda_l\bar X_{\text{trigger}})^{+}\mid b]-\lambda_c(1+w)>E[(A(b_{\text{end}})-\lambda_l\bar X_{\text{end}}-\lambda_c)^{+}\mid b]$, where $\bar X$ are dev-mean exposures (scalars). The use rule is SPEC's. SPEC-θ is decomposed in the same sense as B9+: timing fixes *when*, and the belief with fixed prices decides *whether*.
+  * **Why it is needed.** Without SPEC-θ, Ours-v2[SPECULATIVE] beats every listed rival simply by not prefetching on confident-skip turns, which a decomposed controller can do (THEORY Prop. 4″). The speculative contrast would then measure that, not joint control.
 
 **Architectures (decided by the PI, 2026-10-16): the study tests BOTH, as a boundary test.**
 * **COMMIT:** a dispatched retrieval's passages are always used.
@@ -145,7 +147,7 @@ Both are run on the same test items, seeds, latency profile and price. The archi
   * Under SPECULATIVE, it is the same optimal-stopping controller with the dispatch value replaced by the option value of having the passages ready, $E[\max(U_{\text{use}}(b_{\text{end}}),0)]$, less the dispatch compute.
 * **D\*[arch]** is the strongest decomposed rival for that architecture:
   * D\*[COMMIT] = B9+;
-  * D\*[SPECULATIVE] = whichever of {B9+, SPEC} has the higher dev expected utility at the primary price.
+  * D\*[SPECULATIVE] = whichever of {B9+, SPEC, SPEC-θ} has the highest dev expected utility at the primary price. SPEC-θ is expected to win (THEORY §6.2).
   * Both are named at freeze.
 * **Δ[arch]** = $\bar D(\text{Ours-v2[arch]} - D^{*}[\text{arch}])$.
 
@@ -160,33 +162,42 @@ where $Q$ is the primary correctness and ΔTTFA is the measured TTFA increase ov
 Setup:
 * all channels active (C1+C2+C3);
 * pooled over d1_open and d2_support test items (item-weighted);
-* at **one latency profile and one price**, the same for both architectures, fixed at freeze by the §4.3 rule applied to Δ[COMMIT] on dev: [PROFILE, PRICE TO FILL AT FREEZE].
+* at **one latency profile and one price**, the same for both architectures, fixed at freeze by the §4.3 rule (maximum dev-predicted power of the P1 ∧ P2 ∧ P3 conjunction): [PROFILE, PRICE TO FILL AT FREEZE].
 
-The three hypotheses follow from THEORY Prop. 4 and Prop. 4′:
+The three hypotheses follow from THEORY Props. 4, 4′ and 4″:
 * **P1 (joint control pays when retrieval is committed):** Δ[COMMIT] > 0.
 * **P2 (the boundary itself):** Δ[COMMIT] − Δ[SPECULATIVE] > 0, a paired interaction contrast on the same items.
-* **P3 (speculative prefetch closes the gap):** Δ[SPECULATIVE] < m.
-  * m = λ_c·(1 + w̄)·q̂ is the Prop. 4′ bound: w̄ is the dev mean waste, and q̂ is the dev fraction of SPEC dispatches whose passages end up unused.
-  * m is computed on dev and fixed at freeze: [m TO FILL AT FREEZE].
-  * This is a non-superiority test. It is passed if the 97.5th percentile of the bootstrap distribution of Δ[SPECULATIVE] is < m.
+* **P3 (under speculation, joint control adds nothing beyond belief-gated prefetch):** a TOST equivalence test, −m₃ < Δ[SPECULATIVE] < m₃.
+  * **Margin.** m₃ = ½·δ̂_C,dev, half of the dev-estimated Δ[COMMIT] at the primary (profile, price). It is fixed at freeze: [m₃ TO FILL AT FREEZE].
+  * **Decision.** P3 passes iff the 2.5th and 97.5th percentiles of the bootstrap distribution of Δ[SPECULATIVE] both lie inside (−m₃, m₃).
+  * **Why this margin** (THEORY §6.2):
+    * The draft margin λ_c(1+w̄)q̂ is not a valid bound on the joint advantage over SPEC: there is an analytic counterexample, and it is exceeded in simulation.
+    * It is about 3× the predicted Δ[COMMIT] (0.029 against 0.009–0.011), so P3 would follow from P2 almost for free.
+    * With C3 active, no compute-only bound holds.
+    * The ½δ̂_C margin makes P3 say something P2 does not: speculation removes at least half the commit advantage in absolute terms.
+    * The lower side checks that the joint speculative controller is not broken. Theory predicts Δ[SPECULATIVE] ≥ 0 under correct models.
+  * **Diagnostics, not tests.** The two-epoch theory bounds $m_{\text{prophet}}$ (vs SPEC) and $m_{C1}$ (vs SPEC-θ) are computed on dev and reported next to P3.
 
 How the tests are decided:
-* All three use the paired cluster bootstrap (B = 10,000, the same resamples for every contrast), one-sided.
-* **The boundary claim is supported iff P1, P2 and P3 all hold, each at one-sided α = 0.025.** This is an intersection–union test, so the conjunction needs no multiplicity adjustment.
-* Individual claims about P1, P2 or P3 alone are reported with Holm adjustment across the three (family-wise one-sided α = 0.025).
+* All tests use the paired cluster bootstrap (B = 10,000, the same resamples for every contrast). There are four one-sided tests at α = 0.025: P1, P2, and the two sides of P3.
+* **The boundary claim is supported iff all four reject.** This is an intersection–union test, so the conjunction needs no multiplicity adjustment.
+* Individual claims about P1, P2 or P3 alone are reported with Holm adjustment across the three (family-wise one-sided α = 0.025; P3 counts as one test, at the larger of its two p-values).
 * Every possible pattern of outcomes is reported as it falls. In particular:
   * P1 failing means joint control did not pay off even under commit, at this scale.
-  * P3 failing would contradict Prop. 4′, so the implementation is audited first.
+  * P3's upper side failing means the joint controller keeps a speculative advantage over belief-gated prefetch. THEORY §6.2 names the possible sources: delaying a paid prefetch across several partials, and C3 query improvement. It is reported as such.
+  * P3's lower side failing triggers an implementation audit.
   * Ties are reported as ties.
 
-**Secondary family (directional, Holm-adjusted at family-wise α = 0.05 one-sided).** Every cell of dataset × profile × channel set ∈ {C1, C1+C2, C1+C2+C3}, at the pre-specified price set, with predictions from THEORY §7:
+**Secondary family (directional, Holm-adjusted at family-wise α = 0.05 one-sided).** Every cell of architecture × dataset × profile × channel set ∈ {C1, C1+C2, C1+C2+C3}, at the pre-specified price set, with predictions from THEORY §6–7:
 
-| channel set | vs B9+ / D\* | vs B9 |
-|---|---|---|
-| none (A1–A3 enforced: frozen query, per-policy constant overlap, final-transcript belief) | **decisions identical; $\bar D=0$ exactly** | $\bar D\ge0$, within the Prop. 2 bound |
-| C1 | > 0 for faiss_rerank and remote_api; ≈ 0 for faiss | > 0 |
-| C1+C2 (commit) | > 0 | > 0 |
-| C1+C2+C3 | > 0 | > 0 |
+| architecture | channel set | vs D\*[arch] | vs B9 | vs SPEC |
+|---|---|---|---|---|
+| COMMIT | none (A1–A3 enforced: frozen query, per-policy constant overlap, final-transcript belief) | **decisions identical; $\bar D=0$ exactly** | $\bar D\ge0$, within the Prop. 2 bound | — |
+| COMMIT | C1 | > 0 for faiss_rerank and remote_api; ≈ 0 for faiss | > 0 | — |
+| COMMIT | C1+C2 | > 0 | > 0 | — |
+| COMMIT | C1+C2+C3 | > 0 | > 0 | — |
+| SPECULATIVE | C1, C1+C2 | ≈ 0 (TOST ±m₃) | > 0 | > 0 (belief-gated compute saving, Prop. 4′) |
+| SPECULATIVE | C1+C2+C3 | ≥ 0, possibly > 0 through the C3 query-improvement term (reported, not predicted to exceed m₃) | > 0 | > 0 |
 
 * **Replication of Prop. 1.** The "none" cells are tested as **decision identity**: the fraction of identical (retrieve, timing-if-retrieve) decisions between Ours-v2 and B9+, predicted to be 100%. Any non-identity is investigated as an implementation error and reported. The utility difference is tested by TOST with margin ±0.005 (equivalence).
 * **Predicted-vs-observed agreement.** For each secondary cell × price, the predicted gap $\hat\delta_{\text{dev}}$ is computed **entirely from dev**: the dev-fitted models are applied to dev items through the THEORY expressions and simulation, and the values are written to `docs/research_v2/v2_predictions.json` before the freeze. The observed gap $\delta_{\text{test}}$ is computed on test. Two pre-specified criteria:
@@ -206,14 +217,17 @@ How the tests are decided:
 * **CIs:** percentile CIs. p95 TTFA is recomputed per resample.
 
 ### 4.2 Multiplicity
-* One primary test at α = 0.025 one-sided.
+* One primary intersection–union test (P1 ∧ P2 ∧ P3, i.e. four one-sided tests, each at α = 0.025; §3).
 * One secondary family, Holm-adjusted.
 * H-E1v2 and H-E2v2 are separate experiments, each with its own criteria, as in v1.
 * Everything else is descriptive.
 
 ### 4.3 Pre-specified price and profile selection (dev only)
 * **Price grid:** $\lambda_l$ at the dev belief quantiles {0.5, 0.65, 0.8, 0.9} of the B9+ cut; $\lambda_c$ = 0.05.
-* **Primary (profile, price):** the pair maximizing the dev-predicted standardized effect $\hat\delta/\hat\sigma$ for Ours-v2 vs D\*. It is recorded in §9 before the freeze.
+* **Primary (profile, price):** the pair that maximizes the dev-predicted power of the P1 ∧ P2 ∧ P3 conjunction at the planned test N. Equivalently, it minimizes the N needed for 80% conjunction power, computed as in §6 from the dev per-item paired differences of both architectures.
+  * In the placeholder simulation this coincides with the rule "maximize δ̂/σ̂ of Δ[COMMIT]" (the 0.65 belief quantile for every profile).
+  * The conjunction rule is used because P2 and P3 also depend on the price.
+  * The selected pair and m₃ are recorded in §1 and §3 before the freeze.
 * **No test data are used.** The selection uses only dev, so it involves no winner's-curse leakage into test, although the dev-predicted effect is itself optimistic.
 
 ### 4.4 Exclusions and failed runs
@@ -225,12 +239,24 @@ How the tests are decided:
 
 ### 4.5 Tuning protocol (dev only, equal budget)
 * **Shared estimates.** The belief calibration, the remaining-speech predictor, the latency model (including the non-hideable component π) and $\hat g^{\pm}$ are fitted once on dev and shared by every controller.
-* **Per-controller parameters.** These are the B9+ timing rule (early / late / R̂-threshold on a 21-point quantile grid) and nothing else. Every controller gets the same number of dev evaluations; Ours-v2 has no free parameter beyond the shared models.
+* **Per-controller parameters.** The tunable parameters are:
+  * the B9+ timing rule (early / late / R̂-threshold on a 21-point quantile grid);
+  * the shared SPEC / SPEC-θ trigger policy (immediate or forecast);
+  * the dev-mean scalar exposures used by SPEC-θ, which are estimates and not tuned.
+
+  Nothing else is tuned. Every controller gets the same number of dev evaluations. Ours-v2 (both architectures) has no free parameter beyond the shared models and its lookahead depth, which is fixed at freeze.
 * **Cost calibration.** The latency model is calibrated as the **end-to-end TTFA increment** of retrieval measured on dev, not the retrieval-call duration. In v1 the call duration understated the TTFA cost by more than 2× (THEORY §8.4).
 
 ### 4.6 What may and may not change after freezing
 * **May change (each logged as a deviation):** bug fixes that do not alter a controller's decision rule; infrastructure; re-running failed items; adding descriptive analyses that are labelled as such.
-* **May not change:** hypotheses, predictions, primary and secondary tests, α, margins, the primary (profile, price), the price grid, controller definitions, D\*, judge configuration (deployment, version, reasoning_effort, k, prompt), exclusion rules, splits, model and seeds.
+* **May not change:**
+  * hypotheses, predictions, the primary and secondary tests, α;
+  * margins (m₃ and the ±0.005 replication margin) and δ̂_C,dev;
+  * the primary (profile, price) and the price grid;
+  * both architectures and their controller definitions, including SPEC-θ, the trigger policy and the lookahead depth;
+  * D\*[COMMIT] and D\*[SPECULATIVE];
+  * judge configuration (deployment, version, reasoning_effort, k, prompt);
+  * exclusion rules, splits, model and seeds.
 
 ### 4.7 Deviation logging
 Every deviation is recorded before the affected analysis is run in:
@@ -240,7 +266,9 @@ Every deviation is recorded before the affected analysis is run in:
 ## 5. Statistical details
 * Primary statistic: $\bar D$, the mean over test items of the seed-averaged paired utility difference.
 * Bootstrap test: reject $H_0:\delta\le0$ if the 2.5th percentile of $\bar D^{*}$ is > 0.
-* TOST for the "none" cells: both one-sided 95% bounds lie inside ±0.005.
+* Interaction (P2): the same test applied to the per-item difference $D_{C,i}-D_{S,i}$ on items present in both architectures.
+* P3 TOST: reject both $H_0:\delta_S\ge m_3$ and $H_0:\delta_S\le-m_3$, i.e. the 2.5th–97.5th percentile interval of $\bar D_S^{*}$ lies inside $(-m_3,m_3)$. $m_3$ is a fixed constant from dev and is not re-estimated in the bootstrap.
+* TOST for the "none" cells: the 2.5th–97.5th percentile interval lies inside ±0.005.
 * p95 comparisons: paired cluster bootstrap of the difference in p95.
 
 ## 6. Power analysis
@@ -295,9 +323,52 @@ Every deviation is recorded before the affected analysis is run in:
 
 **Conclusions for planning.**
 1. At the placeholder sizes (1,344 pooled test items) the primary is underpowered: the MDE of 0.014–0.018 exceeds the predicted 0.009–0.012.
-2. **About 4,000 pooled test items** (about 5,700 in total at 30/70) give 80% power for every profile under these assumptions. `d1_open` is where N is cheap (PopQA alone has about 14k questions), so the recommendation is `d1_open` ≥ 5,000 items in total.
+2. **About 4,000 pooled test items** (about 5,700 in total at 30/70) give 80% power for the commit contrast alone, for every profile, under these assumptions. The primary conjunction needs more (§6.1).
 3. The effect is sensitive to prefix informativeness. At prefix-noise SD 0.75, 1.5 and 3.0, giving prefix AUC 0.80, 0.76 and 0.61, the d2 × remote_api δ is 0.0034, 0.0138 and 0.0048 at the 0.65 price. **The power analysis must be re-run with the E1-v2 dev prefix curve before the freeze.**
-4. Both architectures are tested (§3, P1–P3). Under SPECULATIVE the predicted Δ is at most λ_c(1+w̄)·q̂ and can be negative (THEORY Prop. 4′). **Before the freeze, the power analysis must be extended to P2 (the interaction contrast) and P3 (the non-superiority margin m), and the planned N confirmed for all three.** The boundary claim needs all three, so its power is at most the minimum of the three.
+4. The table above covers the commit contrast alone. The primary is the P1 ∧ P2 ∧ P3 conjunction, sized below.
+
+### 6.1 Power of the boundary test (P1, P2, P3 and their conjunction)
+
+**Source.** `v2_power.json`, block `boundary_test` (`simulate_boundary`, `boundary_test_power`).
+
+**Setup.**
+* The same items under both architectures, two decision epochs (first meaningful partial, end of turn), C1+C2 active.
+* Compute is λ_c(1+w) with the v1 waste placeholders (early 0.08, end 0), applied to every controller.
+* d1 and d2 are pooled in proportion 840 : 504.
+* **Conjunction power.** Each statistic's sample mean is shown > 0 one-sided at α = 0.025; P3 counts as two such statistics. Power is evaluated with the joint normal law of the per-item statistics (their full covariance is estimated from the simulation), using 50,000 draws.
+* **Direct check.** At the faiss cell, at the N the normal approximation gives, a full paired percentile bootstrap (200 simulated test sets, B = 1,000) gives conjunction power 0.765. The Wald test on the same test sets gives 0.775 (MC SE 0.028), against 0.80 from the normal approximation. **The N below are therefore lower bounds; plan about 10% above them.**
+
+**Predicted effects at the 0.65 belief-quantile price** (selected by both §4.3 rules in every profile):
+
+| profile | Δ[COMMIT] (σ) | Δ[SPEC] vs {B9+, SPEC, SPEC-θ} (σ) | interaction | m₃ = ½Δ[C] | Δ[SPEC] vs {B9+, SPEC} only | draft m = λ_c(1+w̄)q̂ |
+|---|---|---|---|---|---|---|
+| faiss | 0.0088 (0.175) | −0.0001 (0.049) | 0.0089 | 0.0044 | 0.0149 | 0.0293 |
+| faiss_rerank | 0.0108 (0.229) | −0.0002 (0.095) | 0.0110 | 0.0054 | 0.0133 | 0.0287 |
+| remote_api | 0.0097 (0.201) | −0.0003 (0.113) | 0.0100 | 0.0048 | 0.0151 | 0.0291 |
+
+**N_test for 80% conjunction power:**
+
+| design | faiss | faiss_rerank | remote_api |
+|---|---|---|---|
+| **adopted:** D\*[S] includes SPEC-θ, P3 = TOST at ½δ̂_C | **3,417** (total 4,882) | **4,631** (total 6,616) | **6,492** (total 9,275) |
+| variant: P3 one-sided at ½δ̂_C | 3,395 | 4,299 | 5,125 |
+| variant: P3 one-sided at the two-epoch theory bound m_C1 | 3,655 | 4,101 | 4,358 |
+| draft design (D\*[S] ∈ {B9+, SPEC}, m = λ_c(1+w̄)q̂) | **∞**: P2 predicted false (interaction −0.0062 / −0.0026 / −0.0054) | ∞ | ∞ |
+
+**Conjunction power at fixed pooled N, adopted design:**
+
+| N_test | faiss | faiss_rerank | remote_api |
+|---|---|---|---|
+| 1,344 (placeholder sizes) | 0.33 | 0.03 | 0.00 |
+| 4,000 | 0.86 | 0.71 | 0.43 |
+
+**Conclusions.**
+1. With the draft rival set and margin, the boundary claim cannot pass at any N. Ours-v2[SPEC] beats {B9+, SPEC} by 0.013–0.015, which is more than its commit advantage. SPEC-θ must be implemented and added to D\*[SPECULATIVE].
+2. With the adopted design, the primary needs about **3,400–6,500 pooled test items**, depending on the profile. Planning for 10% more gives about **3,800 (faiss) to 7,100 (remote_api) test items**, or roughly 5,400–10,200 in total at 30/70.
+   * The choice of primary profile therefore drives dataset size. faiss is the cheapest because its Δ[SPEC] has the smallest variance.
+3. **What this simulation does not cover.** It has two epochs and Δρ = 0, so it does not quantify two terms that THEORY §6.2 says can keep Δ[SPEC] > 0: multi-epoch prefetch delay, and C3 query improvement.
+   * Both must be measured on dev.
+   * If they push dev Δ[SPEC] towards m₃, the P3 power above is optimistic.
 
 ## 7. Reporting
 * Every hypothesis is reported with its verdict, the point estimate, the CI and the exclusion counts.
@@ -312,7 +383,8 @@ Every deviation is recorded before the affected analysis is run in:
 | Dataset sizes, splits and README stats filled in (§1) | Yashmita | Ryan |
 | E1-v2 dev results: signal chosen, prefix curve, $\hat g^{\pm}$, boundary-mass check (§3) | Yashmita | Ryan |
 | Judge gate passed and recorded; judge fields filled in (§2) | Yashmita | Ryan |
-| Both architectures tested (decided 2026-10-16); D\*[COMMIT] and D\*[SPECULATIVE] named; margin m fixed (§3) | Yashmita | Ryan |
+| Both architectures tested (decided 2026-10-16); SPEC-θ (B11) implemented and unit-tested; `boundary_contrasts` reports Δ against D\* including SPEC-θ and the TOST margin; D\*[COMMIT] and D\*[SPECULATIVE] named; m₃ = ½δ̂_C,dev fixed (§3) | Yashmita | Ryan |
+| Multi-epoch prefetch-delay and C3 terms of Δ[SPEC] estimated on dev (THEORY §6.2); §6.1 re-run with dev inputs | Yashmita | Ryan |
 | Latency model calibrated as TTFA increment on dev (§4.5) | Yashmita | Ryan |
 | Price grid from dev belief quantiles; primary (profile, price) selected (§4.3) | Renya | Ryan |
 | `analysis/v2_power.py` re-run with dev inputs; §6 updated | Yashmita | Ryan |
