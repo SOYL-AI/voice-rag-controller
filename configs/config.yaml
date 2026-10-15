@@ -448,6 +448,157 @@ controller:
       # retrieval latency inside speech (see overlap_ms above).
       timing: fixed_early_proxy
 
+  # -------------------------------------------------------------------------
+  # Research v2 (docs/research_v2/CONTRACTS.md): the shared cost model of the
+  # v2 controllers, read by controller/baselines/_objective_v2.py (which
+  # mirrors these values as defaults). The v1 `e3` block above is untouched
+  # and still drives the v1 controllers. Every priced v2 controller (ours_v2,
+  # b9_v2, b9plus_v2) reads exactly these values, so they differ only in
+  # decision structure. An explicit null here DOES override the default.
+  # -------------------------------------------------------------------------
+  e3v2:
+    default_prices:
+      lambda_l: 1.0     # quality per SECOND of exposed latency
+      lambda_c: 0.05    # quality per retrieval
+
+    # Asymmetric retrieval effect, U = b g+ (1-rho) - (1-b) g- - ...
+    # Defaults are the v1 E3 measurement (+0.72 where needed, -0.59 where
+    # not). E1-v2 refits both on dev; put its values here.
+    quality:
+      g_plus: 0.72
+      g_minus: 0.59
+
+    calibration:
+      # E1-v2's dev calibration artifact (prefix-aware logistic: intercept,
+      # slope, optional frac_slope / interaction). Until it lands, the v1
+      # full-transcript fit below is used (no prefix terms).
+      from_artifact: null
+      fallback_artifact: controller/baselines/e1_calibration_mean_entropy.json
+      signal: mean_entropy_nats
+      # Word fraction fed to the calibration: "predicted" = causal e/(e+R);
+      # "entry" = the record's reference word_frac (NOT causal; analysis only).
+      frac_source: predicted
+
+    belief:
+      prior: 0.5               # belief before any prefix signal is available
+      availability_lag_ms: 0   # prefix signal usable at t_ms + lag
+
+    timing:
+      # End-of-turn detection delay: hiding window at a partial is
+      # R_t + eot_detection_ms; the end-of-turn step happens at VAD end +
+      # eot_detection_ms (or at the final ASR transcript, if later).
+      eot_detection_ms: 0
+      default_partial_interval_ms: 300
+      fixed_early_fraction: 0.5      # fixed_early_proxy fires at est. word fraction >= this
+      forecast_lead_quantile: 0.5    # forecast fires when R_t + eot <= this latency quantile
+      query_ready:
+        min_words: 4
+        require_content_word: true
+
+    # Retrieval latency per profile (ms quantiles). signals["retrieval"]
+    # overrides these per turn. MEASURED (research v2, v2/pipeline):
+    #   faiss / faiss_rerank / remote_api are the bare vector call and are
+    #   LOWER BOUNDS on what a live-partial dispatch must hide (they exclude
+    #   the LLM query rewrite): bge-small + FAISS on CPU (4 torch threads);
+    #   + ms-marco-MiniLM-L6 fp16 cross-encoder on top-50 (RTX 4060);
+    #   remote_api: faiss behind HTTPS on a Modal CPU container (us-east), measured
+    #   over the WAN from the run host in India, 785 queries, 2026-10-16
+    #   (p50 268 ms = ~18 ms server + ~249 ms transport).
+    #   Source: retrieval/latency_profiles_v2.json.
+    #   rewrite_* are the whole retrieval operation on a live partial: the
+    #   project's LLM query rewrite (retrieval/rewrite.py, Mistral-7B on the
+    #   batched vLLM endpoint at 8 concurrent requests;
+    #   analysis/rewrite_latency_v2/) + the bare profile, as an independent
+    #   Monte Carlo sum (retrieval/compose_profiles.py).
+    # v1's in-pipeline 672 ms median was CPU thread contention on the run
+    # host, not retrieval cost (docs/research_v2/timing_components.md §0).
+    latency_profiles:
+      faiss: {p10: 23, p25: 29, p50: 41, p75: 86, p90: 180, p95: 247, p99: 423}
+      faiss_rerank: {p10: 57, p25: 61, p50: 66, p75: 71, p90: 75, p95: 78, p99: 110}
+      remote_api: {p10: 262, p25: 264, p50: 268, p75: 272, p90: 277, p95: 281, p99: 339}
+      rewrite_faiss: {p10: 852, p25: 919, p50: 1044, p75: 1195, p90: 1379, p95: 1529, p99: 1847}
+      rewrite_faiss_rerank: {p10: 860, p25: 935, p50: 1043, p75: 1165, p90: 1302, p95: 1430, p99: 1765}
+      rewrite_remote: {p10: 1059, p25: 1137, p50: 1241, p75: 1360, p90: 1496, p95: 1621, p99: 1980}
+    # A live-partial dispatch runs the rewrite first, so the composite is
+    # the default; use a bare profile only for a rewrite-free pipeline.
+    default_latency_profile: rewrite_faiss
+    latency_points: 41
+
+    # pi, the NON-HIDEABLE TTFA increment of using retrieved passages:
+    # extra prefill, a longer answer before TTS input, first-clause TTS.
+    # Every priced controller pays lambda_l * (E[exposed retrieval] + pi),
+    # identically. MEASURED on the real endpoint (v2/pipeline,
+    # analysis/latency_model_v2/): paired retrieve-minus-skip TTFA minus the
+    # exposed retrieval call, 50 v1 scenarios, Mistral-7B + resident piper:
+    #   streaming TTS 371 ms (p10/p50/p90 -133/382/969)
+    #   batch TTS     855 ms (p10/p50/p90 -431/812/1968)
+    # v2 uses streaming TTS, so streaming is the default.
+    # signals["retrieval"]["nonhideable_increment_ms"] overrides it per turn.
+    tts_mode: streaming
+    nonhideable_increment_ms: 371.0
+    nonhideable_increment_ms_by_tts_mode:
+      streaming: 371.0
+      batch: 855.0
+
+    # Pipeline architecture. commit: a dispatched retrieval's passages are
+    # always used. speculative: a dispatched retrieval may be discarded at
+    # end of turn (compute still spent) — enables b10_speculative_v2 (SPEC,
+    # THEORY.md Prop. 4'). simulator/e3v2_decide.py reports both.
+    architecture: commit
+
+    # SPEC's independently chosen dispatch timing (immediate = first
+    # query-ready partial; forecast is the other sensible choice).
+    b10:
+      timing: immediate
+
+    # Partial-query risk rho(f): fraction of retrieval's gain lost on a
+    # prefix. Default scale*(1-f)^power; tune_v2.py fits a dev table
+    # (1 - hit(f)/hit(final), isotonic) that replaces it via the estimates
+    # artifact. A partial that fails query_ready gets not_ready.
+    rho:
+      kind: power
+      scale: 1.0
+      power: 2.0
+      not_ready: 1.0
+      table: null
+
+    # PLACEHOLDER (as v1's waste_rate): expected relaunch compute of an early
+    # commit, coef * (1 - f).
+    waste:
+      coef: 0.1
+
+    ours:
+      lookahead_steps: 1
+      belief_transitions_artifact: controller/baselines/belief_transitions_v2.json
+      allow_early_skip: false
+      speculative: false     # documented hook only; true raises
+
+    b9:
+      # v1_full: lambda_l*Hbar - bbar*g+*rhobar - lambda_c*wbar;  hidden_only: lambda_l*Hbar
+      timing_objective: v1_full
+
+    # tune_v2.py output (policy constants, rho table, tuned unpriced
+    # thresholds). null until a dev tuning run exists.
+    estimates_artifact: null
+
+    policy_constants_fallback:
+      prior_belief: 0.5
+      profiles: {}
+
+    # Unpriced defaults (UN-TUNED starting points; tune_v2.py replaces them).
+    unpriced:
+      b4: {theta: 0.3}
+      b5: {threshold: 0.5, model: null}
+      b6: {threshold: 1.0}
+      b8: {trigger: b6, timing: fixed_early_proxy}
+
+    tuning:
+      budget: 21                      # grid evaluations per tuned threshold
+      equal_accuracy_tolerance: 0.02  # b8 timing: E2's equal-accuracy condition
+
+    phase_b:
+      query_variant_order_sensitive: true
+
 # ---------------------------------------------------------------------------
 # Other components: add your section here.
 # ---------------------------------------------------------------------------

@@ -1,0 +1,164 @@
+{
+  "version": "energy-params-1/gpu",
+  "placement": "gpu",
+  "local": {
+    "vad_j_per_audio_s": {
+      "central": 0.04283549521924732,
+      "low": 0.011097090323967407,
+      "high": 0.06425324282887097
+    },
+    "asr_j_per_audio_s": {
+      "central": 11.609625065744043,
+      "low": 2.670309793281626,
+      "high": 19.771321200008668
+    },
+    "tts_j_fixed": {
+      "central": 3.872620817923257,
+      "low": 0.0,
+      "high": 5.808931226884862
+    },
+    "tts_j_per_char": {
+      "central": 0.11437865825162954,
+      "low": 0.11437865825162954,
+      "high": 0.17156798737744436
+    },
+    "tts_subprocess_overhead_j": {
+      "central": 43.38273310780185,
+      "low": 10.722044013625673,
+      "high": 65.07409966170277
+    },
+    "embed_query_j": {
+      "central": 0.2340945269261974,
+      "low": 0.14033081125645308,
+      "high": 0.2873514039000044
+    },
+    "faiss_search_j": {
+      "60": {
+        "central": 4.30967451340255e-05,
+        "low": 1.3037067155380595e-05,
+        "high": 6.464511770103825e-05
+      },
+      "10k": {
+        "central": 0.006123528522938563,
+        "low": 0.0012859212901100369,
+        "high": 0.009185292784407844
+      },
+      "100k": {
+        "central": 0.3904602863080523,
+        "low": 0.12027587276440144,
+        "high": 0.5856904294620784
+      }
+    },
+    "default_index_size": "60",
+    "rerank50_j": {
+      "central": 1.9044583120712328,
+      "low": 1.5731827018180273,
+      "high": 2.163762040565908
+    },
+    "remote_api_network_j": {
+      "central": 0.0,
+      "low": 0.0,
+      "high": 0.0
+    },
+    "gpu_wake_tail_j": {
+      "central": 0.5640908094007878,
+      "low": 0.0,
+      "high": 1.423235056953641
+    },
+    "gpu_wake_per_turn": true,
+    "idle_w": {
+      "central": 40.143340643784306,
+      "low": 12.15627702108834,
+      "high": 40.143340643784306
+    }
+  },
+  "remote_llm": {
+    "prefill_j_fixed": 0.0,
+    "prefill_j_per_token": {
+      "low": 0.017231590386120706,
+      "central": 0.08403470351449585,
+      "high": 0.1115359261700725
+    },
+    "decode_j_per_token": {
+      "low": 1.85903310161385,
+      "central": 7.680540430031824,
+      "high": 8.91556701030928
+    },
+    "idle_w": {
+      "central": 60.0,
+      "low": 30.0,
+      "high": 90.0
+    },
+    "retrieval_server_scale": {
+      "central": 1.0,
+      "low": 0.5,
+      "high": 2.0
+    }
+  },
+  "llm_estimate_detail": {
+    "decode_s_per_token": 0.033020618556701034,
+    "prefill_s_per_token": 0.0004130960228521204,
+    "decode_power_w": {
+      "low": 146.2991604297669,
+      "central": 292.5983208595338,
+      "high": 300.0
+    },
+    "prefill_power_w": {
+      "low": 131.71328076980603,
+      "central": 263.42656153961207,
+      "high": 300.0
+    },
+    "idle_w": {
+      "central": 60.0,
+      "low": 30.0,
+      "high": 90.0
+    },
+    "decode_j_per_token": {
+      "low": 1.85903310161385,
+      "central": 7.680540430031824,
+      "high": 8.91556701030928
+    },
+    "prefill_j_per_token": {
+      "low": 0.017231590386120706,
+      "central": 0.08403470351449585,
+      "high": 0.1115359261700725
+    },
+    "prefill_j_fixed": 0.0,
+    "power_fractions": {
+      "decode": 0.9753277361984461,
+      "prefill": 0.8780885384653736,
+      "decode_w": 33.67904205866854,
+      "decode_limit_w": 34.531,
+      "prefill_w": 31.799976420523507,
+      "prefill_limit_w": 36.215,
+      "decode_proxy_achieved_gbs": 117.77394597067948,
+      "prefill_proxy_achieved_tflops": 10.158040664585553,
+      "source": "proxy kernels on RTX 4060 Laptop (energy/results/phase_power.json)"
+    },
+    "sanity": {
+      "decode_effective_bw_gbs": 438.9984389634717,
+      "decode_bw_utilisation": 0.7316640649391195,
+      "prefill_mfu_vs_dense_bf16": 0.5013016413373861
+    },
+    "assumptions": {
+      "a10g": {
+        "board_power_w": 300.0,
+        "a10_sibling_tdp_w": 150.0,
+        "mem_bw_gbs": 600.0,
+        "dense_bf16_tflops": 70.0
+      },
+      "model": {
+        "n_params": 7248000000.0,
+        "bytes_per_param": 2
+      },
+      "timing_source": "E2 (conv_*) + E3 (e3full_*) logs, Modal vLLM Mistral-7B-Instruct-v0.3 on A10G, Aug 2026; clock res ~15.6 ms",
+      "n_turns": 2250
+    }
+  },
+  "sources": [
+    "energy/results/stages.json",
+    "energy/results/llm_local.json",
+    "energy/results/a10g_timing.json",
+    "energy/results/token_budget.json"
+  ]
+}

@@ -1,0 +1,416 @@
+{
+ "n_items": 720,
+ "n_docs": 353,
+ "n_orgs": 24,
+ "n_pair_groups": 276,
+ "pair_group_sizes": {
+  "2": 108,
+  "3": 168
+ },
+ "by_type": {
+  "org_specific": 240,
+  "ambiguous": 72,
+  "general": 276,
+  "counter_prior": 132
+ },
+ "by_split": {
+  "test": 498,
+  "dev": 222
+ },
+ "by_type_split": {
+  "org_specific": {
+   "test": 164,
+   "dev": 76
+  },
+  "counter_prior": {
+   "test": 94,
+   "dev": 38
+  },
+  "ambiguous": {
+   "test": 48,
+   "dev": 24
+  },
+  "general": {
+   "test": 192,
+   "dev": 84
+  }
+ },
+ "by_domain": {
+  "airline": {
+   "general": 24,
+   "total": 60,
+   "test": 39,
+   "org_specific": 20,
+   "dev": 21,
+   "counter_prior": 10,
+   "ambiguous": 6
+  },
+  "automotive": {
+   "org_specific": 20,
+   "total": 60,
+   "test": 43,
+   "counter_prior": 12,
+   "general": 22,
+   "ambiguous": 6,
+   "dev": 17
+  },
+  "banking": {
+   "general": 24,
+   "total": 60,
+   "test": 40,
+   "org_specific": 20,
+   "counter_prior": 10,
+   "ambiguous": 6,
+   "dev": 20
+  },
+  "ecommerce": {
+   "general": 24,
+   "total": 60,
+   "test": 41,
+   "ambiguous": 6,
+   "dev": 19,
+   "counter_prior": 10,
+   "org_specific": 20
+  },
+  "education": {
+   "org_specific": 20,
+   "total": 60,
+   "dev": 17,
+   "general": 22,
+   "test": 43,
+   "counter_prior": 12,
+   "ambiguous": 6
+  },
+  "food_delivery": {
+   "org_specific": 20,
+   "total": 60,
+   "test": 44,
+   "ambiguous": 6,
+   "general": 22,
+   "dev": 16,
+   "counter_prior": 12
+  },
+  "government": {
+   "org_specific": 20,
+   "total": 60,
+   "test": 43,
+   "counter_prior": 12,
+   "general": 22,
+   "ambiguous": 6,
+   "dev": 17
+  },
+  "healthcare": {
+   "general": 24,
+   "total": 60,
+   "dev": 22,
+   "org_specific": 20,
+   "ambiguous": 6,
+   "test": 38,
+   "counter_prior": 10
+  },
+  "insurance": {
+   "org_specific": 20,
+   "total": 60,
+   "test": 41,
+   "general": 24,
+   "counter_prior": 10,
+   "dev": 19,
+   "ambiguous": 6
+  },
+  "saas": {
+   "org_specific": 20,
+   "total": 60,
+   "dev": 16,
+   "ambiguous": 6,
+   "general": 22,
+   "counter_prior": 12,
+   "test": 44
+  },
+  "telecom": {
+   "org_specific": 20,
+   "total": 60,
+   "test": 39,
+   "ambiguous": 6,
+   "general": 24,
+   "counter_prior": 10,
+   "dev": 21
+  },
+  "utilities": {
+   "org_specific": 20,
+   "total": 60,
+   "test": 43,
+   "counter_prior": 12,
+   "general": 22,
+   "ambiguous": 6,
+   "dev": 17
+  }
+ },
+ "by_org": {
+  "airline/Coralwind Airways": {
+   "general": 12,
+   "total": 30,
+   "test": 18,
+   "org_specific": 10,
+   "dev": 12,
+   "counter_prior": 5,
+   "ambiguous": 3
+  },
+  "airline/Saffron Kite Air": {
+   "general": 12,
+   "total": 30,
+   "test": 21,
+   "org_specific": 10,
+   "counter_prior": 5,
+   "dev": 9,
+   "ambiguous": 3
+  },
+  "automotive/Arunodaya Motors": {
+   "org_specific": 10,
+   "total": 30,
+   "test": 21,
+   "counter_prior": 6,
+   "general": 11,
+   "ambiguous": 3,
+   "dev": 9
+  },
+  "automotive/Corrigan & Pike Auto Group": {
+   "org_specific": 10,
+   "total": 30,
+   "test": 22,
+   "ambiguous": 3,
+   "general": 11,
+   "counter_prior": 6,
+   "dev": 8
+  },
+  "banking/Quaymark Money": {
+   "general": 12,
+   "total": 30,
+   "test": 20,
+   "org_specific": 10,
+   "counter_prior": 5,
+   "ambiguous": 3,
+   "dev": 10
+  },
+  "banking/Saffronleaf Bank": {
+   "general": 12,
+   "total": 30,
+   "test": 20,
+   "org_specific": 10,
+   "counter_prior": 5,
+   "dev": 10,
+   "ambiguous": 3
+  },
+  "ecommerce/Brackenfield Home": {
+   "general": 12,
+   "total": 30,
+   "test": 20,
+   "ambiguous": 3,
+   "dev": 10,
+   "counter_prior": 5,
+   "org_specific": 10
+  },
+  "ecommerce/Tamarind Lane": {
+   "general": 12,
+   "total": 30,
+   "test": 21,
+   "counter_prior": 5,
+   "org_specific": 10,
+   "dev": 9,
+   "ambiguous": 3
+  },
+  "education/Ashcombe Polytechnic Institute": {
+   "org_specific": 10,
+   "total": 30,
+   "dev": 9,
+   "general": 11,
+   "test": 21,
+   "counter_prior": 6,
+   "ambiguous": 3
+  },
+  "education/Vidyanjali University": {
+   "org_specific": 10,
+   "total": 30,
+   "test": 22,
+   "counter_prior": 6,
+   "general": 11,
+   "dev": 8,
+   "ambiguous": 3
+  },
+  "food_delivery/Brambleway Eats": {
+   "org_specific": 10,
+   "total": 30,
+   "test": 23,
+   "ambiguous": 3,
+   "general": 11,
+   "dev": 7,
+   "counter_prior": 6
+  },
+  "food_delivery/Tiffinora": {
+   "org_specific": 10,
+   "total": 30,
+   "dev": 9,
+   "general": 11,
+   "test": 21,
+   "counter_prior": 6,
+   "ambiguous": 3
+  },
+  "government/Kesarinagar Municipal Corporation": {
+   "org_specific": 10,
+   "total": 30,
+   "test": 21,
+   "counter_prior": 6,
+   "general": 11,
+   "ambiguous": 3,
+   "dev": 9
+  },
+  "government/Kestrel Bay County Council": {
+   "counter_prior": 6,
+   "total": 30,
+   "test": 22,
+   "org_specific": 10,
+   "general": 11,
+   "dev": 8,
+   "ambiguous": 3
+  },
+  "healthcare/Varunika Hospitals": {
+   "general": 12,
+   "total": 30,
+   "dev": 11,
+   "org_specific": 10,
+   "ambiguous": 3,
+   "test": 19,
+   "counter_prior": 5
+  },
+  "healthcare/Wrenfield Clinics": {
+   "general": 12,
+   "total": 30,
+   "dev": 11,
+   "org_specific": 10,
+   "ambiguous": 3,
+   "test": 19,
+   "counter_prior": 5
+  },
+  "insurance/Liwan Crest Insurance": {
+   "org_specific": 10,
+   "total": 30,
+   "test": 20,
+   "general": 12,
+   "counter_prior": 5,
+   "dev": 10,
+   "ambiguous": 3
+  },
+  "insurance/Tulsivan Health Insurance": {
+   "org_specific": 10,
+   "total": 30,
+   "test": 21,
+   "ambiguous": 3,
+   "general": 12,
+   "counter_prior": 5,
+   "dev": 9
+  },
+  "saas/Ledgerwick Books": {
+   "org_specific": 10,
+   "total": 30,
+   "dev": 8,
+   "ambiguous": 3,
+   "general": 11,
+   "counter_prior": 6,
+   "test": 22
+  },
+  "saas/Quorvane": {
+   "org_specific": 10,
+   "total": 30,
+   "test": 22,
+   "ambiguous": 3,
+   "general": 11,
+   "counter_prior": 6,
+   "dev": 8
+  },
+  "telecom/Sarovan Telecom": {
+   "org_specific": 10,
+   "total": 30,
+   "test": 19,
+   "ambiguous": 3,
+   "general": 12,
+   "counter_prior": 5,
+   "dev": 11
+  },
+  "telecom/Tallowood Connect": {
+   "counter_prior": 5,
+   "total": 30,
+   "dev": 10,
+   "org_specific": 10,
+   "general": 12,
+   "test": 20,
+   "ambiguous": 3
+  },
+  "utilities/Harrowmere Water & Gas": {
+   "org_specific": 10,
+   "total": 30,
+   "test": 22,
+   "counter_prior": 6,
+   "general": 11,
+   "ambiguous": 3,
+   "dev": 8
+  },
+  "utilities/Vellora Energy Distribution Ltd": {
+   "org_specific": 10,
+   "total": 30,
+   "dev": 9,
+   "ambiguous": 3,
+   "general": 11,
+   "counter_prior": 6,
+   "test": 21
+  }
+ },
+ "with_history": 100,
+ "question_words": {
+  "retrieval_needed": {
+   "mean": 15.04,
+   "sd": 2.08,
+   "min": 9,
+   "max": 21
+  },
+  "general": {
+   "mean": 15.07,
+   "sd": 2.05,
+   "min": 10,
+   "max": 21
+  }
+ },
+ "doc_words": {
+  "mean": 207.1,
+  "min": 132,
+  "max": 289
+ },
+ "docs_per_org": {
+  "telecom/Sarovan Telecom": 15,
+  "telecom/Tallowood Connect": 15,
+  "banking/Quaymark Money": 14,
+  "banking/Saffronleaf Bank": 14,
+  "insurance/Liwan Crest Insurance": 14,
+  "insurance/Tulsivan Health Insurance": 14,
+  "ecommerce/Brackenfield Home": 15,
+  "ecommerce/Tamarind Lane": 14,
+  "airline/Coralwind Airways": 14,
+  "airline/Saffron Kite Air": 15,
+  "healthcare/Varunika Hospitals": 15,
+  "healthcare/Wrenfield Clinics": 15,
+  "utilities/Harrowmere Water & Gas": 15,
+  "utilities/Vellora Energy Distribution Ltd": 14,
+  "saas/Ledgerwick Books": 15,
+  "saas/Quorvane": 15,
+  "food_delivery/Brambleway Eats": 15,
+  "food_delivery/Tiffinora": 15,
+  "education/Ashcombe Polytechnic Institute": 15,
+  "education/Vidyanjali University": 15,
+  "government/Kesarinagar Municipal Corporation": 15,
+  "government/Kestrel Bay County Council": 15,
+  "automotive/Arunodaya Motors": 15,
+  "automotive/Corrigan & Pike Auto Group": 15
+ },
+ "validator": {
+  "errors": 0,
+  "warnings": 46
+ }
+}

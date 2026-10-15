@@ -1,0 +1,51 @@
+% ============================================================================
+% VIII. DISCUSSION AND LIMITATIONS
+% ============================================================================
+\section{Discussion and Limitations}\label{sec:discussion}
+
+% ---- P-VIII.1 what the v1 tie means --------------------------------------------
+% PURPOSE: interpret the null as a boundary condition (R2 "keep the coupling
+%   null central"). Joint control cannot help when quality is timing-invariant,
+%   overlap is a per-policy constant and the belief does not change with
+%   dispatch time; a decomposed controller that prices expected exposure is
+%   then the same controller (Props. 1--2; V1T b9plus 11,300/11,300).
+% DO NOT write "architectural strength" for the zero partial-query risk
+%   (R1 minor); it was a property of the frozen-query test set-up.
+\todo{P-VIII.1: the v1 tie as the equivalence regime.}
+
+% ---- P-VIII.2 where joint control could help -----------------------------------
+% PURPOSE: practitioner guidance (R2 "state where joint control could help").
+% CLAIMS: (a) commit pipelines with slow retrieval (remote APIs) and an
+%   informative partial-transcript belief are where joint control is
+%   predicted to pay (Prop. 4); (b) if a retrieval can be prefetched and
+%   discarded, a decomposed prefetcher that gates on the belief (SPEC-theta)
+%   is predicted to match the joint controller up to a C1-sized term
+%   (Prop. 4''); always-prefetch is not enough when compute has a price; (c) turn-dependent overlap alone is second order
+%   (Prop. 3); (d) the cost model must be calibrated end to end: v1
+%   understated retrieval's TTFA cost by more than 2x [V1T measured_latency].
+%   Whether v2 confirms (a)/(b): \TBD{Sec.~\ref{sec:v2} verdicts}.
+\todo{P-VIII.2: when to build a joint controller and when a belief-gated
+speculative decomposed rule suffices.}
+
+% ---- P-VIII.3 limitations ---------------------------------------------------------
+% PURPOSE: limitations, each stated once and plainly [PRE2 Sec. 10].
+% LIST:
+%   (1) One generator, Mistral-7B-Instruct-v0.3; no claim about other models.
+%   (2) Synthetic speech (TTS) with one streaming-ASR configuration; no human
+%       recordings; v1 had no audio at all (simulated 150 wpm).
+%   (3) v1 data: 50 single-domain scenarios, 36-item E1 gate separable by
+%       surface form; v1 calibration fitted in-sample.
+%   (4) v1 baselines B4/B6/B8 used untuned default thresholds; B4 never fired.
+%   (5) v1 latency model understated the cost of retrieval by more than 2x;
+%       waste_rate was an unmeasured placeholder.
+%   (6) Judge: v1 validated on 19 single-annotator labels; v2 primary judge is
+%       a reasoning model at temperature 1 (stochastic; majority of 3).
+%   (7) d2_support labels are authored and await human verification
+%       [branch v2/d2-support-a README].
+%   (8) Statistical power: C1-only cells are underpowered by design (MDE
+%       stated); the boundary conjunction needs about 3,400 to 6,500 pooled
+%       test items depending on the profile, and the two-epoch power
+%       simulation omits multi-epoch prefetch delay and C3 query improvement
+%       [PRE2 Sec. 6.1] \TBD{realised N and power}.
+%   (9) Experiment 4 (memory scheduling) was cut; no memory claims.
+\todo{P-VIII.3: limitations (1)--(9).}

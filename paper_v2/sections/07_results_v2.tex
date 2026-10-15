@@ -1,0 +1,153 @@
+% ============================================================================
+% VII. v2 RESULTS: THE BOUNDARY TEST
+% Design (PREREG_V2 Sec. 3, as merged at 1d8900c; THEORY Sec. 6.2):
+%   both architectures run on the same test items, seeds, latency profile and
+%   price; the architecture is the only thing that changes.
+%   D*[COMMIT] = B9+;  D*[SPECULATIVE] = best on dev of {B9+, B10 (SPEC),
+%   B11 (SPEC-theta)}, named at freeze.
+%   Delta_C = D-bar(Ours-v2[C] - D*[C]);  Delta_S = D-bar(Ours-v2[S] - D*[S]).
+%   P1: Delta_C > 0.   P2: Delta_C - Delta_S > 0 (paired interaction).
+%   P3: TOST, -m3 < Delta_S < m3, m3 = 1/2 * delta_C,dev (fixed at freeze).
+%   Boundary claim iff P1, P2 and both halves of P3 reject at one-sided
+%   alpha = 0.025 (intersection-union test). Single claims: Holm across the
+%   three (P3 at the larger of its two p-values).
+% No v2 number exists yet. Every \TBD names the artifact that will produce it.
+% Records: simulator/e3v2_results/e3_v2_<controller>_seed<seed>.json.
+% Test split only after docs/research_v2/PREREG_FROZEN exists.
+% ============================================================================
+\section{v2 Results: The Boundary Test}\label{sec:v2}
+
+% ---- P-VII.1 -----------------------------------------------------------------
+% PURPOSE: state the boundary test and why its three parts are needed
+%   (Table~\ref{tab:predictions}).
+% CLAIMS:
+%   (a) The theory predicts a joint advantage when a dispatched retrieval is
+%       committed (Prop. 4) and none beyond a belief-gated decomposed
+%       prefetcher when it can be discarded (Prop. 4''). P1 tests the first,
+%       P3 the second, and P2 tests that the change between them is caused
+%       by the architecture, on the same items.
+%   (b) WHY SPEC-THETA (B11) IS A REQUIRED RIVAL (Prop. 4''; outline note,
+%       no citation needed): under speculation the joint controller can win
+%       against "always prefetch" (B10) simply by not prefetching on turns
+%       where the prefix already makes retrieval unlikely to be used, which
+%       saves compute. That saving needs only the belief at the trigger and
+%       fixed prices, so a decomposed controller can capture it: B11 does,
+%       and the remaining joint advantage over B11 is a C1-sized term.
+%       Without B11 in D*[SPECULATIVE], Delta_S would measure this
+%       decomposable compute saving, not joint control. In simulation it is
+%       0.013 to 0.015, larger than Delta_C (0.009 to 0.011), so P2 would be
+%       predicted FALSE at every price and the conjunction could not pass at
+%       any N [PRE2 Sec. 6.1; POW boundary_test].
+%   (c) WHY THE MARGIN IS 1/2 delta_C: the earlier margin lambda_c(1+w)q is
+%       not a valid bound (counterexample, Prop. 4'(3)), and at about 0.029 it
+%       is roughly three times Delta_C, so P3 would follow from P2 almost for
+%       free. Half the dev commit effect makes P3 say that speculation removes
+%       at least half the commit advantage; the lower TOST side checks that
+%       the joint speculative controller is not broken [THEORY Sec. 6.2].
+% NUMBERS (dev-predicted, simulation, NOT results): 0.013-0.015;
+%   0.009-0.011; 0.029 [PRE2 Sec. 6.1].
+\todo{P-VII.1: the boundary test, its three parts and the intersection--union
+decision rule; why \SPECth{} must be a rival and why the P3 margin is half the
+commit effect.}
+
+\subsection{Gatekeeping Checks}\label{sec:v2-gates}
+% ---- P-VII.2 -----------------------------------------------------------------
+% PURPOSE: report the gates that condition the main tests, in the order the
+%   pre-registration lists them.
+% NUMBERS (all \TBD):
+%   (a) Judge gate on the 200 hold-out answers: kappa, lower bound, accuracy,
+%       retrieve-vs-skip error gap, self-consistency, human kappa
+%       \TBD{simulator/judge_validation/ v2 gate report}.
+%   (b) H-E1v2: test AUC per dataset; prefix curve at word fractions
+%       0.3/0.5/0.7/1.0; C2 "available" iff AUC(0.5) >= 0.65; ECE (10 bins)
+%       on test; boundary mass within +-0.15 of b* (v1: 0.08 [V1T])
+%       \TBD{llm/experiment1_v2/results/ test-split analysis,
+%       llm/experiment1_v2/stats.py}.
+%   (c) H-E2v2 per latency profile: p95 TTFA early vs sentence_end, paired
+%       accuracy non-inferiority (margin 0.02), measured rho(t)
+%       \TBD{v2 E2 analysis over live-partial runs}.
+%   (d) Dev quantities fixed at freeze: D*[S] identity, m3, the primary
+%       (profile, price), and the two terms the two-epoch simulation omits
+%       (multi-epoch prefetch delay; C3 query improvement)
+%       \TBD{PREREG_V2 freeze record; docs/research_v2/v2_predictions.json}.
+\todo{P-VII.2: judge gate, belief validity and prefix informativeness
+(Fig.~\ref{fig:prefix}), the timing experiment, and the dev quantities fixed
+at freeze.}
+
+\begin{figure}[t]
+\centering
+\fbox{\parbox[c][3.2cm][c]{0.92\columnwidth}{\centering
+\TBD{fig\_v2\_prefix\_auc.pdf: AUC of the belief signal against transcript
+fraction (0.3, 0.5, 0.7, 1.0) per dataset, ASR partials, test split, with
+95\% cluster-bootstrap bands; dashed line at the C2-availability threshold
+0.65. Script: analysis/paper\_figures\_v2.py (to be written)}}}
+\caption{Belief quality on partial transcripts (v2, test split).}
+\label{fig:prefix}
+\end{figure}
+
+\subsection{Equivalence Replication (Channels Off)}\label{sec:v2-none}
+% ---- P-VII.3 -----------------------------------------------------------------
+% PURPOSE: replicate Prop. 1 on new data with A1--A3 enforced.
+% PREDICTION: identical decisions, Ours-v2 vs B9+ (100%); utility difference
+%   inside +-0.005 by TOST [PRE2 Sec. 3 secondary family].
+% NUMBERS: \TBD{simulator/e3v2_results/ "none" condition}.
+\todo{P-VII.3: the channels-off replication of the equivalence.}
+
+\subsection{Boundary Test (P1, P2, P3)}\label{sec:v2-boundary}
+% ---- P-VII.4 P1 ----------------------------------------------------------------
+% PURPOSE: Delta_C against B9+, with CI and one-sided p.
+% NUMBERS: \TBD{simulator/e3v2_results/ commit architecture; boundary
+%   contrasts}; dev-predicted \TBD{docs/research_v2/v2_predictions.json}.
+\todo{P-VII.4: P1, the commit-architecture contrast.}
+
+% ---- P-VII.5 P2 ----------------------------------------------------------------
+% PURPOSE: the paired interaction Delta_C - Delta_S on the same items; this is
+%   the boundary itself.
+% NUMBERS: \TBD{same records, both architectures, same bootstrap resamples}.
+\todo{P-VII.5: P2, the interaction between architecture and controller.}
+
+% ---- P-VII.6 P3 ----------------------------------------------------------------
+% PURPOSE: TOST of Delta_S against +-m3; name D*[S] (expected: B11); report
+%   the diagnostics m_prophet (vs B10) and m_C1 (vs B11) next to it, labelled
+%   as two-epoch theory bounds, not tests.
+% READING: if the upper side fails, the joint controller keeps a speculative
+%   advantage beyond belief-gated prefetch; THEORY Sec. 6.2 names the
+%   possible sources (delaying a paid prefetch across several partials; C3
+%   query improvement). If the lower side fails, audit the implementation.
+% NUMBERS: \TBD{speculative architecture records}; m3 \TBD{freeze record};
+%   m_prophet, m_C1 on dev \TBD{dev diagnostics}.
+\todo{P-VII.6: P3, the equivalence test under speculation, with the
+diagnostics, and the conjunction verdict (Table~\ref{tab:v2primary},
+Fig.~\ref{fig:twosided}).}
+
+\input{tables/tab_v2_primary}
+
+\begin{figure}[t]
+\centering
+\fbox{\parbox[c][3.4cm][c]{0.92\columnwidth}{\centering
+\TBD{fig\_v2\_boundary.pdf: $\DC$ and $\DS$ with 95\% CIs per latency
+profile and pooled, next to their dev-predicted values; shaded band
+$\pm m_3$ around zero for $\DS$; the interaction $\DC-\DS$ as a third
+marker. Script: analysis/paper\_figures\_v2.py (to be written)}}}
+\caption{Boundary test: the joint controller's advantage over the strongest
+decomposed rival under the commit ($\DC$) and speculative ($\DS$)
+architectures on the same test items (v2, test split).}
+\label{fig:twosided}
+\end{figure}
+
+\subsection{Secondary Analyses}\label{sec:v2-secondary}
+% ---- P-VII.7 -----------------------------------------------------------------
+% PURPOSE: the Holm-adjusted secondary family and the theory-fit criteria.
+% CONTENT:
+%   (a) architecture x dataset x profile x channel set {C1, C1+C2, C1+C2+C3}
+%       with the predictions of PRE2 Sec. 3 (commit: > 0 against D*;
+%       speculative: approx. 0 against D* by TOST +-m3, > 0 against B9 and
+%       against B10) \TBD{secondary cells};
+%   (b) C1-only cells are second order; report the MDE at the realised N;
+%   (c) predicted versus observed: Spearman r_s >= 0.5 and slope CI
+%       including 1 \TBD{v2_predictions.json vs test};
+%   (d) v1 frontier-dominance rule on v2 \TBD{analysis/e3_frontier.py};
+%   (e) secondary judge (GPT-4o v4) re-report of P1--P3 \TBD{};
+%   (f) waste-rate sensitivity \TBD{}; (g) dead-air rate \TBD{}.
+\todo{P-VII.7: secondary family, theory-fit criteria, frontier dominance,
+judge robustness and sensitivity analyses.}

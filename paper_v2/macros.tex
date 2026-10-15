@@ -1,0 +1,50 @@
+% ============================================================================
+% macros.tex -- drafting macros for the revision. Every \todo and \TBD must be
+% gone before submission: set \finaltrue in main.tex and any remaining one
+% stops the build with an error, so a draft marker cannot reach the PDF.
+% ============================================================================
+
+% \todo{...}   prose the AUTHORS must write (conference AI-content rule).
+%              The comment block above each \todo states the paragraph's
+%              purpose, the claims it must make and their evidence, and the
+%              only numbers it may quote (each with its source path).
+% \TBD{...}    a v2 number that does not exist yet. The argument names the
+%              artifact that will produce it. Never replace it with a guess.
+% \PEND{...}   an author decision that is still open (affiliation, title...).
+\newif\iffinal
+\finalfalse
+
+\iffinal
+  \newcommand{\todo}[1]{\errmessage{Unresolved \string\todo\space before submission}}
+  \newcommand{\TBD}[1]{\errmessage{Unresolved \string\TBD\space before submission}}
+  \newcommand{\PEND}[1]{\errmessage{Unresolved \string\PEND\space before submission}}
+\else
+  \newcommand{\todo}[1]{{\color{red!75!black}\sffamily\footnotesize[AUTHOR PROSE: #1]}}
+  \newcommand{\TBD}[1]{{\color{blue!70!black}\sffamily\footnotesize[TBD: #1]}}
+  \newcommand{\PEND}[1]{{\color{orange!80!black}\sffamily\footnotesize[PENDING: #1]}}
+\fi
+
+% Controllers and quantities (one spelling everywhere).
+\newcommand{\Ours}{\textsc{Ours}}
+\newcommand{\OursV}{\textsc{Ours-v2}}
+\newcommand{\Bnine}{B9}
+\newcommand{\Bplus}{B9\textsuperscript{+}}
+% B10 = speculative-prefetch decomposed controller (called SPEC in
+% docs/research_v2/THEORY.md, Prop. 4'): dispatch at the first meaningful
+% partial, decide use at end of turn with the final belief.
+\newcommand{\Bten}{B10}
+% B11 = SPEC-theta, belief-gated decomposed speculative prefetcher
+% (controller/baselines/b11_speculative_gated_v2.py; THEORY Prop. 4'').
+\newcommand{\Beleven}{B11}
+\newcommand{\SPECth}{\textsc{Spec}-$\theta$}
+% Boundary-test contrasts (PREREG_V2 Sec. 3).
+\newcommand{\DC}{\Delta_{\mathrm{C}}}
+\newcommand{\DS}{\Delta_{\mathrm{S}}}
+\newcommand{\gp}{g^{+}}
+\newcommand{\gm}{g^{-}}
+\newcommand{\lamL}{\lambda_l}
+\newcommand{\lamC}{\lambda_c}
+\newcommand{\E}{\mathbb{E}}
+\newcommand{\Prb}{\Pr}
+\newcommand{\pol}[1]{\texttt{#1}}
+\newcommand{\dset}[1]{\texttt{#1}}

@@ -1,0 +1,47 @@
+validator: 0 errors, 46 warnings
+WARN  airline/coralwind_airways/items:3(q03): general answer mentions KB term(s) ['Brisbane']; make sure the answer is not org-specific
+WARN  airline/saffron_kite_air/items:24(q24): general answer uses value(s) ['15'] that also appear in the org KB; make sure they are not org-specific
+WARN  automotive/arunodaya/items:16(arunodaya-016): general answer uses value(s) ['29'] that also appear in the org KB; make sure they are not org-specific
+WARN  automotive/arunodaya/items:16(arunodaya-016): general answer mentions KB term(s) ['Form', 'NOC', 'PUC', 'RC']; make sure the answer is not org-specific
+WARN  automotive/corriganpike/items:3(corriganpike-003): general answer uses value(s) ['15'] that also appear in the org KB; make sure they are not org-specific
+WARN  automotive/corriganpike/items:20(corriganpike-020): general answer uses value(s) ['500'] that also appear in the org KB; make sure they are not org-specific
+WARN  automotive/corriganpike/items:25(corriganpike-025): general answer uses value(s) ['32'] that also appear in the org KB; make sure they are not org-specific
+WARN  ecommerce/brackenfield_home/items:17(q17): general answer uses value(s) ['55'] that also appear in the org KB; make sure they are not org-specific
+WARN  ecommerce/brackenfield_home/items:27(q27): general answer mentions KB term(s) ['APR']; make sure the answer is not org-specific
+WARN  ecommerce/brackenfield_home/items:29(q29): general answer uses value(s) ['200'] that also appear in the org KB; make sure they are not org-specific
+WARN  ecommerce/tamarind_lane/items:11(q11): general answer mentions KB term(s) ['Return']; make sure the answer is not org-specific
+WARN  ecommerce/tamarind_lane/items:16(q16): general answer mentions KB term(s) ['Google', 'Protection']; make sure the answer is not org-specific
+WARN  education/ashcombe/items:6(ashcombe-006): general answer mentions KB term(s) ['English']; make sure the answer is not org-specific
+WARN  education/ashcombe/items:12(ashcombe-012): general answer mentions KB term(s) ['English']; make sure the answer is not org-specific
+WARN  education/ashcombe/items:23(ashcombe-023): general answer uses value(s) ['70'] that also appear in the org KB; make sure they are not org-specific
+WARN  food_delivery/brambleway/items:5(brambleway-005): general answer uses value(s) ['20'] that also appear in the org KB; make sure they are not org-specific
+WARN  food_delivery/brambleway/items:17(brambleway-017): general answer uses value(s) ['18'] that also appear in the org KB; make sure they are not org-specific
+WARN  food_delivery/brambleway/items:17(brambleway-017): general answer mentions KB term(s) ['Scotland']; make sure the answer is not org-specific
+WARN  food_delivery/tiffinora/items:5(tiffinora-005): general answer uses value(s) ['15'] that also appear in the org KB; make sure they are not org-specific
+WARN  food_delivery/tiffinora/items:11(tiffinora-011): general answer uses value(s) ['75'] that also appear in the org KB; make sure they are not org-specific
+WARN  food_delivery/tiffinora/items:17(tiffinora-017): general answer uses value(s) ['500'] that also appear in the org KB; make sure they are not org-specific
+WARN  government/kesarinagar/items:4(kesarinagar-004): expected_answer number '4' not in gold docs
+WARN  government/kesarinagar/items:4(kesarinagar-004): expected_answer number '1600' not in gold docs
+WARN  government/kesarinagar/items:4(kesarinagar-004): expected_answer number '40000' not in gold docs
+WARN  government/kesarinagar/items:10(kesarinagar-010): expected_answer number '250' not in gold docs
+WARN  government/kestrelbay/items:30(kestrelbay-030): general answer uses value(s) ['20'] that also appear in the org KB; make sure they are not org-specific
+WARN  healthcare/wrenfield_clinics/items:23(q23): general answer mentions KB term(s) ['Child', 'Health', 'Personal', 'Record']; make sure the answer is not org-specific
+WARN  insurance/liwan_crest_insurance/items:1(q01): expected_answer number '1500' not in gold docs
+WARN  saas/ledgerwick/items:2(ledgerwick-002): expected_answer number '14388' not in gold docs
+WARN  saas/ledgerwick/items:3(ledgerwick-003): general answer mentions KB term(s) ['GSTIN']; make sure the answer is not org-specific
+WARN  saas/ledgerwick/items:17(ledgerwick-017): general answer uses value(s) ['16'] that also appear in the org KB; make sure they are not org-specific
+WARN  saas/ledgerwick/items:25(ledgerwick-025): general answer mentions KB term(s) ['IGST', 'LUT']; make sure the answer is not org-specific
+WARN  saas/quorvane/items:7(quorvane-007): expected_answer number '10' not in gold docs
+WARN  saas/quorvane/items:7(quorvane-007): expected_answer number '10' not in gold docs
+WARN  saas/quorvane/items:18(quorvane-018): general answer uses value(s) ['17'] that also appear in the org KB; make sure they are not org-specific
+WARN  saas/quorvane/items:27(quorvane-027): general answer uses value(s) ['429'] that also appear in the org KB; make sure they are not org-specific
+WARN  saas/quorvane/items:27(quorvane-027): general answer mentions KB term(s) ['Retry-After']; make sure the answer is not org-specific
+WARN  saas/quorvane/items:30(quorvane-030): general answer uses value(s) ['99.9'] that also appear in the org KB; make sure they are not org-specific
+WARN  telecom/sarovan_telecom/items:3(q03): general answer mentions KB term(s) ['OTPs']; make sure the answer is not org-specific
+WARN  telecom/tallowood_connect/items:14(q14): general answer mentions KB term(s) ['Australian']; make sure the answer is not org-specific
+WARN  telecom/tallowood_connect/items:21(q21): general answer uses value(s) ['000'] that also appear in the org KB; make sure they are not org-specific
+WARN  telecom/tallowood_connect/items:25(q25): general answer mentions KB term(s) ['Add', 'Mobile']; make sure the answer is not org-specific
+WARN  telecom/tallowood_connect/items:30(q30): general answer mentions KB term(s) ['Industry', 'Ombudsman']; make sure the answer is not org-specific
+WARN  utilities/vellora/items:1(vellora-001): expected_answer number '3.10' not in gold docs
+WARN  utilities/vellora/items:7(vellora-007): expected_answer number '15000' not in gold docs
+WARN  utilities/vellora/items:17(vellora-017): general answer uses value(s) ['1500'] that also appear in the org KB; make sure they are not org-specific

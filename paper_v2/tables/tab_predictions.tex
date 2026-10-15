@@ -1,0 +1,29 @@
+% Table -- pre-registered predictions (complete; predictions, not results).
+% Sources: docs/research_v2/PREREG_V2.md Sec. 3 (H-E3v2, boundary test) and
+% Sec. 6.1; docs/research_v2/THEORY.md Secs. 6.2 and 7 (as merged at 1d8900c).
+% D*[COMMIT] = B9+. D*[SPECULATIVE] = best on dev of {B9+, B10 (SPEC),
+% B11 (SPEC-theta)}; named at freeze. Delta[arch] = mean paired utility
+% difference Ours-v2[arch] - D*[arch] on the same test items.
+% The earlier prediction "Ours-v2 - B10 <= lambda_c(1+w)" is WITHDRAWN: it is
+% not a valid bound (THEORY Prop. 4'(3) counterexample) and, without B11 in
+% D*[SPECULATIVE], the speculative contrast measures a decomposable effect.
+\begin{table}[t]
+\caption{Pre-Registered Boundary Test (v2). $\DC$ and $\DS$ are the joint
+controller's mean paired utility advantage over the strongest decomposed
+rival under the commit and speculative architectures.}
+\label{tab:predictions}
+\centering
+\footnotesize
+\setlength{\tabcolsep}{3pt}
+\begin{tabular}{@{}p{0.75cm} p{3.65cm} p{3.2cm}@{}}
+\toprule
+Test & Hypothesis & Source\\
+\midrule
+P1 & $\DC>0$: joint pays when retrieval is committed; rival \Bplus & Prop.~\ref{prop:c2}\\
+P2 & $\DC-\DS>0$: the advantage shrinks under speculation (paired interaction) & Props.~\ref{prop:c2}, \ref{prop:spectheta}\\
+P3 & $|\DS|<m_3=\tfrac12\hat\delta_{C,\mathrm{dev}}$ (TOST): no joint advantage beyond belief-gated prefetch; rival best of \{\Bplus, \Bten, \Beleven\} & Props.~\ref{prop:spec}, \ref{prop:spectheta}\\
+\midrule
+\multicolumn{3}{@{}p{0.95\columnwidth}@{}}{\scriptsize Boundary claim supported iff P1, P2 and both one-sided halves of P3 reject at one-sided $\alpha=0.025$ (intersection--union test; no multiplicity adjustment for the conjunction). Channels-off control: \OursV{} and \Bplus{} make identical decisions (Prop.~\ref{prop:eq}).}\\
+\bottomrule
+\end{tabular}
+\end{table}

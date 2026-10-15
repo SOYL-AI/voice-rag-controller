@@ -1,0 +1,210 @@
+% ============================================================================
+% references.bib -- 15 entries (conference limit: at most 15). No
+% self-citations. Every field was checked against the publisher or indexing
+% record named in the "verified:" line on 2026-10-15. Where the publisher
+% page refused automated access (IEEE Xplore, ACM DL), Crossref's record for
+% the DOI was used and is named instead.
+%
+% Kept from the submitted list (12): lewis2020rag, jiang2023flare,
+%   asai2024selfrag, jeong2024adaptiverag, su2024dragin, ekstedt2020turngpt,
+%   ekstedt2022vap, skantze2021turntaking, bohus2011decisions.
+% Dropped from the submitted list, with reasons (see README.md):
+%   Karpukhin et al. 2020 (DPR) -- the system does not use DPR; dense
+%     retrieval as a component is covered by lewis2020rag.
+%   Cooper 1973 (JASIS) -- an evaluation-measure paper; the decision-theoretic
+%     foundation the paper actually uses is value of information (howard1966).
+%   Rao and Daume III 2018 (EVPI for clarification questions) -- applies the
+%     same concept as howard1966 to a different task; the primary source is
+%     preferred under the 15-entry cap.
+% Added (6): howard1966information (R1 minor), mallen2023trust (PopQA, d1_open;
+%   also evidence that retrieval can hurt, i.e. g^- > 0), yang2018hotpotqa
+%   (d1_open), radford2023whisper (ASR used for v2 partials), guo2017calibration
+%   (ECE, R1.5), jiang2023mistral (the only generator).
+% Alternate, verified but not included: Zheng et al. 2023, "Judging
+%   LLM-as-a-Judge with MT-Bench and Chatbot Arena", NeurIPS 36 Datasets and
+%   Benchmarks, pp. 46595--46623 (verified: proceedings.neurips.cc bib file).
+%   Swap it in for jiang2023mistral if the authors prefer to cite the model
+%   by a footnote URL instead.
+% ============================================================================
+
+% verified: https://proceedings.neurips.cc/paper_files/paper/2020/file/6b493230205f780e1bc26945df7481e5-Bibtex.bib
+@inproceedings{lewis2020rag,
+  author    = {Patrick Lewis and Ethan Perez and Aleksandra Piktus and Fabio Petroni and Vladimir Karpukhin and Naman Goyal and Heinrich K{\"u}ttler and Mike Lewis and Wen-tau Yih and Tim Rockt{\"a}schel and Sebastian Riedel and Douwe Kiela},
+  title     = {Retrieval-Augmented Generation for Knowledge-Intensive {NLP} Tasks},
+  booktitle = {Advances in Neural Information Processing Systems},
+  volume    = {33},
+  pages     = {9459--9474},
+  publisher = {Curran Associates, Inc.},
+  year      = {2020},
+  url       = {https://proceedings.neurips.cc/paper/2020/hash/6b493230205f780e1bc26945df7481e5-Abstract.html}
+}
+
+% verified: https://aclanthology.org/2023.emnlp-main.495.bib
+@inproceedings{jiang2023flare,
+  author    = {Zhengbao Jiang and Frank Xu and Luyu Gao and Zhiqing Sun and Qian Liu and Jane Dwivedi-Yu and Yiming Yang and Jamie Callan and Graham Neubig},
+  title     = {Active Retrieval Augmented Generation},
+  booktitle = {Proceedings of the 2023 Conference on Empirical Methods in Natural Language Processing},
+  pages     = {7969--7992},
+  address   = {Singapore},
+  publisher = {Association for Computational Linguistics},
+  year      = {2023},
+  doi       = {10.18653/v1/2023.emnlp-main.495}
+}
+
+% verified: https://proceedings.iclr.cc/paper_files/paper/2024/hash/25f7be9694d7b32d5cc670927b8091e1-Abstract-Conference.html
+% note: the ICLR proceedings record lists the fourth author as "Avi Sil"
+% (OpenReview and arXiv: "Avirup Sil"); the proceedings form is used.
+@inproceedings{asai2024selfrag,
+  author    = {Akari Asai and Zeqiu Wu and Yizhong Wang and Avi Sil and Hannaneh Hajishirzi},
+  title     = {{Self-RAG}: Learning to Retrieve, Generate, and Critique through Self-Reflection},
+  booktitle = {Proceedings of the International Conference on Learning Representations (ICLR)},
+  pages     = {9112--9141},
+  year      = {2024},
+  url       = {https://proceedings.iclr.cc/paper_files/paper/2024/hash/25f7be9694d7b32d5cc670927b8091e1-Abstract-Conference.html}
+}
+
+% verified: https://aclanthology.org/2024.naacl-long.389.bib
+@inproceedings{jeong2024adaptiverag,
+  author    = {Soyeong Jeong and Jinheon Baek and Sukmin Cho and Sung Ju Hwang and Jong Park},
+  title     = {{Adaptive-RAG}: Learning to Adapt Retrieval-Augmented Large Language Models through Question Complexity},
+  booktitle = {Proceedings of the 2024 Conference of the North American Chapter of the Association for Computational Linguistics: Human Language Technologies (Volume 1: Long Papers)},
+  pages     = {7036--7050},
+  address   = {Mexico City, Mexico},
+  publisher = {Association for Computational Linguistics},
+  year      = {2024},
+  doi       = {10.18653/v1/2024.naacl-long.389}
+}
+
+% verified: https://aclanthology.org/2024.acl-long.702.bib
+@inproceedings{su2024dragin,
+  author    = {Weihang Su and Yichen Tang and Qingyao Ai and Zhijing Wu and Yiqun Liu},
+  title     = {{DRAGIN}: Dynamic Retrieval Augmented Generation based on the Real-time Information Needs of Large Language Models},
+  booktitle = {Proceedings of the 62nd Annual Meeting of the Association for Computational Linguistics (Volume 1: Long Papers)},
+  pages     = {12991--13013},
+  address   = {Bangkok, Thailand},
+  publisher = {Association for Computational Linguistics},
+  year      = {2024},
+  doi       = {10.18653/v1/2024.acl-long.702}
+}
+
+% verified: https://aclanthology.org/2023.acl-long.546.bib
+@inproceedings{mallen2023trust,
+  author    = {Alex Mallen and Akari Asai and Victor Zhong and Rajarshi Das and Daniel Khashabi and Hannaneh Hajishirzi},
+  title     = {When Not to Trust Language Models: Investigating Effectiveness of Parametric and Non-Parametric Memories},
+  booktitle = {Proceedings of the 61st Annual Meeting of the Association for Computational Linguistics (Volume 1: Long Papers)},
+  pages     = {9802--9822},
+  address   = {Toronto, Canada},
+  publisher = {Association for Computational Linguistics},
+  year      = {2023},
+  doi       = {10.18653/v1/2023.acl-long.546}
+}
+
+% verified: https://aclanthology.org/D18-1259.bib
+@inproceedings{yang2018hotpotqa,
+  author    = {Zhilin Yang and Peng Qi and Saizheng Zhang and Yoshua Bengio and William Cohen and Ruslan Salakhutdinov and Christopher D. Manning},
+  title     = {{HotpotQA}: A Dataset for Diverse, Explainable Multi-hop Question Answering},
+  booktitle = {Proceedings of the 2018 Conference on Empirical Methods in Natural Language Processing},
+  pages     = {2369--2380},
+  address   = {Brussels, Belgium},
+  publisher = {Association for Computational Linguistics},
+  year      = {2018},
+  doi       = {10.18653/v1/D18-1259}
+}
+
+% verified: https://aclanthology.org/2020.findings-emnlp.268.bib
+% note: the title ends "Spoken Dialog" (not "Dialogue"), as on the Anthology.
+@inproceedings{ekstedt2020turngpt,
+  author    = {Erik Ekstedt and Gabriel Skantze},
+  title     = {{TurnGPT}: a Transformer-based Language Model for Predicting Turn-taking in Spoken Dialog},
+  booktitle = {Findings of the Association for Computational Linguistics: EMNLP 2020},
+  pages     = {2981--2990},
+  address   = {Online},
+  publisher = {Association for Computational Linguistics},
+  year      = {2020},
+  doi       = {10.18653/v1/2020.findings-emnlp.268}
+}
+
+% verified: https://www.isca-archive.org/interspeech_2022/ekstedt22_interspeech.html
+@inproceedings{ekstedt2022vap,
+  author    = {Erik Ekstedt and Gabriel Skantze},
+  title     = {Voice Activity Projection: Self-supervised Learning of Turn-taking Events},
+  booktitle = {Proc. Interspeech 2022},
+  pages     = {5190--5194},
+  year      = {2022},
+  doi       = {10.21437/Interspeech.2022-10955}
+}
+
+% verified: https://api.crossref.org/works/10.1016/j.csl.2020.101178
+% note: the submitted bib listed this as "AI Magazine 42(3)"; that was wrong.
+@article{skantze2021turntaking,
+  author    = {Gabriel Skantze},
+  title     = {Turn-taking in Conversational Systems and Human-Robot Interaction: A Review},
+  journal   = {Computer Speech \& Language},
+  volume    = {67},
+  pages     = {101178},
+  year      = {2021},
+  doi       = {10.1016/j.csl.2020.101178}
+}
+
+% verified: https://api.crossref.org/works/10.1145/2070481.2070507
+%   (also https://www.microsoft.com/en-us/research/publication/decisions-turns-multiparty-conversation-perception-action/)
+@inproceedings{bohus2011decisions,
+  author    = {Dan Bohus and Eric Horvitz},
+  title     = {Decisions about turns in multiparty conversation: from perception to action},
+  booktitle = {Proceedings of the 13th International Conference on Multimodal Interfaces (ICMI '11)},
+  pages     = {153--160},
+  address   = {Alicante, Spain},
+  publisher = {ACM},
+  year      = {2011},
+  doi       = {10.1145/2070481.2070507}
+}
+
+% verified: https://api.crossref.org/works/10.1109/TSSC.1966.300074
+% note: Crossref gives the author as "Ronald Howard"; the conventional form
+% R. A. Howard is used (same person, same record).
+@article{howard1966information,
+  author    = {Ronald A. Howard},
+  title     = {Information Value Theory},
+  journal   = {IEEE Transactions on Systems Science and Cybernetics},
+  volume    = {2},
+  number    = {1},
+  pages     = {22--26},
+  year      = {1966},
+  doi       = {10.1109/TSSC.1966.300074}
+}
+
+% verified: https://proceedings.mlr.press/v202/radford23a.html
+% note: PMLR spells the fifth author "Christine Mcleavey".
+@inproceedings{radford2023whisper,
+  author    = {Alec Radford and Jong Wook Kim and Tao Xu and Greg Brockman and Christine Mcleavey and Ilya Sutskever},
+  title     = {Robust Speech Recognition via Large-Scale Weak Supervision},
+  booktitle = {Proceedings of the 40th International Conference on Machine Learning},
+  series    = {Proceedings of Machine Learning Research},
+  volume    = {202},
+  pages     = {28492--28518},
+  publisher = {PMLR},
+  year      = {2023},
+  url       = {https://proceedings.mlr.press/v202/radford23a.html}
+}
+
+% verified: https://proceedings.mlr.press/v70/guo17a.html
+@inproceedings{guo2017calibration,
+  author    = {Chuan Guo and Geoff Pleiss and Yu Sun and Kilian Q. Weinberger},
+  title     = {On Calibration of Modern Neural Networks},
+  booktitle = {Proceedings of the 34th International Conference on Machine Learning},
+  series    = {Proceedings of Machine Learning Research},
+  volume    = {70},
+  pages     = {1321--1330},
+  publisher = {PMLR},
+  year      = {2017},
+  url       = {https://proceedings.mlr.press/v70/guo17a.html}
+}
+
+% verified: https://arxiv.org/abs/2310.06825 (arXiv only; no peer-reviewed venue)
+@article{jiang2023mistral,
+  author    = {Albert Q. Jiang and Alexandre Sablayrolles and Arthur Mensch and Chris Bamford and Devendra Singh Chaplot and Diego de las Casas and Florian Bressand and Gianna Lengyel and Guillaume Lample and Lucile Saulnier and L{\'e}lio Renard Lavaud and Marie-Anne Lachaux and Pierre Stock and Teven Le Scao and Thibaut Lavril and Thomas Wang and Timoth{\'e}e Lacroix and William El Sayed},
+  title     = {Mistral {7B}},
+  journal   = {arXiv preprint arXiv:2310.06825},
+  year      = {2023},
+  url       = {https://arxiv.org/abs/2310.06825}
+}

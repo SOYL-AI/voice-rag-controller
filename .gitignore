@@ -3,6 +3,10 @@
 logs/
 logs/*.jsonl
 
+# E1-v2 mock-backend output (plumbing only, never data) and local scratch.
+llm/experiment1_v2/results_mock/
+.tmp_e1v2/
+
 # Downloaded model weights (Piper ONNX models)
 audio/models/
 *.onnx
@@ -112,8 +116,6 @@ ipython_config.py
 
 # poetry
 #   Similar to Pipfile.lock, it is generally recommended to include poetry.lock in version control.
-#   This is especially recommended for binary packages to ensure reproducibility, and is more
-#   commonly ignored for libraries.
 #   https://python-poetry.org/docs/basic-usage/#commit-your-poetrylock-file-to-version-control
 # poetry.lock
 # poetry.toml
@@ -257,6 +259,19 @@ simulator/e3_sweep_cache_superseded_*/
 
 # research v2: rendered speech audio is never committed
 datasets/v2/*/speech/audio/
+
+# research v2 pipeline: worktree-local venv and scratch
+.venv-v2/
+.scratch/
+
+# local agent worktrees
+.claude/
+# energy/: worktree-local venv and model cache are never committed
+.venv-energy/
+.energy-cache/
+
+# built retrieval indexes (regenerate with python -m retrieval.v2_index build)
+retrieval/indexes/
 
 # research v2: raw download caches and built FAISS indexes are reproducible, never committed
 datasets/v2/*/.cache/

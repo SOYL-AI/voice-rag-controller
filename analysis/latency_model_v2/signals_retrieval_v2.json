@@ -1,0 +1,1202 @@
+{
+ "pipeline_logged/batch": {
+  "latency_profile": "pipeline_logged",
+  "expected_latency_ms": 47.0,
+  "latency_quantiles_ms": {
+   "p10": 31.0,
+   "p25": 31.0,
+   "p50": 47.0,
+   "p75": 78.0,
+   "p90": 157.60000000000014,
+   "p95": 250.79999999999995,
+   "p99": 328.47000000000025
+  },
+  "nonhideable_increment_ms": 854.7,
+  "nonhideable_increment_quantiles_ms": {
+   "p10": -431.29999999999995,
+   "p25": 284.75,
+   "p50": 812.5,
+   "p75": 1340.0,
+   "p90": 1968.3000000000004,
+   "p95": 2555.5499999999984,
+   "p99": 3510.1899999999982
+  },
+  "nonhideable_increment_tts_mode": "batch",
+  "nonhideable_increment_source": "measured paired retrieve-skip, v2 logs, 50 pairs"
+ },
+ "pipeline_logged/streaming": {
+  "latency_profile": "pipeline_logged",
+  "expected_latency_ms": 47.0,
+  "latency_quantiles_ms": {
+   "p10": 31.0,
+   "p25": 31.0,
+   "p50": 47.0,
+   "p75": 78.0,
+   "p90": 157.60000000000014,
+   "p95": 250.79999999999995,
+   "p99": 328.47000000000025
+  },
+  "nonhideable_increment_ms": 370.54,
+  "nonhideable_increment_quantiles_ms": {
+   "p10": -132.79999999999998,
+   "p25": 19.75,
+   "p50": 382.5,
+   "p75": 621.25,
+   "p90": 969.0,
+   "p95": 1307.0499999999984,
+   "p99": 1912.7499999999986
+  },
+  "nonhideable_increment_tts_mode": "streaming",
+  "nonhideable_increment_source": "measured paired retrieve-skip, v2 logs, 50 pairs"
+ },
+ "faiss/batch": {
+  "latency_profile": "faiss",
+  "expected_latency_ms": 41.26,
+  "latency_quantiles_ms": {
+   "p10": 23.276,
+   "p25": 29.0,
+   "p50": 41.26,
+   "p75": 85.76,
+   "p90": 179.68800000000005,
+   "p95": 246.85599999999994,
+   "p99": 422.83439999999956
+  },
+  "nonhideable_increment_ms": 854.7,
+  "nonhideable_increment_quantiles_ms": {
+   "p10": -431.29999999999995,
+   "p25": 284.75,
+   "p50": 812.5,
+   "p75": 1340.0,
+   "p90": 1968.3000000000004,
+   "p95": 2555.5499999999984,
+   "p99": 3510.1899999999982
+  },
+  "nonhideable_increment_tts_mode": "batch",
+  "nonhideable_increment_source": "measured paired retrieve-skip, v2 logs, 50 pairs"
+ },
+ "faiss/streaming": {
+  "latency_profile": "faiss",
+  "expected_latency_ms": 41.26,
+  "latency_quantiles_ms": {
+   "p10": 23.276,
+   "p25": 29.0,
+   "p50": 41.26,
+   "p75": 85.76,
+   "p90": 179.68800000000005,
+   "p95": 246.85599999999994,
+   "p99": 422.83439999999956
+  },
+  "nonhideable_increment_ms": 370.54,
+  "nonhideable_increment_quantiles_ms": {
+   "p10": -132.79999999999998,
+   "p25": 19.75,
+   "p50": 382.5,
+   "p75": 621.25,
+   "p90": 969.0,
+   "p95": 1307.0499999999984,
+   "p99": 1912.7499999999986
+  },
+  "nonhideable_increment_tts_mode": "streaming",
+  "nonhideable_increment_source": "measured paired retrieve-skip, v2 logs, 50 pairs"
+ },
+ "faiss_to_thread/batch": {
+  "latency_profile": "faiss_to_thread",
+  "expected_latency_ms": 53.42,
+  "latency_quantiles_ms": {
+   "p10": 26.018,
+   "p25": 34.17,
+   "p50": 53.42,
+   "p75": 96.28,
+   "p90": 168.458,
+   "p95": 234.196,
+   "p99": 580.0699999999999
+  },
+  "nonhideable_increment_ms": 854.7,
+  "nonhideable_increment_quantiles_ms": {
+   "p10": -431.29999999999995,
+   "p25": 284.75,
+   "p50": 812.5,
+   "p75": 1340.0,
+   "p90": 1968.3000000000004,
+   "p95": 2555.5499999999984,
+   "p99": 3510.1899999999982
+  },
+  "nonhideable_increment_tts_mode": "batch",
+  "nonhideable_increment_source": "measured paired retrieve-skip, v2 logs, 50 pairs"
+ },
+ "faiss_to_thread/streaming": {
+  "latency_profile": "faiss_to_thread",
+  "expected_latency_ms": 53.42,
+  "latency_quantiles_ms": {
+   "p10": 26.018,
+   "p25": 34.17,
+   "p50": 53.42,
+   "p75": 96.28,
+   "p90": 168.458,
+   "p95": 234.196,
+   "p99": 580.0699999999999
+  },
+  "nonhideable_increment_ms": 370.54,
+  "nonhideable_increment_quantiles_ms": {
+   "p10": -132.79999999999998,
+   "p25": 19.75,
+   "p50": 382.5,
+   "p75": 621.25,
+   "p90": 969.0,
+   "p95": 1307.0499999999984,
+   "p99": 1912.7499999999986
+  },
+  "nonhideable_increment_tts_mode": "streaming",
+  "nonhideable_increment_source": "measured paired retrieve-skip, v2 logs, 50 pairs"
+ },
+ "faiss_v1_default_threads/batch": {
+  "latency_profile": "faiss_v1_default_threads",
+  "expected_latency_ms": 26.44,
+  "latency_quantiles_ms": {
+   "p10": 20.448,
+   "p25": 22.8,
+   "p50": 26.44,
+   "p75": 31.21,
+   "p90": 39.29,
+   "p95": 46.589999999999996,
+   "p99": 76.49039999999984
+  },
+  "nonhideable_increment_ms": 854.7,
+  "nonhideable_increment_quantiles_ms": {
+   "p10": -431.29999999999995,
+   "p25": 284.75,
+   "p50": 812.5,
+   "p75": 1340.0,
+   "p90": 1968.3000000000004,
+   "p95": 2555.5499999999984,
+   "p99": 3510.1899999999982
+  },
+  "nonhideable_increment_tts_mode": "batch",
+  "nonhideable_increment_source": "measured paired retrieve-skip, v2 logs, 50 pairs"
+ },
+ "faiss_v1_default_threads/streaming": {
+  "latency_profile": "faiss_v1_default_threads",
+  "expected_latency_ms": 26.44,
+  "latency_quantiles_ms": {
+   "p10": 20.448,
+   "p25": 22.8,
+   "p50": 26.44,
+   "p75": 31.21,
+   "p90": 39.29,
+   "p95": 46.589999999999996,
+   "p99": 76.49039999999984
+  },
+  "nonhideable_increment_ms": 370.54,
+  "nonhideable_increment_quantiles_ms": {
+   "p10": -132.79999999999998,
+   "p25": 19.75,
+   "p50": 382.5,
+   "p75": 621.25,
+   "p90": 969.0,
+   "p95": 1307.0499999999984,
+   "p99": 1912.7499999999986
+  },
+  "nonhideable_increment_tts_mode": "streaming",
+  "nonhideable_increment_source": "measured paired retrieve-skip, v2 logs, 50 pairs"
+ },
+ "faiss_v1_default_threads_to_thread/batch": {
+  "latency_profile": "faiss_v1_default_threads_to_thread",
+  "expected_latency_ms": 43.97,
+  "latency_quantiles_ms": {
+   "p10": 28.504,
+   "p25": 34.36,
+   "p50": 43.97,
+   "p75": 62.12,
+   "p90": 121.85000000000005,
+   "p95": 193.66799999999992,
+   "p99": 313.2447999999997
+  },
+  "nonhideable_increment_ms": 854.7,
+  "nonhideable_increment_quantiles_ms": {
+   "p10": -431.29999999999995,
+   "p25": 284.75,
+   "p50": 812.5,
+   "p75": 1340.0,
+   "p90": 1968.3000000000004,
+   "p95": 2555.5499999999984,
+   "p99": 3510.1899999999982
+  },
+  "nonhideable_increment_tts_mode": "batch",
+  "nonhideable_increment_source": "measured paired retrieve-skip, v2 logs, 50 pairs"
+ },
+ "faiss_v1_default_threads_to_thread/streaming": {
+  "latency_profile": "faiss_v1_default_threads_to_thread",
+  "expected_latency_ms": 43.97,
+  "latency_quantiles_ms": {
+   "p10": 28.504,
+   "p25": 34.36,
+   "p50": 43.97,
+   "p75": 62.12,
+   "p90": 121.85000000000005,
+   "p95": 193.66799999999992,
+   "p99": 313.2447999999997
+  },
+  "nonhideable_increment_ms": 370.54,
+  "nonhideable_increment_quantiles_ms": {
+   "p10": -132.79999999999998,
+   "p25": 19.75,
+   "p50": 382.5,
+   "p75": 621.25,
+   "p90": 969.0,
+   "p95": 1307.0499999999984,
+   "p99": 1912.7499999999986
+  },
+  "nonhideable_increment_tts_mode": "streaming",
+  "nonhideable_increment_source": "measured paired retrieve-skip, v2 logs, 50 pairs"
+ },
+ "faiss_cuda/batch": {
+  "latency_profile": "faiss_cuda",
+  "expected_latency_ms": 22.29,
+  "latency_quantiles_ms": {
+   "p10": 17.832,
+   "p25": 19.84,
+   "p50": 22.29,
+   "p75": 24.52,
+   "p90": 27.19,
+   "p95": 30.203999999999994,
+   "p99": 40.92999999999997
+  },
+  "nonhideable_increment_ms": 854.7,
+  "nonhideable_increment_quantiles_ms": {
+   "p10": -431.29999999999995,
+   "p25": 284.75,
+   "p50": 812.5,
+   "p75": 1340.0,
+   "p90": 1968.3000000000004,
+   "p95": 2555.5499999999984,
+   "p99": 3510.1899999999982
+  },
+  "nonhideable_increment_tts_mode": "batch",
+  "nonhideable_increment_source": "measured paired retrieve-skip, v2 logs, 50 pairs"
+ },
+ "faiss_cuda/streaming": {
+  "latency_profile": "faiss_cuda",
+  "expected_latency_ms": 22.29,
+  "latency_quantiles_ms": {
+   "p10": 17.832,
+   "p25": 19.84,
+   "p50": 22.29,
+   "p75": 24.52,
+   "p90": 27.19,
+   "p95": 30.203999999999994,
+   "p99": 40.92999999999997
+  },
+  "nonhideable_increment_ms": 370.54,
+  "nonhideable_increment_quantiles_ms": {
+   "p10": -132.79999999999998,
+   "p25": 19.75,
+   "p50": 382.5,
+   "p75": 621.25,
+   "p90": 969.0,
+   "p95": 1307.0499999999984,
+   "p99": 1912.7499999999986
+  },
+  "nonhideable_increment_tts_mode": "streaming",
+  "nonhideable_increment_source": "measured paired retrieve-skip, v2 logs, 50 pairs"
+ },
+ "faiss_rerank_minilm_l6/batch": {
+  "latency_profile": "faiss_rerank_minilm_l6",
+  "expected_latency_ms": 156.68,
+  "latency_quantiles_ms": {
+   "p10": 136.26,
+   "p25": 145.84,
+   "p50": 156.68,
+   "p75": 176.66,
+   "p90": 221.37000000000006,
+   "p95": 240.248,
+   "p99": 361.27079999999944
+  },
+  "nonhideable_increment_ms": 854.7,
+  "nonhideable_increment_quantiles_ms": {
+   "p10": -431.29999999999995,
+   "p25": 284.75,
+   "p50": 812.5,
+   "p75": 1340.0,
+   "p90": 1968.3000000000004,
+   "p95": 2555.5499999999984,
+   "p99": 3510.1899999999982
+  },
+  "nonhideable_increment_tts_mode": "batch",
+  "nonhideable_increment_source": "measured paired retrieve-skip, v2 logs, 50 pairs"
+ },
+ "faiss_rerank_minilm_l6/streaming": {
+  "latency_profile": "faiss_rerank_minilm_l6",
+  "expected_latency_ms": 156.68,
+  "latency_quantiles_ms": {
+   "p10": 136.26,
+   "p25": 145.84,
+   "p50": 156.68,
+   "p75": 176.66,
+   "p90": 221.37000000000006,
+   "p95": 240.248,
+   "p99": 361.27079999999944
+  },
+  "nonhideable_increment_ms": 370.54,
+  "nonhideable_increment_quantiles_ms": {
+   "p10": -132.79999999999998,
+   "p25": 19.75,
+   "p50": 382.5,
+   "p75": 621.25,
+   "p90": 969.0,
+   "p95": 1307.0499999999984,
+   "p99": 1912.7499999999986
+  },
+  "nonhideable_increment_tts_mode": "streaming",
+  "nonhideable_increment_source": "measured paired retrieve-skip, v2 logs, 50 pairs"
+ },
+ "faiss_rerank_bge_base/batch": {
+  "latency_profile": "faiss_rerank_bge_base",
+  "expected_latency_ms": 536.89,
+  "latency_quantiles_ms": {
+   "p10": 516.706,
+   "p25": 525.95,
+   "p50": 536.89,
+   "p75": 550.03,
+   "p90": 564.39,
+   "p95": 575.79,
+   "p99": 604.1752
+  },
+  "nonhideable_increment_ms": 854.7,
+  "nonhideable_increment_quantiles_ms": {
+   "p10": -431.29999999999995,
+   "p25": 284.75,
+   "p50": 812.5,
+   "p75": 1340.0,
+   "p90": 1968.3000000000004,
+   "p95": 2555.5499999999984,
+   "p99": 3510.1899999999982
+  },
+  "nonhideable_increment_tts_mode": "batch",
+  "nonhideable_increment_source": "measured paired retrieve-skip, v2 logs, 50 pairs"
+ },
+ "faiss_rerank_bge_base/streaming": {
+  "latency_profile": "faiss_rerank_bge_base",
+  "expected_latency_ms": 536.89,
+  "latency_quantiles_ms": {
+   "p10": 516.706,
+   "p25": 525.95,
+   "p50": 536.89,
+   "p75": 550.03,
+   "p90": 564.39,
+   "p95": 575.79,
+   "p99": 604.1752
+  },
+  "nonhideable_increment_ms": 370.54,
+  "nonhideable_increment_quantiles_ms": {
+   "p10": -132.79999999999998,
+   "p25": 19.75,
+   "p50": 382.5,
+   "p75": 621.25,
+   "p90": 969.0,
+   "p95": 1307.0499999999984,
+   "p99": 1912.7499999999986
+  },
+  "nonhideable_increment_tts_mode": "streaming",
+  "nonhideable_increment_source": "measured paired retrieve-skip, v2 logs, 50 pairs"
+ },
+ "faiss_rerank_minilm_l6_fp16/batch": {
+  "latency_profile": "faiss_rerank_minilm_l6_fp16",
+  "expected_latency_ms": 65.93,
+  "latency_quantiles_ms": {
+   "p10": 57.418,
+   "p25": 61.32,
+   "p50": 65.93,
+   "p75": 70.94,
+   "p90": 74.802,
+   "p95": 78.00800000000001,
+   "p99": 110.38159999999978
+  },
+  "nonhideable_increment_ms": 854.7,
+  "nonhideable_increment_quantiles_ms": {
+   "p10": -431.29999999999995,
+   "p25": 284.75,
+   "p50": 812.5,
+   "p75": 1340.0,
+   "p90": 1968.3000000000004,
+   "p95": 2555.5499999999984,
+   "p99": 3510.1899999999982
+  },
+  "nonhideable_increment_tts_mode": "batch",
+  "nonhideable_increment_source": "measured paired retrieve-skip, v2 logs, 50 pairs"
+ },
+ "faiss_rerank_minilm_l6_fp16/streaming": {
+  "latency_profile": "faiss_rerank_minilm_l6_fp16",
+  "expected_latency_ms": 65.93,
+  "latency_quantiles_ms": {
+   "p10": 57.418,
+   "p25": 61.32,
+   "p50": 65.93,
+   "p75": 70.94,
+   "p90": 74.802,
+   "p95": 78.00800000000001,
+   "p99": 110.38159999999978
+  },
+  "nonhideable_increment_ms": 370.54,
+  "nonhideable_increment_quantiles_ms": {
+   "p10": -132.79999999999998,
+   "p25": 19.75,
+   "p50": 382.5,
+   "p75": 621.25,
+   "p90": 969.0,
+   "p95": 1307.0499999999984,
+   "p99": 1912.7499999999986
+  },
+  "nonhideable_increment_tts_mode": "streaming",
+  "nonhideable_increment_source": "measured paired retrieve-skip, v2 logs, 50 pairs"
+ },
+ "faiss_rerank_bge_base_fp16/batch": {
+  "latency_profile": "faiss_rerank_bge_base_fp16",
+  "expected_latency_ms": 165.33,
+  "latency_quantiles_ms": {
+   "p10": 156.19400000000002,
+   "p25": 160.2,
+   "p50": 165.33,
+   "p75": 178.56,
+   "p90": 293.024,
+   "p95": 305.998,
+   "p99": 322.73799999999983
+  },
+  "nonhideable_increment_ms": 854.7,
+  "nonhideable_increment_quantiles_ms": {
+   "p10": -431.29999999999995,
+   "p25": 284.75,
+   "p50": 812.5,
+   "p75": 1340.0,
+   "p90": 1968.3000000000004,
+   "p95": 2555.5499999999984,
+   "p99": 3510.1899999999982
+  },
+  "nonhideable_increment_tts_mode": "batch",
+  "nonhideable_increment_source": "measured paired retrieve-skip, v2 logs, 50 pairs"
+ },
+ "faiss_rerank_bge_base_fp16/streaming": {
+  "latency_profile": "faiss_rerank_bge_base_fp16",
+  "expected_latency_ms": 165.33,
+  "latency_quantiles_ms": {
+   "p10": 156.19400000000002,
+   "p25": 160.2,
+   "p50": 165.33,
+   "p75": 178.56,
+   "p90": 293.024,
+   "p95": 305.998,
+   "p99": 322.73799999999983
+  },
+  "nonhideable_increment_ms": 370.54,
+  "nonhideable_increment_quantiles_ms": {
+   "p10": -132.79999999999998,
+   "p25": 19.75,
+   "p50": 382.5,
+   "p75": 621.25,
+   "p90": 969.0,
+   "p95": 1307.0499999999984,
+   "p99": 1912.7499999999986
+  },
+  "nonhideable_increment_tts_mode": "streaming",
+  "nonhideable_increment_source": "measured paired retrieve-skip, v2 logs, 50 pairs"
+ },
+ "remote_api_faiss/batch": {
+  "latency_profile": "remote_api_faiss",
+  "expected_latency_ms": 23.32,
+  "latency_quantiles_ms": {
+   "p10": 19.848,
+   "p25": 21.61,
+   "p50": 23.32,
+   "p75": 24.98,
+   "p90": 26.65,
+   "p95": 27.895999999999997,
+   "p99": 39.56639999999997
+  },
+  "nonhideable_increment_ms": 854.7,
+  "nonhideable_increment_quantiles_ms": {
+   "p10": -431.29999999999995,
+   "p25": 284.75,
+   "p50": 812.5,
+   "p75": 1340.0,
+   "p90": 1968.3000000000004,
+   "p95": 2555.5499999999984,
+   "p99": 3510.1899999999982
+  },
+  "nonhideable_increment_tts_mode": "batch",
+  "nonhideable_increment_source": "measured paired retrieve-skip, v2 logs, 50 pairs"
+ },
+ "remote_api_faiss/streaming": {
+  "latency_profile": "remote_api_faiss",
+  "expected_latency_ms": 23.32,
+  "latency_quantiles_ms": {
+   "p10": 19.848,
+   "p25": 21.61,
+   "p50": 23.32,
+   "p75": 24.98,
+   "p90": 26.65,
+   "p95": 27.895999999999997,
+   "p99": 39.56639999999997
+  },
+  "nonhideable_increment_ms": 370.54,
+  "nonhideable_increment_quantiles_ms": {
+   "p10": -132.79999999999998,
+   "p25": 19.75,
+   "p50": 382.5,
+   "p75": 621.25,
+   "p90": 969.0,
+   "p95": 1307.0499999999984,
+   "p99": 1912.7499999999986
+  },
+  "nonhideable_increment_tts_mode": "streaming",
+  "nonhideable_increment_source": "measured paired retrieve-skip, v2 logs, 50 pairs"
+ },
+ "remote_api_faiss_rerank/batch": {
+  "latency_profile": "remote_api_faiss_rerank",
+  "expected_latency_ms": 66.14,
+  "latency_quantiles_ms": {
+   "p10": 60.142,
+   "p25": 63.0,
+   "p50": 66.14,
+   "p75": 69.27,
+   "p90": 72.158,
+   "p95": 74.362,
+   "p99": 90.76319999999997
+  },
+  "nonhideable_increment_ms": 854.7,
+  "nonhideable_increment_quantiles_ms": {
+   "p10": -431.29999999999995,
+   "p25": 284.75,
+   "p50": 812.5,
+   "p75": 1340.0,
+   "p90": 1968.3000000000004,
+   "p95": 2555.5499999999984,
+   "p99": 3510.1899999999982
+  },
+  "nonhideable_increment_tts_mode": "batch",
+  "nonhideable_increment_source": "measured paired retrieve-skip, v2 logs, 50 pairs"
+ },
+ "remote_api_faiss_rerank/streaming": {
+  "latency_profile": "remote_api_faiss_rerank",
+  "expected_latency_ms": 66.14,
+  "latency_quantiles_ms": {
+   "p10": 60.142,
+   "p25": 63.0,
+   "p50": 66.14,
+   "p75": 69.27,
+   "p90": 72.158,
+   "p95": 74.362,
+   "p99": 90.76319999999997
+  },
+  "nonhideable_increment_ms": 370.54,
+  "nonhideable_increment_quantiles_ms": {
+   "p10": -132.79999999999998,
+   "p25": 19.75,
+   "p50": 382.5,
+   "p75": 621.25,
+   "p90": 969.0,
+   "p95": 1307.0499999999984,
+   "p99": 1912.7499999999986
+  },
+  "nonhideable_increment_tts_mode": "streaming",
+  "nonhideable_increment_source": "measured paired retrieve-skip, v2 logs, 50 pairs"
+ },
+ "rewrite_faiss/batch": {
+  "latency_profile": "rewrite_faiss",
+  "expected_latency_ms": 1045.105,
+  "latency_quantiles_ms": {
+   "p10": 864.252,
+   "p25": 920.5875000000001,
+   "p50": 1045.105,
+   "p75": 1195.6925,
+   "p90": 1385.084,
+   "p95": 1525.433,
+   "p99": 1853.1211999999998
+  },
+  "nonhideable_increment_ms": 854.7,
+  "nonhideable_increment_quantiles_ms": {
+   "p10": -431.29999999999995,
+   "p25": 284.75,
+   "p50": 812.5,
+   "p75": 1340.0,
+   "p90": 1968.3000000000004,
+   "p95": 2555.5499999999984,
+   "p99": 3510.1899999999982
+  },
+  "nonhideable_increment_tts_mode": "batch",
+  "nonhideable_increment_source": "measured paired retrieve-skip, v2 logs, 50 pairs"
+ },
+ "rewrite_faiss/streaming": {
+  "latency_profile": "rewrite_faiss",
+  "expected_latency_ms": 1045.105,
+  "latency_quantiles_ms": {
+   "p10": 864.252,
+   "p25": 920.5875000000001,
+   "p50": 1045.105,
+   "p75": 1195.6925,
+   "p90": 1385.084,
+   "p95": 1525.433,
+   "p99": 1853.1211999999998
+  },
+  "nonhideable_increment_ms": 370.54,
+  "nonhideable_increment_quantiles_ms": {
+   "p10": -132.79999999999998,
+   "p25": 19.75,
+   "p50": 382.5,
+   "p75": 621.25,
+   "p90": 969.0,
+   "p95": 1307.0499999999984,
+   "p99": 1912.7499999999986
+  },
+  "nonhideable_increment_tts_mode": "streaming",
+  "nonhideable_increment_source": "measured paired retrieve-skip, v2 logs, 50 pairs"
+ },
+ "rewrite_faiss_rerank/batch": {
+  "latency_profile": "rewrite_faiss_rerank",
+  "expected_latency_ms": 1047.3200000000002,
+  "latency_quantiles_ms": {
+   "p10": 866.151,
+   "p25": 936.85,
+   "p50": 1047.3200000000002,
+   "p75": 1175.77,
+   "p90": 1320.3280000000002,
+   "p95": 1431.9905,
+   "p99": 1767.1580000000001
+  },
+  "nonhideable_increment_ms": 854.7,
+  "nonhideable_increment_quantiles_ms": {
+   "p10": -431.29999999999995,
+   "p25": 284.75,
+   "p50": 812.5,
+   "p75": 1340.0,
+   "p90": 1968.3000000000004,
+   "p95": 2555.5499999999984,
+   "p99": 3510.1899999999982
+  },
+  "nonhideable_increment_tts_mode": "batch",
+  "nonhideable_increment_source": "measured paired retrieve-skip, v2 logs, 50 pairs"
+ },
+ "rewrite_faiss_rerank/streaming": {
+  "latency_profile": "rewrite_faiss_rerank",
+  "expected_latency_ms": 1047.3200000000002,
+  "latency_quantiles_ms": {
+   "p10": 866.151,
+   "p25": 936.85,
+   "p50": 1047.3200000000002,
+   "p75": 1175.77,
+   "p90": 1320.3280000000002,
+   "p95": 1431.9905,
+   "p99": 1767.1580000000001
+  },
+  "nonhideable_increment_ms": 370.54,
+  "nonhideable_increment_quantiles_ms": {
+   "p10": -132.79999999999998,
+   "p25": 19.75,
+   "p50": 382.5,
+   "p75": 621.25,
+   "p90": 969.0,
+   "p95": 1307.0499999999984,
+   "p99": 1912.7499999999986
+  },
+  "nonhideable_increment_tts_mode": "streaming",
+  "nonhideable_increment_source": "measured paired retrieve-skip, v2 logs, 50 pairs"
+ },
+ "rewrite_remote/batch": {
+  "latency_profile": "rewrite_remote",
+  "expected_latency_ms": 1242.0949999999998,
+  "latency_quantiles_ms": {
+   "p10": 1061.143,
+   "p25": 1135.7125,
+   "p50": 1242.0949999999998,
+   "p75": 1369.1775,
+   "p90": 1490.346,
+   "p95": 1619.002,
+   "p99": 1975.4091
+  },
+  "nonhideable_increment_ms": 854.7,
+  "nonhideable_increment_quantiles_ms": {
+   "p10": -431.29999999999995,
+   "p25": 284.75,
+   "p50": 812.5,
+   "p75": 1340.0,
+   "p90": 1968.3000000000004,
+   "p95": 2555.5499999999984,
+   "p99": 3510.1899999999982
+  },
+  "nonhideable_increment_tts_mode": "batch",
+  "nonhideable_increment_source": "measured paired retrieve-skip, v2 logs, 50 pairs"
+ },
+ "rewrite_remote/streaming": {
+  "latency_profile": "rewrite_remote",
+  "expected_latency_ms": 1242.0949999999998,
+  "latency_quantiles_ms": {
+   "p10": 1061.143,
+   "p25": 1135.7125,
+   "p50": 1242.0949999999998,
+   "p75": 1369.1775,
+   "p90": 1490.346,
+   "p95": 1619.002,
+   "p99": 1975.4091
+  },
+  "nonhideable_increment_ms": 370.54,
+  "nonhideable_increment_quantiles_ms": {
+   "p10": -132.79999999999998,
+   "p25": 19.75,
+   "p50": 382.5,
+   "p75": 621.25,
+   "p90": 969.0,
+   "p95": 1307.0499999999984,
+   "p99": 1912.7499999999986
+  },
+  "nonhideable_increment_tts_mode": "streaming",
+  "nonhideable_increment_source": "measured paired retrieve-skip, v2 logs, 50 pairs"
+ },
+ "rewrite_faiss_c1/batch": {
+  "latency_profile": "rewrite_faiss_c1",
+  "expected_latency_ms": 990.405,
+  "latency_quantiles_ms": {
+   "p10": 792.582,
+   "p25": 884.1725,
+   "p50": 990.405,
+   "p75": 1105.0675,
+   "p90": 1242.057,
+   "p95": 1337.9315,
+   "p99": 1706.331
+  },
+  "nonhideable_increment_ms": 854.7,
+  "nonhideable_increment_quantiles_ms": {
+   "p10": -431.29999999999995,
+   "p25": 284.75,
+   "p50": 812.5,
+   "p75": 1340.0,
+   "p90": 1968.3000000000004,
+   "p95": 2555.5499999999984,
+   "p99": 3510.1899999999982
+  },
+  "nonhideable_increment_tts_mode": "batch",
+  "nonhideable_increment_source": "measured paired retrieve-skip, v2 logs, 50 pairs"
+ },
+ "rewrite_faiss_c1/streaming": {
+  "latency_profile": "rewrite_faiss_c1",
+  "expected_latency_ms": 990.405,
+  "latency_quantiles_ms": {
+   "p10": 792.582,
+   "p25": 884.1725,
+   "p50": 990.405,
+   "p75": 1105.0675,
+   "p90": 1242.057,
+   "p95": 1337.9315,
+   "p99": 1706.331
+  },
+  "nonhideable_increment_ms": 370.54,
+  "nonhideable_increment_quantiles_ms": {
+   "p10": -132.79999999999998,
+   "p25": 19.75,
+   "p50": 382.5,
+   "p75": 621.25,
+   "p90": 969.0,
+   "p95": 1307.0499999999984,
+   "p99": 1912.7499999999986
+  },
+  "nonhideable_increment_tts_mode": "streaming",
+  "nonhideable_increment_source": "measured paired retrieve-skip, v2 logs, 50 pairs"
+ },
+ "rewrite_faiss_rerank_c1/batch": {
+  "latency_profile": "rewrite_faiss_rerank_c1",
+  "expected_latency_ms": 947.0,
+  "latency_quantiles_ms": {
+   "p10": 821.0459999999999,
+   "p25": 836.6475,
+   "p50": 947.0,
+   "p75": 1121.3125,
+   "p90": 1228.398,
+   "p95": 1254.3079999999998,
+   "p99": 1610.5667999999998
+  },
+  "nonhideable_increment_ms": 854.7,
+  "nonhideable_increment_quantiles_ms": {
+   "p10": -431.29999999999995,
+   "p25": 284.75,
+   "p50": 812.5,
+   "p75": 1340.0,
+   "p90": 1968.3000000000004,
+   "p95": 2555.5499999999984,
+   "p99": 3510.1899999999982
+  },
+  "nonhideable_increment_tts_mode": "batch",
+  "nonhideable_increment_source": "measured paired retrieve-skip, v2 logs, 50 pairs"
+ },
+ "rewrite_faiss_rerank_c1/streaming": {
+  "latency_profile": "rewrite_faiss_rerank_c1",
+  "expected_latency_ms": 947.0,
+  "latency_quantiles_ms": {
+   "p10": 821.0459999999999,
+   "p25": 836.6475,
+   "p50": 947.0,
+   "p75": 1121.3125,
+   "p90": 1228.398,
+   "p95": 1254.3079999999998,
+   "p99": 1610.5667999999998
+  },
+  "nonhideable_increment_ms": 370.54,
+  "nonhideable_increment_quantiles_ms": {
+   "p10": -132.79999999999998,
+   "p25": 19.75,
+   "p50": 382.5,
+   "p75": 621.25,
+   "p90": 969.0,
+   "p95": 1307.0499999999984,
+   "p99": 1912.7499999999986
+  },
+  "nonhideable_increment_tts_mode": "streaming",
+  "nonhideable_increment_source": "measured paired retrieve-skip, v2 logs, 50 pairs"
+ },
+ "rewrite_remote_c1/batch": {
+  "latency_profile": "rewrite_remote_c1",
+  "expected_latency_ms": 1150.295,
+  "latency_quantiles_ms": {
+   "p10": 1024.0839999999998,
+   "p25": 1038.3875,
+   "p50": 1150.295,
+   "p75": 1326.02,
+   "p90": 1432.458,
+   "p95": 1458.0915,
+   "p99": 1812.108
+  },
+  "nonhideable_increment_ms": 854.7,
+  "nonhideable_increment_quantiles_ms": {
+   "p10": -431.29999999999995,
+   "p25": 284.75,
+   "p50": 812.5,
+   "p75": 1340.0,
+   "p90": 1968.3000000000004,
+   "p95": 2555.5499999999984,
+   "p99": 3510.1899999999982
+  },
+  "nonhideable_increment_tts_mode": "batch",
+  "nonhideable_increment_source": "measured paired retrieve-skip, v2 logs, 50 pairs"
+ },
+ "rewrite_remote_c1/streaming": {
+  "latency_profile": "rewrite_remote_c1",
+  "expected_latency_ms": 1150.295,
+  "latency_quantiles_ms": {
+   "p10": 1024.0839999999998,
+   "p25": 1038.3875,
+   "p50": 1150.295,
+   "p75": 1326.02,
+   "p90": 1432.458,
+   "p95": 1458.0915,
+   "p99": 1812.108
+  },
+  "nonhideable_increment_ms": 370.54,
+  "nonhideable_increment_quantiles_ms": {
+   "p10": -132.79999999999998,
+   "p25": 19.75,
+   "p50": 382.5,
+   "p75": 621.25,
+   "p90": 969.0,
+   "p95": 1307.0499999999984,
+   "p99": 1912.7499999999986
+  },
+  "nonhideable_increment_tts_mode": "streaming",
+  "nonhideable_increment_source": "measured paired retrieve-skip, v2 logs, 50 pairs"
+ },
+ "rewrite_faiss_c32/batch": {
+  "latency_profile": "rewrite_faiss_c32",
+  "expected_latency_ms": 1386.56,
+  "latency_quantiles_ms": {
+   "p10": 1009.225,
+   "p25": 1123.96,
+   "p50": 1386.56,
+   "p75": 2243.6400000000003,
+   "p90": 2703.3360000000002,
+   "p95": 2901.3175,
+   "p99": 3211.2072
+  },
+  "nonhideable_increment_ms": 854.7,
+  "nonhideable_increment_quantiles_ms": {
+   "p10": -431.29999999999995,
+   "p25": 284.75,
+   "p50": 812.5,
+   "p75": 1340.0,
+   "p90": 1968.3000000000004,
+   "p95": 2555.5499999999984,
+   "p99": 3510.1899999999982
+  },
+  "nonhideable_increment_tts_mode": "batch",
+  "nonhideable_increment_source": "measured paired retrieve-skip, v2 logs, 50 pairs"
+ },
+ "rewrite_faiss_c32/streaming": {
+  "latency_profile": "rewrite_faiss_c32",
+  "expected_latency_ms": 1386.56,
+  "latency_quantiles_ms": {
+   "p10": 1009.225,
+   "p25": 1123.96,
+   "p50": 1386.56,
+   "p75": 2243.6400000000003,
+   "p90": 2703.3360000000002,
+   "p95": 2901.3175,
+   "p99": 3211.2072
+  },
+  "nonhideable_increment_ms": 370.54,
+  "nonhideable_increment_quantiles_ms": {
+   "p10": -132.79999999999998,
+   "p25": 19.75,
+   "p50": 382.5,
+   "p75": 621.25,
+   "p90": 969.0,
+   "p95": 1307.0499999999984,
+   "p99": 1912.7499999999986
+  },
+  "nonhideable_increment_tts_mode": "streaming",
+  "nonhideable_increment_source": "measured paired retrieve-skip, v2 logs, 50 pairs"
+ },
+ "rewrite_faiss_rerank_c32/batch": {
+  "latency_profile": "rewrite_faiss_rerank_c32",
+  "expected_latency_ms": 1350.255,
+  "latency_quantiles_ms": {
+   "p10": 1023.176,
+   "p25": 1122.5349999999999,
+   "p50": 1350.255,
+   "p75": 2156.225,
+   "p90": 2688.395,
+   "p95": 2928.4429999999998,
+   "p99": 3219.6692
+  },
+  "nonhideable_increment_ms": 854.7,
+  "nonhideable_increment_quantiles_ms": {
+   "p10": -431.29999999999995,
+   "p25": 284.75,
+   "p50": 812.5,
+   "p75": 1340.0,
+   "p90": 1968.3000000000004,
+   "p95": 2555.5499999999984,
+   "p99": 3510.1899999999982
+  },
+  "nonhideable_increment_tts_mode": "batch",
+  "nonhideable_increment_source": "measured paired retrieve-skip, v2 logs, 50 pairs"
+ },
+ "rewrite_faiss_rerank_c32/streaming": {
+  "latency_profile": "rewrite_faiss_rerank_c32",
+  "expected_latency_ms": 1350.255,
+  "latency_quantiles_ms": {
+   "p10": 1023.176,
+   "p25": 1122.5349999999999,
+   "p50": 1350.255,
+   "p75": 2156.225,
+   "p90": 2688.395,
+   "p95": 2928.4429999999998,
+   "p99": 3219.6692
+  },
+  "nonhideable_increment_ms": 370.54,
+  "nonhideable_increment_quantiles_ms": {
+   "p10": -132.79999999999998,
+   "p25": 19.75,
+   "p50": 382.5,
+   "p75": 621.25,
+   "p90": 969.0,
+   "p95": 1307.0499999999984,
+   "p99": 1912.7499999999986
+  },
+  "nonhideable_increment_tts_mode": "streaming",
+  "nonhideable_increment_source": "measured paired retrieve-skip, v2 logs, 50 pairs"
+ },
+ "rewrite_remote_c32/batch": {
+  "latency_profile": "rewrite_remote_c32",
+  "expected_latency_ms": 1535.69,
+  "latency_quantiles_ms": {
+   "p10": 1208.942,
+   "p25": 1304.92,
+   "p50": 1535.69,
+   "p75": 2304.3525,
+   "p90": 2812.1740000000004,
+   "p95": 3151.042499999998,
+   "p99": 3431.5634
+  },
+  "nonhideable_increment_ms": 854.7,
+  "nonhideable_increment_quantiles_ms": {
+   "p10": -431.29999999999995,
+   "p25": 284.75,
+   "p50": 812.5,
+   "p75": 1340.0,
+   "p90": 1968.3000000000004,
+   "p95": 2555.5499999999984,
+   "p99": 3510.1899999999982
+  },
+  "nonhideable_increment_tts_mode": "batch",
+  "nonhideable_increment_source": "measured paired retrieve-skip, v2 logs, 50 pairs"
+ },
+ "rewrite_remote_c32/streaming": {
+  "latency_profile": "rewrite_remote_c32",
+  "expected_latency_ms": 1535.69,
+  "latency_quantiles_ms": {
+   "p10": 1208.942,
+   "p25": 1304.92,
+   "p50": 1535.69,
+   "p75": 2304.3525,
+   "p90": 2812.1740000000004,
+   "p95": 3151.042499999998,
+   "p99": 3431.5634
+  },
+  "nonhideable_increment_ms": 370.54,
+  "nonhideable_increment_quantiles_ms": {
+   "p10": -132.79999999999998,
+   "p25": 19.75,
+   "p50": 382.5,
+   "p75": 621.25,
+   "p90": 969.0,
+   "p95": 1307.0499999999984,
+   "p99": 1912.7499999999986
+  },
+  "nonhideable_increment_tts_mode": "streaming",
+  "nonhideable_increment_source": "measured paired retrieve-skip, v2 logs, 50 pairs"
+ },
+ "remote_api_wan/batch": {
+  "latency_profile": "remote_api_wan",
+  "expected_latency_ms": 267.58,
+  "latency_quantiles_ms": {
+   "p10": 261.656,
+   "p25": 264.15,
+   "p50": 267.58,
+   "p75": 271.68,
+   "p90": 276.918,
+   "p95": 281.268,
+   "p99": 338.72839999999934
+  },
+  "nonhideable_increment_ms": 854.7,
+  "nonhideable_increment_quantiles_ms": {
+   "p10": -431.29999999999995,
+   "p25": 284.75,
+   "p50": 812.5,
+   "p75": 1340.0,
+   "p90": 1968.3000000000004,
+   "p95": 2555.5499999999984,
+   "p99": 3510.1899999999982
+  },
+  "nonhideable_increment_tts_mode": "batch",
+  "nonhideable_increment_source": "measured paired retrieve-skip, v2 logs, 50 pairs"
+ },
+ "remote_api_wan/streaming": {
+  "latency_profile": "remote_api_wan",
+  "expected_latency_ms": 267.58,
+  "latency_quantiles_ms": {
+   "p10": 261.656,
+   "p25": 264.15,
+   "p50": 267.58,
+   "p75": 271.68,
+   "p90": 276.918,
+   "p95": 281.268,
+   "p99": 338.72839999999934
+  },
+  "nonhideable_increment_ms": 370.54,
+  "nonhideable_increment_quantiles_ms": {
+   "p10": -132.79999999999998,
+   "p25": 19.75,
+   "p50": 382.5,
+   "p75": 621.25,
+   "p90": 969.0,
+   "p95": 1307.0499999999984,
+   "p99": 1912.7499999999986
+  },
+  "nonhideable_increment_tts_mode": "streaming",
+  "nonhideable_increment_source": "measured paired retrieve-skip, v2 logs, 50 pairs"
+ },
+ "faiss_rerank/batch": {
+  "latency_profile": "faiss_rerank",
+  "expected_latency_ms": 65.93,
+  "latency_quantiles_ms": {
+   "p10": 57.418,
+   "p25": 61.32,
+   "p50": 65.93,
+   "p75": 70.94,
+   "p90": 74.802,
+   "p95": 78.00800000000001,
+   "p99": 110.38159999999978
+  },
+  "nonhideable_increment_ms": 854.7,
+  "nonhideable_increment_quantiles_ms": {
+   "p10": -431.29999999999995,
+   "p25": 284.75,
+   "p50": 812.5,
+   "p75": 1340.0,
+   "p90": 1968.3000000000004,
+   "p95": 2555.5499999999984,
+   "p99": 3510.1899999999982
+  },
+  "nonhideable_increment_tts_mode": "batch",
+  "nonhideable_increment_source": "measured paired retrieve-skip, v2 logs, 50 pairs"
+ },
+ "faiss_rerank/streaming": {
+  "latency_profile": "faiss_rerank",
+  "expected_latency_ms": 65.93,
+  "latency_quantiles_ms": {
+   "p10": 57.418,
+   "p25": 61.32,
+   "p50": 65.93,
+   "p75": 70.94,
+   "p90": 74.802,
+   "p95": 78.00800000000001,
+   "p99": 110.38159999999978
+  },
+  "nonhideable_increment_ms": 370.54,
+  "nonhideable_increment_quantiles_ms": {
+   "p10": -132.79999999999998,
+   "p25": 19.75,
+   "p50": 382.5,
+   "p75": 621.25,
+   "p90": 969.0,
+   "p95": 1307.0499999999984,
+   "p99": 1912.7499999999986
+  },
+  "nonhideable_increment_tts_mode": "streaming",
+  "nonhideable_increment_source": "measured paired retrieve-skip, v2 logs, 50 pairs"
+ },
+ "remote_api/batch": {
+  "latency_profile": "remote_api",
+  "expected_latency_ms": 267.58,
+  "latency_quantiles_ms": {
+   "p10": 261.656,
+   "p25": 264.15,
+   "p50": 267.58,
+   "p75": 271.68,
+   "p90": 276.918,
+   "p95": 281.268,
+   "p99": 338.72839999999934
+  },
+  "nonhideable_increment_ms": 854.7,
+  "nonhideable_increment_quantiles_ms": {
+   "p10": -431.29999999999995,
+   "p25": 284.75,
+   "p50": 812.5,
+   "p75": 1340.0,
+   "p90": 1968.3000000000004,
+   "p95": 2555.5499999999984,
+   "p99": 3510.1899999999982
+  },
+  "nonhideable_increment_tts_mode": "batch",
+  "nonhideable_increment_source": "measured paired retrieve-skip, v2 logs, 50 pairs"
+ },
+ "remote_api/streaming": {
+  "latency_profile": "remote_api",
+  "expected_latency_ms": 267.58,
+  "latency_quantiles_ms": {
+   "p10": 261.656,
+   "p25": 264.15,
+   "p50": 267.58,
+   "p75": 271.68,
+   "p90": 276.918,
+   "p95": 281.268,
+   "p99": 338.72839999999934
+  },
+  "nonhideable_increment_ms": 370.54,
+  "nonhideable_increment_quantiles_ms": {
+   "p10": -132.79999999999998,
+   "p25": 19.75,
+   "p50": 382.5,
+   "p75": 621.25,
+   "p90": 969.0,
+   "p95": 1307.0499999999984,
+   "p99": 1912.7499999999986
+  },
+  "nonhideable_increment_tts_mode": "streaming",
+  "nonhideable_increment_source": "measured paired retrieve-skip, v2 logs, 50 pairs"
+ }
+}

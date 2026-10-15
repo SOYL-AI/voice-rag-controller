@@ -1,0 +1,129 @@
+% ============================================================================
+% Fig. 1 -- redesigned architecture / decision diagram (R1 figures: Fig. 1
+% illegible; R2: revised diagram highlighting the novelty).
+%
+% DRAWING SPEC (the TikZ below implements it; a designer may redraw it from
+% this spec in any vector tool, keeping every element):
+%  * Full text width (figure*), white background, minimum font 8 pt at print
+%    size (\footnotesize in IEEEtran = 8 pt), no colour-only encoding: lanes
+%    differ by label and line style as well as colour; readable in greyscale.
+%  * Top band, left to right on one time axis: the user's speech; ASR partial
+%    ticks x_1 ... x_K; the VAD end-of-turn marker; below each partial a small
+%    box for the belief b_k (Eq. 1, recomputed per partial) and for the
+%    predicted remaining speech R_k -- "the partial-transcript belief stream".
+%  * Lane (a) JOINT (Ours-v2), highlighted (blue fill): ONE decision box that
+%    receives BOTH b_k and R_k at every partial and compares "dispatch now"
+%    U_k with "wait" (value of the next belief update). Output: a dispatch
+%    time that depends on the belief. Annotation: "stopping region is not a
+%    product of a belief rule and a timing rule (Prop. 4)".
+%  * Lane (b) DECOMPOSED (B9, B9+): two boxes separated by a dashed wall
+%    labelled "no shared state": a timing sub-optimiser fixed before the turn
+%    (dev constants only, no belief) that fires at a fixed trigger, and a
+%    retrieval sub-optimiser that only sees b_k at that trigger and prices
+%    L (B9) or the policy-average exposure (B9+).
+%  * Lane (c) SPECULATIVE decomposed rivals, B10 (SPEC) and B11 (SPEC-theta):
+%    at the first query-ready partial, B10 always prefetches and B11 prefetches
+%    only if the belief-only option value of the prefetch exceeds that of not
+%    prefetching (dev-mean exposures, no turn-level timing state); both decide
+%    USE at end of turn with the final belief b_K; an unused result costs
+%    compute only. Annotation: "B11 is within a C1-sized term of the joint
+%    optimum (Prop. 4'')". Do NOT write "within lambda_c(1+w) of joint": that
+%    bound is withdrawn (THEORY Sec. 6.2).
+%  * Lane (a) must say that the same joint controller runs under both
+%    architectures: under commit it compares the dispatch value with waiting;
+%    under speculation the dispatch value is replaced by the option value of
+%    having the passages ready.
+%  * Right side, shared by all lanes: retrieval -> LLM -> TTS -> first audio,
+%    with TTFA (Eq. 4) measured from VAD end of turn to first audio.
+% ============================================================================
+\begin{figure*}[t]
+\centering
+\resizebox{\textwidth}{!}{%
+\begin{tikzpicture}[
+  font=\footnotesize,
+  >={Stealth[length=2mm]},
+  box/.style={draw, rounded corners=1.5pt, align=center, inner sep=3pt, minimum height=7mm},
+  small/.style={draw, rounded corners=1pt, align=center, inner sep=1.5pt, minimum width=7mm, minimum height=4.5mm, font=\scriptsize},
+  lane/.style={draw=black!45, rounded corners=3pt},
+  note/.style={font=\scriptsize\itshape, align=left, text=black!75}
+]
+% ---------------- time axis and speech -----------------------------------
+\draw[->, black!70] (0,6.2) -- (17.6,6.2) node[right, font=\scriptsize] {time};
+\fill[black!12] (0.4,6.35) rectangle (8.6,6.75);
+\node[font=\scriptsize] at (4.5,6.55) {user speech (``What is the late fee on a postpaid plan?'')};
+\draw[thick] (8.6,6.0) -- (8.6,7.0);
+\node[font=\scriptsize, align=center] at (8.6,7.25) {VAD end of turn\\[-1pt]$t_{\text{user end}}$};
+% partial ticks
+\foreach \x/\kk in {1.4/1, 3.0/2, 4.6/3, 6.2/4, 7.8/5} {
+  \draw (\x,6.1) -- (\x,6.3);
+  \node[font=\scriptsize] at (\x,5.9) {$x_{\kk}$};
+}
+\draw (8.6,6.1) -- (8.6,6.3);
+\node[font=\scriptsize] at (8.95,5.9) {$x_K$};
+% belief stream
+\node[font=\scriptsize\bfseries, anchor=east] at (1.0,5.35) {belief};
+\node[font=\scriptsize\bfseries, anchor=east] at (1.0,4.85) {remaining};
+\foreach \x/\kk in {1.4/1, 3.0/2, 4.6/3, 6.2/4, 7.8/5} {
+  \node[small, fill=black!5] at (\x,5.35) {$b_{\kk}$};
+  \node[small, fill=black!5] at (\x,4.85) {$\hat R_{\kk}$};
+}
+\node[small, fill=black!5] at (8.95,5.35) {$b_K$};
+\node[small, fill=black!5] at (8.95,4.85) {$0$};
+\node[note, anchor=west] at (9.5,5.1) {partial-transcript belief stream:\\ closed-book entropy on each prefix, Eq.~(\ref{eq:belief});\\ remaining speech from the end-of-turn predictor};
+
+% ---------------- lane (a): joint ----------------------------------------
+\draw[lane, fill=blue!6] (0.2,3.15) rectangle (12.3,4.45);
+\node[anchor=north west, font=\scriptsize\bfseries] at (0.3,4.42) {(a) Joint: \OursV{} (commit: dispatch value; speculative: option value of a prefetch)};
+\node[box, fill=white, text width=6.2cm] (joint) at (5.55,3.62)
+  {at every partial $k$: \ dispatch now if $U_k(b_k,\hat R_k)>0$ and $U_k\ge\textsc{Wait}(b_k,\hat R_k)$; else wait};
+\draw[->, blue!60!black, thick] (4.6,4.6) -- (4.6,4.0);
+\draw[->, blue!60!black, thick] (6.2,4.6) -- (6.2,4.0);
+\node[note, anchor=west] at (9.05,3.62) {dispatch time depends on $b_k$:\\ the stopping region is not a product\\ of a belief rule and a timing rule (Prop.~4)};
+
+% ---------------- lane (b): decomposed -----------------------------------
+\draw[lane, dashed, fill=orange!6] (0.2,1.55) rectangle (12.3,2.95);
+\node[anchor=north west, font=\scriptsize\bfseries] at (0.3,2.92) {(b) Decomposed: B9, \Bplus};
+\node[box, fill=white, text width=3.4cm] (timing) at (2.75,2.05)
+  {timing sub-optimiser\\ fixed before the turn (no $b$)};
+\draw[dashed, very thick, black!60] (4.85,1.65) -- (4.85,2.75);
+\node[font=\scriptsize, rotate=90] at (5.05,2.2) {no shared state};
+\node[box, fill=white, text width=4.3cm] (retr) at (7.6,2.05)
+  {retrieval sub-optimiser at the fixed trigger:\\ retrieve iff $U(b_k)>0$, priced at $L$ (B9) or $\bar E_{p^\star}$ (\Bplus)};
+\node[note, anchor=west] at (10.2,2.05) {dispatch time\\ independent of $b$};
+
+% ---------------- lane (c): speculative -----------------------------------
+\draw[lane, densely dotted, fill=green!5] (0.2,-0.7) rectangle (12.3,1.35);
+\node[anchor=north west, font=\scriptsize\bfseries] at (0.3,1.32) {(c) Speculative decomposed: \Bten{} (\textsc{Spec}), \Beleven{} (\SPECth)};
+\node[box, fill=white, text width=3.6cm, font=\scriptsize] (spec1) at (2.75,0.3)
+  {at the first query-ready partial: \Bten{} always prefetches; \Beleven{} only if the belief gate passes};
+\node[box, fill=white, text width=4.3cm] (spec2) at (7.6,0.3)
+  {at end of turn: use the result iff $U(b_K)>0$;\\ an unused result costs compute only};
+\draw[->] (spec1) -- (spec2);
+\node[note, anchor=west] at (10.2,0.3) {\Beleven: within a C1-sized\\ term of joint (Prop.~\ref{prop:spectheta})};
+
+% ---------------- shared back end ----------------------------------------
+\node[box, fill=black!4, minimum width=2.3cm] (ret) at (14.1,3.62) {retrieval\\ latency $L$};
+\node[box, fill=black!4, minimum width=2.3cm] (llm) at (14.1,2.15) {LLM answer\\ (Mistral-7B)};
+\node[box, fill=black!4, minimum width=2.3cm] (tts) at (14.1,0.65) {TTS\\ first audio};
+\draw[->] (12.3,3.62) -- (ret.west);
+\draw[->] (12.3,2.05) -- (12.85,2.05) |- (ret.west);
+\draw[->] (12.3,0.3) -- (12.65,0.3) |- (ret.west);
+\draw[->] (ret) -- (llm);
+\draw[->] (llm) -- (tts);
+\draw[<->, thick] (15.55,6.2) -- (15.55,0.65) node[midway, right, align=left, font=\scriptsize] {TTFA,\\ Eq.~(\ref{eq:ttfa}):\\ user end\\ to first\\ audio};
+\draw[dotted] (8.6,6.0) -- (15.55,6.0) -- (15.55,6.2);
+\end{tikzpicture}%
+}
+\caption{Decision structure compared in this paper. A streaming ASR emits
+partial transcripts $x_k$; a closed-book pass on each prefix gives the belief
+$b_k$, and an end-of-turn predictor gives the remaining speech $\hat R_k$.
+(a) The joint controller decides at every partial whether to dispatch now or
+wait, using $b_k$ and $\hat R_k$ together. (b) The decomposed controllers fix
+the dispatch time without the belief and decide retrieval at that time only.
+(c) The speculative decomposed controllers prefetch at a fixed early partial,
+always (B10) or only when a belief gate passes (B11), and decide at the end of
+the turn whether to use the result. The joint controller runs under both the
+commit and the speculative architecture. All controllers share the back end and
+are scored by time to first audio (TTFA).}
+\label{fig:arch}
+\end{figure*}

@@ -1,0 +1,29 @@
+{
+  "default": "IN_CEA_v21_FY2024_25",
+  "factors": {
+    "IN_CEA_v21_FY2024_25": {
+      "g_co2_per_kwh": 710.0,
+      "metric": "Weighted average emission factor of the Indian grid (all stations incl. renewables and grid-connected captive, net generation weighted), FY 2024-25",
+      "source": "Central Electricity Authority, CO2 Baseline Database for the Indian Power Sector, Version 21.0 (User Guide dated Nov/Dec 2025)",
+      "url": "https://cea.nic.in/wp-content/uploads/baseline/2025/12/User_Guide_V_21.0.pdf",
+      "accessed": "2026-10-15",
+      "verification": "The CEA PDF was behind a login page when accessed, so 0.710 tCO2/MWh is taken from secondary summaries of Version 21.0 (e.g. BEE/CCTS reference tables, which also give 0.727 for FY 2023-24 and so match the primary Version 20.0 figure below). One vendor summary reports 0.7117. Treat the third significant figure as unverified until checked against the CEA database's Results sheet.",
+      "note": "CEA has also published Version 22.0 (FY 2025-26, dated Aug/Sep 2026; https://cea.nic.in/wp-content/uploads/baseline/2026/09/User_Guide__Version_22.0.pdf), but its figures were not retrievable (login wall). Replace this default when they are."
+    },
+    "IN_CEA_v20_FY2023_24": {
+      "g_co2_per_kwh": 727.0,
+      "metric": "Weighted average emission factor, FY 2023-24 (adjusted for cross-border transfers, incl. RES and captive injection), Table S",
+      "source": "Central Electricity Authority, CO2 Baseline Database for the Indian Power Sector, User Guide Version 20.0, December 2024",
+      "url": "https://cea.nic.in/wp-content/uploads/2021/03/User_Guide_Version_20.0.pdf",
+      "accessed": "2026-10-15",
+      "verification": "Read directly from Table S of the Version 20.0 user guide text (Average 0.727, OM 0.962, BM 0.552, CM 0.757 tCO2/MWh), via the public copy at https://static-cdn.publive.online/saur-energy/media/pdf_files/2025/01user_guide_version_20.0.pdf because the CEA site required a login."
+    },
+    "IN_CEA_v20_CM_FY2023_24": {
+      "g_co2_per_kwh": 757.0,
+      "metric": "Combined margin (CDM marginal-style factor), FY 2023-24, Table S of Version 20.0. Use for a marginal-emissions sensitivity, not as the default.",
+      "source": "As IN_CEA_v20_FY2023_24",
+      "url": "https://cea.nic.in/wp-content/uploads/2021/03/User_Guide_Version_20.0.pdf",
+      "accessed": "2026-10-15"
+    }
+  }
+}
