@@ -378,7 +378,9 @@ class Wiki:
                     pages[key].update({k: v for k, v in pg.items() if v})
                 else:
                     pages[key] = dict(pg)
-            if "continue" not in data:
+            # Follow continuation only for unfinished extracts; a generator's
+            # own continuation (e.g. gsroffset = more search hits) is ignored.
+            if "excontinue" not in data.get("continue", {}):
                 break
             cont = data["continue"]
         return list(pages.values()), extra
