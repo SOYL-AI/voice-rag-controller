@@ -596,6 +596,89 @@ class JudgeTests(unittest.TestCase):
         self.assertEqual(reply["rate_limited_retries"], 2)
         self.assertTrue(sleeps)  # had to wait once both were cooling down
 
+    # -- spend cap -----------------------------------------------------------
+    def test_budget_config_baseline_and_cap_override(self):
+        from llm.experiment1_v2 import spend
+
+        with tempfile.TemporaryDirectory() as tmp:
+            ledger = Path(tmp) / "ledger.json"
+            budget = spend.budget_from_config("primary", self.CFG, env={}, ledger_path=ledger)
+            status = budget.status()
+            self.assertAlmostEqual(status["spent_usd"], 88.85, places=2)  # the Azure-metrics baseline
+            self.assertAlmostEqual(status["spent_inr"], 88.85 * 88, delta=1)
+            self.assertEqual(status["cap_inr"], 20000)
+            capped = spend.budget_from_config("primary", self.CFG, env={"VOICE_RAG_JUDGE_CAP_INR": "9000"},
+                                              ledger_path=ledger)
+            self.assertEqual(capped.cap_inr, 9000)
+            gpt4o = spend.budget_from_config("secondary", self.CFG, env={}, ledger_path=ledger)
+            self.assertIsNone(gpt4o.cap_inr)
+            self.assertEqual(gpt4o.price, {"input": 2.5, "output": 10.0})
+            self.assertEqual(spend.main(["--ledger", str(ledger)]), 0)
+
+    def test_cap_trips_before_the_call_and_grading_resumes_from_cache(self):
+        from llm.experiment1_v2 import spend
+
+        calls = []
+        usage = {"prompt_tokens": 400, "completion_tokens": 100}  # $0.0018 per call
+
+        def transport(messages, params):
+            calls.append(params["seed"])
+            return {"text": "VERDICT: YES", "model": self.MODEL, "usage": usage}
+
+        with tempfile.TemporaryDirectory() as tmp:
+            ledger = Path(tmp) / "ledger.json"
+            # Baseline 0; INR 88/USD. Estimate per call ~ (chars/3 + 50) in + 2000 out ~ $0.0216 = INR 1.9.
+            budget = spend.SpendBudget("gpt-6.1-sol", {"input": 2.0, "output": 10.0}, 88.0, cap_inr=5.0,
+                                       ledger_path=ledger)
+            judge = judges.AzureChatJudge(judges.resolve_spec("primary", self.CFG, self.ENV),
+                                          transport=transport, budget=budget)
+            cache = Path(tmp) / "cache"
+            with self.assertRaises(spend.JudgeBudgetExceeded) as ctx:
+                for n in range(10):
+                    judges.grade(judge, cache_dir=cache, **dict(self.KW, item_id=f"i{n}", answer=f"a{n}"))
+            self.assertIn("No call was made", str(ctx.exception))
+            made = len(calls)
+            self.assertGreater(made, 0)
+            status = budget.status()
+            self.assertLessEqual(status["spent_inr"], 5.0)  # never over the cap
+            self.assertEqual(status["calls"], made)
+            self.assertAlmostEqual(status["spent_usd"], made * 0.0018, places=6)
+            # Raise the cap: grading resumes, already-graded samples come from the cache.
+            budget.cap_inr = 1000.0
+            before = len(calls)
+            for n in range(10):
+                judges.grade(judge, cache_dir=cache, **dict(self.KW, item_id=f"i{n}", answer=f"a{n}"))
+            self.assertEqual(len(calls) - before, 30 - made)  # only the missing samples
+
+    def test_ledger_is_safe_under_concurrent_processes_and_threads(self):
+        import subprocess
+        import sys
+        from concurrent.futures import ThreadPoolExecutor
+
+        from llm.experiment1_v2 import spend
+
+        with tempfile.TemporaryDirectory() as tmp:
+            ledger = Path(tmp) / "ledger.json"
+            code = ("from llm.experiment1_v2.spend import bump_for_test; "
+                    f"bump_for_test(r'{ledger}', 20, 1000, 100)")
+            procs = [subprocess.Popen([sys.executable, "-c", code], cwd=str(common.REPO_ROOT))
+                     for _ in range(4)]
+            with ThreadPoolExecutor(4) as pool:
+                list(pool.map(lambda _: spend.bump_for_test(str(ledger), 10, 1000, 100), range(4)))
+            for p in procs:
+                self.assertEqual(p.wait(timeout=300), 0)
+            data = json.loads(ledger.read_text(encoding="utf-8"))
+            tracked = data["entries"]["concurrency-test"]["tracked"]
+            self.assertEqual(tracked["calls"], 4 * 20 + 4 * 10)
+            self.assertEqual(tracked["input_tokens"], 120 * 1000)
+            self.assertEqual(tracked["output_tokens"], 120 * 100)
+            self.assertEqual(data["entries"]["concurrency-test"]["reservations"], {})
+
+    def test_injected_transport_has_no_budget_by_default(self):
+        judge = judges.AzureChatJudge(judges.resolve_spec("primary", self.CFG, self.ENV),
+                                      transport=lambda m, p: ("VERDICT: YES", self.MODEL))
+        self.assertIsNone(judge.budget)
+
     def test_errors_are_redacted(self):
         def transport(messages, params):
             raise RuntimeError(f"401 for {SENTINEL_URL} with key {SENTINEL_KEY}")

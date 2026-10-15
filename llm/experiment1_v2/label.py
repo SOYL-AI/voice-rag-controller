@@ -467,7 +467,13 @@ def main(argv=None) -> int:
     print(f"[label] grading {len(records)} answers ({common.rel(rdir)}) with alias match"
           + "".join(f" + {r}={judges[r].spec.identity_string()}" for r in roles)
           + (f" (judges on a stratified subsample of {len(judge_keys)})" if judge_keys else ""))
-    rows = grade_draws(records, items_by_id, judges, cfg, cache_dir, args.workers, judge_keys)
+    try:
+        rows = grade_draws(records, items_by_id, judges, cfg, cache_dir, args.workers, judge_keys)
+    except judges_mod.JudgeBudgetExceeded as error:
+        print(f"[label] STOPPED: {error}", file=sys.stderr)
+        print("[label] No labels file was written. Every verdict graded so far is cached; "
+              "re-running the same command resumes from the cache.", file=sys.stderr)
+        return 4
     rule = cfg["labels"]["need_rule"]
     graded_ids = {r["item_id"] for r in rows}
     labelled_items = [i for i in items if i["id"] in graded_ids]
