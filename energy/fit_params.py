@@ -151,7 +151,9 @@ def main():
     timing = json.loads((RES / "a10g_timing.json").read_text())
     tokens = json.loads((RES / "token_budget.json").read_text())
     lp = RES / "llm_local.json"
-    llm = a10g_llm_params(timing, tokens, json.loads(lp.read_text()) if lp.exists() else None)
+    pp = RES / "phase_power.json"
+    llm = a10g_llm_params(timing, tokens, json.loads(lp.read_text()) if lp.exists() else None,
+                          json.loads(pp.read_text()) if pp.exists() else None)
     S = stages["stages"]
     cpu_idle = [s["cpu_idle_w"]["mean"] for s in S.values() if "cpu_idle_w" in s and s["cpu_idle_w"]["mean"]]
     gpu_idle = [s["gpu_idle_w"]["mean"] for s in S.values() if "gpu_idle_w" in s and s.get("gpu_idle_w", {}).get("mean")]

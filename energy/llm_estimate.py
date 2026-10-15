@@ -22,10 +22,12 @@ Each coefficient is   e = (P_phase - P_idle) * t_phase_per_token   where
   here, so three scenarios are carried as (low, central, high):
     high    = 300 W: the A10G board power limit (cannot be exceeded).
     central = f_phase * 300 W, where f_phase = (mean GPU power) / (enforced
-              power limit) measured LOCALLY on the RTX 4060 Laptop running the
-              same phase (memory-bound batch-1 decode; compute-bound prefill)
-              of a Qwen2.5 bf16 model (energy/results/llm_local.json, largest
-              model measured). Assumes the phase loads both GPUs to the same
+              power limit) measured LOCALLY on the RTX 4060 Laptop with
+              dispatch-free proxy kernels for the phase (memory-bound bf16
+              GEMV over 2 GiB for decode; bf16 GEMM 512x4096x4096 for
+              prefill; energy/results/phase_power.json). The Qwen2.5 runs
+              (llm_local.json) are launch-bound on this host and are only the
+              fallback. Assumes the phase loads both GPUs to the same
               fraction of their power limit.
     low     = f_phase * 150 W: as if the board drew like the NVIDIA A10, the
               150 W card built on the same GA102 die with the same 24 GB /
@@ -60,8 +62,30 @@ IDLE_W = {"central": 60.0, "low": 30.0, "high": 90.0}
 FALLBACK_FRACTIONS = {"decode": 0.8, "prefill": 0.95}
 
 
-def local_fractions(local: dict | None) -> dict:
-    """Phase power as a fraction of the enforced limit, from the largest local model."""
+def phase_fractions(phase: dict | None) -> dict | None:
+    """Power fractions from the dispatch-free proxy kernels (preferred)."""
+    if not phase or not phase.get("phases"):
+        return None
+    P = phase["phases"]
+    d = P["decode_gemv_2GiB"]
+    p = P["prefill_gemm_512x4096x4096"]
+    return {"decode": min(d["power_fraction_of_limit"], 1.0),
+            "prefill": min(p["power_fraction_of_limit"], 1.0),
+            "decode_w": d["gpu_mean_active_w"]["mean"], "decode_limit_w": d["enforced_power_limit_w"],
+            "prefill_w": p["gpu_mean_active_w"]["mean"], "prefill_limit_w": p["enforced_power_limit_w"],
+            "decode_proxy_achieved_gbs": d.get("achieved_gbs"),
+            "prefill_proxy_achieved_tflops": p.get("achieved_tflops"),
+            "source": "proxy kernels on RTX 4060 Laptop (energy/results/phase_power.json)"}
+
+
+def local_fractions(local: dict | None, phase: dict | None = None) -> dict:
+    """Phase power as a fraction of the enforced power limit.
+
+    Preferred: the dispatch-free proxy kernels (bench_phase_power). Fallback:
+    the largest Qwen2.5 model measured with Hugging Face generate."""
+    pf = phase_fractions(phase)
+    if pf:
+        return pf
     if not local or not local.get("models"):
         return {**FALLBACK_FRACTIONS, "source": "fallback (no local measurement)"}
     size, m = max(local["models"].items(), key=lambda kv: kv[1]["n_params"])
@@ -82,12 +106,13 @@ def local_fractions(local: dict | None) -> dict:
             "prefill_limit_w": lp, "source": f"Qwen2.5-{size} bf16 on RTX 4060 Laptop"}
 
 
-def a10g_llm_params(timing: dict, tokens: dict, local: dict | None) -> dict:
+def a10g_llm_params(timing: dict, tokens: dict, local: dict | None,
+                    phase: dict | None = None) -> dict:
     t_dec = timing["decode_ms_per_token_median"] / 1e3
     d_ttft = timing["ttft_median_diff_retrieve_minus_skip_ms"] / 1e3
     d_tok = tokens["extra_prefill_tokens"]["mean"]
     t_pf = d_ttft / d_tok
-    fr = local_fractions(local)
+    fr = local_fractions(local, phase)
 
     def phase(f, t):
         P = {"low": f * A10G["a10_sibling_tdp_w"], "central": f * A10G["board_power_w"],
@@ -121,7 +146,8 @@ def main():
     tokens = json.loads((RES / "token_budget.json").read_text())
     lp = RES / "llm_local.json"
     local = json.loads(lp.read_text()) if lp.exists() else None
-    p = a10g_llm_params(timing, tokens, local)
+    pp = RES / "phase_power.json"
+    p = a10g_llm_params(timing, tokens, local, json.loads(pp.read_text()) if pp.exists() else None)
     print(json.dumps(p, indent=1))
 
 
