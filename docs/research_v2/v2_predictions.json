@@ -1,0 +1,482 @@
+{
+  "_comment": "DEV-ONLY predicted gaps for PREREG_V2 §3, computed by python -m simulator.e3v2_dev_analysis from Phase A cells (real Mistral-7B generations, real grading) and Phase B on dev. Nothing is selected or frozen here: the primary (profile, price), D*[SPEC] and m3 are fixed at freeze.",
+  "generated_at_utc": "2026-10-15T12:24:02.983740+00:00",
+  "git_commit": "3f75e9c51c8878297a1e19ccf1ff94da7d8af6d2",
+  "split": "dev",
+  "definitions": {
+    "delta_commit": "mean_i [U_i(Ours-v2[COMMIT]) - U_i(B9+)]",
+    "delta_speculative": "mean_i [U_i(Ours-v2[SPEC]) - U_i(D*[SPEC])], D*[SPEC] = dev-best of B9+, SPEC, SPEC-theta",
+    "interaction": "mean_i [Delta_i[COMMIT] - Delta_i[SPEC]] on the same items",
+    "m3": "1/2 max(Delta[COMMIT], 0) on dev (PREREG_V2 §3 P3 margin)",
+    "U_i": "Q - lambda_l (TTFA - skip TTFA)/1000 - lambda_c n_retrievals, mean over 5 seeds",
+    "se": "paired cluster bootstrap over items (pair_id clusters for d2_support), B=2000",
+    "price_grid": "lambda_l = (b_q (g+ + g-) - g- - lambda_c) / ((E[L] + pi)/1000), b_q = dev end-of-turn belief quantile"
+  },
+  "inputs": {
+    "d1_open": {
+      "primary_condition": "text150",
+      "g": {
+        "g_plus": 0.7176738882554161,
+        "g_minus": 0.023222060957910014,
+        "n_needed": 877,
+        "n_not_needed": 689,
+        "source": "Phase A cells, condition text150: final-transcript dispatch vs skip, per item mean over seeds"
+      },
+      "g_text150": {
+        "g_plus": 0.7176738882554161,
+        "g_minus": 0.023222060957910014,
+        "n_needed": 877,
+        "n_not_needed": 689,
+        "source": "Phase A cells, condition text150: final-transcript dispatch vs skip, per item mean over seeds"
+      },
+      "calibration": {
+        "calibration": {
+          "signal": "self_assessed_need_logit",
+          "kind": "logistic",
+          "intercept": 0.017258013307067152,
+          "slope": -0.003864940297840543,
+          "frac_slope": 1.2053324676629482,
+          "interaction": 0.15014807551852904,
+          "calibrated": false,
+          "source": "Fitted on d1_open dev (1566 items, 6264 prefix records over 1 conditions): P(empirical need) = sigmoid(a + b*logit(SA) + c*f + d*logit(SA)*f), SA = self_assessed_need (sa-v1-frozen), f = spoken word fraction",
+          "auc": 0.5875205108621719
+        },
+        "diagnostics": {
+          "auc_in_sample": 0.5875205108621719,
+          "auc_oof_grouped5": 0.581765626318777,
+          "auc_oof_by_frac": {
+            "[0,0.4)": {
+              "n": 1566,
+              "auc_oof": 0.4790054828027333
+            },
+            "[0.4,0.8)": {
+              "n": 3132,
+              "auc_oof": 0.5737966960859111
+            },
+            "[0.999,1.01)": {
+              "n": 1566,
+              "auc_oof": 0.6472752307394419
+            }
+          },
+          "n_records": 6264,
+          "n_items": 1566,
+          "base_rate": 0.5600255427841635
+        }
+      },
+      "sa_lag_ms": 548.0733500153292,
+      "calibration_artifact": "controller/baselines/e3v2_calibration_d1_open_mistral7b_v03_self_assessed_need_logit.json",
+      "belief_transitions_artifact": "controller/baselines/belief_transitions_v2_d1_open.json"
+    }
+  },
+  "cells": [
+    {
+      "dataset": "d1_open",
+      "condition": "text150",
+      "condition_role": "primary",
+      "profile": "rewrite_faiss",
+      "belief_quantile": 0.5,
+      "b_cut": 0.49939208913702177,
+      "lambda_l": 0.20238623499822622,
+      "lambda_c": 0.05,
+      "d_star": {
+        "commit": "b9plus_v2",
+        "speculative": "b9plus_v2"
+      },
+      "delta_commit": -0.005046804903578185,
+      "se_commit": 0.00371479245158789,
+      "delta_speculative": -0.004688305964888152,
+      "se_speculative": 0.0037504292672562852,
+      "interaction": -0.0003584989386900329,
+      "se_interaction": 0.0005119396116263012,
+      "z_commit": -1.3585698176545302,
+      "m3": 0.0,
+      "q_hat": 0.8985095812633073,
+      "w_bar": 0.04238890055070701,
+      "n_items": {
+        "commit": 1566,
+        "speculative": 1566,
+        "paired": 1566
+      },
+      "d_star_speculative_dev_utilities": {
+        "b9plus_v2": 0.5032677990342636,
+        "b10_speculative_v2": 0.4141855263962952,
+        "b11_speculative_gated_v2": 0.4985794930693757
+      }
+    },
+    {
+      "dataset": "d1_open",
+      "condition": "text150",
+      "condition_role": "primary",
+      "profile": "rewrite_faiss",
+      "belief_quantile": 0.65,
+      "b_cut": 0.5585271065784386,
+      "lambda_l": 0.2322644641383306,
+      "lambda_c": 0.05,
+      "d_star": {
+        "commit": "b9plus_v2",
+        "speculative": "b9plus_v2"
+      },
+      "delta_commit": -0.006559817911644633,
+      "se_commit": 0.002948602939255151,
+      "delta_speculative": -0.00608473357430761,
+      "se_speculative": 0.0029598655694924735,
+      "interaction": -0.0004750843373370221,
+      "se_interaction": 0.00046980599250880285,
+      "z_commit": -2.224720671716387,
+      "m3": 0.0,
+      "q_hat": 0.9245830311820159,
+      "w_bar": 0.04238890055070701,
+      "n_items": {
+        "commit": 1566,
+        "speculative": 1566,
+        "paired": 1566
+      },
+      "d_star_speculative_dev_utilities": {
+        "b9plus_v2": 0.4815306509040453,
+        "b10_speculative_v2": 0.40830284321964827,
+        "b11_speculative_gated_v2": 0.475287985168964
+      }
+    },
+    {
+      "dataset": "d1_open",
+      "condition": "text150",
+      "condition_role": "primary",
+      "profile": "rewrite_faiss",
+      "belief_quantile": 0.8,
+      "b_cut": 0.6374499155943844,
+      "lambda_l": 0.2721405625007804,
+      "lambda_c": 0.05,
+      "d_star": {
+        "commit": "b9plus_v2",
+        "speculative": "b9plus_v2"
+      },
+      "delta_commit": -0.004807427094718879,
+      "se_commit": 0.002484984667866409,
+      "delta_speculative": -0.0042758154903789255,
+      "se_speculative": 0.002503978581292936,
+      "interaction": -0.0005316116043399534,
+      "se_interaction": 0.00044893092097209367,
+      "z_commit": -1.9345902439094338,
+      "m3": 0.0,
+      "q_hat": 0.9541080680977054,
+      "w_bar": 0.04238890055070701,
+      "n_items": {
+        "commit": 1566,
+        "speculative": 1566,
+        "paired": 1566
+      },
+      "d_star_speculative_dev_utilities": {
+        "b9plus_v2": 0.4579638111254393,
+        "b10_speculative_v2": 0.4045182708763701,
+        "b11_speculative_gated_v2": 0.453502949045048
+      }
+    },
+    {
+      "dataset": "d1_open",
+      "condition": "text150",
+      "condition_role": "primary",
+      "profile": "rewrite_faiss",
+      "belief_quantile": 0.9,
+      "b_cut": 0.6981687694362124,
+      "lambda_l": 0.30281903198813426,
+      "lambda_c": 0.05,
+      "d_star": {
+        "commit": "b9plus_v2",
+        "speculative": "b9plus_v2"
+      },
+      "delta_commit": -0.004446900314940621,
+      "se_commit": 0.0038163337457534424,
+      "delta_speculative": -0.00432584121217068,
+      "se_speculative": 0.00381725917464664,
+      "interaction": -0.0001210591027699402,
+      "se_interaction": 0.00011904479814202767,
+      "z_commit": -1.1652283608289842,
+      "m3": 0.0,
+      "q_hat": 0.9737434358589647,
+      "w_bar": 0.04238890055070701,
+      "n_items": {
+        "commit": 1566,
+        "speculative": 1566,
+        "paired": 1566
+      },
+      "d_star_speculative_dev_utilities": {
+        "b9plus_v2": 0.4429098518075777,
+        "b10_speculative_v2": 0.4033180635979496,
+        "b11_speculative_gated_v2": 0.4383781036598688
+      }
+    },
+    {
+      "dataset": "d1_open",
+      "condition": "text150",
+      "condition_role": "primary",
+      "profile": "rewrite_faiss_rerank",
+      "belief_quantile": 0.5,
+      "b_cut": 0.49939208913702177,
+      "lambda_l": 0.2046519884587024,
+      "lambda_c": 0.05,
+      "d_star": {
+        "commit": "b9plus_v2",
+        "speculative": "b9plus_v2"
+      },
+      "delta_commit": -0.005999441356373864,
+      "se_commit": 0.003709779033454507,
+      "delta_speculative": -0.005629522219546118,
+      "se_speculative": 0.003743118223112876,
+      "interaction": -0.0003699191368277444,
+      "se_interaction": 0.0005160240634989227,
+      "z_commit": -1.6171964158165097,
+      "m3": 0.0,
+      "q_hat": 0.8992193044712562,
+      "w_bar": 0.04238890055070701,
+      "n_items": {
+        "commit": 1566,
+        "speculative": 1566,
+        "paired": 1566
+      },
+      "d_star_speculative_dev_utilities": {
+        "b9plus_v2": 0.5021571860465771,
+        "b10_speculative_v2": 0.4138136059098944,
+        "b11_speculative_gated_v2": 0.49652766382703106
+      }
+    },
+    {
+      "dataset": "d1_open",
+      "condition": "text150",
+      "condition_role": "primary",
+      "profile": "rewrite_faiss_rerank",
+      "belief_quantile": 0.65,
+      "b_cut": 0.5585271065784386,
+      "lambda_l": 0.23486471021421457,
+      "lambda_c": 0.05,
+      "d_star": {
+        "commit": "b9plus_v2",
+        "speculative": "b9plus_v2"
+      },
+      "delta_commit": -0.007651301041714493,
+      "se_commit": 0.0030045715691131808,
+      "delta_speculative": -0.007169453845059057,
+      "se_speculative": 0.0030154281945430285,
+      "interaction": -0.00048184719665543747,
+      "se_interaction": 0.0004764956592518635,
+      "z_commit": -2.5465530994067236,
+      "m3": 0.0,
+      "q_hat": 0.9245830311820159,
+      "w_bar": 0.04238890055070701,
+      "n_items": {
+        "commit": 1566,
+        "speculative": 1566,
+        "paired": 1566
+      },
+      "d_star_speculative_dev_utilities": {
+        "b9plus_v2": 0.48081837320526927,
+        "b10_speculative_v2": 0.4076280898179878,
+        "b11_speculative_gated_v2": 0.4734973304992443
+      }
+    },
+    {
+      "dataset": "d1_open",
+      "condition": "text150",
+      "condition_role": "primary",
+      "profile": "rewrite_faiss_rerank",
+      "belief_quantile": 0.8,
+      "b_cut": 0.6374499155943844,
+      "lambda_l": 0.27518722929226197,
+      "lambda_c": 0.05,
+      "d_star": {
+        "commit": "b9plus_v2",
+        "speculative": "b9plus_v2"
+      },
+      "delta_commit": -0.005789423700674823,
+      "se_commit": 0.0025119427757425926,
+      "delta_speculative": -0.00533448323793376,
+      "se_speculative": 0.0025346910188342414,
+      "interaction": -0.0004549404627410633,
+      "se_interaction": 0.00044974057329920413,
+      "z_commit": -2.3047593904536003,
+      "m3": 0.0,
+      "q_hat": 0.9541080680977054,
+      "w_bar": 0.04238890055070701,
+      "n_items": {
+        "commit": 1566,
+        "speculative": 1566,
+        "paired": 1566
+      },
+      "d_star_speculative_dev_utilities": {
+        "b9plus_v2": 0.457161307031455,
+        "b10_speculative_v2": 0.40441133482919345,
+        "b11_speculative_gated_v2": 0.45164920954656734
+      }
+    },
+    {
+      "dataset": "d1_open",
+      "condition": "text150",
+      "condition_role": "primary",
+      "profile": "rewrite_faiss_rerank",
+      "belief_quantile": 0.9,
+      "b_cut": 0.6981687694362124,
+      "lambda_l": 0.30620915024213097,
+      "lambda_c": 0.05,
+      "d_star": {
+        "commit": "b9plus_v2",
+        "speculative": "b9plus_v2"
+      },
+      "delta_commit": -0.006361242341148409,
+      "se_commit": 0.003820900058429514,
+      "delta_speculative": -0.006252370917644145,
+      "se_speculative": 0.0038222908110441033,
+      "interaction": -0.00010887142350426511,
+      "se_interaction": 0.00010696714742123109,
+      "z_commit": -1.6648544175120452,
+      "m3": 0.0,
+      "q_hat": 0.9752438109527382,
+      "w_bar": 0.04238890055070701,
+      "n_items": {
+        "commit": 1566,
+        "speculative": 1566,
+        "paired": 1566
+      },
+      "d_star_speculative_dev_utilities": {
+        "b9plus_v2": 0.44271163804155883,
+        "b10_speculative_v2": 0.4028919779306547,
+        "b11_speculative_gated_v2": 0.4362616303812122
+      }
+    },
+    {
+      "dataset": "d1_open",
+      "condition": "text150",
+      "condition_role": "primary",
+      "profile": "rewrite_remote",
+      "belief_quantile": 0.5,
+      "b_cut": 0.49939208913702177,
+      "lambda_l": 0.1800443075890772,
+      "lambda_c": 0.05,
+      "d_star": {
+        "commit": "b9plus_v2",
+        "speculative": "b9plus_v2"
+      },
+      "delta_commit": -0.005314513214647994,
+      "se_commit": 0.003717419245722243,
+      "delta_speculative": -0.004679413199261081,
+      "se_speculative": 0.0037336452574538797,
+      "interaction": -0.000635100015386912,
+      "se_interaction": 0.0005141448374627421,
+      "z_commit": -1.429624388146045,
+      "m3": 0.0,
+      "q_hat": 0.8814762242725337,
+      "w_bar": 0.04238890055070701,
+      "n_items": {
+        "commit": 1566,
+        "speculative": 1566,
+        "paired": 1566
+      },
+      "d_star_speculative_dev_utilities": {
+        "b9plus_v2": 0.5023063751606214,
+        "b10_speculative_v2": 0.41150536948906397,
+        "b11_speculative_gated_v2": 0.49734407150503307
+      }
+    },
+    {
+      "dataset": "d1_open",
+      "condition": "text150",
+      "condition_role": "primary",
+      "profile": "rewrite_remote",
+      "belief_quantile": 0.65,
+      "b_cut": 0.5585271065784386,
+      "lambda_l": 0.20662420358627792,
+      "lambda_c": 0.05,
+      "d_star": {
+        "commit": "b9plus_v2",
+        "speculative": "b9plus_v2"
+      },
+      "delta_commit": -0.006848474415005764,
+      "se_commit": 0.0030376299359649605,
+      "delta_speculative": -0.006865267496299148,
+      "se_speculative": 0.003036385043881753,
+      "interaction": 1.6793081293382867e-05,
+      "se_interaction": 0.00022330328951733982,
+      "z_commit": -2.254545339417791,
+      "m3": 0.0,
+      "q_hat": 0.9187817258883249,
+      "w_bar": 0.04238890055070701,
+      "n_items": {
+        "commit": 1566,
+        "speculative": 1566,
+        "paired": 1566
+      },
+      "d_star_speculative_dev_utilities": {
+        "b9plus_v2": 0.48080001046864934,
+        "b10_speculative_v2": 0.4085186039835498,
+        "b11_speculative_gated_v2": 0.47409294883041453
+      }
+    },
+    {
+      "dataset": "d1_open",
+      "condition": "text150",
+      "condition_role": "primary",
+      "profile": "rewrite_remote",
+      "belief_quantile": 0.8,
+      "b_cut": 0.6374499155943844,
+      "lambda_l": 0.24209827878256848,
+      "lambda_c": 0.05,
+      "d_star": {
+        "commit": "b9plus_v2",
+        "speculative": "b9plus_v2"
+      },
+      "delta_commit": -0.005596053697387487,
+      "se_commit": 0.0025599401582728503,
+      "delta_speculative": -0.005278764887659977,
+      "se_speculative": 0.00254648849972563,
+      "interaction": -0.00031728880972751197,
+      "se_interaction": 0.00022988226459331017,
+      "z_commit": -2.186009574990633,
+      "m3": 0.0,
+      "q_hat": 0.9467061435973353,
+      "w_bar": 0.04238890055070701,
+      "n_items": {
+        "commit": 1566,
+        "speculative": 1566,
+        "paired": 1566
+      },
+      "d_star_speculative_dev_utilities": {
+        "b9plus_v2": 0.45722760859130557,
+        "b10_speculative_v2": 0.4044092767878394,
+        "b11_speculative_gated_v2": 0.45202457877971924
+      }
+    },
+    {
+      "dataset": "d1_open",
+      "condition": "text150",
+      "condition_role": "primary",
+      "profile": "rewrite_remote",
+      "belief_quantile": 0.9,
+      "b_cut": 0.6981687694362124,
+      "lambda_l": 0.2693900745748647,
+      "lambda_c": 0.05,
+      "d_star": {
+        "commit": "b9plus_v2",
+        "speculative": "b9plus_v2"
+      },
+      "delta_commit": -0.005898603572147795,
+      "se_commit": 0.003888293001610228,
+      "delta_speculative": -0.005602107809525374,
+      "se_speculative": 0.003886662271574585,
+      "interaction": -0.0002964957626224229,
+      "se_interaction": 0.0002055161563130398,
+      "z_commit": -1.5170162252960497,
+      "m3": 0.0,
+      "q_hat": 0.9669917479369843,
+      "w_bar": 0.04238890055070701,
+      "n_items": {
+        "commit": 1566,
+        "speculative": 1566,
+        "paired": 1566
+      },
+      "d_star_speculative_dev_utilities": {
+        "b9plus_v2": 0.4428880898980066,
+        "b10_speculative_v2": 0.40215052817979824,
+        "b11_speculative_gated_v2": 0.43705979140388873
+      }
+    }
+  ],
+  "pooled_primary": []
+}
