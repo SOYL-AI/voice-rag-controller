@@ -44,7 +44,7 @@ anything else.
 | `main.tex` | class, packages, title options, author block, section order |
 | `macros.tex` | `\todo{}` (author prose), `\TBD{artifact}` (v2 number not yet produced), `\PEND{}` (open author decision), and notation macros |
 | `sections/00_abstract.tex` to `09_conclusion.tex` | paragraph outlines (`P-<section>.<n>` blocks) |
-| `sections/theory_formal.tex` | the theory slot, copied from `docs/research_v2/theory_latex.tex` at `8bbe257` |
+| `sections/theory_formal.tex` | the theory slot, copied from `docs/research_v2/theory_latex.tex` at `1d8900c` (corrected boundary test, Props. 4′ and 4″) |
 | `tables/` | controllers, predictions, v1 E3, v1 E2, v2 primary |
 | `figures/fig1_architecture.tex` | Fig. 1 in TikZ, with a full drawing spec in its header |
 | `figures/*.pdf` | v1 figures, regenerated from the real data by `analysis/paper_figures_v1.py` |
@@ -136,18 +136,22 @@ verification URL is in a comment in `references.bib`.
   marker is a placeholder on Ryan Gomez; confirm it, and keep exactly one.
 - Fill the pre-registration link (public repo commit URLs or OSF) for
   `b9ba0c9`, `cd5d145` and `6addd89`.
-- Update `docs/research_v2/PREREG_V2.md` to the two-architecture design
-  before freezing:
-  - two primaries and the alpha allocation between them;
-  - the speculative non-superiority margin λ_c(1+w);
-  - B10 named and implemented. There is no B10 controller on
-    `research/v2-base` yet.
+- At the `PREREG_V2.md` freeze, carry the frozen values into the paper:
+  - the name of D*[SPECULATIVE] (expected B11, SPEC-θ);
+  - the P3 margin m₃ = ½·δ̂_C,dev;
+  - the primary (profile, price);
+  - the dev estimates of multi-epoch prefetch delay and C3 query
+    improvement, which the two-epoch power simulation omits.
+  The design itself, the boundary test P1/P2/P3 (intersection–union at
+  one-sided α = 0.025), is merged at `1d8900c`. B10 and B11 are implemented
+  (`controller/baselines/b10_speculative_v2.py`,
+  `b11_speculative_gated_v2.py`).
 - Decide where the proofs go (6-page budget). The full proofs in
   `theory_formal.tex` will not fit.
 - Choose a dead-air threshold for the v2 dead-air rate.
 - Waste-rate sensitivity for v1 needs an extension of
   `analysis/v1_theory_check.py`, which has not been written yet.
 - Write `analysis/paper_figures_v2.py` for the two v2 figure placeholders
-  (prefix AUC, two-sided test).
+  (prefix AUC; boundary test with Δ_C, Δ_S, ±m₃ and the interaction).
 - Fill every `\TBD` from the named artifact after the frozen test-split
   runs. Never estimate one.
