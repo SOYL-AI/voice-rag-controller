@@ -1,0 +1,80 @@
+{
+  "_comment": "e3v2_test_budget.py — dry-run LLM-call and judge-call counts, and judge cost,\nfor the E3-v2 TEST split under the PREREG_V2 §2.2/§2.3/§4.8 rules, estimated\nWITHOUT touching test content: every count is a dev per-item ratio scaled by\nthe number of test items (test ids are only counted, per CONTRACTS §7).",
+  "created_at_utc": "2026-10-15T19:53:56.748913+00:00",
+  "measured_tokens_per_judge_call": {
+    "primary": {
+      "in": 664.983375,
+      "out": 70.939875,
+      "n_sampled": 8000
+    },
+    "secondary": {
+      "in": 673.7457480041652,
+      "out": 51.23672335994446,
+      "n_sampled": 5762
+    }
+  },
+  "usd_per_judge_call": {
+    "primary": 0.0020393655,
+    "secondary": 0.002196731603609858
+  },
+  "datasets": {
+    "d1_open": {
+      "n_dev": 1566,
+      "n_test": 3734,
+      "dev_frozen_cells": {
+        "retrieve": 7764,
+        "skip": 3132
+      },
+      "llm_calls": {
+        "e1_self_assessment": 45426,
+        "e1_closed_book_full_question": 18670,
+        "e3_rewrites": 26548,
+        "e3_grounded_answers_lazy": 92563,
+        "e3_skip_answers_lazy": 18670
+      },
+      "llm_calls_total": 201877,
+      "judge_calls": {},
+      "judge_cost_usd": {
+        "primary": 0.0,
+        "secondary": 0.0
+      },
+      "judge_cost_inr": {
+        "primary": 0.0,
+        "secondary": 0.0
+      }
+    },
+    "d2_support": {
+      "n_dev": 222,
+      "n_test": 498,
+      "dev_frozen_cells": {
+        "retrieve": 1503,
+        "skip": 444
+      },
+      "llm_calls": {
+        "e1_self_assessment": 8565,
+        "e1_closed_book_full_question": 2490,
+        "e3_rewrites": 8302,
+        "e3_grounded_answers_lazy": 16858,
+        "e3_skip_answers_lazy": 2490
+      },
+      "llm_calls_total": 38705,
+      "judge_calls": {
+        "primary_k1": 22056,
+        "secondary_30pct": 6551
+      },
+      "judge_cost_usd": {
+        "primary": 44.98024546800001,
+        "secondary": 14.390788735248178
+      },
+      "judge_cost_inr": {
+        "primary": 3958.2616011840005,
+        "secondary": 1266.3894087018396
+      }
+    }
+  },
+  "totals": {
+    "llm_calls": 240582.0,
+    "primary_inr": 3958.2616011840005,
+    "secondary_inr": 1266.3894087018396
+  }
+}
