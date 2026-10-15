@@ -1,0 +1,335 @@
+{
+ "n_items": 360,
+ "n_pos": 216,
+ "n_groups": 144,
+ "domains": [
+  "airline",
+  "banking",
+  "ecommerce",
+  "healthcare",
+  "insurance",
+  "telecom"
+ ],
+ "label": "part A after revision round 2",
+ "target_auc_max": 0.65,
+ "configs": [
+  {
+   "variant": "question:word+char+len",
+   "C": 0.1,
+   "auc_pooled_oof_mean_over_seeds": 0.5753,
+   "auc_per_seed": [
+    0.5767,
+    0.5823,
+    0.5667
+   ]
+  },
+  {
+   "variant": "question:word+char+len",
+   "C": 1.0,
+   "auc_pooled_oof_mean_over_seeds": 0.5817,
+   "auc_per_seed": [
+    0.5893,
+    0.5778,
+    0.5779
+   ]
+  },
+  {
+   "variant": "question:word+char+len",
+   "C": 10.0,
+   "auc_pooled_oof_mean_over_seeds": 0.5799,
+   "auc_per_seed": [
+    0.5873,
+    0.5757,
+    0.5769
+   ]
+  },
+  {
+   "variant": "question:word",
+   "C": 0.1,
+   "auc_pooled_oof_mean_over_seeds": 0.5065,
+   "auc_per_seed": [
+    0.5049,
+    0.5079,
+    0.5068
+   ]
+  },
+  {
+   "variant": "question:word",
+   "C": 1.0,
+   "auc_pooled_oof_mean_over_seeds": 0.5052,
+   "auc_per_seed": [
+    0.5016,
+    0.509,
+    0.505
+   ]
+  },
+  {
+   "variant": "question:word",
+   "C": 10.0,
+   "auc_pooled_oof_mean_over_seeds": 0.5073,
+   "auc_per_seed": [
+    0.5045,
+    0.5118,
+    0.5055
+   ]
+  },
+  {
+   "variant": "question:char",
+   "C": 0.1,
+   "auc_pooled_oof_mean_over_seeds": 0.5515,
+   "auc_per_seed": [
+    0.5632,
+    0.5376,
+    0.5535
+   ]
+  },
+  {
+   "variant": "question:char",
+   "C": 1.0,
+   "auc_pooled_oof_mean_over_seeds": 0.554,
+   "auc_per_seed": [
+    0.5659,
+    0.541,
+    0.5551
+   ]
+  },
+  {
+   "variant": "question:char",
+   "C": 10.0,
+   "auc_pooled_oof_mean_over_seeds": 0.5595,
+   "auc_per_seed": [
+    0.5708,
+    0.5463,
+    0.5613
+   ]
+  },
+  {
+   "variant": "question:len_only",
+   "C": 0.1,
+   "auc_pooled_oof_mean_over_seeds": 0.5644,
+   "auc_per_seed": [
+    0.5615,
+    0.5779,
+    0.5537
+   ]
+  },
+  {
+   "variant": "question:len_only",
+   "C": 1.0,
+   "auc_pooled_oof_mean_over_seeds": 0.5625,
+   "auc_per_seed": [
+    0.5612,
+    0.5762,
+    0.5502
+   ]
+  },
+  {
+   "variant": "question:len_only",
+   "C": 10.0,
+   "auc_pooled_oof_mean_over_seeds": 0.5622,
+   "auc_per_seed": [
+    0.561,
+    0.5762,
+    0.5496
+   ]
+  },
+  {
+   "variant": "question+history:word+char+len",
+   "C": 0.1,
+   "auc_pooled_oof_mean_over_seeds": 0.5437,
+   "auc_per_seed": [
+    0.5422,
+    0.5381,
+    0.5506
+   ]
+  },
+  {
+   "variant": "question+history:word+char+len",
+   "C": 1.0,
+   "auc_pooled_oof_mean_over_seeds": 0.5314,
+   "auc_per_seed": [
+    0.5348,
+    0.5307,
+    0.5288
+   ]
+  },
+  {
+   "variant": "question+history:word+char+len",
+   "C": 10.0,
+   "auc_pooled_oof_mean_over_seeds": 0.5266,
+   "auc_per_seed": [
+    0.527,
+    0.5264,
+    0.5266
+   ]
+  }
+ ],
+ "headline": {
+  "variant": "question:word+char+len",
+  "C": 1.0,
+  "auc": 0.5817,
+  "ci95_group_bootstrap": [
+   0.5335,
+   0.6384
+  ],
+  "pass": true,
+  "by_domain": {
+   "airline": 0.6157,
+   "banking": 0.6725,
+   "ecommerce": 0.5509,
+   "healthcare": 0.5405,
+   "insurance": 0.5787,
+   "telecom": 0.5729
+  },
+  "by_type": {
+   "org_specific_vs_general": 0.5886,
+   "counter_prior_vs_general": 0.5635,
+   "ambiguous_vs_general": 0.6115
+  }
+ },
+ "worst_config_any_variant": {
+  "variant": "question:word+char+len",
+  "C": 1.0,
+  "auc_pooled_oof_mean_over_seeds": 0.5817,
+  "auc_per_seed": [
+   0.5893,
+   0.5778,
+   0.5779
+  ]
+ },
+ "leave_one_domain_out": {
+  "pooled_auc": 0.6414,
+  "by_domain": {
+   "airline": 0.6956,
+   "banking": 0.6609,
+   "ecommerce": 0.6296,
+   "healthcare": 0.6065,
+   "insurance": 0.6794,
+   "telecom": 0.6574
+  }
+ },
+ "top_features_retrieval_needed": [
+  [
+   "w:how does",
+   0.423
+  ],
+  [
+   "w:work",
+   0.401
+  ],
+  [
+   "w:for the",
+   0.365
+  ],
+  [
+   "c:'ni'",
+   0.325
+  ],
+  [
+   "w:limit",
+   0.321
+  ],
+  [
+   "w:cost",
+   0.289
+  ],
+  [
+   "w:cash",
+   0.281
+  ],
+  [
+   "w:new",
+   0.276
+  ],
+  [
+   "w:does that",
+   0.274
+  ],
+  [
+   "w:once",
+   0.27
+  ],
+  [
+   "w:if i",
+   0.268
+  ],
+  [
+   "c:'k '",
+   0.267
+  ],
+  [
+   "w:for",
+   0.265
+  ],
+  [
+   "w:until",
+   0.26
+  ],
+  [
+   "c:'wa'",
+   0.257
+  ]
+ ],
+ "top_features_general": [
+  [
+   "w:an",
+   -0.492
+  ],
+  [
+   "w:need a",
+   -0.454
+  ],
+  [
+   "w:why do",
+   -0.433
+  ],
+  [
+   "w:name",
+   -0.38
+  ],
+  [
+   "w:be",
+   -0.371
+  ],
+  [
+   "w:code",
+   -0.359
+  ],
+  [
+   "w:says",
+   -0.353
+  ],
+  [
+   "c:'r?'",
+   -0.35
+  ],
+  [
+   "c:'r? '",
+   -0.35
+  ],
+  [
+   "w:difference between",
+   -0.349
+  ],
+  [
+   "w:to be",
+   -0.335
+  ],
+  [
+   "w:stop",
+   -0.318
+  ],
+  [
+   "w:how come",
+   -0.313
+  ],
+  [
+   "w:why does",
+   -0.311
+  ],
+  [
+   "w:point",
+   -0.309
+  ]
+ ]
+}

@@ -1,0 +1,473 @@
+{
+ "n_items": 720,
+ "n_pos": 444,
+ "n_groups": 276,
+ "domains": [
+  "airline",
+  "automotive",
+  "banking",
+  "ecommerce",
+  "education",
+  "food_delivery",
+  "government",
+  "healthcare",
+  "insurance",
+  "saas",
+  "telecom",
+  "utilities"
+ ],
+ "label": "combined A+B, before combined revision",
+ "target_auc_max": 0.65,
+ "configs": [
+  {
+   "variant": "question:word+char+len",
+   "C": 0.1,
+   "auc_pooled_oof_mean_over_seeds": 0.602,
+   "auc_per_seed": [
+    0.5998,
+    0.5932,
+    0.6131
+   ]
+  },
+  {
+   "variant": "question:word+char+len",
+   "C": 1.0,
+   "auc_pooled_oof_mean_over_seeds": 0.6626,
+   "auc_per_seed": [
+    0.6577,
+    0.6491,
+    0.6809
+   ]
+  },
+  {
+   "variant": "question:word+char+len",
+   "C": 10.0,
+   "auc_pooled_oof_mean_over_seeds": 0.6776,
+   "auc_per_seed": [
+    0.6729,
+    0.6604,
+    0.6994
+   ]
+  },
+  {
+   "variant": "question:word",
+   "C": 0.1,
+   "auc_pooled_oof_mean_over_seeds": 0.6417,
+   "auc_per_seed": [
+    0.6336,
+    0.6293,
+    0.6624
+   ]
+  },
+  {
+   "variant": "question:word",
+   "C": 1.0,
+   "auc_pooled_oof_mean_over_seeds": 0.6503,
+   "auc_per_seed": [
+    0.6418,
+    0.6397,
+    0.6693
+   ]
+  },
+  {
+   "variant": "question:word",
+   "C": 10.0,
+   "auc_pooled_oof_mean_over_seeds": 0.6584,
+   "auc_per_seed": [
+    0.652,
+    0.649,
+    0.6743
+   ]
+  },
+  {
+   "variant": "question:char",
+   "C": 0.1,
+   "auc_pooled_oof_mean_over_seeds": 0.6336,
+   "auc_per_seed": [
+    0.6198,
+    0.624,
+    0.6571
+   ]
+  },
+  {
+   "variant": "question:char",
+   "C": 1.0,
+   "auc_pooled_oof_mean_over_seeds": 0.6485,
+   "auc_per_seed": [
+    0.6368,
+    0.6355,
+    0.6733
+   ]
+  },
+  {
+   "variant": "question:char",
+   "C": 10.0,
+   "auc_pooled_oof_mean_over_seeds": 0.6607,
+   "auc_per_seed": [
+    0.6542,
+    0.6409,
+    0.687
+   ]
+  },
+  {
+   "variant": "question:len_only",
+   "C": 0.1,
+   "auc_pooled_oof_mean_over_seeds": 0.5216,
+   "auc_per_seed": [
+    0.526,
+    0.5217,
+    0.517
+   ]
+  },
+  {
+   "variant": "question:len_only",
+   "C": 1.0,
+   "auc_pooled_oof_mean_over_seeds": 0.5203,
+   "auc_per_seed": [
+    0.5252,
+    0.5207,
+    0.5151
+   ]
+  },
+  {
+   "variant": "question:len_only",
+   "C": 10.0,
+   "auc_pooled_oof_mean_over_seeds": 0.5203,
+   "auc_per_seed": [
+    0.5253,
+    0.5206,
+    0.5149
+   ]
+  },
+  {
+   "variant": "question+history:word+char+len",
+   "C": 0.1,
+   "auc_pooled_oof_mean_over_seeds": 0.6224,
+   "auc_per_seed": [
+    0.6171,
+    0.6114,
+    0.6387
+   ]
+  },
+  {
+   "variant": "question+history:word+char+len",
+   "C": 1.0,
+   "auc_pooled_oof_mean_over_seeds": 0.6538,
+   "auc_per_seed": [
+    0.6539,
+    0.6388,
+    0.6688
+   ]
+  },
+  {
+   "variant": "question+history:word+char+len",
+   "C": 10.0,
+   "auc_pooled_oof_mean_over_seeds": 0.6629,
+   "auc_per_seed": [
+    0.6658,
+    0.6437,
+    0.6793
+   ]
+  }
+ ],
+ "headline": {
+  "variant": "question:word+char+len",
+  "C": 10.0,
+  "auc": 0.6776,
+  "ci95_group_bootstrap": [
+   0.6495,
+   0.7218
+  ],
+  "pass": false,
+  "by_domain": {
+   "airline": 0.6354,
+   "automotive": 0.7823,
+   "banking": 0.6678,
+   "ecommerce": 0.588,
+   "education": 0.7285,
+   "food_delivery": 0.7548,
+   "government": 0.8206,
+   "healthcare": 0.61,
+   "insurance": 0.7431,
+   "saas": 0.6495,
+   "telecom": 0.6273,
+   "utilities": 0.7297
+  },
+  "by_type": {
+   "org_specific_vs_general": 0.7085,
+   "counter_prior_vs_general": 0.6636,
+   "ambiguous_vs_general": 0.662
+  }
+ },
+ "worst_config_any_variant": {
+  "variant": "question:word+char+len",
+  "C": 10.0,
+  "auc_pooled_oof_mean_over_seeds": 0.6776,
+  "auc_per_seed": [
+   0.6729,
+   0.6604,
+   0.6994
+  ]
+ },
+ "leave_one_domain_out": {
+  "pooled_auc": 0.6929,
+  "by_domain": {
+   "airline": 0.64,
+   "automotive": 0.7249,
+   "banking": 0.6771,
+   "ecommerce": 0.6713,
+   "education": 0.6758,
+   "food_delivery": 0.7488,
+   "government": 0.7763,
+   "healthcare": 0.7014,
+   "insurance": 0.7801,
+   "saas": 0.6256,
+   "telecom": 0.6655,
+   "utilities": 0.6722
+  }
+ },
+ "top_features_retrieval_needed": [
+  [
+   "w:for",
+   0.551
+  ],
+  [
+   "w:the",
+   0.55
+  ],
+  [
+   "w:much is",
+   0.537
+  ],
+  [
+   "w:work",
+   0.491
+  ],
+  [
+   "w:for the",
+   0.485
+  ],
+  [
+   "w:over",
+   0.462
+  ],
+  [
+   "w:if i",
+   0.454
+  ],
+  [
+   "w:your",
+   0.453
+  ],
+  [
+   "w:cost",
+   0.452
+  ],
+  [
+   "w:now",
+   0.418
+  ],
+  [
+   "w:week",
+   0.408
+  ],
+  [
+   "w:and",
+   0.404
+  ],
+  [
+   "w:is the",
+   0.399
+  ],
+  [
+   "c:' we'",
+   0.397
+  ],
+  [
+   "w:deposit",
+   0.386
+  ],
+  [
+   "w:have i",
+   0.385
+  ],
+  [
+   "w:with you",
+   0.384
+  ],
+  [
+   "w:once",
+   0.383
+  ],
+  [
+   "w:new",
+   0.382
+  ],
+  [
+   "c:'r '",
+   0.38
+  ],
+  [
+   "w:if i'm",
+   0.374
+  ],
+  [
+   "c:'ost '",
+   0.373
+  ],
+  [
+   "w:limit",
+   0.373
+  ],
+  [
+   "c:'ce'",
+   0.369
+  ],
+  [
+   "w:drop",
+   0.366
+  ],
+  [
+   "w:how does",
+   0.365
+  ],
+  [
+   "w:charge to",
+   0.363
+  ],
+  [
+   "c:'ek'",
+   0.362
+  ],
+  [
+   "c:'eek'",
+   0.362
+  ],
+  [
+   "c:' week'",
+   0.362
+  ]
+ ],
+ "top_features_general": [
+  [
+   "c:'ot'",
+   -0.632
+  ],
+  [
+   "w:an",
+   -0.583
+  ],
+  [
+   "w:but",
+   -0.514
+  ],
+  [
+   "w:difference between",
+   -0.496
+  ],
+  [
+   "w:gst",
+   -0.471
+  ],
+  [
+   "w:they",
+   -0.466
+  ],
+  [
+   "w:as",
+   -0.464
+  ],
+  [
+   "w:need a",
+   -0.461
+  ],
+  [
+   "w:why do",
+   -0.46
+  ],
+  [
+   "w:will i",
+   -0.446
+  ],
+  [
+   "w:bank",
+   -0.444
+  ],
+  [
+   "w:a",
+   -0.442
+  ],
+  [
+   "w:need",
+   -0.427
+  ],
+  [
+   "w:percent",
+   -0.408
+  ],
+  [
+   "c:'rs '",
+   -0.396
+  ],
+  [
+   "w:exactly",
+   -0.393
+  ],
+  [
+   "w:to be",
+   -0.384
+  ],
+  [
+   "w:code",
+   -0.382
+  ],
+  [
+   "w:in my",
+   -0.374
+  ],
+  [
+   "w:or",
+   -0.372
+  ],
+  [
+   "w:stop",
+   -0.366
+  ],
+  [
+   "w:says",
+   -0.363
+  ],
+  [
+   "w:number",
+   -0.358
+  ],
+  [
+   "c:'hot'",
+   -0.357
+  ],
+  [
+   "w:point",
+   -0.356
+  ],
+  [
+   "w:check",
+   -0.353
+  ],
+  [
+   "w:between a",
+   -0.35
+  ],
+  [
+   "w:keep my",
+   -0.347
+  ],
+  [
+   "c:'nt '",
+   -0.346
+  ],
+  [
+   "w:someone",
+   -0.345
+  ]
+ ]
+}
