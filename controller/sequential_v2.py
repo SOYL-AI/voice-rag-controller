@@ -47,8 +47,12 @@ from controller.baselines._objective_v2 import load_e3v2_config  # noqa: E402
 from controller.timing import is_query_ready  # noqa: E402
 
 WAIT = "wait"
-RETRIEVE = "retrieve"
+RETRIEVE = "retrieve"   # commit: dispatch now, passages will be used
 SKIP = "skip"
+# Speculative architecture only (controller.e3v2.architecture = speculative):
+SPECULATE = "speculate"  # dispatch now, decide whether to use at end of turn
+USE = "use"              # end of turn: use the speculative passages
+DISCARD = "discard"      # end of turn: answer without them (compute already spent)
 
 
 # ---------------------------------------------------------------------------
@@ -138,11 +142,22 @@ class TurnDecision:
     trace: List[StepTrace]
     dispatch_step: Optional[int] = None
     dispatch_partial_index: Optional[int] = None  # None with a dispatch => final transcript
-    cancelled_dispatches: int = 0  # speculative-dispatch hook (unused unless enabled)
+    cancelled_dispatches: int = 0  # speculative dispatches discarded at end of turn
+    #: None = commit (a dispatch is always used); True/False = speculative
+    #: dispatch whose passages were used / discarded at end of turn.
+    used: Optional[bool] = None
+    #: when the use/discard decision was taken (end of turn); None under commit
+    decided_t_ms: Optional[int] = None
 
     @property
     def retrieve(self) -> bool:
+        """A retrieval was DISPATCHED (compute spent)."""
         return self.dispatch_t_ms is not None
+
+    @property
+    def uses_passages(self) -> bool:
+        """The answer is generated WITH the retrieved passages."""
+        return self.retrieve and self.used is not False
 
 
 # ---------------------------------------------------------------------------
@@ -295,10 +310,41 @@ class SequentialController(ABC):
                                    retrieval=dict((ctx.signals or {}).get("retrieval") or {})))
         memory: dict = {}
         trace: List[StepTrace] = []
+        spec: Optional[StepObs] = None  # a pending speculative dispatch
         for obs in steps:
             action, record = self.step(obs, memory)
             record.action = action
             trace.append(record)
+            if spec is not None:
+                # After a speculative dispatch the only legal actions are
+                # WAIT (before the end) and USE / DISCARD (at the end).
+                if action in (USE, DISCARD) and obs.is_final:
+                    used = action == USE
+                    return TurnDecision(
+                        dispatch_t_ms=spec.available_ms,
+                        timing_label=self.timing_label(spec, memory),
+                        query_text=spec.text,
+                        reason=(f"{self.name}: speculate@k={spec.k} t={spec.available_ms}ms, "
+                                f"{action}@end t={obs.available_ms}ms | {record.note}"),
+                        trace=trace, dispatch_step=spec.k,
+                        dispatch_partial_index=spec.partial_index,
+                        cancelled_dispatches=0 if used else 1,
+                        used=used, decided_t_ms=obs.available_ms,
+                    )
+                if action != WAIT or obs.is_final:
+                    raise RuntimeError(f"{self.name}: after a speculative dispatch only WAIT and, "
+                                       f"at the end of turn, USE/DISCARD are allowed (got {action!r})")
+                continue
+            if action == SPECULATE:
+                if self.cfg.get("architecture") != "speculative":
+                    raise RuntimeError(
+                        f"{self.name} speculated under architecture "
+                        f"{self.cfg.get('architecture')!r}: discarding a dispatched retrieval "
+                        f"is only possible under architecture: speculative")
+                if obs.is_final:
+                    raise RuntimeError(f"{self.name}: SPECULATE at the end of turn; use RETRIEVE/SKIP")
+                spec = obs
+                continue
             if action == RETRIEVE:
                 return TurnDecision(
                     dispatch_t_ms=obs.available_ms,
@@ -328,6 +374,7 @@ _FACTORIES: Dict[str, Tuple[str, str, dict]] = {
     "ours_v2": ("controller.baselines.ours_v2", "OursV2", {}),
     "b9_v2": ("controller.baselines.b9_v2", "B9V2", {}),
     "b9plus_v2": ("controller.baselines.b9plus_v2", "B9PlusV2", {}),
+    "b10_speculative_v2": ("controller.baselines.b10_speculative_v2", "B10SpeculativeV2", {}),
     "oracle_v2": ("controller.baselines.oracle_v2", "OracleV2", {}),
     "b0_v2": ("controller.baselines.unpriced_v2", "B0V2", {}),
     "b1_v2_sentence_end": ("controller.baselines.unpriced_v2", "B1V2", {"policy": "sentence_end"}),
@@ -340,7 +387,9 @@ _FACTORIES: Dict[str, Tuple[str, str, dict]] = {
     "b8_v2": ("controller.baselines.unpriced_v2", "B8V2", {}),
 }
 
-PRICED_V2 = ("ours_v2", "b9_v2", "b9plus_v2")
+PRICED_V2 = ("ours_v2", "b9_v2", "b9plus_v2", "b10_speculative_v2")
+#: controllers that need architecture: speculative (they discard dispatches)
+SPECULATIVE_ONLY_V2 = ("b10_speculative_v2",)
 
 
 def list_controllers_v2() -> List[str]:
@@ -364,27 +413,47 @@ def get_controller_v2(name: str, cfg: Optional[dict] = None, **params) -> Sequen
 # ---------------------------------------------------------------------------
 def model_utility(decision: TurnDecision, ctx: TurnCtx, cfg: Optional[dict] = None) -> float:
     """
-    The shared v2 objective evaluated at the decision's dispatch step with
-    that step's OWN terms (belief, rho, waste, exposure from the turn's
-    remaining-speech prediction): what the decision is worth under the
-    model, whichever controller made it. 0 for a skip. On synthetic data
-    whose predictions equal the truth this is the true expected utility,
-    which is what tests/test_v2_theory.py compares controllers on.
+    The shared v2 objective evaluated for a decision with the terms of the
+    step it was taken at: what the decision is worth under the model,
+    whichever controller made it. 0 for a skip.
+
+      commit       U at the dispatch step: its belief, rho, waste and
+                   exposure (from the turn's remaining-speech prediction) + pi.
+      speculative  -lambda_c (1 + w_dispatch) always; if used, plus
+                   b_K g+ (1 - rho_dispatch) - (1 - b_K) g- - lambda_l X, with
+                   b_K the end-of-turn belief and X the exposure of the
+                   REALISED window end_of_turn - dispatch, + pi.
+
+    On synthetic data whose predictions equal the truth (and whose beliefs
+    are a martingale, for the speculative case) this is the true expected
+    utility, which is what tests/test_v2_theory.py compares controllers on.
     """
     if not decision.retrieve:
         return 0.0
     from controller.baselines._objective_v2 import (
+        belief_from_obs,
         latency_dist_for,
         load_belief_calibration,
         quality_model,
         read_prices_v2,
+        speculative_use_utility,
         step_terms,
         utility_retrieve,
     )
 
     cfg = cfg if cfg is not None else load_e3v2_config()
-    obs = build_steps(ctx, cfg)[decision.dispatch_step]
+    steps = build_steps(ctx, cfg)
+    obs = steps[decision.dispatch_step]
     lat = latency_dist_for((ctx.signals or {}).get("retrieval"), cfg)
-    terms = step_terms(obs, cfg, load_belief_calibration(cfg), lat)
-    return utility_retrieve(terms.belief, terms.rho, terms.exposed_ms, terms.waste,
-                            read_prices_v2(ctx.prices, cfg), quality_model(cfg))
+    calibration = load_belief_calibration(cfg)
+    terms = step_terms(obs, cfg, calibration, lat)
+    prices, quality = read_prices_v2(ctx.prices, cfg), quality_model(cfg)
+    if decision.used is None:
+        return utility_retrieve(terms.belief, terms.rho, terms.cost_ms, terms.waste, prices, quality)
+    compute = prices.lambda_c * (1.0 + terms.waste)
+    if not decision.used:
+        return -compute
+    final = steps[-1]
+    b_end, _ = belief_from_obs(final, cfg, calibration)
+    return speculative_use_utility(b_end, terms.rho, lat, final.available_ms - decision.dispatch_t_ms,
+                                   prices, quality) - compute

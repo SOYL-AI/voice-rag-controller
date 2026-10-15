@@ -22,8 +22,12 @@ Stub model:
     ready      = user_end + eot_detection_ms
     retrieval  L ~ the profile's quantile function (controller.e3v2.latency_profiles)
     gen_start  = max(ready, dispatch + L)        (retrieve)   | ready (skip)
-    ttft       = base_ttft_ms + prefill_ms_per_token * n_prompt_tokens
+    ttft       = base_ttft_ms (+ pi on the retrieve path)
     ttfa       = (gen_start - user_end) + ttft + tts_first_audio_ms
+pi = controller.e3v2.nonhideable_increment_ms: the non-hideable TTFA
+increment of using passages (extra prefill and generation; v1 measured the
+whole retrieval TTFA increment at 1.27-1.57 s). n_prompt_tokens is accepted
+for the interface but not used, so the longer prompt is not counted twice.
 All constants are placeholders, not measurements.
 """
 
@@ -42,7 +46,6 @@ from controller.baselines._objective_v2 import latency_dist_from_quantiles, load
 
 class LatencyModel:
     BASE_TTFT_MS = 180.0
-    PREFILL_MS_PER_TOKEN = 0.15
     TTS_FIRST_AUDIO_MS = 250.0
 
     def __init__(self, cfg: Optional[dict] = None, profiles: Optional[dict] = None):
@@ -73,13 +76,15 @@ class LatencyModel:
             exposed = gen_start - ready
         else:
             latency, gen_start, exposed = 0.0, ready, 0.0
-        ttft = self.BASE_TTFT_MS + self.PREFILL_MS_PER_TOKEN * float(n_prompt_tokens or 0)
+        pi = float(self.cfg.get("nonhideable_increment_ms", 0.0)) if path == "retrieve" else 0.0
+        ttft = self.BASE_TTFT_MS + pi
         return {
             "ttfa_ms": (gen_start - float(user_end_ms)) + ttft + self.TTS_FIRST_AUDIO_MS,
             "retrieval_ms": latency,
             "exposed_retrieval_ms": exposed,
             "eot_ms": eot,
             "ttft_ms": ttft,
+            "nonhideable_ms": pi,
             "tts_first_audio_ms": self.TTS_FIRST_AUDIO_MS,
             "stub": True,
         }

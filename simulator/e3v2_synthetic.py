@@ -87,6 +87,9 @@ def synthetic_cfg_overrides(**extra) -> dict:
         "timing": {"eot_detection_ms": 0},
         "ours": {"belief_transitions_artifact": None},
         "estimates_artifact": None,
+        # pi = 0 unless a test sets it: the A-world propositions are stated
+        # without it; tests that exercise pi pass nonhideable_increment_ms.
+        "nonhideable_increment_ms": 0.0,
     }
     for key, value in extra.items():
         if isinstance(value, dict) and isinstance(base.get(key), dict):

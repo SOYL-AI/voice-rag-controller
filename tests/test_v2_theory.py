@@ -334,6 +334,12 @@ def test_causality_future_perturbation_does_not_change_the_past():
         elif n == "b8_v2":
             kw = {"trigger": "b6", "timing": "immediate"}
         ctrls[n] = get_controller_v2(n, cfg=cfg, **kw)
+    # speculative architecture: the joint speculative controller and SPEC
+    spec_cfg = load_e3v2_config(overrides=synthetic_cfg_overrides(
+        quality={"g_plus": 0.72, "g_minus": 0.59}, architecture="speculative"))
+    ctrls["ours_v2[spec]"] = get_controller_v2("ours_v2", cfg=spec_cfg, transitions=trans,
+                                               lookahead_steps=2)
+    ctrls["b10_speculative_v2"] = get_controller_v2("b10_speculative_v2", cfg=spec_cfg)
 
     checked_dispatches = 0
     for turn in base_turns:
