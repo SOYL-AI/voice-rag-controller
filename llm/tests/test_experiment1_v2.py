@@ -467,6 +467,55 @@ class JudgeTests(unittest.TestCase):
         self.assertNotIn(SENTINEL_KEY, str(ctx.exception))
         self.assertNotIn(SENTINEL_URL, str(ctx.exception))
 
+    def test_r2_rubric_prompt_and_hash(self):
+        from llm.experiment1_v2 import rubrics
+
+        r2 = rubrics.get_rubric("e1v2-r2")
+        self.assertIsNone(rubrics.get_rubric(rubrics.R1))
+        self.assertEqual(rubrics.rubric_sha256(rubrics.R1), judges.PROMPT_SHA256)  # r1 unchanged
+        self.assertEqual(judges.PROMPT_SHA256,
+                         "b6f9a66873db8d3062f166c4a41789d556c648c6c6c1c2c360f0f8935f3aca11")
+        self.assertNotEqual(r2.sha256, judges.PROMPT_SHA256)
+        # default.txt is r1's instruction text, verbatim
+        self.assertEqual(r2.texts["default"].rstrip("\n"), judges.V2_INSTRUCTIONS)
+        text = r2.user_prompt(dataset="d2_support", question="And the seven-day one?",
+                              reference="5 GB", answer="Please check the app.",
+                              key_facts=["5 GB of data"],
+                              history=[{"role": "user", "content": "Roaming packs?"},
+                                       {"role": "assistant", "content": "Two packs."}])
+        self.assertIn("states EVERY key fact", text)
+        self.assertNotIn("Omitting some of the reference's details is CORRECT", text)
+        self.assertIn("Conversation before the question:\nCaller: Roaming packs?\nAgent: Two packs.", text)
+        self.assertIn("Key facts:\n- 5 GB of data", text)
+        # d1_open under r2 keeps r1's rubric text
+        d1 = r2.user_prompt(dataset="d1_open", question="q", reference="r", answer="a")
+        self.assertTrue(d1.startswith(judges.V2_INSTRUCTIONS))
+        # identity and cache key carry the rubric
+        cfg = dict(self.CFG, prompt_version="e1v2-r2")
+        spec = judges.resolve_spec("primary", cfg, self.ENV)
+        self.assertEqual(spec.identity()["prompt_sha256"], r2.sha256)
+        j2 = judges.AzureChatJudge(spec, transport=lambda m, p: None)
+        j1 = judges.AzureChatJudge(judges.resolve_spec(
+            "primary", dict(self.CFG, prompt_version=rubrics.R1), self.ENV), transport=lambda m, p: None)
+        kw = dict(item_id="i", question="q", reference="r", answer="a", key_facts=["f"], aliases=[],
+                  context="customer-support", dataset="d2_support")
+        self.assertNotEqual(judges.cache_key(j1, **kw), judges.cache_key(j2, **kw))
+        self.assertNotEqual(judges.cache_key(j2, **kw), judges.cache_key(j2, **dict(kw, history=["x"])))
+
+    def test_rubric_hash_tracks_file_text(self):
+        from llm.experiment1_v2 import rubrics
+
+        with tempfile.TemporaryDirectory() as tmp:
+            folder = Path(tmp) / "vX"
+            folder.mkdir()
+            (folder / "default.txt").write_bytes(b"A rubric.\n")
+            with mock.patch.object(rubrics, "RUBRIC_DIR", Path(tmp)):
+                first = rubrics.load_file_rubric("vX").sha256
+                (folder / "default.txt").write_bytes(b"A rubric.\r\n")
+                self.assertEqual(rubrics.load_file_rubric("vX").sha256, first)  # CRLF-insensitive
+                (folder / "default.txt").write_bytes(b"A changed rubric.\n")
+                self.assertNotEqual(rubrics.load_file_rubric("vX").sha256, first)
+
     def test_v2_prompt_derives_from_v4(self):
         text = judges.user_prompt("Q?", "Ref", "Ans", key_facts=["fact one"], aliases=["alt"])
         self.assertIn("naming the company or organisation", text)

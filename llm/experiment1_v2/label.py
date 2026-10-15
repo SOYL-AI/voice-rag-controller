@@ -128,6 +128,7 @@ def grade_draws(records, items_by_id, judges, cfg, cache_dir, workers) -> list:
                 reference=item["expected_answer"], answer=answer,
                 key_facts=item_key_facts(item), aliases=item.get("answer_aliases") or [],
                 context=contexts.get(item["dataset"], contexts["default"]), cache_dir=cache_dir,
+                dataset=item["dataset"], history=item.get("history") or [],
             )
             row["judges"][role] = {
                 "answer_correct": verdict["answer_correct"] if verdict["parsed_ok"] else None,
@@ -303,6 +304,8 @@ def parse_args(argv=None):
                    help="comma list of judge roles, or 'none' (alias match only)")
     p.add_argument("--judge-backend", choices=("azure", "mock"), default="azure")
     p.add_argument("--judges-config", type=Path, default=common.DEFAULT_JUDGES_CONFIG)
+    p.add_argument("--rubric", help="judge prompt version (default: judges.json prompt_version, "
+                   "e1v2-r2; e1v2-reasoned-strip-r1 reproduces the first grading)")
     p.add_argument("--correctness", help="override correctness source for every dataset "
                    "(alias | judge:primary | judge:secondary)")
     p.add_argument("--cache-dir", type=Path)
@@ -349,6 +352,8 @@ def main(argv=None) -> int:
     roles = [] if args.judges.strip().lower() == "none" else \
         [r.strip() for r in args.judges.split(",") if r.strip()]
     judges_cfg = judges_mod.load_judges_config(args.judges_config)
+    if args.rubric:
+        judges_cfg["prompt_version"] = args.rubric
     try:
         judges = judges_mod.make_judges(roles, args.judge_backend, judges_cfg)
     except judges_mod.JudgeConfigError as error:
@@ -419,6 +424,9 @@ def main(argv=None) -> int:
     }
     out_path = rdir / f"labels_{args.split}.json"
     common.atomic_write_json(out_path, output)
+    # A rubric-tagged copy, so gradings under different rubrics coexist
+    # (analyze.py --labels picks one; labels_<split>.json is the latest).
+    common.atomic_write_json(rdir / f"labels_{args.split}.{judges_cfg['prompt_version']}.json", output)
 
     need = [v["empirical_need"] for v in labels.values() if v["empirical_need"] is not None]
     authored = [v["label_authored"] for v in labels.values() if v["empirical_need"] is not None]

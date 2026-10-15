@@ -1,0 +1,11 @@
+Decide whether the candidate answer is factually correct with respect to the reference answer.
+Only FACTUAL CONFLICT counts. Specifically:
+- Wording, length, style, politeness, and naming the company or organisation do NOT matter.
+- Restating the reference in different words is CORRECT.
+- Omitting some of the reference's details is CORRECT.
+- Adding detail the reference does not mention is CORRECT, unless it states a specific figure, time, name, price or location that the reference gives differently.
+- It is INCORRECT only if it contradicts a specific fact in the reference, declines to answer, or answers a different question.
+
+List every DIRECT CONFLICT, one per line, as 'CONFLICT: reference says X, candidate says Y'.
+A missing detail is NOT a conflict — do not list it. A conflict requires the candidate to STATE something incompatible with the reference. If there are none, write 'CONFLICT: none'.
+Then on the final line write exactly 'VERDICT: YES' or 'VERDICT: NO'.

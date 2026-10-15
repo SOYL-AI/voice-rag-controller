@@ -58,9 +58,9 @@ LEAK_CANDIDATES = (
 # ---------------------------------------------------------------------------
 # Loading
 # ---------------------------------------------------------------------------
-def load_model_inputs(rdir: Path, split: str) -> dict:
+def load_model_inputs(rdir: Path, split: str, labels_name: str = None) -> dict:
     signals_path = rdir / f"signals_{split}.jsonl"
-    labels_path = rdir / f"labels_{split}.json"
+    labels_path = rdir / (labels_name or f"labels_{split}.json")
     records = [r for r in common.read_jsonl(signals_path) if r.get("condition", "closed_book")
                == "closed_book"]
     labels = common.load_json(labels_path) if labels_path.exists() else None
@@ -872,6 +872,7 @@ def parse_args(argv=None):
     p.add_argument("--calibration-signal")
     p.add_argument("--calibration-label", choices=("empirical", "authored"))
     p.add_argument("--leak-results", type=Path)
+    p.add_argument("--labels", help="labels file name inside each model dir (default labels_<split>.json; e.g. labels_dev.e1v2-r2.json)")
     p.add_argument("--controller-artifact", action="store_true",
                    help="also write each calibration artifact to controller/baselines/ "
                    "(refused for mock-backend results)")
@@ -912,7 +913,7 @@ def main(argv=None) -> int:
                 "bootstrap": n_boot, "models": {}, "artifacts": {}}
     lmaps_any = None
     for key in model_keys:
-        inp = load_model_inputs(root / key, args.split)
+        inp = load_model_inputs(root / key, args.split, args.labels)
         if not inp["records"]:
             print(f"[analyze] {key}: no closed-book records, skipped")
             continue

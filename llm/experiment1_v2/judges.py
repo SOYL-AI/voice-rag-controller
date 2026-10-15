@@ -50,6 +50,7 @@ from dataclasses import dataclass, field
 from pathlib import Path
 
 from llm.experiment1_v2 import common
+from llm.experiment1_v2.rubrics import get_rubric, rubric_sha256
 from simulator.judge_core import JUDGE_INSTRUCTIONS, _is_retryable, parse_verdict
 
 
@@ -138,7 +139,7 @@ class JudgeSpec:
             "role": self.role, "label": self.label, "provider": self.provider,
             "deployment": self.deployment, "model_id": self.model_id,
             "api_version": self.api_version, "prompt_version": self.prompt_version,
-            "prompt_sha256": PROMPT_SHA256,
+            "prompt_sha256": rubric_sha256(self.prompt_version),
         }
 
     def identity_string(self) -> str:
@@ -421,28 +422,49 @@ def make_judges(roles, backend: str, judges_cfg: dict = None, env=None) -> dict:
 # ---------------------------------------------------------------------------
 # Grading with a cache
 # ---------------------------------------------------------------------------
-def cache_key(judge, *, item_id, question, reference, answer, key_facts, aliases, context) -> str:
-    return common.sha256_text(
+def cache_key(judge, *, item_id, question, reference, answer, key_facts, aliases, context,
+              dataset=None, history=None) -> str:
+    parts = [
         json.dumps(judge.identity, sort_keys=True),
         json.dumps(judge.spec.request, sort_keys=True),
         item_id, question, reference, json.dumps(key_facts or []), json.dumps(aliases or []),
         context, answer,
-    )
+    ]
+    if get_rubric(judge.spec.prompt_version) is not None:
+        # File rubrics also see the dataset (which rubric text) and the
+        # history; r1 keys stay byte-identical so its cache remains valid.
+        parts += [dataset or "", json.dumps(history or [], sort_keys=True)]
+    return common.sha256_text(*parts)
+
+
+def render_prompt(judge, *, question, reference, answer, key_facts=None, aliases=None,
+                  context="general", dataset=None, history=None) -> tuple:
+    """(system, user) for this judge's rubric version."""
+    rubric = get_rubric(judge.spec.prompt_version)
+    if rubric is None:
+        return system_prompt(context), user_prompt(question, reference, answer, key_facts, aliases)
+    return system_prompt(context), rubric.user_prompt(
+        dataset=dataset, question=question, reference=reference, answer=answer,
+        key_facts=key_facts, aliases=aliases, history=history)
 
 
 def grade(judge, *, item_id, question, reference, answer, key_facts=None, aliases=None,
-          context="general", cache_dir: Path = None) -> dict:
-    """One verdict, cached by (judge identity + request config + prompt
-    version + item + reference + answer). The answer is stripped before both
-    the key and the prompt (the v4 'strip' fix)."""
+          context="general", cache_dir: Path = None, dataset=None, history=None) -> dict:
+    """One verdict, cached by (judge identity incl. rubric hash + request
+    config + item + reference + answer [+ dataset, history for file
+    rubrics]). The answer is stripped before both the key and the prompt
+    (the v4 'strip' fix)."""
     answer = (answer or "").strip()
     key = cache_key(judge, item_id=item_id, question=question, reference=reference, answer=answer,
-                    key_facts=key_facts, aliases=aliases, context=context)
+                    key_facts=key_facts, aliases=aliases, context=context, dataset=dataset,
+                    history=history)
+    system, user = render_prompt(judge, question=question, reference=reference, answer=answer,
+                                 key_facts=key_facts, aliases=aliases, context=context,
+                                 dataset=dataset, history=history)
     # Identical answers across seeds share a key; serialise them so the
     # judge is called once and nobody reads a file mid-replace (Windows).
     with _key_lock(key):
-        return _grade_locked(judge, key, item_id, question, reference, answer, key_facts,
-                             aliases, context, cache_dir)
+        return _grade_locked(judge, key, item_id, system, user, cache_dir)
 
 
 _LOCKS: dict = {}
@@ -480,11 +502,9 @@ def majority(votes, min_parsed: int = 1) -> tuple:
     return yes > no, True, share
 
 
-def _grade_locked(judge, key, item_id, question, reference, answer, key_facts, aliases, context,
-                  cache_dir) -> dict:
+def _grade_locked(judge, key, item_id, system, user, cache_dir) -> dict:
     """k independent samples (each cached under its own key, which includes
     its seed), then a majority vote. Every sample is kept on the record."""
-    system, user = system_prompt(context), user_prompt(question, reference, answer, key_facts, aliases)
     request = judge.spec.request
     k = int(request.get("samples") or 1)
     need = k // 2 + 1  # a valid majority needs this many parsed samples (2 of 3)
