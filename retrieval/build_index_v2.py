@@ -98,22 +98,33 @@ def build(args, model):
     n_split = len(chunks) - len(corpus)
     print(f"Loaded {len(corpus)} passages -> {len(chunks)} chunks "
           f"({n_split} extra from passages over {args.max_words} words).")
-    texts = [embed_input(c, not args.no_title) for c in chunks]
+    corpus_sha = content_sha256(corpus)
+    n_passages = len(corpus)
+    del corpus
+    # Stream: embed fixed-size blocks and add each to the index immediately, so
+    # peak memory is one block of activations plus the (small) flat index.
+    dim = model.get_sentence_embedding_dimension()
+    index = faiss.IndexFlatL2(dim)
     t0 = time.time()
-    emb = model.encode(texts, batch_size=args.batch_size, convert_to_numpy=True,
-                       show_progress_bar=True).astype("float32")
-    print(f"Embedded {emb.shape} in {time.time() - t0:.0f}s")
-    index = faiss.IndexFlatL2(emb.shape[1])
-    index.add(emb)
+    for start in range(0, len(chunks), args.block_size):
+        block = [embed_input(c, not args.no_title) for c in chunks[start:start + args.block_size]]
+        emb = model.encode(block, batch_size=args.batch_size, convert_to_numpy=True,
+                           show_progress_bar=False).astype("float32")
+        index.add(emb)
+        done = start + len(block)
+        rate = done / max(time.time() - t0, 1e-6)
+        print(f"  embedded {done}/{len(chunks)} ({rate:.1f}/s, eta {(len(chunks) - done) / rate:.0f}s)",
+              flush=True)
+    print(f"Embedded {index.ntotal} x {dim} in {time.time() - t0:.0f}s")
     args.out_dir.mkdir(parents=True, exist_ok=True)
     faiss.write_index(index, str(args.out_dir / "index.faiss"))
     with (args.out_dir / "chunks.json").open("w", encoding="utf-8") as fh:
         json.dump(chunks, fh, ensure_ascii=False)
     info = {
-        "model": MODEL_NAME, "index": "IndexFlatL2", "dim": int(emb.shape[1]),
+        "model": MODEL_NAME, "index": "IndexFlatL2", "dim": int(dim),
         "embed_input": "text" if args.no_title else "title\\ntext",
-        "max_words": args.max_words, "n_passages": len(corpus), "n_chunks": len(chunks),
-        "corpus": str(args.corpus), "corpus_content_sha256": content_sha256(corpus),
+        "max_words": args.max_words, "n_passages": n_passages, "n_chunks": len(chunks),
+        "corpus": str(args.corpus), "corpus_content_sha256": corpus_sha,
         "embed_seconds": round(time.time() - t0, 1),
     }
     (args.out_dir / "build_info.json").write_text(json.dumps(info, indent=1), encoding="utf-8")
@@ -196,7 +207,9 @@ def main():
     ap = argparse.ArgumentParser(description="Build/evaluate a FAISS index for a v2 corpus.jsonl")
     ap.add_argument("--corpus", type=Path, required=True)
     ap.add_argument("--out-dir", type=Path, default=None, help="default: <corpus dir>/index")
-    ap.add_argument("--batch-size", type=int, default=64)
+    ap.add_argument("--batch-size", type=int, default=32)
+    ap.add_argument("--block-size", type=int, default=2048, help="passages embedded per streamed block")
+    ap.add_argument("--threads", type=int, default=8, help="torch CPU threads (shared machine)")
     ap.add_argument("--max-words", type=int, default=MAX_WORDS)
     ap.add_argument("--no-title", action="store_true", help="embed passage text only (literal v1)")
     ap.add_argument("--eval-items", type=Path, default=None)
@@ -214,7 +227,9 @@ def main():
                  "(test split is sealed, CONTRACTS.md section 7).")
 
     from sentence_transformers import SentenceTransformer
-    model = SentenceTransformer(MODEL_NAME)
+    import torch
+    torch.set_num_threads(args.threads)
+    model = SentenceTransformer(MODEL_NAME, device="cpu")
     if not args.eval_only:
         build(args, model)
     if args.eval_items:
