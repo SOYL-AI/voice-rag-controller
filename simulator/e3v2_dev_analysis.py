@@ -527,7 +527,7 @@ def run_dataset(args, ds: str, record: Optional[set] = None) -> dict:
     return results
 
 
-def write_predictions(phase_a: Path, datasets: Sequence[str], out_path: Path) -> dict:
+def write_predictions(phase_a: Path, datasets: Sequence[str], out_path: Path, subdir: str = "analysis") -> dict:
     """docs/research_v2/v2_predictions.json from the per-dataset dev analyses.
     Every quantity PREREG_V2 §3 names, per dataset x condition x composite
     profile x belief-quantile price; plus an item-weighted pool of the
@@ -535,7 +535,7 @@ def write_predictions(phase_a: Path, datasets: Sequence[str], out_path: Path) ->
     differs by dataset at the same quantile, so the pool is by quantile."""
     cells, inputs = [], {}
     for ds in datasets:
-        res = e1common.load_json(Path(phase_a) / ds / "analysis" / "dev_analysis.json")
+        res = e1common.load_json(Path(phase_a) / ds / subdir / "dev_analysis.json")
         inputs[ds] = {"primary_condition": res["primary_condition"], "g": res["g"], "g_text150": res["g_text150"],
                       "calibration": res["calibration"], "sa_lag_ms": res["sa_lag_ms"],
                       "calibration_artifact": f"controller/baselines/e3v2_calibration_{ds}_{MODEL_KEY}_{SIGNAL_X}.json",
@@ -622,8 +622,16 @@ def main(argv=None) -> int:
     ap.add_argument("--g-minus", type=float, default=None, help=argparse.SUPPRESS)
     args = ap.parse_args(argv)
     if args.write_predictions:
-        write_predictions(Path(args.phase_a), args.dataset.split(","),
-                          _REPO_ROOT / "docs" / "research_v2" / "v2_predictions.json")
+        ext = bool(args.b9plus_extended)
+        doc = write_predictions(Path(args.phase_a), args.dataset.split(","),
+                                _REPO_ROOT / "docs" / "research_v2" /
+                                ("v2_predictions_b9plus_extended.json" if ext else "v2_predictions.json"),
+                                "analysis_b9x" if ext else "analysis")
+        if ext:
+            doc["_comment"] = ("DIAGNOSTIC, not the pre-registered comparison: B9+ tuned over the PREREG §4.5 family "
+                               "PLUS the r_below rule (dispatch at the first query-ready partial with R_hat <= r0). "
+                               "Same data, models and prices as v2_predictions.json. " + doc["_comment"])
+            e1common.atomic_write_json(_REPO_ROOT / "docs" / "research_v2" / "v2_predictions_b9plus_extended.json", doc)
         return 0
     for ds in args.dataset.split(","):
         run_dataset(args, ds)
