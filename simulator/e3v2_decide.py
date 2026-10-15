@@ -186,7 +186,7 @@ class CellStore:
         gold = set(gold_ids)
         return sorted(k[2] for k, rec in self.retrievals.items()
                       if k[0] == item_id and k[1] == condition and k[2] is not None
-                      and gold & set(rec["retrieved_doc_ids"]))
+                      and gold & set(rec.get("retrieved_parent_ids") or rec["retrieved_doc_ids"]))
 
 
 # ---------------------------------------------------------------------------

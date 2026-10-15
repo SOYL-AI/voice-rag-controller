@@ -160,11 +160,13 @@ def fit_rho_table(turns: Sequence[TurnCtx], store: CellStore, gold: Dict[str, Li
                 continue
             frac = min(1.0, len(str(part.get("text", "")).split()) / n_final)
             b = min(n_bins - 1, int(frac * n_bins))
-            hits[b][0] += 1.0 if g & set(store.retrievals[key]["retrieved_doc_ids"]) else 0.0
+            rec = store.retrievals[key]
+            hits[b][0] += 1.0 if g & set(rec.get("retrieved_parent_ids") or rec["retrieved_doc_ids"]) else 0.0
             hits[b][1] += 1.0
         fkey = (turn.item_id, turn.condition, None)
         if fkey in store.retrievals:
-            final[0] += 1.0 if g & set(store.retrievals[fkey]["retrieved_doc_ids"]) else 0.0
+            frec = store.retrievals[fkey]
+            final[0] += 1.0 if g & set(frec.get("retrieved_parent_ids") or frec["retrieved_doc_ids"]) else 0.0
             final[1] += 1.0
     if final[1] == 0 or final[0] == 0:
         return None
