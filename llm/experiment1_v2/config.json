@@ -23,6 +23,20 @@
     "grounded_user_template": "Reference passages:\n{passages}\n\n{question}",
     "passage_template": "- {text}"
   },
+  "self_assessment": {
+    "_note": "FROZEN wording (exploratory probe on d2_support dev, 2026-10-15). Do not tune on dev: with 222 dev items any wording search would overfit. signal self_assessed_need = P(No) = mass of top-20 tokens whose stripped lower-case text starts with 'no' / (that + mass starting with 'yes'). One deterministic call per distinct prefix text per item (temperature 0, max_tokens 1).",
+    "prompt_version": "sa-v1-frozen",
+    "request": {"max_tokens": 1, "temperature": 0, "top_logprobs": 20},
+    "history_line": "{Role}: {content}\n",
+    "d2_support": {
+      "system": "You decide whether a customer-support voice agent for {org}, a {domain} company, must look up the company's own documents before answering a caller.",
+      "user": "{history}Caller (may still be mid-sentence): \"{prefix}\"\nCan this be answered correctly from general knowledge alone, without {org}'s own policies, prices, plans or records? Answer with one word: Yes or No."
+    },
+    "default": {
+      "system": "You decide whether a voice assistant must look something up before answering a user.",
+      "user": "{history}User (may still be mid-sentence): \"{prefix}\"\nCan this be answered correctly from your own knowledge, without looking anything up? Answer with one word: Yes or No."
+    }
+  },
   "history": {
     "_note": "History turns become chat turns. Consecutive same-role turns are merged and a leading assistant turn is folded into the system prompt, because Mistral's chat template rejects anything but strict user/assistant alternation starting with user.",
     "mode": "turns",
@@ -58,8 +72,9 @@
     }
   },
   "analysis": {
-    "headline_signals": ["mean_entropy_nats", "max_entropy_nats", "first_k_mean_entropy_nats@8"],
+    "headline_signals": ["mean_entropy_nats", "max_entropy_nats", "first_k_mean_entropy_nats@8", "self_assessed_need"],
     "calibration_signal": "mean_entropy_nats",
+    "calibration_signals": ["mean_entropy_nats", "self_assessed_need"],
     "calibration_label": "empirical",
     "cv_folds": 5,
     "ece_bins": 10,

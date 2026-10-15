@@ -128,6 +128,44 @@ class FirstKEntropyTests(unittest.TestCase):
         self.assertEqual(out, {"4": 40.0, "8": None})
 
 
+class SelfAssessmentTests(unittest.TestCase):
+    ITEM = {"id": "d2_support-1", "dataset": "d2_support", "org": "Sarovan Telecom",
+            "domain": "telecom", "question": "q",
+            "history": [{"role": "user", "content": "Hi, roaming?"},
+                        {"role": "assistant", "content": "Two packs."}]}
+
+    def test_prompt_is_the_frozen_probe_wording(self):
+        from llm.experiment1_v2 import self_assess
+
+        sa = common.load_config()["self_assessment"]
+        messages = self_assess.build_messages(self.ITEM, "And the seven-day", sa)
+        # Reconstructed exactly as the exploratory probe built it.
+        it = self.ITEM
+        hist = "".join(f"{t['role'].capitalize()}: {t['content']}\n" for t in it["history"])
+        probe_system = (f"You decide whether a customer-support voice agent for {it['org']}, a "
+                        f"{it['domain']} company, must look up the company's own documents before "
+                        "answering a caller.")
+        probe_user = (f"{hist}Caller (may still be mid-sentence): \"And the seven-day\"\n"
+                      f"Can this be answered correctly from general knowledge alone, without "
+                      f"{it['org']}'s own policies, prices, plans or records? Answer with one word: "
+                      "Yes or No.")
+        self.assertEqual(messages, [{"role": "system", "content": probe_system},
+                                    {"role": "user", "content": probe_user}])
+        d1 = self_assess.build_messages({"id": "x", "dataset": "d1_open", "question": "q"}, "Who", sa)
+        self.assertIn("from your own knowledge, without looking anything up?", d1[1]["content"])
+        self.assertEqual(sa["request"], {"max_tokens": 1, "temperature": 0, "top_logprobs": 20})
+
+    def test_p_no_math(self):
+        from llm.experiment1_v2 import self_assess
+
+        tops = [AlternativeLogprob("No", math.log(0.6)), AlternativeLogprob(" Yes", math.log(0.2)),
+                AlternativeLogprob("Not", math.log(0.1)), AlternativeLogprob("Maybe", math.log(0.05))]
+        out = self_assess.p_no_from_top(tops)
+        self.assertAlmostEqual(out["p_no"], 0.7 / 0.9)
+        self.assertAlmostEqual(out["yes_mass"], 0.2)
+        self.assertIsNone(self_assess.p_no_from_top([AlternativeLogprob("I", 0.0)])["p_no"])
+
+
 # ---------------------------------------------------------------------------
 class SealingTests(unittest.TestCase):
     def test_guard(self):
@@ -650,6 +688,18 @@ class EndToEndMockSmoke(unittest.TestCase):
             self.assertIn("judge:primary vs judge:secondary", labels["agreement"]["closed_book"])
             self.assertEqual(labels["meta"]["judges"]["primary"]["provider"], "mock")
 
+            from llm.experiment1_v2 import self_assess
+            self.assertEqual(self_assess.main([
+                "--items", str(items), "--split", "dev", "--backend", "mock", "--model",
+                "mistral7b_v03", "--out-dir", str(out), "--limit", "12"]), 0)
+            sa_rows = common.read_jsonl(out / "self_assessment_dev.jsonl")
+            sa_texts = {(r["item_id"], r["prefix_text"]) for r in sa_rows}
+            sig_texts = {(r["item_id"], r["prefix"]["text"]) for r in records}
+            self.assertEqual(sa_texts, sig_texts)  # one call per distinct prefix text, all covered
+            self.assertEqual(self_assess.main([  # resumable: nothing left to do
+                "--items", str(items), "--split", "dev", "--backend", "mock", "--model",
+                "mistral7b_v03", "--out-dir", str(out), "--limit", "12"]), 0)
+            self.assertEqual(len(common.read_jsonl(out / "self_assessment_dev.jsonl")), len(sa_rows))
             self.assertEqual(analyze.main([
                 "--items", str(items), "--split", "dev", "--results-root", str(root),
                 "--bootstrap", "50", "--controller-artifact"]), 0)
@@ -659,7 +709,11 @@ class EndToEndMockSmoke(unittest.TestCase):
             self.assertEqual([p["word_frac"] for p in model["prefix_curve_text"]["mean_entropy_nats"]],
                              [0.3, 0.5, 0.7, 1.0])
             self.assertTrue(model["asr_curves"]["mean_entropy_nats"])
-            self.assertEqual([r["k"] for r in model["first_k"]], [4, 8, 16, "all"])
+            self.assertEqual([r["k"] for r in model["first_k"]], [4, 8, 16, "all", "self"])
+            self.assertIn("self_assessed_need", model["auc_full"])
+            # (the first 12 v1 items are all authored-needed, so only the empirical AUC exists)
+            self.assertIsNotNone(model["auc_full"]["self_assessed_need"]["empirical"]["auc"])
+            self.assertEqual(set(model["calibrations"]), {"mean_entropy_nats", "self_assessed_need"})
             wf = next(iter(model["asr_word_frac_curve"]["mean_entropy_nats"].values()))
             self.assertEqual([p["word_frac"] for p in wf["curve"]], [0.3, 0.5, 0.7, 1.0])
             self.assertIn("auc_diff", wf["paired_diff"]["authored"])

@@ -44,6 +44,8 @@ if __package__ in (None, ""):
     sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
 
 from llm.experiment1_v2 import common, stats  # noqa: E402
+from llm.experiment1_v2.prefixes import normalize_text  # noqa: E402
+from llm.experiment1_v2.self_assess import SIGNAL as SA_SIGNAL  # noqa: E402
 from llm.experiment1_v2.signals_v2 import flatten_signals  # noqa: E402
 
 FULL = ("text", 1.0)
@@ -67,9 +69,25 @@ def load_model_inputs(rdir: Path, split: str, labels_name: str = None) -> dict:
     for record in records:
         record["_flat"] = flatten_signals(record["signals"])
     probe = common.read_jsonl(rdir / f"latency_{split}.jsonl")
+    # Self-assessed need (self_assess.py): one deterministic call per distinct
+    # prefix text, joined to every record with that (item, text).
+    sa_path = rdir / f"self_assessment_{split}.jsonl"
+    sa_rows = common.read_jsonl(sa_path)
+    sa_latency = latency_model([], sa_rows) if sa_rows else None
+    if sa_rows:
+        lookup = {(r["item_id"], normalize_text(r["prefix_text"])): r for r in sa_rows}
+        for record in records:
+            hit = lookup.get((record["item_id"], normalize_text(record["prefix"]["text"])))
+            if hit is not None and hit.get(SA_SIGNAL) is not None:
+                record["_flat"][SA_SIGNAL] = float(hit[SA_SIGNAL])
+                record["_sa_gen_ms"] = (sa_latency["gen_ms_median"]
+                                        if sa_latency and sa_latency["valid_latency_estimate"]
+                                        else hit.get("gen_ms"))
     return {"records": records, "labels": labels, "signals_path": signals_path,
             "labels_path": labels_path if labels else None,
-            "latency": latency_model(probe, records)}
+            "latency": latency_model(probe, records),
+            "self_assessment_path": sa_path if sa_rows else None,
+            "self_assessment_latency": sa_latency}
 
 
 def latency_model(probe_records, run_records) -> dict:
@@ -81,7 +99,8 @@ def latency_model(probe_records, run_records) -> dict:
     Latency of token k is modelled as ttft + (k - 1) * per-token interval,
     with medians over calls, so it can be applied to any record's length."""
     def calls(records):
-        return list({r["call_key"]: r for r in records if r.get("ttft_ms") is not None}.values())
+        return list({r.get("call_key") or r.get("key"): r for r in records
+                     if r.get("ttft_ms") is not None}.values())
 
     probe = calls(probe_records)
     solo = [r for r in calls(run_records) if r.get("in_flight_at_send") == 1]
@@ -175,6 +194,8 @@ def signal_latency_ms(record, signal, lat=None):
     With a latency model the time is predicted from unqueued calls; without
     one it is the record's own (possibly queued) measurement."""
     n = record.get("n_tokens") or 0
+    if signal == SA_SIGNAL:  # its own one-token call
+        return record.get("_sa_gen_ms")
     if signal.startswith("first_k_mean_entropy_nats@"):
         k = int(signal.split("@", 1)[1])
         if lat:
@@ -854,6 +875,20 @@ def analyze_model(inp, items, cfg_a, headline, n_boot) -> dict:
         for name, lm in lmaps.items():
             row[name] = item_auc(item_scores(full, signal), lm, clusters, n_boot)
         result["first_k"].append(row)
+    if SA_SIGNAL in all_signals:
+        # Self-assessment is its own one-token call, not a prefix of the answer.
+        lat = [r["_sa_gen_ms"] for r in full if r.get("_sa_gen_ms") is not None]
+        sa_lat = inp.get("self_assessment_latency") or {}
+        row = {"k": "self", "signal": SA_SIGNAL,
+               "latency_ms": {"median": float(np.median(lat)) if lat else None,
+                              "p90": float(np.percentile(lat, 90)) if lat else None},
+               "latency_source": ("self-assessment calls, " + sa_lat.get("source", "")
+                                  + ("" if sa_lat.get("valid_latency_estimate") else
+                                     " (includes queueing: not a latency estimate)"))}
+        for name, lm in lmaps.items():
+            row[name] = item_auc(item_scores(full, SA_SIGNAL), lm, clusters, n_boot)
+        result["first_k"].append(row)
+        result["self_assessment_latency"] = sa_lat or None
     return result
 
 
@@ -905,7 +940,8 @@ def main(argv=None) -> int:
     out_dir = args.out_dir or root / f"analysis_{args.split}"
     out_dir.mkdir(parents=True, exist_ok=True)
     headline = cfg_a["headline_signals"]
-    cal_signal = args.calibration_signal or cfg_a["calibration_signal"]
+    cal_signals = common.parse_csv_list(args.calibration_signal) or cfg_a.get(
+        "calibration_signals") or [cfg_a["calibration_signal"]]
     cal_label = args.calibration_label or cfg_a["calibration_label"]
 
     analysis = {"dataset": dataset, "split": args.split, "created_at_utc": common.now_utc(),
@@ -924,22 +960,10 @@ def main(argv=None) -> int:
         lmaps = label_maps(items, inp["labels"])
         lmaps_any = lmaps_any or lmaps
         label_kind = cal_label if cal_label in lmaps else "authored"
-        cal = calibration_block(inp["records"], cal_signal, lmaps[label_kind], cluster_of(items), cfg_a)
-        result["calibration"] = cal
         result["calibration_label"] = label_kind
         result["gains"] = gains(inp["labels"], cluster_of(items), n_boot)
         b_star = ((result["gains"] or {}).get(label_kind) or {}).get("break_even_belief")
-        result["boundary_mass"] = None
-        if cal:
-            result["boundary_mass"] = {
-                "label": label_kind,
-                "dev_out_of_fold": boundary_mass(cal.pop("_beliefs_oof"), b_star),
-                "dev_in_sample": boundary_mass(cal.pop("_beliefs_in_sample"), b_star),
-            }
-        pcal = prefix_calibration_block(inp["records"], cal_signal, lmaps[label_kind],
-                                        cluster_of(items), cfg_a)
-        result["prefix_calibration"] = pcal
-        analysis["models"][key] = result
+        result["calibrations"] = {}
         inputs = {
             "signals": common.rel(inp["signals_path"]),
             "signals_sha256": common.sha256_file(inp["signals_path"]),
@@ -950,17 +974,34 @@ def main(argv=None) -> int:
             "splits": common.rel(paths["splits"]),
             "splits_sha256": common.sha256_file(paths["splits"]),
         }
-        analysis["artifacts"][key] = []
+        if inp.get("self_assessment_path"):
+            inputs["self_assessment"] = common.rel(inp["self_assessment_path"])
+            inputs["self_assessment_sha256"] = common.sha256_file(inp["self_assessment_path"])
         # (artifact name, writer, block, effective slopes that must be > 0)
         candidates = []
-        if cal:
-            candidates.append((f"calibration_{dataset}_{key}_{cal_signal}.json", write_artifact, cal,
-                               [cal["logistic"]["slope"]]))
-        if pcal:
-            m = pcal["model"]
-            candidates.append((f"calibration_prefix_{dataset}_{key}_{cal_signal}.json",
-                               write_prefix_artifact, pcal,
-                               [m["slope"], m["slope"] + m["interaction"]]))  # d logit/dx at f=0, f=1
+        for signal in cal_signals:
+            cal = calibration_block(inp["records"], signal, lmaps[label_kind], cluster_of(items), cfg_a)
+            pcal = prefix_calibration_block(inp["records"], signal, lmaps[label_kind],
+                                            cluster_of(items), cfg_a)
+            bmass = None
+            if cal:
+                bmass = {"label": label_kind,
+                         "dev_out_of_fold": boundary_mass(cal.pop("_beliefs_oof"), b_star),
+                         "dev_in_sample": boundary_mass(cal.pop("_beliefs_in_sample"), b_star)}
+                candidates.append((f"calibration_{dataset}_{key}_{signal}.json", write_artifact, cal,
+                                   [cal["logistic"]["slope"]]))
+            if pcal:
+                m = pcal["model"]
+                candidates.append((f"calibration_prefix_{dataset}_{key}_{signal}.json",
+                                   write_prefix_artifact, pcal,
+                                   [m["slope"], m["slope"] + m["interaction"]]))  # d logit/dx, f=0 and 1
+            result["calibrations"][signal] = {"full": cal, "prefix": pcal, "boundary_mass": bmass}
+        first = result["calibrations"].get(cal_signals[0], {})
+        result["calibration"] = first.get("full")          # first signal, for the figures
+        result["prefix_calibration"] = first.get("prefix")
+        result["boundary_mass"] = first.get("boundary_mass")
+        analysis["models"][key] = result
+        analysis["artifacts"][key] = []
         for name, writer, block, slopes in candidates:
             if min(slopes) <= 0:
                 print(f"[analyze] {key}: {name}: signal slope {min(slopes):+.4f} <= 0; refusing to "
@@ -999,14 +1040,16 @@ def main(argv=None) -> int:
                     cells.append(f"{kind} {row[kind]['auc']:.3f}"
                                  + (f" [{ci[0]:.3f},{ci[1]:.3f}]" if ci else ""))
             print(f"    {signal:<34} " + "   ".join(cells))
-        if m.get("calibration") and m["calibration"]["cross_validation"].get("logistic"):
-            cvl = m["calibration"]["cross_validation"]["logistic"]
-            print(f"    calibration ({m['calibration_label']}, {cal_signal}): CV AUC {cvl['auc']:.3f} "
-                  f"ECE {cvl['ece']:.3f}")
-        if m.get("prefix_calibration"):
-            pc = m["prefix_calibration"]
-            print(f"    prefix calibration ({pc['source']}): {pc['model']}  CV AUC {pc['cv']['auc']} "
-                  f"ECE {pc['cv']['ece']}")
+        for signal, cals in m.get("calibrations", {}).items():
+            full = cals["full"]
+            if full and full["cross_validation"].get("logistic"):
+                cvl = full["cross_validation"]["logistic"]
+                print(f"    calibration ({m['calibration_label']}, {signal}): CV AUC {cvl['auc']:.3f} "
+                      f"ECE {cvl['ece']:.3f}")
+            if cals["prefix"]:
+                pc = cals["prefix"]
+                print(f"    prefix calibration ({signal}, {pc['source']}): CV AUC {pc['cv']['auc']} "
+                      f"ECE {pc['cv']['ece']}")
         for signal, conds in (m.get("asr_word_frac_curve") or {}).items():
             for cond, entry in conds.items():
                 print(f"    ASR word_frac curve {signal} [{cond}]: c2_available {entry['c2_available']}")
