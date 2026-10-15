@@ -116,8 +116,6 @@ ipython_config.py
 
 # poetry
 #   Similar to Pipfile.lock, it is generally recommended to include poetry.lock in version control.
-#   This is especially recommended for binary packages to ensure reproducibility, and is more
-#   commonly ignored for libraries.
 #   https://python-poetry.org/docs/basic-usage/#commit-your-poetrylock-file-to-version-control
 # poetry.lock
 # poetry.toml
@@ -268,3 +266,9 @@ datasets/v2/*/speech/audio/
 
 # local agent worktrees
 .claude/
+# energy/: worktree-local venv and model cache are never committed
+.venv-energy/
+.energy-cache/
+
+# built retrieval indexes (regenerate with python -m retrieval.v2_index build)
+retrieval/indexes/

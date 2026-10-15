@@ -138,6 +138,47 @@ def test_modal_app_imports_without_modal():
     assert "SPEND APPROVAL" in src and "modal.run" not in src
 
 
+def test_compose_profiles_adds_composites_and_marks_lower_bounds():
+    from retrieval.compose_profiles import compose
+    from retrieval.profiles import retrieval_signals
+
+    q = {k: 1.0 for k in ("p10", "p25", "p50", "p75", "p90", "p95", "p99")}
+    profiles = {
+        "canonical": {"faiss": "faiss", "faiss_rerank": "fr", "remote_api": "ra"},
+        "profiles": {
+            "faiss": {"samples_ms": [40.0] * 50, "quantiles_ms": q, "notes": ""},
+            "fr": {"samples_ms": [60.0] * 50, "quantiles_ms": q},
+            "ra": {"samples_ms": [20.0] * 50, "quantiles_ms": q, "network": "localhost", "wan_rtt_ms": None},
+        },
+    }
+    rewrite = {"model": "m", "by_concurrency": {"8": {"samples_ms": [1000.0] * 30}, "1": {"samples_ms": [900.0] * 30}}}
+    out = compose(profiles, rewrite, "8", n=200, extra_levels=("1",))
+    p = out["profiles"]
+    assert p["faiss"]["lower_bound"] is True and "LOWER BOUND" in p["faiss"]["notes"]
+    assert p["rewrite_faiss"]["quantiles_ms"]["p50"] == 1040.0
+    assert p["rewrite_faiss_rerank"]["quantiles_ms"]["p50"] == 1060.0
+    assert p["rewrite_remote"]["quantiles_ms"]["p50"] == 1020.0
+    assert p["rewrite_faiss_c1"]["quantiles_ms"]["p50"] == 940.0
+    assert out["canonical"]["rewrite_faiss"] == "rewrite_faiss"
+    assert p["rewrite_remote"]["network"] == "localhost"
+
+
+def test_rewrite_measurement_helpers():
+    from retrieval.measure_rewrite_latency import history_lines, ready_prefixes, sample_level, summarize
+
+    assert history_lines([{"role": "user", "content": "hi"}, "plain"]) == ["user: hi", "plain"]
+    pre = ready_prefixes("What time does the pool close tonight?")
+    assert pre and all(len(p.split()) >= 4 for p in pre) and pre[-1] != "What time does the pool close tonight?"
+    pool = [{"source": "v1", "x": i} for i in range(5)] + [{"source": "d2_support", "x": i} for i in range(5)]
+    s = sample_level(pool, 30, seed=1)
+    assert len(s) == 30 and sum(e["source"] == "d2_support" for e in s) == 20
+    rows = [{"concurrency": 8, "error": None, "source": "v1", "full": i % 2 == 0, "start_s": i * 0.1,
+             "total_ms": 900.0 + i, "ttft_ms": 500.0, "n_tokens": 10} for i in range(10)]
+    out = summarize(rows)["8"]
+    assert out["n"] == 10 and out["errors"] == 0 and out["total_ms"]["p50"] == pytest.approx(904.5)
+    assert out["by_source"]["v1"]["n"] == 10
+
+
 def test_partial_query_risk_rows_and_rho():
     from retrieval.partial_query_risk import analyse, rho_at, score_traces
 

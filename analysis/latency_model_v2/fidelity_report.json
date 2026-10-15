@@ -64,11 +64,11 @@
      "mean": 4054.808
     },
     "predicted": {
-     "p50": 3717.5,
-     "p95": 6859.0,
-     "mean": 4074.2952
+     "p50": 3704.0,
+     "p95": 6844.049999999999,
+     "mean": 4074.0527
     },
-    "ks_distance": 0.0378
+    "ks_distance": 0.0384
    },
    "immediate/retrieve/batch": {
     "n_obs": 250,
@@ -79,10 +79,10 @@
     },
     "predicted": {
      "p50": 3922.0,
-     "p95": 7047.0,
-     "mean": 4285.5129
+     "p95": 7047.69999999999,
+     "mean": 4285.3764
     },
-    "ks_distance": 0.0536
+    "ks_distance": 0.0535
    },
    "sentence_end/retrieve/batch": {
     "n_obs": 250,
@@ -92,11 +92,11 @@
      "mean": 4448.652
     },
     "predicted": {
-     "p50": 3998.5,
-     "p95": 7202.049999999999,
-     "mean": 4375.9896
+     "p50": 3999.0,
+     "p95": 7203.0,
+     "mean": 4376.089
     },
-    "ks_distance": 0.0624
+    "ks_distance": 0.0628
    }
   },
   "increments": {}
@@ -184,10 +184,10 @@
     },
     "predicted": {
      "p50": 2782.0,
-     "p95": 4672.774021411843,
-     "mean": 2857.5282369019737
+     "p95": 4671.395329474404,
+     "mean": 2856.7955584039073
     },
-    "ks_distance": 0.0795
+    "ks_distance": 0.0808
    },
    "fixed_early_proxy/skip/batch": {
     "n_obs": 250,
@@ -197,11 +197,11 @@
      "mean": 1666.684
     },
     "predicted": {
-     "p50": 1609.0,
-     "p95": 2609.200334560053,
-     "mean": 1702.1965930411511
+     "p50": 1608.978755436601,
+     "p95": 2625.0141565752256,
+     "mean": 1702.400639093998
     },
-    "ks_distance": 0.0824
+    "ks_distance": 0.0826
    },
    "immediate/retrieve/batch": {
     "n_obs": 250,
@@ -211,11 +211,11 @@
      "mean": 2976.276
     },
     "predicted": {
-     "p50": 2923.0,
+     "p50": 2922.550440672191,
      "p95": 5047.0,
-     "mean": 3032.058664135162
+     "mean": 3031.7196640165143
     },
-    "ks_distance": 0.0992
+    "ks_distance": 0.0989
    },
    "immediate/skip/batch": {
     "n_obs": 250,
@@ -225,11 +225,11 @@
      "mean": 1681.144
     },
     "predicted": {
-     "p50": 1609.0,
+     "p50": 1608.0043492806958,
      "p95": 2578.0,
-     "mean": 1701.417261625962
+     "mean": 1701.49432984594
     },
-    "ks_distance": 0.0589
+    "ks_distance": 0.059
    },
    "sentence_end/retrieve/batch": {
     "n_obs": 250,
@@ -239,11 +239,11 @@
      "mean": 3296.66
     },
     "predicted": {
-     "p50": 3142.0,
-     "p95": 5298.469789227157,
-     "mean": 3260.52636172633
+     "p50": 3141.0,
+     "p95": 5297.0,
+     "mean": 3260.412560184137
     },
-    "ks_distance": 0.0897
+    "ks_distance": 0.0899
    },
    "sentence_end/skip/batch": {
     "n_obs": 250,
@@ -254,10 +254,10 @@
     },
     "predicted": {
      "p50": 1593.0,
-     "p95": 2609.0,
-     "mean": 1694.794042154567
+     "p95": 2594.4907872696813,
+     "mean": 1694.823688344533
     },
-    "ks_distance": 0.0387
+    "ks_distance": 0.0402
    }
   },
   "increments": {
@@ -265,22 +265,22 @@
     "n_pairs": 250,
     "observed_mean_ms": 1266.204,
     "observed_median_ms": 1125.0,
-    "predicted_mean_ms": 1159.600799197056,
-    "predicted_median_of_expected_ms": 1163.05
+    "predicted_mean_ms": 1160.6852530152826,
+    "predicted_median_of_expected_ms": 1149.1124999999997
    },
    "immediate/batch": {
     "n_pairs": 250,
     "observed_mean_ms": 1295.132,
     "observed_median_ms": 1195.5,
-    "predicted_mean_ms": 1339.9616505854801,
-    "predicted_median_of_expected_ms": 1374.1220516895282
+    "predicted_mean_ms": 1341.038417671563,
+    "predicted_median_of_expected_ms": 1361.7403308207704
    },
    "sentence_end/batch": {
     "n_pairs": 250,
     "observed_mean_ms": 1565.82,
     "observed_median_ms": 1390.0,
-    "predicted_mean_ms": 1557.0097045834727,
-    "predicted_median_of_expected_ms": 1557.321888591502
+    "predicted_mean_ms": 1557.3571312596998,
+    "predicted_median_of_expected_ms": 1558.0431624289063
    }
   }
  },
@@ -343,11 +343,11 @@
      "mean": 2815.66
     },
     "predicted": {
-     "p50": 2704.4343963365955,
-     "p95": 4349.134855902318,
-     "mean": 2741.7833284846847
+     "p50": 2703.375011455789,
+     "p95": 4336.981501156915,
+     "mean": 2738.2446449845515
     },
-    "ks_distance": 0.084
+    "ks_distance": 0.0845
    },
    "sentence_end/retrieve/streaming": {
     "n_obs": 50,
@@ -357,11 +357,11 @@
      "mean": 1946.28
     },
     "predicted": {
-     "p50": 1817.847465765944,
-     "p95": 3102.8253079464207,
-     "mean": 1933.4280991520993
+     "p50": 1798.3172503899377,
+     "p95": 3084.348469999721,
+     "mean": 1924.7417209940543
     },
-    "ks_distance": 0.088
+    "ks_distance": 0.087
    },
    "sentence_end/skip/batch": {
     "n_obs": 50,
@@ -371,9 +371,9 @@
      "mean": 1889.7
     },
     "predicted": {
-     "p50": 1736.5533265261213,
-     "p95": 3177.102945376835,
-     "mean": 1833.4597623390466
+     "p50": 1743.9572752925333,
+     "p95": 3183.2966287439945,
+     "mean": 1835.541518502486
     },
     "ks_distance": 0.0705
    },
@@ -385,11 +385,11 @@
      "mean": 1499.14
     },
     "predicted": {
-     "p50": 1416.0564311094536,
-     "p95": 2468.716970888975,
-     "mean": 1510.056240160449
+     "p50": 1413.9961609184347,
+     "p95": 2457.2258282453345,
+     "mean": 1510.725124480001
     },
-    "ks_distance": 0.1375
+    "ks_distance": 0.1415
    }
   },
   "increments": {
@@ -397,15 +397,15 @@
     "n_pairs": 50,
     "observed_mean_ms": 925.96,
     "observed_median_ms": 874.5,
-    "predicted_mean_ms": 963.5184889744683,
-    "predicted_median_of_expected_ms": 944.7312736938953
+    "predicted_mean_ms": 970.7385359595296,
+    "predicted_median_of_expected_ms": 959.644379897243
    },
    "sentence_end/streaming": {
     "n_pairs": 50,
     "observed_mean_ms": 447.14,
     "observed_median_ms": 429.5,
-    "predicted_mean_ms": 453.249514788878,
-    "predicted_median_of_expected_ms": 448.45983798059945
+    "predicted_mean_ms": 453.84363992365684,
+    "predicted_median_of_expected_ms": 458.796835004478
    }
   }
  },
@@ -462,7 +462,17 @@
    "pipeline_logged",
    "remote_api",
    "remote_api_faiss",
-   "remote_api_faiss_rerank"
+   "remote_api_faiss_rerank",
+   "remote_api_wan",
+   "rewrite_faiss",
+   "rewrite_faiss_c1",
+   "rewrite_faiss_c32",
+   "rewrite_faiss_rerank",
+   "rewrite_faiss_rerank_c1",
+   "rewrite_faiss_rerank_c32",
+   "rewrite_remote",
+   "rewrite_remote_c1",
+   "rewrite_remote_c32"
   ]
  }
 }

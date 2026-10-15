@@ -1,0 +1,728 @@
+{
+  "tokenizer": "mistral_common mistral_instruct_tokenizer_240323.model.v3 (Mistral-7B-Instruct-v0.3)",
+  "k_passages": 5,
+  "corpus": "retrieval/corpus (60 hotel passages)",
+  "prompt_skip": {
+    "n": 50,
+    "mean": 78.74,
+    "sd": 2.3802760944298638,
+    "median": 78.0,
+    "p10": 76.0,
+    "p90": 82.0,
+    "min": 75.0,
+    "max": 85.0
+  },
+  "prompt_retrieve": {
+    "n": 50,
+    "mean": 533.84,
+    "sd": 26.86273498012153,
+    "median": 531.5,
+    "p10": 504.7,
+    "p90": 578.2,
+    "min": 492.0,
+    "max": 597.0
+  },
+  "extra_prefill_tokens": {
+    "n": 50,
+    "mean": 455.1,
+    "sd": 25.853788259110864,
+    "median": 451.0,
+    "p10": 424.9,
+    "p90": 496.6,
+    "min": 414.0,
+    "max": 513.0
+  },
+  "passage_tokens": {
+    "n": 250,
+    "mean": 87.796,
+    "sd": 9.346647703490952,
+    "median": 87.5,
+    "p10": 76.0,
+    "p90": 100.0,
+    "min": 65.0,
+    "max": 108.0
+  },
+  "gen_skip": {
+    "n": 250,
+    "mean": 28.264,
+    "sd": 16.808223269516372,
+    "median": 25.0,
+    "p10": 10.900000000000002,
+    "p90": 48.0,
+    "min": 8.0,
+    "max": 113.0
+  },
+  "gen_retrieve": {
+    "n": 250,
+    "mean": 51.376,
+    "sd": 22.442130488960583,
+    "median": 54.0,
+    "p10": 22.0,
+    "p90": 79.1,
+    "min": 12.0,
+    "max": 109.0
+  },
+  "gen_retrieve_minus_skip_paired": {
+    "n": 250,
+    "mean": 23.112,
+    "sd": 24.489885134389308,
+    "median": 26.0,
+    "p10": -3.0,
+    "p90": 46.0,
+    "min": -87.0,
+    "max": 82.0
+  },
+  "chars_per_gen_token": 4.228729281767956,
+  "per_scenario": [
+    {
+      "id": 1,
+      "retrieval_needed": true,
+      "prompt_skip": 77,
+      "prompt_retrieve": 509,
+      "passage_tokens": [
+        79,
+        96,
+        71,
+        81,
+        89
+      ]
+    },
+    {
+      "id": 2,
+      "retrieval_needed": true,
+      "prompt_skip": 77,
+      "prompt_retrieve": 532,
+      "passage_tokens": [
+        86,
+        88,
+        88,
+        81,
+        96
+      ]
+    },
+    {
+      "id": 3,
+      "retrieval_needed": true,
+      "prompt_skip": 79,
+      "prompt_retrieve": 531,
+      "passage_tokens": [
+        98,
+        88,
+        65,
+        96,
+        89
+      ]
+    },
+    {
+      "id": 4,
+      "retrieval_needed": true,
+      "prompt_skip": 77,
+      "prompt_retrieve": 501,
+      "passage_tokens": [
+        82,
+        89,
+        86,
+        80,
+        71
+      ]
+    },
+    {
+      "id": 5,
+      "retrieval_needed": true,
+      "prompt_skip": 78,
+      "prompt_retrieve": 561,
+      "passage_tokens": [
+        94,
+        86,
+        82,
+        108,
+        97
+      ]
+    },
+    {
+      "id": 6,
+      "retrieval_needed": true,
+      "prompt_skip": 81,
+      "prompt_retrieve": 532,
+      "passage_tokens": [
+        95,
+        83,
+        94,
+        78,
+        85
+      ]
+    },
+    {
+      "id": 7,
+      "retrieval_needed": true,
+      "prompt_skip": 77,
+      "prompt_retrieve": 526,
+      "passage_tokens": [
+        65,
+        98,
+        85,
+        89,
+        96
+      ]
+    },
+    {
+      "id": 8,
+      "retrieval_needed": true,
+      "prompt_skip": 77,
+      "prompt_retrieve": 540,
+      "passage_tokens": [
+        89,
+        93,
+        71,
+        98,
+        96
+      ]
+    },
+    {
+      "id": 9,
+      "retrieval_needed": true,
+      "prompt_skip": 81,
+      "prompt_retrieve": 532,
+      "passage_tokens": [
+        83,
+        94,
+        95,
+        83,
+        80
+      ]
+    },
+    {
+      "id": 10,
+      "retrieval_needed": true,
+      "prompt_skip": 82,
+      "prompt_retrieve": 595,
+      "passage_tokens": [
+        104,
+        107,
+        96,
+        102,
+        87
+      ]
+    },
+    {
+      "id": 11,
+      "retrieval_needed": true,
+      "prompt_skip": 76,
+      "prompt_retrieve": 578,
+      "passage_tokens": [
+        97,
+        97,
+        108,
+        86,
+        98
+      ]
+    },
+    {
+      "id": 12,
+      "retrieval_needed": true,
+      "prompt_skip": 78,
+      "prompt_retrieve": 549,
+      "passage_tokens": [
+        82,
+        86,
+        108,
+        85,
+        94
+      ]
+    },
+    {
+      "id": 13,
+      "retrieval_needed": true,
+      "prompt_skip": 77,
+      "prompt_retrieve": 533,
+      "passage_tokens": [
+        83,
+        100,
+        88,
+        83,
+        86
+      ]
+    },
+    {
+      "id": 14,
+      "retrieval_needed": true,
+      "prompt_skip": 78,
+      "prompt_retrieve": 536,
+      "passage_tokens": [
+        96,
+        98,
+        88,
+        89,
+        71
+      ]
+    },
+    {
+      "id": 15,
+      "retrieval_needed": true,
+      "prompt_skip": 77,
+      "prompt_retrieve": 531,
+      "passage_tokens": [
+        93,
+        79,
+        86,
+        100,
+        80
+      ]
+    },
+    {
+      "id": 16,
+      "retrieval_needed": true,
+      "prompt_skip": 76,
+      "prompt_retrieve": 496,
+      "passage_tokens": [
+        83,
+        74,
+        88,
+        71,
+        88
+      ]
+    },
+    {
+      "id": 17,
+      "retrieval_needed": true,
+      "prompt_skip": 80,
+      "prompt_retrieve": 530,
+      "passage_tokens": [
+        86,
+        93,
+        76,
+        100,
+        79
+      ]
+    },
+    {
+      "id": 18,
+      "retrieval_needed": true,
+      "prompt_skip": 82,
+      "prompt_retrieve": 595,
+      "passage_tokens": [
+        104,
+        107,
+        96,
+        102,
+        87
+      ]
+    },
+    {
+      "id": 19,
+      "retrieval_needed": true,
+      "prompt_skip": 77,
+      "prompt_retrieve": 520,
+      "passage_tokens": [
+        81,
+        71,
+        89,
+        98,
+        88
+      ]
+    },
+    {
+      "id": 20,
+      "retrieval_needed": true,
+      "prompt_skip": 76,
+      "prompt_retrieve": 571,
+      "passage_tokens": [
+        91,
+        104,
+        96,
+        102,
+        86
+      ]
+    },
+    {
+      "id": 21,
+      "retrieval_needed": true,
+      "prompt_skip": 82,
+      "prompt_retrieve": 595,
+      "passage_tokens": [
+        107,
+        102,
+        87,
+        104,
+        96
+      ]
+    },
+    {
+      "id": 22,
+      "retrieval_needed": true,
+      "prompt_skip": 77,
+      "prompt_retrieve": 510,
+      "passage_tokens": [
+        79,
+        79,
+        80,
+        93,
+        86
+      ]
+    },
+    {
+      "id": 23,
+      "retrieval_needed": true,
+      "prompt_skip": 78,
+      "prompt_retrieve": 521,
+      "passage_tokens": [
+        77,
+        88,
+        98,
+        86,
+        78
+      ]
+    },
+    {
+      "id": 24,
+      "retrieval_needed": true,
+      "prompt_skip": 77,
+      "prompt_retrieve": 549,
+      "passage_tokens": [
+        85,
+        88,
+        96,
+        98,
+        89
+      ]
+    },
+    {
+      "id": 25,
+      "retrieval_needed": true,
+      "prompt_skip": 76,
+      "prompt_retrieve": 523,
+      "passage_tokens": [
+        82,
+        80,
+        85,
+        88,
+        96
+      ]
+    },
+    {
+      "id": 26,
+      "retrieval_needed": false,
+      "prompt_skip": 78,
+      "prompt_retrieve": 543,
+      "passage_tokens": [
+        81,
+        108,
+        88,
+        93,
+        79
+      ]
+    },
+    {
+      "id": 27,
+      "retrieval_needed": false,
+      "prompt_skip": 78,
+      "prompt_retrieve": 554,
+      "passage_tokens": [
+        81,
+        85,
+        88,
+        98,
+        108
+      ]
+    },
+    {
+      "id": 28,
+      "retrieval_needed": false,
+      "prompt_skip": 81,
+      "prompt_retrieve": 540,
+      "passage_tokens": [
+        94,
+        79,
+        97,
+        93,
+        80
+      ]
+    },
+    {
+      "id": 29,
+      "retrieval_needed": false,
+      "prompt_skip": 81,
+      "prompt_retrieve": 532,
+      "passage_tokens": [
+        94,
+        79,
+        83,
+        86,
+        93
+      ]
+    },
+    {
+      "id": 30,
+      "retrieval_needed": false,
+      "prompt_skip": 79,
+      "prompt_retrieve": 527,
+      "passage_tokens": [
+        80,
+        91,
+        82,
+        98,
+        81
+      ]
+    },
+    {
+      "id": 31,
+      "retrieval_needed": false,
+      "prompt_skip": 82,
+      "prompt_retrieve": 533,
+      "passage_tokens": [
+        81,
+        80,
+        98,
+        91,
+        85
+      ]
+    },
+    {
+      "id": 32,
+      "retrieval_needed": false,
+      "prompt_skip": 81,
+      "prompt_retrieve": 505,
+      "passage_tokens": [
+        88,
+        81,
+        79,
+        75,
+        85
+      ]
+    },
+    {
+      "id": 33,
+      "retrieval_needed": false,
+      "prompt_skip": 82,
+      "prompt_retrieve": 533,
+      "passage_tokens": [
+        88,
+        85,
+        75,
+        79,
+        108
+      ]
+    },
+    {
+      "id": 34,
+      "retrieval_needed": false,
+      "prompt_skip": 79,
+      "prompt_retrieve": 544,
+      "passage_tokens": [
+        85,
+        75,
+        94,
+        107,
+        87
+      ]
+    },
+    {
+      "id": 35,
+      "retrieval_needed": false,
+      "prompt_skip": 75,
+      "prompt_retrieve": 510,
+      "passage_tokens": [
+        75,
+        76,
+        94,
+        81,
+        93
+      ]
+    },
+    {
+      "id": 36,
+      "retrieval_needed": false,
+      "prompt_skip": 78,
+      "prompt_retrieve": 519,
+      "passage_tokens": [
+        94,
+        75,
+        80,
+        83,
+        93
+      ]
+    },
+    {
+      "id": 37,
+      "retrieval_needed": false,
+      "prompt_skip": 78,
+      "prompt_retrieve": 518,
+      "passage_tokens": [
+        94,
+        88,
+        83,
+        76,
+        83
+      ]
+    },
+    {
+      "id": 38,
+      "retrieval_needed": false,
+      "prompt_skip": 77,
+      "prompt_retrieve": 524,
+      "passage_tokens": [
+        94,
+        71,
+        81,
+        89,
+        96
+      ]
+    },
+    {
+      "id": 39,
+      "retrieval_needed": false,
+      "prompt_skip": 77,
+      "prompt_retrieve": 502,
+      "passage_tokens": [
+        94,
+        83,
+        89,
+        65,
+        78
+      ]
+    },
+    {
+      "id": 40,
+      "retrieval_needed": false,
+      "prompt_skip": 76,
+      "prompt_retrieve": 531,
+      "passage_tokens": [
+        93,
+        88,
+        86,
+        88,
+        84
+      ]
+    },
+    {
+      "id": 41,
+      "retrieval_needed": false,
+      "prompt_skip": 78,
+      "prompt_retrieve": 516,
+      "passage_tokens": [
+        76,
+        93,
+        85,
+        88,
+        80
+      ]
+    },
+    {
+      "id": 42,
+      "retrieval_needed": false,
+      "prompt_skip": 77,
+      "prompt_retrieve": 509,
+      "passage_tokens": [
+        75,
+        83,
+        86,
+        85,
+        87
+      ]
+    },
+    {
+      "id": 43,
+      "retrieval_needed": false,
+      "prompt_skip": 78,
+      "prompt_retrieve": 492,
+      "passage_tokens": [
+        88,
+        88,
+        83,
+        74,
+        65
+      ]
+    },
+    {
+      "id": 44,
+      "retrieval_needed": false,
+      "prompt_skip": 81,
+      "prompt_retrieve": 508,
+      "passage_tokens": [
+        88,
+        77,
+        79,
+        81,
+        86
+      ]
+    },
+    {
+      "id": 45,
+      "retrieval_needed": false,
+      "prompt_skip": 79,
+      "prompt_retrieve": 532,
+      "passage_tokens": [
+        98,
+        91,
+        81,
+        82,
+        85
+      ]
+    },
+    {
+      "id": 46,
+      "retrieval_needed": false,
+      "prompt_skip": 78,
+      "prompt_retrieve": 498,
+      "passage_tokens": [
+        86,
+        94,
+        74,
+        71,
+        79
+      ]
+    },
+    {
+      "id": 47,
+      "retrieval_needed": false,
+      "prompt_skip": 78,
+      "prompt_retrieve": 506,
+      "passage_tokens": [
+        86,
+        71,
+        93,
+        80,
+        82
+      ]
+    },
+    {
+      "id": 48,
+      "retrieval_needed": false,
+      "prompt_skip": 84,
+      "prompt_retrieve": 597,
+      "passage_tokens": [
+        107,
+        87,
+        102,
+        96,
+        104
+      ]
+    },
+    {
+      "id": 49,
+      "retrieval_needed": false,
+      "prompt_skip": 85,
+      "prompt_retrieve": 543,
+      "passage_tokens": [
+        98,
+        96,
+        89,
+        88,
+        71
+      ]
+    },
+    {
+      "id": 50,
+      "retrieval_needed": false,
+      "prompt_skip": 84,
+      "prompt_retrieve": 580,
+      "passage_tokens": [
+        102,
+        107,
+        94,
+        87,
+        89
+      ]
+    }
+  ]
+}

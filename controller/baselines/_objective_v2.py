@@ -105,18 +105,25 @@ _DEFAULT_E3V2_CFG: dict = {
         "forecast_lead_quantile": 0.5,
         "query_ready": {"min_words": 4, "require_content_word": True},
     },
+    # MEASURED (v2/pipeline; mirrors configs/config.yaml controller.e3v2):
+    # bare profiles are lower bounds (no LLM rewrite); rewrite_* are the
+    # whole retrieval operation on a live partial.
     "latency_profiles": {
-        "faiss": {"p10": 310, "p50": 672, "p90": 3187},
-        "faiss_rerank": {"p10": 520, "p50": 1100, "p90": 3900},
-        "remote_api": {"p10": 900, "p50": 1800, "p90": 5200},
+        "faiss": {"p10": 23, "p25": 29, "p50": 41, "p75": 86, "p90": 180, "p95": 247, "p99": 423},
+        "faiss_rerank": {"p10": 57, "p25": 61, "p50": 66, "p75": 71, "p90": 75, "p95": 78, "p99": 110},
+        "remote_api": {"p10": 262, "p25": 264, "p50": 268, "p75": 272, "p90": 277, "p95": 281, "p99": 339},
+        "rewrite_faiss": {"p10": 852, "p25": 919, "p50": 1044, "p75": 1195, "p90": 1379, "p95": 1529, "p99": 1847},
+        "rewrite_faiss_rerank": {"p10": 860, "p25": 935, "p50": 1043, "p75": 1165, "p90": 1302, "p95": 1430, "p99": 1765},
+        "rewrite_remote": {"p10": 1059, "p25": 1137, "p50": 1241, "p75": 1360, "p90": 1496, "p95": 1621, "p99": 1980},
     },
-    "default_latency_profile": "faiss",
+    "default_latency_profile": "rewrite_faiss",
     "latency_points": 41,
-    # PLACEHOLDER from v1 (paired, mean): retrieving added 1.27-1.57 s of
-    # TTFA, of which only the retrieval call (0.3-0.7 s) can overlap speech;
-    # 900 ms ~ the midpoint increment (1.42 s) minus the midpoint call
-    # (0.5 s). Replace with the v2 latency model's measured pi.
-    "nonhideable_increment_ms": 900.0,
+    # MEASURED pi (paired retrieve-minus-skip TTFA minus the exposed call,
+    # real endpoint): streaming TTS 371 ms, batch TTS 855 ms. v2 uses
+    # streaming TTS, so it is the default.
+    "tts_mode": "streaming",
+    "nonhideable_increment_ms": 371.0,
+    "nonhideable_increment_ms_by_tts_mode": {"streaming": 371.0, "batch": 855.0},
     # Pipeline architecture. commit: a dispatched retrieval's passages are
     # always used. speculative: a dispatched retrieval may be discarded at
     # end of turn (compute is still spent); enables b10_speculative_v2.

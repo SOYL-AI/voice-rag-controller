@@ -113,7 +113,9 @@ _DEFAULT_TIMING_CFG = {
         "latency_quantile": "p50",     # which retrieval-latency quantile to hide
         "margin_ms": 0,                # extra safety margin on top of the latency
         "extra_latency_ms": 0,         # e.g. a live query rewrite before retrieval
-        "retrieval_profile": "faiss",
+        # the live-partial path rewrites before retrieving, so the
+        # hideable latency is rewrite + search (retrieval/compose_profiles.py)
+        "retrieval_profile": "rewrite_faiss",
         "predictor_path": None,        # saved RemainingSpeechPredictor JSON
         # used only when neither signals["retrieval"] nor the latency
         # profile artifact is available (E2 in-pipeline median)

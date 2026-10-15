@@ -9,7 +9,7 @@ Modal account configured)::
 
     # optional knobs, all read at deploy time:
     #   RETRIEVAL_MODAL_BACKEND    faiss | faiss_rerank          (default faiss)
-    #   RETRIEVAL_MODAL_GPU        T4 | L4 | none                (default T4)
+    #   RETRIEVAL_MODAL_GPU        none | T4 | L4                (default none: CPU only)
     #   RETRIEVAL_MODAL_INDEX_DIR  local v2 index dir to bake in (default: v1 hotel index)
     #   RETRIEVAL_MODAL_RERANK_MODEL cross-encoder name
     #   RETRIEVAL_MODAL_RERANK_DTYPE float32 | float16              (default float32)
@@ -44,7 +44,7 @@ MODAL_AVAILABLE = modal is not None
 _HERE = Path(__file__).resolve().parent
 APP_NAME = "voice-rag-retrieval"
 BACKEND = os.environ.get("RETRIEVAL_MODAL_BACKEND", "faiss")
-GPU = os.environ.get("RETRIEVAL_MODAL_GPU", "T4")
+GPU = os.environ.get("RETRIEVAL_MODAL_GPU", "none")
 INDEX_DIR = os.environ.get("RETRIEVAL_MODAL_INDEX_DIR")  # None -> v1 hotel index
 RERANK_MODEL = os.environ.get("RETRIEVAL_MODAL_RERANK_MODEL", "cross-encoder/ms-marco-MiniLM-L6-v2")
 RERANK_DTYPE = os.environ.get("RETRIEVAL_MODAL_RERANK_DTYPE", "float32")
@@ -54,8 +54,12 @@ REMOTE_INDEX_DIR = "/index"
 REMOTE_PKG_DIR = "/root/retrieval"
 
 # Versions match the host the local latency profiles were measured on.
+# CPU-only by default: torch comes from the CPU wheel index (the default
+# PyPI Linux wheel bundles CUDA, ~2.5 GB); a GPU deployment installs the
+# CUDA wheel instead.
+TORCH = "torch==2.9.1"
+TORCH_INDEX_CPU = "https://download.pytorch.org/whl/cpu"
 PIP_PACKAGES = [
-    "torch==2.9.1",
     "faiss-cpu==1.15.0",
     "sentence-transformers==5.7.0",
     "fastapi==0.115.0",
@@ -83,12 +87,25 @@ if MODAL_AVAILABLE:  # pragma: no cover - never executed in tests
         "RETRIEVAL_RERANK_MODEL": RERANK_MODEL,
         "RETRIEVAL_RERANK_DTYPE": RERANK_DTYPE,
         "RETRIEVAL_TORCH_THREADS": "4",
+        # The deploy-time switches are re-read when this module is imported
+        # inside the container, so they must be present there too; otherwise
+        # the container defines a different app (e.g. no secret) than the one
+        # deployed and crash-loops on "Function has N dependencies".
+        "RETRIEVAL_MODAL_BACKEND": BACKEND,
+        "RETRIEVAL_MODAL_GPU": GPU,
+        "RETRIEVAL_MODAL_RERANK_MODEL": RERANK_MODEL,
+        "RETRIEVAL_MODAL_RERANK_DTYPE": RERANK_DTYPE,
     }
+    if SECRET_NAME:
+        _env["RETRIEVAL_MODAL_SECRET"] = SECRET_NAME
+    if INDEX_DIR:
+        _env["RETRIEVAL_MODAL_INDEX_DIR"] = INDEX_DIR
     if INDEX_DIR:
         _env["RETRIEVAL_INDEX_DIR"] = REMOTE_INDEX_DIR
 
     image = (
         modal.Image.debian_slim(python_version="3.10")
+        .pip_install(TORCH, **({} if _gpu else {"index_url": TORCH_INDEX_CPU}))
         .pip_install(*PIP_PACKAGES)
         .env(_env)
         .run_function(_download_models)
