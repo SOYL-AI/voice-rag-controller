@@ -3688,8 +3688,10 @@
    "cell": "faiss, q=0.65, recommended design",
    "N_test": 3992,
    "reps": 200,
-   "B": 500,
-   "bootstrap_conjunction_power": 0.705,
+   "B": 1000,
+   "bootstrap_conjunction_power": 0.75,
+   "wald_same_datasets_conjunction_power": 0.75,
+   "mc_se": 0.028284271247461905,
    "normal_approx_conjunction_power": 0.8029
   }
  },
