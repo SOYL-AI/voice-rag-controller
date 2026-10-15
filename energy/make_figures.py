@@ -82,8 +82,9 @@ def fig_stages(stages):
     ax.set_xscale("log")
     ax.set_yticks(y, [r[0] for r in rows])
     ax.set_xlabel("Energy per operation, J (net; log scale; 95% CI)")
-    for yi, v in zip(y, c):
-        ax.text(v * 1.25, yi, f"{v:.3g} J", va="center", fontsize=10, color=INK2)
+    for yi, v, h in zip(y, c, hi):
+        ax.text(max(v, h) * 1.4, yi, f"{v:.3g} J", va="center", fontsize=10, color=INK2)
+    ax.set_xlim(right=c.max() * 30)
     ax.grid(axis="y", visible=False)
     fig.savefig(FIG / "stage_energy.png")
     plt.close(fig)
@@ -107,7 +108,8 @@ def grouped(e):
 def fig_turn(tb):
     asr = 3.94
     mean = lambda k: tb[k]["mean"]
-    chars_s, chars_r = 4.6 * mean("gen_skip"), 4.6 * mean("gen_retrieve")
+    cpt = tb.get("chars_per_gen_token", 4.6)
+    chars_s, chars_r = cpt * mean("gen_skip"), cpt * mean("gen_retrieve")
     cases = [("Skip", em.turn_energy_j("skip", None, mean("prompt_skip"), mean("gen_skip"), asr, chars_s))]
     for prof, lab in (("faiss", "Retrieve: faiss"), ("faiss_rerank", "Retrieve: faiss_rerank"),
                       ("remote_api", "Retrieve: remote_api")):
@@ -139,21 +141,23 @@ def fig_frontier(fr):
     pts = fr["points"]
     fig, ax = plt.subplots(figsize=(7.5, 4.8))
     order = [("ours", "Ours (joint)"), ("b9", "B9 decomposed"), ("b8", "B8 independent"),
-             ("b4", "B4 FLARE-style"), ("b6", "B6 DRAGIN-style"), ("b0", "B0 never retrieve")]
+             ("b4", "B4 FLARE-style"), ("b6", "B6 DRAGIN-style"), ("b0", "B0 never retrieve (= B4 here)")]
     for i, (b, lab) in enumerate(order):
         p = sorted([q for q in pts if q["baseline"] == b], key=lambda q: q["energy_j"]["central"])
         if not p:
             continue
         x = [q["energy_j"]["central"] for q in p]
         yv = [q["accuracy"] for q in p]
-        if len(p) > 1:
-            ax.plot(x, yv, "-", color=C[i], lw=2, marker="o", ms=4, label=lab)
+        if b == "ours":   # drawn wide underneath: Ours and B9 coincide point for point
+            ax.plot(x, yv, "-", color=C[i], lw=6, alpha=0.45, solid_capstyle="round", label=lab)
+        elif len(p) > 1:
+            ax.plot(x, yv, "--", color=C[i], lw=1.8, marker="o", ms=4, label=lab)
         else:
             ax.plot(x, yv, "o", color=C[i], ms=9, label=lab,
                     markeredgecolor="white", markeredgewidth=1.5)
     ax.axvline(fr["mean_turn_j_always_retrieve"], color=INK2, lw=1, ls="--")
-    ax.text(fr["mean_turn_j_always_retrieve"], ax.get_ylim()[0] + 0.01, " always retrieve",
-            color=INK2, fontsize=10, va="bottom")
+    ax.text(fr["mean_turn_j_always_retrieve"], ax.get_ylim()[1] - 0.005, "always retrieve ",
+            color=INK2, fontsize=10, va="top", ha="right")
     ax.set_xlabel("Mean energy per turn, J (central; whole turn incl. local stages)")
     ax.set_ylabel("Accuracy (judged)")
     ax.legend(frameon=False, loc="lower right")

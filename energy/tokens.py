@@ -95,10 +95,13 @@ def main():
     gen = {"skip": [], "retrieve": []}
     paired = []
     by_key = {}
+    n_chars = n_toks = 0
     for f in sorted(ans_dir.glob("*.json")):
         a = json.loads(f.read_text(encoding="utf-8"))
         n = text_tokens(tok, a["answer_text"])
         gen[a["path"]].append(n)
+        n_chars += len(a["answer_text"].strip())
+        n_toks += n
         by_key[(a["scenario_id"], a["seed"], a["path"])] = n
     for (sid, seed, path), n in by_key.items():
         if path == "retrieve" and (sid, seed, "skip") in by_key:
@@ -122,6 +125,7 @@ def main():
         "gen_skip": summ(gen["skip"]),
         "gen_retrieve": summ(gen["retrieve"]),
         "gen_retrieve_minus_skip_paired": summ(paired),
+        "chars_per_gen_token": n_chars / n_toks,
         "per_scenario": rows,
     }
     OUT.parent.mkdir(parents=True, exist_ok=True)

@@ -75,13 +75,13 @@
   "remote_llm": {
     "prefill_j_fixed": 0.0,
     "prefill_j_per_token": {
-      "low": 0.02168754119973632,
-      "central": 0.09294660514172709,
+      "low": 0.017231590386120706,
+      "central": 0.08403470351449585,
       "high": 0.1115359261700725
     },
     "decode_j_per_token": {
-      "low": 0.990618556701031,
-      "central": 5.943711340206186,
+      "low": 1.85903310161385,
+      "central": 7.680540430031824,
       "high": 8.91556701030928
     },
     "idle_w": {
@@ -99,13 +99,13 @@
     "decode_s_per_token": 0.033020618556701034,
     "prefill_s_per_token": 0.0004130960228521204,
     "decode_power_w": {
-      "low": 120.0,
-      "central": 240.0,
+      "low": 146.2991604297669,
+      "central": 292.5983208595338,
       "high": 300.0
     },
     "prefill_power_w": {
-      "low": 142.5,
-      "central": 285.0,
+      "low": 131.71328076980603,
+      "central": 263.42656153961207,
       "high": 300.0
     },
     "idle_w": {
@@ -114,20 +114,26 @@
       "high": 90.0
     },
     "decode_j_per_token": {
-      "low": 0.990618556701031,
-      "central": 5.943711340206186,
+      "low": 1.85903310161385,
+      "central": 7.680540430031824,
       "high": 8.91556701030928
     },
     "prefill_j_per_token": {
-      "low": 0.02168754119973632,
-      "central": 0.09294660514172709,
+      "low": 0.017231590386120706,
+      "central": 0.08403470351449585,
       "high": 0.1115359261700725
     },
     "prefill_j_fixed": 0.0,
     "power_fractions": {
-      "decode": 0.8,
-      "prefill": 0.95,
-      "source": "fallback (no local measurement)"
+      "decode": 0.9753277361984461,
+      "prefill": 0.8780885384653736,
+      "decode_w": 33.67904205866854,
+      "decode_limit_w": 34.531,
+      "prefill_w": 31.799976420523507,
+      "prefill_limit_w": 36.215,
+      "decode_proxy_achieved_gbs": 117.77394597067948,
+      "prefill_proxy_achieved_tflops": 10.158040664585553,
+      "source": "proxy kernels on RTX 4060 Laptop (energy/results/phase_power.json)"
     },
     "sanity": {
       "decode_effective_bw_gbs": 438.9984389634717,

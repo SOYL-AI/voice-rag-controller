@@ -72,6 +72,7 @@
     "min": -87.0,
     "max": 82.0
   },
+  "chars_per_gen_token": 4.228729281767956,
   "per_scenario": [
     {
       "id": 1,
