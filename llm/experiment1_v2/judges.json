@@ -27,8 +27,8 @@
         "price_usd_per_1m": {"input": 2.00, "output": 10.00},
         "cap_inr": 20000,
         "cap_env": "VOICE_RAG_JUDGE_CAP_INR",
-        "baseline": {"input_tokens": 28710941, "output_tokens": 3142391, "as_of": "2026-10-16",
-                     "source": "Azure metrics, gpt-6.1-sol + gpt-6.1-sol-dz"}
+        "baseline": {"input_tokens": 29602115, "output_tokens": 3237689, "as_of": "2026-10-16 (live Azure metrics refresh)",
+                     "source": "Azure metrics InputTokens/OutputTokens, gpt-6.1-sol + gpt-6.1-sol-dz"}
       },
       "request": {
         "temperature": null,
@@ -60,7 +60,7 @@
         "price_usd_per_1m": {"input": 2.50, "output": 10.00},
         "cap_inr": null,
         "cap_env": "VOICE_RAG_JUDGE2_CAP_INR",
-        "baseline": {"input_tokens": 0, "output_tokens": 0, "as_of": null, "source": "not provided"}
+        "baseline": {"input_tokens": 9837826, "output_tokens": 788663, "as_of": "2026-10-16 (live Azure metrics refresh)", "source": "Azure metrics InputTokens/OutputTokens, gpt-4o"}
       },
       "request": {
         "temperature": 0,
