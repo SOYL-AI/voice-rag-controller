@@ -156,7 +156,11 @@ uncontrolled-rate human recordings), one line per item:
                 "text": "What's the", "stable": false, "stable_prefix_words": 0}],
   "n_empty_partials": 1,
   "asr_final": {"t_ms": 3980, "available_ms": 4350, "compute_ms": 370.1, "text": "..."},
-  "vad_user_end_ms": 3980, "endpoint_reason": "vad|stream_end", "vad_onset_ms": 30,
+  "vad_user_end_ms": 3980, "user_end_ms": 3980,
+  "endpoint_reason": "vad|fallback_timeout|stream_end",
+  "endpoint_rule": null | "no_text_change", "fallback_rule": "armed-2", "fallback_arm_ms": 410,
+  "n_partials_after_end": 0,
+  "vad_onset_ms": 30,
   "asr_model": "faster-whisper-<size>", "asr_settings": {...}, "partial_interval_ms": 400,
   "word_timing": {"method": "ctc_forced_alignment", "model": "..."},
   "replay_wall_ms": 2500.0, "trace_version": "v2-speech-1"
@@ -172,9 +176,20 @@ uncontrolled-rate human recordings), one line per item:
   compute measured on the host that produced the trace). Controllers and the
   latency simulation must act on a partial no earlier than `available_ms`.
 - `vad_user_end_ms` is the Silero-VAD end of turn with the live thresholds;
-  `null` (with `endpoint_reason: "stream_end"`) if no endpoint fired before the
-  audio ended. The live pipeline ends the turn at the first endpoint, so an
-  endpoint inside a pause truncates `asr_final` - that is kept, not repaired.
+  `null` if the VAD never confirmed one (typical under babble). The live
+  pipeline ends the turn at the first endpoint, so an endpoint inside a pause
+  truncates `asr_final` - that is kept, not repaired.
+- **`user_end_ms` is the end of turn every consumer uses.** It equals
+  `vad_user_end_ms` when the VAD fired (`endpoint_reason: "vad"`). Otherwise the
+  fallback applies (`endpoint_reason: "fallback_timeout"`, `fallback_rule:
+  "armed-2"`): armed at the first partial with >= 2 words (`fallback_arm_ms`),
+  the turn ends 2.0 s after the last change of the normalised partial text
+  (`endpoint_rule: "no_text_change"`); every ASR call counts as the user still
+  talking. Partials after that moment are dropped (`n_partials_after_end` counts them)
+  and `asr_final` covers the audio up to it. `"stream_end"` remains only for
+  turns where no partial ever had >= 2 words. Report fallback turns separately.
+  Traces from `trace_version` v2-speech-1 lack these fields; `trace.py
+  --upgrade-fallback` adds them.
 - `partials` must be what the real streaming ASR emitted, including errors
   and revisions. Never write the reference transcript into a partial.
 - Producer: `audio/v2/trace.py`; method: `docs/research_v2/SPEECH.md`.
@@ -216,7 +231,7 @@ A controller must treat any missing key as "signal not available" (the v1
 Optional, additive keys read by the v2 controllers (`v2/controllers`):
 
 ```python
-signals["timing"]["user_end_ms"]          # VAD end (alias: vad_user_end_ms)
+signals["timing"]["user_end_ms"]          # trace user_end_ms (VAD end, or the fallback end of turn)
 signals["timing"]["asr_final"]            # {"t_ms": ..., "text": ...}
 signals["timing"]["partial_interval_ms"]  # ASR partial cadence
 signals["retrieval"]["nonhideable_increment_ms"]  # pi: TTFA increment of USING passages

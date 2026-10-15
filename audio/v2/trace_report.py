@@ -21,7 +21,9 @@ items_revised    share of items with at least one lenient revision.
 eot_*            end-of-turn: vad_user_end_ms - true speech end (last word end).
                  Includes the configured silence hang (800 ms); eot_lag_beyond_hang
                  subtracts it. eot_premature = endpoint fired before the speech ended
-                 (turn cut mid-utterance); eot_missed = no VAD endpoint before the
+                 (turn cut mid-utterance); user_end_* is the same for user_end_ms
+                 (VAD or fallback end of turn), fallback_share = share of turns ended
+                 by the fallback rule; eot_missed = no VAD endpoint before the
                  audio ran out.
 partial latency  compute_ms (ASR time per partial), avail_lag = available_ms - t_ms
                  (compute + queueing), first_partial_avail = available_ms of the
@@ -60,6 +62,7 @@ def condition_metrics(recs: list[dict]) -> dict:
     f_err = f_ref = f_wrong = 0
     trans = rev_s = rev_l = items_rev = 0
     eot, lag_beyond, premature, missed = [], [], 0, 0
+    uend, n_fallback, fb_lag = [], 0, []
     comp, avail_lag, first_av, final_after, wpm, n_parts_item = [], [], [], [], [], []
     hang = None
     for r in recs:
@@ -103,6 +106,12 @@ def condition_metrics(recs: list[dict]) -> dict:
         f_wrong += (rw != hw)
         if r.get("asr_final"):
             final_after.append(r["asr_final"]["available_ms"] - speech_end)
+        ue = r.get("user_end_ms", r["vad_user_end_ms"])
+        if ue is not None:
+            uend.append(ue - speech_end)
+        if r.get("endpoint_reason") == "fallback_timeout":
+            n_fallback += 1
+            fb_lag.append(r["user_end_ms"] - speech_end)
         if r["vad_user_end_ms"] is None:
             missed += 1
         else:
@@ -122,6 +131,12 @@ def condition_metrics(recs: list[dict]) -> dict:
         "eot_median_ms": _q(eot, 50), "eot_mean_ms": float(np.mean(eot)) if eot else None,
         "eot_p90_ms": _q(eot, 90), "eot_lag_beyond_hang_median_ms": _q(lag_beyond, 50),
         "eot_premature": premature / n if n else None, "eot_missed": missed / n if n else None,
+        "user_end_median_ms": _q(uend, 50), "user_end_p90_ms": _q(uend, 90),
+        "user_end_premature": float(np.mean(np.array(uend) < 0)) if uend else None,
+        "fallback_share": n_fallback / n if n else None,
+        "fallback_n": n_fallback,
+        "fallback_premature_n": int(sum(x < 0 for x in fb_lag)),
+        "fallback_lag_median_ms": _q(fb_lag, 50), "fallback_lag_p90_ms": _q(fb_lag, 90),
         "compute_median_ms": _q(comp, 50), "compute_p90_ms": _q(comp, 90),
         "avail_lag_median_ms": _q(avail_lag, 50), "avail_lag_p90_ms": _q(avail_lag, 90),
         "first_partial_avail_median_ms": _q(first_av, 50),
@@ -137,9 +152,21 @@ def _fmt(v, pct=False, nd=0):
     return f"{100 * v:.1f}%" if pct else f"{v:.{nd}f}"
 
 
+def fallback_markdown(rows: dict) -> str:
+    """Fallback-ended turns listed separately: their end-of-turn latency is structurally higher."""
+    out = ["| condition | n | fallback turns | premature | end-of-turn lag median ms | p90 ms |",
+           "|---|---|---|---|---|---|"]
+    for cond, m in rows.items():
+        if not m.get("fallback_n"):
+            continue
+        out.append(f"| {cond} | {m['n_items']} | {m['fallback_n']} | {m['fallback_premature_n']} | "
+                   f"{_fmt(m['fallback_lag_median_ms'])} | {_fmt(m['fallback_lag_p90_ms'])} |")
+    return "\n".join(out) if len(out) > 2 else "(no fallback turns)"
+
+
 def to_markdown(rows: dict) -> str:
     hdr = ("| condition | n | wpm | partial WER | final WER | rev (lenient) | items revised | "
-           "EOT median ms | EOT p90 | premature | missed | ASR ms med | avail lag p90 | "
+           "EOT median ms | EOT p90 | premature | missed | fallback | user_end median | ASR ms med | avail lag p90 | "
            "final avail after end |")
     out = [hdr, "|" + "---|" * (hdr.count("|") - 1)]
     for cond, m in rows.items():
@@ -147,7 +174,8 @@ def to_markdown(rows: dict) -> str:
             f"| {cond} | {m['n_items']} | {_fmt(m['wpm_actual_mean'])} | {_fmt(m['partial_wer'], True)} | "
             f"{_fmt(m['final_wer'], True)} | {_fmt(m['rev_lenient'], True)} | {_fmt(m['items_revised'], True)} | "
             f"{_fmt(m['eot_median_ms'])} | {_fmt(m['eot_p90_ms'])} | {_fmt(m['eot_premature'], True)} | "
-            f"{_fmt(m['eot_missed'], True)} | {_fmt(m['compute_median_ms'])} | {_fmt(m['avail_lag_p90_ms'])} | "
+            f"{_fmt(m['eot_missed'], True)} | {_fmt(m.get('fallback_share'), True)} | "
+            f"{_fmt(m.get('user_end_median_ms'))} | {_fmt(m['compute_median_ms'])} | {_fmt(m['avail_lag_p90_ms'])} | "
             f"{_fmt(m['final_avail_after_end_median_ms'])} |")
     return "\n".join(out)
 
@@ -189,7 +217,9 @@ def main(argv=None):
           f"Traces: `{tdir.relative_to(_REPO_ROOT).as_posix() if tdir.is_absolute() else tdir}`; "
           f"text normaliser: {NORMALISER}. Metric definitions: audio/v2/trace_report.py.", "",
           "## By noise", "", to_markdown(by_noise), "", "## By rate", "", to_markdown(by_rate), "",
-          "## By voice", "", to_markdown(by_voice), "", "## All conditions", "", to_markdown(rows), ""]
+          "## By voice", "", to_markdown(by_voice), "", "## All conditions", "", to_markdown(rows), "",
+          "## Fallback-ended turns (VAD never fired; listed separately, structurally later)", "",
+          fallback_markdown(rows), ""]
     stem = Path(a.out) if a.out else tdir.parent / "trace_report"
     stem.with_suffix(".json").write_text(json.dumps(
         {"normaliser": NORMALISER, "conditions": rows, "by_noise": by_noise, "by_rate": by_rate,

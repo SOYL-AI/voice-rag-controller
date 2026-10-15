@@ -56,7 +56,7 @@ if str(_REPO_ROOT) not in sys.path:
 
 from audio.v2 import voices as V  # noqa: E402
 from audio.v2.align import ALIGN_MODEL, cross_check, energy_bounds, force_align  # noqa: E402
-from audio.v2.items import dataset_name_for, load_items, shard, speech_root  # noqa: E402
+from audio.v2.items import dataset_name_for, filter_ids, load_items, shard, speech_root  # noqa: E402
 from audio.v2.textnorm import reference_words  # noqa: E402
 
 SR = 16000
@@ -345,6 +345,7 @@ def main(argv=None):
     ap.add_argument("--rates", nargs="+", type=int, default=V.DEFAULT_RATES)
     ap.add_argument("--noises", nargs="+", default=V.DEFAULT_NOISES)
     ap.add_argument("--limit", type=int, default=None)
+    ap.add_argument("--ids", default=None, help="json file with the item ids to keep (e.g. grid_subset.json)")
     ap.add_argument("--shard", default=None, help="k/n: render items k, k+n, ... (parallel processes)")
     ap.add_argument("--align-check-frac", type=float, default=0.1,
                     help="fraction of clean renders that get the Whisper timestamp cross-check")
@@ -357,7 +358,7 @@ def main(argv=None):
     from audio.v2.tts_engines import close_all
 
     name = a.name or dataset_name_for(Path(a.items))
-    items_all = load_items(a.items, a.split)
+    items_all = filter_ids(load_items(a.items, a.split), a.ids)
     if a.limit:
         items_all = items_all[: a.limit]
     todo = shard(items_all, a.shard)

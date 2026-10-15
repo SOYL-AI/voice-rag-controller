@@ -7,7 +7,7 @@ import numpy as np
 from audio.v2 import voices as V
 from audio.v2.align import refine_with_energy
 from audio.v2.textnorm import align_chars, edit_ops, int_to_words, wer
-from audio.v2.trace import append_line, done_ids, finalize
+from audio.v2.trace import append_line, done_ids, fallback_arm_ms, fallback_end, finalize
 from audio.v2.trace_report import condition_metrics
 
 
@@ -76,3 +76,29 @@ def test_trace_file_resume_and_finalize(tmp_path):
     finalize(p)
     rows = [json.loads(l) for l in p.read_text(encoding="utf-8").splitlines()]
     assert [r["item_id"] for r in rows] == ["a", "b"] and rows[1]["x"] == 3  # last record wins
+
+
+def test_fallback_end_of_turn():
+    P = lambda t, txt: {"t_ms": t, "text": txt}
+    # text stops changing at 800 ms; partials keep coming every 400 ms -> no-change timeout at 2800
+    ps = [P(0, "tell"), P(400, "tell me"), P(800, "tell me more"), P(1200, "tell me more."),
+          P(1600, "Tell me more"), P(2000, "tell me more"), P(2400, "tell me more"),
+          P(2800, "tell me more"), P(3200, "tell me more"), P(3600, "tell me more")]
+    assert fallback_end(ps, 800, arm_ms=400) == (2800, "no_text_change")
+    # armed-2 has no gap rule; the unarmed/armed-1 rules end on the gap
+    ps2 = [P(0, "a b"), P(400, "a b c"), P(1600, "a b c d")]
+    assert fallback_end(ps2, 800, arm_ms=0, rule="unarmed") == (1200, "no_new_partial")
+    assert fallback_end(ps2, 800, arm_ms=0) == (3600, "no_text_change")
+    assert fallback_end([], 800, arm_ms=0) == (None, None)
+
+
+def test_fallback_is_armed_after_onset():
+    P = lambda t, txt: {"t_ms": t, "text": txt}
+    # a babble partial before the question, a gap of empty partials, then the question
+    ps = [P(-400, "Hmm."), P(800, "what time"), P(1200, "what time does"), P(1600, "what time does it close")]
+    assert fallback_end(ps, 800, rule="unarmed") == (400, "no_new_partial")       # premature
+    assert fallback_arm_ms(ps, -500, rule="armed-1") == -500                     # VAD onset in the babble
+    arm = fallback_arm_ms(ps, -500)                                              # armed-2 ignores the VAD
+    assert arm == 800
+    assert fallback_end(ps, 800, arm_ms=arm) == (3600, "no_text_change")
+    assert fallback_arm_ms([P(0, "...")], None) is None                          # never arms on wordless text
