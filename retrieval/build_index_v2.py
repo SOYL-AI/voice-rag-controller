@@ -34,6 +34,7 @@ from __future__ import annotations
 
 import argparse
 import collections
+import gzip
 import hashlib
 import json
 import sys
@@ -48,6 +49,14 @@ MAX_WORDS = 350
 
 
 def load_corpus(path: Path):
+    """Read corpus.jsonl or corpus.jsonl.gz (either may be given)."""
+    if not path.exists():
+        alt = path.with_name(path.name + ".gz") if path.suffix != ".gz" else path.with_suffix("")
+        if alt.exists():
+            path = alt
+    if path.suffix == ".gz":
+        with gzip.open(path, "rt", encoding="utf-8") as fh:
+            return [json.loads(line) for line in fh if line.strip()]
     with path.open(encoding="utf-8") as fh:
         return [json.loads(line) for line in fh if line.strip()]
 
@@ -72,11 +81,12 @@ def embed_input(chunk, use_title: bool) -> str:
     return chunk["text"]
 
 
-def sha256_file(path: Path) -> str:
+def content_sha256(corpus) -> str:
+    """Hash of (doc_id, title, text) in file order; identical for .jsonl and .jsonl.gz."""
     h = hashlib.sha256()
-    with path.open("rb") as fh:
-        for block in iter(lambda: fh.read(1 << 20), b""):
-            h.update(block)
+    for d in corpus:
+        h.update(json.dumps([d["doc_id"], d.get("title", ""), d["text"]], ensure_ascii=False).encode("utf-8"))
+        h.update(b"\n")
     return h.hexdigest()
 
 
@@ -103,7 +113,7 @@ def build(args, model):
         "model": MODEL_NAME, "index": "IndexFlatL2", "dim": int(emb.shape[1]),
         "embed_input": "text" if args.no_title else "title\\ntext",
         "max_words": args.max_words, "n_passages": len(corpus), "n_chunks": len(chunks),
-        "corpus": str(args.corpus), "corpus_sha256": sha256_file(args.corpus),
+        "corpus": str(args.corpus), "corpus_content_sha256": content_sha256(corpus),
         "embed_seconds": round(time.time() - t0, 1),
     }
     (args.out_dir / "build_info.json").write_text(json.dumps(info, indent=1), encoding="utf-8")

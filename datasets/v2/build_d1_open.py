@@ -39,6 +39,7 @@ from __future__ import annotations
 import argparse
 import collections
 import csv
+import gzip
 import hashlib
 import json
 import math
@@ -968,9 +969,15 @@ def main():
     with (out / "items.jsonl").open("w", encoding="utf-8", newline="\n") as fh:
         for it in items:
             fh.write(json.dumps(it, ensure_ascii=False) + "\n")
-    with (out / "corpus.jsonl").open("w", encoding="utf-8", newline="\n") as fh:
-        for doc_id in sorted(corpus):
-            fh.write(json.dumps(corpus[doc_id], ensure_ascii=False) + "\n")
+    corpus_bytes = "".join(json.dumps(corpus[doc_id], ensure_ascii=False) + "\n"
+                           for doc_id in sorted(corpus)).encode("utf-8")
+    (out / "corpus.jsonl").write_bytes(corpus_bytes)
+    # Deterministic gzip copy (no filename, mtime 0): this is the committed form,
+    # since the plain file is too large for the repository.
+    with (out / "corpus.jsonl.gz").open("wb") as raw:
+        with gzip.GzipFile(filename="", mode="wb", fileobj=raw, compresslevel=9, mtime=0) as gz:
+            gz.write(corpus_bytes)
+    report["corpus_jsonl_sha256"] = hashlib.sha256(corpus_bytes).hexdigest()
     (out / "splits.json").write_text(json.dumps(splits, indent=1, ensure_ascii=False) + "\n",
                                      encoding="utf-8", newline="\n")
 
