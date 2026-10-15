@@ -278,3 +278,28 @@ Testing both architectures makes the result informative whichever way it falls, 
 **Needs PI sign-off before freeze.**
 
 **Recorded by:** methods/theory workstream
+
+### 2026-10-16 — E1-v2 dev results; proposed operational belief and judge rubric (pending PI sign-off)
+
+**Evidence (dev only; the test split is sealed):**
+
+- **d2_support** (222 dev items):
+  - Closed-book token entropy is at chance as a retrieval-need signal: mean entropy has AUC 0.55 [0.47, 0.65] on the full question against r3 labels. In the support-agent persona, Mistral-7B states fabricated org policies fluently.
+  - A self-assessment probe (frozen wording `sa-v1-frozen`: "answerable from general knowledge alone, without {org}'s own policies…? Yes/No", reading P(No)) gives AUC 0.55 / 0.58 / 0.62 / 0.70 at word fraction 0.3 / 0.5 / 0.7 / 1.0, and 0.78 against the authored labels.
+- **d1_open** (1,566 dev items; alias-match labels, need 877/1566):
+  - mean entropy: 0.44 / 0.43 / 0.57 / 0.70;
+  - self-assessed need: 0.51 / 0.56 / 0.60 / 0.69.
+- **Combined belief** (logistic on entropy + self-assessment): +0.02 on d1's full question, worse at every prefix, no gain on d2.
+- **Latency of each belief:** self-assessment 0.55 s; first-16-token entropy 1.10 s; full-answer entropy 1.9–3.0 s.
+
+**Proposed:** the operational belief AND the E1-v2 gate signal is `self_assessed_need`, calibrated on dev. One signal is used for both, which avoids v1's gate-signal vs operational-signal mismatch. The combined belief is reported as exploratory.
+
+**Rubric:** judge rubric r3 (core facts) is final. It is the second and last dev revision allowed by PREREG §2.4.
+
+- Judge κ: 0.525 under r1, 0.704 under r2, 0.737 under r3.
+- Authored-vs-empirical κ under r3: 0.424.
+- The core facts were annotated blind to model outputs.
+
+**Status:** pending PI sign-off; to be written into PREREG_V2 before the freeze.
+
+**Recorded by:** Ryan Gomez
