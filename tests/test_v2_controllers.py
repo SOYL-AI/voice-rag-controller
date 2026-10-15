@@ -321,6 +321,13 @@ def test_b9plus_timing_rules_and_tuning():
     assert hi.dispatch_t_ms == 300 and lo.dispatch_t_ms == 2700
     with pytest.raises(ValueError):
         get_controller_v2("b9plus_v2", cfg=cfg, timing_rule={"kind": "sometimes"})
+    # diagnostic r_below: first ready partial with R_hat <= r0 (R_hat = 2700 - t here)
+    rb = get_controller_v2("b9plus_v2", cfg=cfg, timing_rule={"kind": "r_below", "r0": 700,
+                                                             "late_exposed_ms": 0.0}).decide_turn(long_turn)
+    assert rb.dispatch_t_ms == 2100 and rb.timing_label == "r_below_partial"
+    never = get_controller_v2("b9plus_v2", cfg=cfg, timing_rule={"kind": "r_below", "r0": -1,
+                                                                "late_exposed_ms": 0.0}).decide_turn(long_turn)
+    assert never.dispatch_t_ms in (None, 2700)
 
     turns, cells, labels, items = synthetic_dataset(20, seed=3)
     store = CellStore(cells)

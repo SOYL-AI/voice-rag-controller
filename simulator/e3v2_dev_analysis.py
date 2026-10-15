@@ -367,7 +367,8 @@ def run_dataset(args, ds: str, record: Optional[set] = None) -> dict:
     t0 = time.perf_counter()
     phase_a = Path(args.phase_a) / ds
     plan = record is not None
-    out = phase_a / ("analysis_plan" if plan else "analysis")
+    ext = bool(getattr(args, "b9plus_extended", False))
+    out = phase_a / (("analysis_plan" if plan else "analysis") + ("_b9x" if ext else ""))
     out.mkdir(parents=True, exist_ok=True)
     inp = load_inputs(ds, Path(args.e1_results), phase_a)
     store = CellStore.load(phase_a / "store_dev.jsonl", recording=record)
@@ -458,7 +459,7 @@ def run_dataset(args, ds: str, record: Optional[set] = None) -> dict:
                                      ("commit", "speculative"), "dev", labels, gold)
             tuning = {}
             for pr in prices:
-                b9p = tune_b9plus_timing(turns, store, SEEDS, prof, pr, cfg, lm)
+                b9p = tune_b9plus_timing(turns, store, SEEDS, prof, pr, cfg, lm, extended=ext)
                 trig = tune_spec_trigger(turns, store, SEEDS, prof, pr, cfg, lm)
                 tuning[f"{pr['lambda_l']:g}"] = {"b9plus_timing_rule": b9p, "spec_trigger": trig}
                 params = {"b9plus_v2": {"timing_rule": b9p["chosen"]},
@@ -615,6 +616,8 @@ def main(argv=None) -> int:
     ap.add_argument("--primary-condition", default=None)
     ap.add_argument("--write-predictions", action="store_true",
                     help="only aggregate existing dev analyses into docs/research_v2/v2_predictions.json")
+    ap.add_argument("--b9plus-extended", action="store_true",
+                    help="DIAGNOSTIC: tune B9+ over the PREREG family plus the r_below rule; outputs to analysis_b9x/")
     ap.add_argument("--g-plus", type=float, default=None, help=argparse.SUPPRESS)
     ap.add_argument("--g-minus", type=float, default=None, help=argparse.SUPPRESS)
     args = ap.parse_args(argv)

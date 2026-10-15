@@ -142,16 +142,18 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
     ap.add_argument("--e1-results", default=str(_REPO_ROOT / "llm" / "experiment1_v2" / "results"))
     ap.add_argument("--d-star-speculative", default=None)
     ap.add_argument("--m3", type=float, default=None)
+    ap.add_argument("--b9plus-extended", action="store_true", help="plan for the diagnostic B9+ family too")
     args = ap.parse_args(argv)
     check_split(args.split)
     phase_a = Path(args.phase_a) / args.dataset
-    out_path = phase_a / f"required_{args.split}.json"
+    out_path = phase_a / (f"required_{args.split}" + ("_b9x" if args.b9plus_extended else "") + ".json")
 
     if args.command == "plan" and args.split == "dev" and not args.bundle:
         from simulator.e3v2_dev_analysis import run_dataset
         record: set = set()
         run_dataset(argparse.Namespace(phase_a=args.phase_a, e1_results=args.e1_results, primary_condition=None,
-                                       g_plus=None, g_minus=None), args.dataset, record=record)
+                                       g_plus=None, g_minus=None, b9plus_extended=args.b9plus_extended),
+                    args.dataset, record=record)
         doc = write_plan(out_path, record, {"dataset": args.dataset, "split": "dev",
                                             "source": "dev analysis in recording mode (tuning candidates included)"})
         print(f"wrote {out_path}: {doc['n_cells']} cells {doc['by_path']}")

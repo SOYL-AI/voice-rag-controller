@@ -218,7 +218,7 @@ def _mean_utility(records: List[dict]) -> float:
 
 
 def tune_b9plus_timing(turns: Sequence[TurnCtx], store: CellStore, seeds: Sequence[int], profile: str,
-                       prices: dict, cfg: dict, lm, n_grid: int = 21) -> dict:
+                       prices: dict, cfg: dict, lm, n_grid: int = 21, extended: bool = False) -> dict:
     """
     PREREG_V2 §4.5: B9+'s timing rule, tuned on dev at one (profile, price)
     by mean realised utility over {early, late, R_hat-threshold on a
@@ -250,6 +250,28 @@ def tune_b9plus_timing(turns: Sequence[TurnCtx], store: CellStore, seeds: Sequen
                 candidates.append({"kind": "r_threshold", "r0": float(r0),
                                    "early_exposed_ms": float(exposed[sel].mean()),
                                    "early_fraction": float(sel.mean())})
+    if extended:
+        # DIAGNOSTIC family extension (not PREREG_V2 §4.5): dispatch at the
+        # first query-ready partial with R_hat <= r0, priced at the dev-mean
+        # realised exposure of the turns' firing steps (E[L] when it never fires).
+        all_r = []
+        firing = []
+        for t in turns:
+            ctx = with_profile(t, profile, ccfg)
+            lat = latency_dist_for(ctx.signals["retrieval"], ccfg)
+            end = end_of_turn_ms(ctx, ccfg)
+            steps = build_steps(ctx, ccfg)
+            rs = [(o.remaining_ms, max(0.0, end - o.available_ms)) for o in steps
+                  if not o.is_final and o.query_ready and o.remaining_ms is not None]
+            all_r += [r for r, _ in rs]
+            firing.append((rs, lat))
+        if all_r:
+            for r0 in np.quantile(np.asarray(all_r), np.linspace(0.0, 1.0, n_grid)):
+                ex = []
+                for rs, lat in firing:
+                    w = next((win for r, win in rs if r <= r0), None)
+                    ex.append(lat.mean_ms if w is None else lat.expected_exposed_ms(w))
+                candidates.append({"kind": "r_below", "r0": float(r0), "late_exposed_ms": float(np.mean(ex))})
     scores = []
     for rule in candidates:
         ctrl = get_controller_v2("b9plus_v2", cfg=ccfg, timing_rule=rule)

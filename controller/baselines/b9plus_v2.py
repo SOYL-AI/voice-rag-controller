@@ -32,6 +32,14 @@ sub-optimizer is replaced by a rule tuned on dev, one of
                                       this rule sends early); else wait and
                                       decide at the end of turn priced E[L]
 
+    {"kind": "r_below", "r0": ms, "late_exposed_ms": ms}
+                                      DIAGNOSTIC (not in the PREREG_V2 §4.5 family):
+                                      decide at the first query-ready partial whose
+                                      R_hat <= r0 (late in the utterance, where a
+                                      dispatch is still hidden by the end-of-turn
+                                      gap), priced at the dev-mean realised exposure
+                                      of that rule; at the end of turn if none
+
 (+ pi in every case). The rule reads the timing state (R_hat) only to pick
 WHEN; the retrieve decision still prices a dev scalar and never this turn's
 exposure, so B9+ stays in the decomposed class Pi_D (THEORY §1).
@@ -58,7 +66,7 @@ from controller.baselines._objective_v2 import (  # noqa: E402
 from controller.baselines.b9_v2 import B9V2, _optimize_retrieval  # noqa: E402
 from controller.sequential_v2 import RETRIEVE, SKIP, WAIT, StepObs, StepTrace, TurnStatic  # noqa: E402
 
-TIMING_RULE_KINDS = ("early", "late", "r_threshold")
+TIMING_RULE_KINDS = ("early", "late", "r_threshold", "r_below")
 
 
 class B9PlusV2(B9V2):
@@ -92,6 +100,8 @@ class B9PlusV2(B9V2):
 
     def step(self, obs: StepObs, memory: dict) -> Tuple[str, StepTrace]:
         rule = self.timing_rule
+        if rule is not None and rule["kind"] == "r_below":
+            return self._step_r_below(obs, rule)
         if rule is None or rule["kind"] != "r_threshold":
             return super().step(obs, memory)
         record = StepTrace(k=obs.k, available_ms=obs.available_ms, action=WAIT, remaining_ms=obs.remaining_ms)
@@ -118,7 +128,25 @@ class B9PlusV2(B9V2):
         memory["branch"] = "late" if obs.is_final else "early"
         return (RETRIEVE if retrieve else SKIP), record
 
+    def _step_r_below(self, obs: StepObs, rule: dict) -> Tuple[str, StepTrace]:
+        record = StepTrace(k=obs.k, available_ms=obs.available_ms, action=WAIT, remaining_ms=obs.remaining_ms)
+        if not obs.is_final and (not obs.query_ready or obs.remaining_ms is None
+                                 or obs.remaining_ms > float(rule["r0"])):
+            record.note = f"timing-rule[r_below]: waiting for R_hat <= {float(rule['r0']):.0f} ms"
+            return WAIT, record
+        exposed = self.lat.mean_ms if obs.is_final else float(rule["late_exposed_ms"])
+        priced = priced_latency_ms(self.lat, exposed)
+        belief, source = belief_from_obs(obs, self.cfg, self.calibration)
+        frac = estimated_frac(obs.speech_elapsed_ms, obs.remaining_ms, obs.is_final)
+        rho, waste = rho_at(frac, obs.query_ready, self.cfg), waste_at(frac, obs.is_final, self.cfg)
+        retrieve, u, why = _optimize_retrieval(belief, rho, waste, priced, self.prices, self.quality)
+        record.belief, record.rho, record.waste, record.u_retrieve, record.exposed_ms = belief, rho, waste, u, priced
+        record.note = f"timing-rule[r_below r0={float(rule['r0']):.0f}] | {why} [{source}]"
+        return (RETRIEVE if retrieve else SKIP), record
+
     def timing_label(self, obs: StepObs, memory: dict) -> str:
+        if self.timing_rule is not None and self.timing_rule["kind"] == "r_below":
+            return "sentence_end" if obs.is_final else "r_below_partial"
         if self.timing_rule is not None and self.timing_rule["kind"] == "r_threshold":
             return "sentence_end" if obs.is_final else "r_threshold_early"
         return self.policy
