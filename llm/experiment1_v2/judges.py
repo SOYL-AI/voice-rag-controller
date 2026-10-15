@@ -96,6 +96,16 @@ def user_prompt(question, reference, answer, key_facts=None, aliases=None) -> st
     return "\n\n".join(parts) + "\n"
 
 
+# Fingerprint of the full prompt template (system line, instructions, the
+# key-facts rule and the block layout). Part of every judge identity and so
+# of every cache key; the pre-registration freezes it with prompt_version.
+PROMPT_SHA256 = common.sha256_text(
+    system_prompt("{context}"),
+    user_prompt("{question}", "{reference}", "{answer}", ["{fact}"], ["{alias}"]),
+    user_prompt("{question}", "{reference}", "{answer}"),
+)
+
+
 # ---------------------------------------------------------------------------
 # Configuration
 # ---------------------------------------------------------------------------
@@ -209,20 +219,39 @@ def resolve_spec(role: str, judges_cfg: dict, env=None) -> JudgeSpec:
 # Judges
 # ---------------------------------------------------------------------------
 def _sdk_transport(spec: JudgeSpec, timeout_s: float = 120.0):
-    from openai import AzureOpenAI  # noqa: PLC0415 -- optional, real runs only
+    from openai import AzureOpenAI, DefaultHttpxClient  # noqa: PLC0415 -- real runs only
+
+    # The JSON body the SDK actually puts on the wire is captured by an
+    # httpx request hook (per thread), so the record holds the exact request
+    # including anything the SDK adds. Only the body: never the URL or the
+    # headers, which carry the endpoint and the key.
+    captured = threading.local()
+
+    def on_request(request):
+        captured.body = request.content
 
     client = AzureOpenAI(api_key=spec.api_key, azure_endpoint=spec.endpoint,
-                         api_version=spec.api_version, max_retries=0, timeout=timeout_s)
+                         api_version=spec.api_version, max_retries=0, timeout=timeout_s,
+                         http_client=DefaultHttpxClient(event_hooks={"request": [on_request]}))
 
     def call(messages, params):
-        # All sampling/limit parameters go through extra_body so the exact
-        # JSON sent is `params`, whatever this SDK version knows about
-        # (openai 1.52 has no reasoning_effort argument, for instance).
+        # All sampling/limit parameters go through extra_body so the JSON
+        # sent is exactly `params` plus model and messages, whatever this SDK
+        # version knows about (openai 1.52 has no reasoning_effort argument).
+        captured.body = None
         response = client.chat.completions.create(
             model=spec.deployment, messages=messages, extra_body=params
         )
-        usage = response.usage.model_dump() if getattr(response, "usage", None) else None
-        return (response.choices[0].message.content or ""), getattr(response, "model", None), usage
+        body = json.loads(captured.body) if captured.body else None
+        choice = response.choices[0]
+        return {
+            "text": choice.message.content or "",
+            "model": getattr(response, "model", None),
+            "usage": response.usage.model_dump() if getattr(response, "usage", None) else None,
+            "response_id": getattr(response, "id", None),
+            "finish_reason": getattr(choice, "finish_reason", None),
+            "request_body": body,
+        }
 
     return call
 
@@ -286,11 +315,23 @@ class AzureChatJudge:
             params = self._params(seed)
             try:
                 reply = self._transport(messages, params)
-                text, served = reply[0], reply[1]
-                usage = reply[2] if len(reply) > 2 else None
-                return {"text": (text or "").strip(), "sent_params": params,
-                        "response_model": served, "usage": usage,
-                        "attempts": transient + adapted + 1}
+                if not isinstance(reply, dict):  # (text, model[, usage]) test transports
+                    reply = {"text": reply[0], "model": reply[1],
+                             "usage": reply[2] if len(reply) > 2 else None}
+                body = reply.get("request_body")
+                return {
+                    "text": (reply.get("text") or "").strip(),
+                    "sent_params": params,
+                    "request_body": body if body is not None else
+                    {"model": self.spec.deployment, "messages": messages, **params},
+                    "request_body_captured": body is not None,
+                    "response_model": reply.get("model"),
+                    "response_id": reply.get("response_id"),
+                    "finish_reason": reply.get("finish_reason"),
+                    "usage": reply.get("usage"),
+                    "attempts": transient + adapted + 1,
+                    "adaptations_so_far": list(self.adaptations),
+                }
             except Exception as error:  # noqa: BLE001 -- classified below
                 if adapted < 3 and self._adapt(error):
                     adapted += 1
