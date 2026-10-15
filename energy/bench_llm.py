@@ -76,8 +76,10 @@ def main():
     for size in args.models.split(","):
         rid = f"Qwen/Qwen2.5-{size}-Instruct"
         tok = AutoTokenizer.from_pretrained(str(model_dir(rid)))
+        # load straight onto the GPU: host RAM was nearly exhausted by other workloads
         model = AutoModelForCausalLM.from_pretrained(
-            str(model_dir(rid)), torch_dtype=torch.bfloat16, attn_implementation="sdpa").cuda().eval()
+            str(model_dir(rid)), torch_dtype=torch.bfloat16, attn_implementation="sdpa",
+            low_cpu_mem_usage=True, device_map="cuda").eval()
         n_params = sum(p.numel() for p in model.parameters())
         ids_all = tok(corpus, return_tensors="pt").input_ids[0]
         entry = {"repo": rid, "n_params": n_params,
