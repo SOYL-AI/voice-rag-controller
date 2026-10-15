@@ -299,3 +299,65 @@ def test_evaluator_reports_per_architecture(tmp_path):
     saved = json.loads((tmp_path / "e3_dominance_ours_v2_vs_b10_speculative_v2.json").read_text())
     assert saved["per_seed"] and saved["per_seed"][0]["matched_operating_points"] == len(prices)
     assert "b10_speculative_v2" in saved["per_seed"][0]["operating_points"][0]
+
+
+# ---------------------------------------------------------------------------
+# Boundary test outputs (PREREG_V2 §3)
+# ---------------------------------------------------------------------------
+def test_boundary_contrasts_delta_interaction_and_q_hat():
+    from simulator.e3v2_decide import boundary_contrasts
+
+    turns, cells, labels, items = synthetic_dataset(20, seed=8)
+    cfg = cfg_with(nonhideable_increment_ms=600.0)
+    store = CellStore(cells)
+    names = ["ours_v2", "b9plus_v2", "b10_speculative_v2", "b9_v2"]
+    prices = [{"lambda_l": 0.2, "lambda_c": 0.05}, {"lambda_l": 0.8, "lambda_c": 0.05}]
+    recs = run_architectures(list(turns.values()), store, names, prices, [11, 23], ["faiss"], cfg,
+                             LatencyModel(cfg=cfg), ("commit", "speculative"))
+    # realised utility: Q - lambda_l * dTTFA - lambda_c * n
+    for r in recs:
+        lam_l, lam_c = r["prices"]["lambda_l"], r["prices"]["lambda_c"]
+        expect = (float(r["outcome"]["answer_correct"])
+                  - lam_l * (r["outcome"]["ttfa_ms"] - r["skip_ttfa_ms"]) / 1000.0
+                  - lam_c * r["outcome"]["retrievals"])
+        assert r["realized_utility"] == pytest.approx(expect)
+        if r["outcome"]["retrievals"] == 0 or r["used"] is False:
+            assert r["outcome"]["ttfa_ms"] == r["skip_ttfa_ms"]  # no wait for passages
+    rows = boundary_contrasts(recs, "dev")
+    assert len(rows) == len(prices)
+
+    def key_of(r):
+        return f"{r['prices']['lambda_l']:g}|{r['prices']['lambda_c']:g}"
+
+    def item_mean(arch, name, pk):
+        acc = {}
+        for r in recs:
+            if (r["architecture"], r["baseline"]) == (arch, name) and key_of(r) == pk:
+                acc.setdefault(r["item_id"], []).append(r["realized_utility"])
+        return {i: sum(v) / len(v) for i, v in acc.items()}
+
+    for row in rows:
+        pk = row["price"]
+        assert row["d_star"]["commit"] == "b9plus_v2"
+        assert row["d_star"]["speculative"] in ("b9plus_v2", "b10_speculative_v2")
+        dev_u = row["d_star_speculative_dev_utilities"]
+        assert dev_u[row["d_star"]["speculative"]] == max(dev_u.values())
+        o_c, d_c = item_mean("commit", "ours_v2", pk), item_mean("commit", "b9plus_v2", pk)
+        o_s = item_mean("speculative", "ours_v2", pk)
+        d_s = item_mean("speculative", row["d_star"]["speculative"], pk)
+        dc = sum(o_c[i] - d_c[i] for i in o_c) / len(o_c)
+        ds = sum(o_s[i] - d_s[i] for i in o_s) / len(o_s)
+        assert row["delta"]["commit"] == pytest.approx(dc)
+        assert row["delta"]["speculative"] == pytest.approx(ds)
+        assert row["interaction"] == pytest.approx(dc - ds)  # same items under both
+        assert row["n_items"]["paired"] == len(turns)
+        spec = [r for r in recs if r["architecture"] == "speculative"
+                and r["baseline"] == "b10_speculative_v2" and key_of(r) == pk
+                and r["outcome"]["retrievals"]]
+        q = sum(r["used"] is False for r in spec) / len(spec)
+        assert row["q_hat"] == pytest.approx(q)
+        assert row["m"] == pytest.approx(0.05 * (1 + row["w_bar"]) * q)
+    with pytest.raises(ValueError):  # D*[SPEC] must be fixed at freeze on test
+        boundary_contrasts(recs, "test")
+    fixed = boundary_contrasts(recs, "test", d_star_speculative="b10_speculative_v2")
+    assert all(r["d_star"]["speculative"] == "b10_speculative_v2" for r in fixed)

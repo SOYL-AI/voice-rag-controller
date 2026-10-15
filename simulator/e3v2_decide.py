@@ -63,6 +63,15 @@ dispatch is scored on the skip cell and skip-path TTFA with its compute
 counted (retrievals = 1, used = false). Results are written and analysed
 per architecture.
 
+BOUNDARY TEST (PREREG_V2 §3): with both architectures run, the evaluator
+also writes <out>/e3v2_boundary.json — per (profile, price): Delta[COMMIT]
+(Ours-v2[COMMIT] - B9+), Delta[SPECULATIVE] (Ours-v2[SPEC] - D*[SPEC], D*
+the dev-better of B9+ and SPEC, fixed at freeze for test), their paired
+interaction, q_hat, w_bar and m = lambda_c (1 + w_bar) q_hat, with per-item
+paired differences for the bootstrap. Each record carries
+realized_utility = Q - lambda_l (TTFA - skip TTFA) - lambda_c n_retrievals
+(skip TTFA from the same latency draw).
+
 SEALING: --split test is refused unless docs/research_v2/PREREG_FROZEN exists.
 """
 
@@ -225,6 +234,23 @@ def outcome_record(name: str, decision, turn: TurnCtx, seed: int, profile: str, 
                                       ue, profile, cell.get("n_prompt_tokens", 0),
                                       _rng_for(item, seed, cond, profile))
     exposed = comps.get("exposed_retrieval_ms")
+    # The same item's skip-cell TTFA under the SAME latency draw (common
+    # random numbers): Delta-TTFA in the realised utility is measured
+    # against it (PREREG_V2 §3).
+    skip_cell = store.cell(item, seed, cond, "skip", "none")
+    skip_ttfa = float(latency_model.sample_ttfa("skip", None, ue, profile,
+                                                skip_cell.get("n_prompt_tokens", 0),
+                                                _rng_for(item, seed, cond, profile))["ttfa_ms"])
+    retrievals = 1 if decision.retrieve else 0
+    utility = None
+    if prices is not None:
+        utility = (float(bool(cell["answer_correct"]))
+                   - float(prices["lambda_l"]) * (float(comps["ttfa_ms"]) - skip_ttfa) / 1000.0
+                   - float(prices["lambda_c"]) * retrievals)
+    dispatch_waste = None
+    if decision.retrieve:
+        rec = next((t for t in decision.trace if t.k == decision.dispatch_step), None)
+        dispatch_waste = None if rec is None else rec.waste
     return {
         "baseline": name,
         "seed": seed,
@@ -243,13 +269,17 @@ def outcome_record(name: str, decision, turn: TurnCtx, seed: int, profile: str, 
         "outcome": {
             "answer_correct": bool(cell["answer_correct"]),
             "ttfa_ms": float(comps["ttfa_ms"]),
-            "retrievals": 1 if decision.retrieve else 0,
+            "retrievals": retrievals,
         },
+        "skip_ttfa_ms": skip_ttfa,
+        # U = Q - lambda_l * (TTFA - skip TTFA) - lambda_c * n_retrievals
+        "realized_utility": utility,
         "ttfa_components": comps,
         "decision": {
             "retrieve": decision.retrieve,
             "used": decision.used,
             "decided_t_ms": decision.decided_t_ms,
+            "dispatch_waste": dispatch_waste,
             "discarded_query_variant": (retr["query_variant"]
                                         if retr is not None and not decision.uses_passages else None),
             "timing_label": decision.timing_label,
@@ -338,6 +368,109 @@ def run_architectures(
         records.extend(run_phase_b(turns, store, ctrls, price_points, seeds, profiles, arch_cfg,
                                    latency_model, split, labels, gold))
     return records
+
+
+# ---------------------------------------------------------------------------
+# The pre-registered boundary test (PREREG_V2 §3: P1, P2, P3)
+# ---------------------------------------------------------------------------
+OURS = "ours_v2"
+D_STAR_COMMIT = "b9plus_v2"
+D_STAR_SPECULATIVE_CANDIDATES = ("b9plus_v2", "b10_speculative_v2")
+SPEC = "b10_speculative_v2"
+
+
+def _price_key(prices: dict) -> str:
+    return f"{float(prices['lambda_l']):g}|{float(prices['lambda_c']):g}"
+
+
+def _item_utilities(records: List[dict]) -> Dict[tuple, Dict[str, Dict[str, float]]]:
+    """(architecture, profile, price) -> baseline -> item -> mean realised
+    utility over seeds (the item is the unit; seeds are replicates)."""
+    acc: Dict[tuple, Dict[str, Dict[str, List[float]]]] = {}
+    for r in records:
+        if r.get("prices") is None or r.get("realized_utility") is None:
+            continue
+        key = (r["architecture"], r["latency_profile"], _price_key(r["prices"]))
+        acc.setdefault(key, {}).setdefault(r["baseline"], {}).setdefault(r["item_id"], []).append(
+            float(r["realized_utility"]))
+    return {k: {b: {i: sum(v) / len(v) for i, v in items.items()} for b, items in bs.items()}
+            for k, bs in acc.items()}
+
+
+def _paired(a: Dict[str, float], b: Dict[str, float]) -> Dict[str, float]:
+    return {i: a[i] - b[i] for i in sorted(set(a) & set(b))}
+
+
+def _mean(d: Dict[str, float]) -> Optional[float]:
+    return sum(d.values()) / len(d) if d else None
+
+
+def boundary_contrasts(records: List[dict], split: str,
+                       d_star_speculative: Optional[object] = None) -> List[dict]:
+    """
+    Per (latency profile, price), on the same items:
+
+      Delta[COMMIT]      = mean_i (U_i[Ours-v2[COMMIT]]      - U_i[B9+])
+      Delta[SPECULATIVE] = mean_i (U_i[Ours-v2[SPECULATIVE]] - U_i[D*])
+      interaction        = mean_i (Delta_i[COMMIT] - Delta_i[SPECULATIVE])   (P2)
+      q_hat              = fraction of SPEC dispatches whose passages ended unused
+      w_bar              = mean waste of SPEC dispatches
+      m                  = lambda_c (1 + w_bar) q_hat                      (P3 margin)
+
+    D*[SPECULATIVE] is whichever of {B9+, SPEC} has the higher expected
+    utility ON DEV at that (profile, price). On dev it is chosen here and
+    recorded; on test it must be passed in (it is fixed at freeze):
+    `d_star_speculative` is one name or {"<profile>|<lambda_l>|<lambda_c>": name}.
+    Per-item paired differences are included so the analysis can run the
+    pre-registered paired cluster bootstrap on them.
+    """
+    utils = _item_utilities(records)
+    out = []
+    cells = sorted({(p, pk) for (_, p, pk) in utils})
+    for profile, pk in cells:
+        commit = utils.get(("commit", profile, pk), {})
+        spec = utils.get(("speculative", profile, pk), {})
+        row = {"latency_profile": profile, "price": pk, "split": split}
+        d_commit = (_paired(commit[OURS], commit[D_STAR_COMMIT])
+                    if OURS in commit and D_STAR_COMMIT in commit else {})
+        row["d_star"] = {"commit": D_STAR_COMMIT}
+        d_spec: Dict[str, float] = {}
+        if spec and OURS in spec:
+            if isinstance(d_star_speculative, dict):
+                chosen = d_star_speculative.get(f"{profile}|{pk}")
+            else:
+                chosen = d_star_speculative
+            if chosen is None:
+                if split != "dev":
+                    raise ValueError("D*[SPECULATIVE] must be fixed at freeze for the test split: "
+                                     "pass d_star_speculative")
+                cands = [c for c in D_STAR_SPECULATIVE_CANDIDATES if c in spec]
+                chosen = max(cands, key=lambda c: (_mean(spec[c]), -cands.index(c))) if cands else None
+                row["d_star_speculative_dev_utilities"] = {c: _mean(spec[c]) for c in cands}
+            row["d_star"]["speculative"] = chosen
+            if chosen in spec:
+                d_spec = _paired(spec[OURS], spec[chosen])
+        common = sorted(set(d_commit) & set(d_spec))
+        inter = {i: d_commit[i] - d_spec[i] for i in common}
+        spec_recs = [r for r in records if r["architecture"] == "speculative" and r["baseline"] == SPEC
+                     and r["latency_profile"] == profile and r.get("prices") is not None
+                     and _price_key(r["prices"]) == pk and r["outcome"]["retrievals"] > 0]
+        q_hat = (sum(1 for r in spec_recs if r.get("used") is False) / len(spec_recs)) if spec_recs else None
+        wastes = [r["decision"].get("dispatch_waste") for r in spec_recs
+                  if r["decision"].get("dispatch_waste") is not None]
+        w_bar = sum(wastes) / len(wastes) if wastes else None
+        lam_c = float(pk.split("|")[1])
+        row.update({
+            "delta": {"commit": _mean(d_commit), "speculative": _mean(d_spec)},
+            "interaction": _mean(inter),
+            "n_items": {"commit": len(d_commit), "speculative": len(d_spec), "paired": len(common)},
+            "q_hat": q_hat,
+            "w_bar": w_bar,
+            "m": (lam_c * (1.0 + w_bar) * q_hat) if (q_hat is not None and w_bar is not None) else None,
+            "per_item": {"delta_commit": d_commit, "delta_speculative": d_spec, "interaction": inter},
+        })
+        out.append(row)
+    return out
 
 
 # ---------------------------------------------------------------------------
@@ -442,6 +575,9 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
     ap.add_argument("--estimates", type=Path, help="tune_v2.py artifact")
     ap.add_argument("--architectures", default="commit,speculative",
                     help="pipeline architectures to report (commit | speculative)")
+    ap.add_argument("--d-star-speculative", default=None,
+                    help="D*[SPECULATIVE] fixed at freeze (b9plus_v2 | b10_speculative_v2); "
+                         "required for --split test, chosen on dev otherwise")
     ap.add_argument("--out", type=Path, default=_REPO_ROOT / "simulator" / "e3v2_results")
     args = ap.parse_args(argv)
 
@@ -467,6 +603,17 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
                                 args.split, labels, gold)
     for p in write_records(records, args.out):
         print(f"wrote {p}")
+    archs = {r["architecture"] for r in records}
+    if {"commit", "speculative"} <= archs:
+        contrasts = boundary_contrasts(records, args.split, args.d_star_speculative)
+        path = args.out / "e3v2_boundary.json"
+        with open(path, "w", encoding="utf-8") as fh:
+            json.dump(contrasts, fh, indent=1)
+        print(f"wrote {path}")
+        for c in contrasts:
+            print(f"  {c['latency_profile']} @ {c['price']}: Delta[commit]={c['delta']['commit']} "
+                  f"Delta[spec]={c['delta']['speculative']} (D*={c['d_star'].get('speculative')}) "
+                  f"interaction={c['interaction']} q_hat={c['q_hat']} m={c['m']}")
     return 0
 
 

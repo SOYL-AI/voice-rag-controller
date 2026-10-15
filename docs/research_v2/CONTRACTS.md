@@ -194,7 +194,13 @@ decision time, only the causal estimate e/(e+R) (see
   dispatched retrieval is always used; `speculative` = it may be discarded
   at end of turn. The v2 pipeline must state which it implements; under
   `speculative`, `b10_speculative_v2` (SPEC, THEORY.md Prop. 4′) is a
-  mandatory rival.
+  mandatory rival. Per the PI decision (2026-10-16) both are evaluated:
+  `ours_v2` is Ours-v2[COMMIT] or Ours-v2[SPECULATIVE] according to the
+  architecture, and `simulator/e3v2_decide.py` writes
+  `e3v2_boundary.json` with Δ[COMMIT] (vs B9+), Δ[SPECULATIVE] (vs D*, the
+  dev-better of B9+ and SPEC, fixed at freeze for test), their paired
+  interaction, q̂, w̄ and m = λ_c(1+w̄)q̂ (PREREG_V2 §3). Records carry
+  `realized_utility` = Q − λ_l·(TTFA − skip TTFA) − λ_c·n_retrievals.
 
 ## 7. Splits and sealing (pre-registration hygiene)
 
