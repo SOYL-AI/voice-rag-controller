@@ -97,6 +97,29 @@ record by (item, prefix text) and treats it like any other signal: AUC,
 prefix and ASR curves, a latency row, and full and prefix-aware calibration
 artifacts.
 
+## Combined beliefs (`analyze.py`, `pooled_combined.py`)
+
+There are two combined signals:
+- `combined_v1`: logistic on [mean entropy, logit(`self_assessed_need`)];
+- `combined_fast`: the same with first-16-token entropy.
+
+The combiner is fitted on full-question dev records with item/pair-grouped
+CV. Each held-out item then gets out-of-fold values at every prefix, using
+that prefix's own inputs. Downstream, both signals get the same treatment
+as any other signal.
+
+A combiner artifact (`combiner_<ds>_<model>_<signal>.json`) holds the
+full-dev weights a controller would apply.
+
+Belief latency is the max of the generation input and the self-assessment
+call, which run in parallel. It is measured with unqueued probes:
+
+```powershell
+python -m llm.experiment1_v2.run --dataset $ds --split dev --latency-probe --limit 20
+python -m llm.experiment1_v2.self_assess --dataset $ds --split dev --latency-probe --limit 20
+python -m llm.experiment1_v2.pooled_combined --labels d2_support=labels_dev.e1v2-r3.json --out pooled.json
+```
+
 ## Judges (`judges.json`)
 
 **Rubric r3** (`rubrics/e1v2-r3/`, default; the second and final dev
