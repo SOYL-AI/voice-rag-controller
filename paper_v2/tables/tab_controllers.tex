@@ -1,0 +1,27 @@
+% Table I -- controllers. Complete (definitions only; no results).
+% Sources: controller/baselines/*.py, configs/config.yaml controller.e3,
+% docs/research_v2/pseudocode.md, docs/research_v2/THEORY.md (Prop. 4').
+\begin{table}[t]
+\caption{Controllers Compared. ``Priced'' means the controller reads
+$(\lamL,\lamC)$; ``Joint'' means retrieve and dispatch time are chosen in
+one decision.}
+\label{tab:controllers}
+\centering
+\footnotesize
+\setlength{\tabcolsep}{3pt}
+\begin{tabular}{@{}l p{3.55cm} c c c@{}}
+\toprule
+ID & Retrieve rule / dispatch rule & Priced & Joint & Study\\
+\midrule
+B0 & never retrieve & -- & -- & v1, v2\\
+B4 & $1-\bar p\ge0.5$ on closed-book draft (FLARE-style); sentence end & no & no & v1\\
+B6 & $s^{\max}\ge1.0$ (DRAGIN-style); sentence end & no & no & v1\\
+B8 & $s^{\max}\ge1.2$; fixed early dispatch & no & no & v1, v2\\
+B9 & Eq.~(\ref{eq:obj}) with full latency $L$; timing chosen separately & yes & no & v1, v2\\
+\Bplus & Eq.~(\ref{eq:obj}) with the expected exposure of its own timing & yes & no & v1 (analysis), v2\\
+\Bten & dispatch at first query-ready partial; use iff Eq.~(\ref{eq:obj}) $>0$ at end of turn & yes & no & v2\\
+\Ours & $\arg\max$ of Eq.~(\ref{eq:obj}) over skip and $(\text{retrieve},t)$ & yes & yes & v1\\
+\OursV & optimal stopping over partials (Algorithm~\ref{alg:oursv2}) & yes & yes & v2\\
+\bottomrule
+\end{tabular}
+\end{table}

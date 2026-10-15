@@ -1,0 +1,63 @@
+% ============================================================================
+% II. RELATED WORK  (target length: about 0.5 column; three short paragraphs)
+% R2: originality versus RAG / uncertainty / decision-theoretic work must be
+% explicit. Each paragraph ends with one sentence that states the difference
+% from this paper. The submitted memory-system paragraphs (MemGPT, LongMem,
+% MemoryBank, LightMem) are removed: Experiment 4 (memory) was cut and the
+% 15-reference cap leaves no room for work the paper does not use.
+% ============================================================================
+\section{Related Work}\label{sec:related}
+
+% ---- P-II.1 Adaptive retrieval ------------------------------------------------
+% PURPOSE: position against work that decides WHETHER/HOW MUCH to retrieve.
+% CLAIMS + EVIDENCE:
+%   (a) RAG conditions generation on retrieved passages [lewis2020rag].
+%   (b) FLARE triggers retrieval on low-confidence tokens of the upcoming
+%       sentence [jiang2023flare]; DRAGIN on real-time information need
+%       during generation [su2024dragin]; Self-RAG uses learned reflection
+%       tokens [asai2024selfrag]; Adaptive-RAG routes by predicted query
+%       complexity [jeong2024adaptiverag].
+%   (c) Retrieval can lower accuracy on popular entities the model already
+%       knows; popularity-aware adaptive retrieval [mallen2023trust]. This
+%       motivates g^- > 0 in Eq.~(\ref{eq:obj}).
+%   (d) DIFFERENCE: these methods decide whether to retrieve during text
+%       generation; none prices the dispatch time against a user's ongoing
+%       speech, and none asks when joint control of the two decisions adds
+%       value over separate components.
+% NOTE: the paper's B4 and B6 are single-turn, pre-generation proxies
+%   "in the style of" FLARE and DRAGIN (thresholds on a confidence/entropy
+%   statistic of a closed-book draft), not reimplementations; say so here or
+%   in Sec. V [controller/baselines/b4_flare.py, b6_dragin.py].
+\todo{P-II.1: adaptive retrieval \cite{lewis2020rag,jiang2023flare,su2024dragin,asai2024selfrag,jeong2024adaptiverag,mallen2023trust}
+and the difference from this paper.}
+
+% ---- P-II.2 Turn-taking ---------------------------------------------------------
+% PURPOSE: position against work that predicts WHEN the user stops.
+% CLAIMS + EVIDENCE:
+%   (a) TurnGPT predicts turn shifts from text [ekstedt2020turngpt]; VAP
+%       projects future voice activity from audio [ekstedt2022vap]; review of
+%       end-of-turn detection and prediction [skantze2021turntaking].
+%       (R1 minor: cite TurnGPT/VAP directly, not only the review.)
+%   (b) Streaming ASR supplies the partial transcripts the belief is computed
+%       on [radford2023whisper] -- only if v2 uses a Whisper-family model;
+%       confirm against datasets/v2/*/speech/traces/*.jsonl asr_model field.
+%   (c) DIFFERENCE: these predict the timing state Z (remaining speech); this
+%       paper uses such a prediction as an input and asks how it should be
+%       combined with the retrieval decision.
+\todo{P-II.2: turn-taking and streaming ASR \cite{ekstedt2020turngpt,ekstedt2022vap,skantze2021turntaking,radford2023whisper}
+and the difference from this paper.}
+
+% ---- P-II.3 Decision theory -----------------------------------------------------
+% PURPOSE: position against decision-theoretic control.
+% CLAIMS + EVIDENCE:
+%   (a) Value of information [howard1966information] (R1 minor) -- the
+%       one-step waiting value I_k in Prop. 4 is Howard's VoI.
+%   (b) Decision-theoretic turn-taking that weighs acting early against
+%       waiting under uncertainty and processing delay [bohus2011decisions].
+%   (c) Calibration and ECE [guo2017calibration] (used in Sec. VI).
+%   (d) DIFFERENCE: the contribution is not the use of expected utility but
+%       an exact characterisation of when a joint argmax and a decomposed
+%       controller with shared prices coincide, and a test of the boundary.
+\todo{P-II.3: value of information and decision-theoretic dialogue control
+\cite{howard1966information,bohus2011decisions,guo2017calibration} and the
+difference from this paper.}
