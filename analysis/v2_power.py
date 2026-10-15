@@ -710,13 +710,15 @@ def boundary_test_power(Q, v1_b, n_test, alpha, power, n=100_000):
       PI      P1: D_C;  P2: D_C - D_S_PI;  P3: m_PI - D_S_PI
               with D*[S] = best of {B9+, SPEC} and m_PI = lambda_c (1+w) q_hat.
       PI_prophet  same, with the valid prophet bound as the margin.
-      corrected   D*[S] = best of {B9+, SPEC, SPEC-theta};
+      corrected family: D*[S] = best of {B9+, SPEC, SPEC-theta};
               P1: D_C;  P2: D_C - D_S;  P3 (TOST, two one-sided tests):
               m_half - D_S and D_S + m_half, m_half = delta_C / 2.
       corrected_nonsup   as corrected, P3 one-sided only (m_half - D_S).
       corrected_C1bound  as corrected_nonsup with the rigorous Prop. 4''
               margin m_C1 instead of m_half.
-      recommended  as corrected (TOST), margin m3 = min(m_half, m_C1).
+      recommended        = corrected (TOST with m3 = delta_C / 2); the design PREREG_V2 adopts.
+      recommended_C1cap  TOST with m3 = min(m_half, m_C1) (valid only for two
+              epochs and timing-invariant rho; THEORY Prop. 4'').
     """
     rng = np.random.default_rng(RNG_SEED + 1)
     A = ASSUMPTIONS
@@ -750,10 +752,10 @@ def boundary_test_power(Q, v1_b, n_test, alpha, power, n=100_000):
             m_half = max(dC, 0.0) / 2
             m_rec = min(m_half, m_c1)
             designs = {
-                "recommended": np.column_stack([D_C, D_C - D_S, m_rec - D_S, D_S + m_rec]),
+                "recommended": np.column_stack([D_C, D_C - D_S, m_half - D_S, D_S + m_half]),
+                "recommended_C1cap": np.column_stack([D_C, D_C - D_S, m_rec - D_S, D_S + m_rec]),
                 "PI": np.column_stack([D_C, D_C - D_S_pi, m_pi - D_S_pi]),
                 "PI_prophet": np.column_stack([D_C, D_C - D_S_pi, m_pr - D_S_pi]),
-                "corrected": np.column_stack([D_C, D_C - D_S, m_half - D_S, D_S + m_half]),
                 "corrected_nonsup": np.column_stack([D_C, D_C - D_S, m_half - D_S]),
                 "corrected_C1bound": np.column_stack([D_C, D_C - D_S, m_c1 - D_S]),
             }
