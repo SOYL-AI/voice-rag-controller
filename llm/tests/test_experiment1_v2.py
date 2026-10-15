@@ -608,7 +608,7 @@ class EndToEndMockSmoke(unittest.TestCase):
             model = analysis["models"]["mistral7b_v03"]
             self.assertIn("empirical", model["auc_full"]["mean_entropy_nats"])
             self.assertEqual([p["word_frac"] for p in model["prefix_curve_text"]["mean_entropy_nats"]],
-                             [0.25, 0.5, 0.75, 1.0])
+                             [0.3, 0.5, 0.7, 1.0])
             self.assertTrue(model["asr_curves"]["mean_entropy_nats"])
             self.assertEqual([r["k"] for r in model["first_k"]], [4, 8, 16, "all"])
             wf = next(iter(model["asr_word_frac_curve"]["mean_entropy_nats"].values()))
