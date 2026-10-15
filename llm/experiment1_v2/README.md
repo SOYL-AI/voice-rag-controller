@@ -88,6 +88,47 @@ kappa) and the primary judge's self-consistency across its samples.
 Correctness of record: `d1_open` uses a normalized alias match; `d2_support`
 uses the primary judge with key facts.
 
+**Empirical need** (PREREG_V2 §1) means the answer to the full question is
+wrong in at least 3 of 5 closed-book draws:
+- draws with no valid judge majority are excluded, and the label is
+  undetermined if they could decide it;
+- a sensitivity variant counts them as wrong.
+
+If fewer than 2 of 3 judge samples parse, or they tie, up to 3 more are
+drawn.
+
+Every sample stores the exact request body the SDK sent, captured from the
+httpx request (body only, never the URL or headers). It also stores the
+response id, finish reason and usage. The judge identity includes the
+prompt sha256.
+
+`score_judges.py --v2-labels` ends with the §2.4 gate. The holdout is the
+cases with sha256(case_id) mod 3 ≠ 0; the rest are prompt-development. On
+the holdout it checks:
+- human κ ≥ 0.70, first;
+- judge κ ≥ 0.80, with lower 95% bound ≥ 0.70;
+- accuracy ≥ 0.90;
+- |error(retrieve) − error(skip)| ≤ 0.05, which needs a `path` column;
+- unanimity ≥ 0.90 and Fleiss' κ ≥ 0.80.
+
+## Outputs the v2 controllers read
+
+`analyze.py` writes two calibration artifacts per model:
+- `calibration_<ds>_mistral7b_v03_<signal>.json`: the full transcript, in v1
+  format, loadable by `_objective.py`;
+- `calibration_prefix_<ds>_mistral7b_v03_<signal>.json`: the prefix-aware form
+  `sigmoid(intercept + slope·x + frac_slope·f + interaction·x·f)`. This is
+  the one to point `controller.e3v2.calibration.from_artifact` at. It was
+  checked against `_objective_v2.py:load_belief_calibration()` on
+  research/v2-base.
+
+It also prints ĝ⁺ and ĝ⁻ for `controller.e3v2.quality`. The analysis JSON
+holds the remaining PREREG H-E1v2 quantities:
+- the ASR prefix curve at word_frac {0.3, 0.5, 0.7, 1.0};
+- the paired bootstrap of AUC(1.0) − AUC(0.3);
+- the C2-availability flag, AUC(0.5) ≥ 0.65;
+- the boundary-mass check.
+
 To score both judges against the team's double-labelled answers, run:
 
 ```powershell
@@ -109,17 +150,41 @@ Measured on the Modal Mistral endpoint (2026-10-15):
 - throughput is 0.35 calls/s at client concurrency 1 and 0.38 at 4, so the endpoint serves one request at a time;
 - until that changes, wall time is roughly calls x 2.9 s.
 
-Example for 300 dev items and 5 seeds:
+Planned dev sizes are 30% of `d1_open` ≈ 5,300 items and `d2_support` ≈ 720
+items. That gives 1,590 + 216 = 1,806 dev items, or 9,030 (item, seed) pairs
+over 5 seeds:
 
-| conditions | calls | wall time (1 stream) |
-|---|---|---|
-| text (4) | 6,000 | 4.8 h |
-| + 1 clean ASR voice (about 10 distinct partials + final) | +16,500 | +13.3 h |
-| + retrieval | +1,500 | +1.2 h |
+| conditions | d1_open | d2_support | total calls | wall time (1 stream) |
+|---|---|---|---|---|
+| text: full + 3 prefixes (≤ 4) | 31,800 | 4,320 | 36,120 | 29.1 h |
+| ASR, per voice condition (assumes ~10 distinct partials + final) | 87,450 | 11,880 | 99,330 | 80.0 h |
+| retrieval (full question) | 7,950 | 1,080 | 9,030 | 7.3 h |
+| latency probe (50 items x 4 texts x 1 seed, each) | 200 | 200 | 400 | 0.3 h |
+| **total, one ASR voice** | | | **144,880** | **≈ 117 h** |
 
-Judging covers 3,000 answers (closed-book and grounded). That is 9,000
-gpt-6.1-sol samples (k=3) plus 3,000 gpt-4o calls, run in parallel and
-cached.
+The ASR row is the uncertain one; `--dry-run` gives the exact deduplicated
+count once the traces exist. At one stream the full run is about 5 days.
+Moving the endpoint to the concurrent Modal app (`llm/modal_serve.py` on
+research/v2-base declares `@modal.concurrent(max_inputs=64)`) or adding
+replicas divides the wall time by the effective parallelism, which must be
+measured (`--assume-parallel-streams`).
+
+Judging covers 18,060 answers: 9,030 closed-book plus 9,030 grounded.
+Identical answers share cache entries; in the smoke run 68 of 80 were
+distinct. Expected calls:
+- gpt-6.1-sol: 54,180 (k=3), plus redraws on parse failures (none in the smoke run);
+- gpt-4o: 18,060.
+
+Measured per call in the smoke run:
+- prompt about 323 tokens (expect about 350 with d2 key facts);
+- visible completion about 26 tokens;
+- 0 reasoning tokens at `medium` on these easy items.
+
+That puts gpt-6.1-sol at about 19 M prompt tokens plus at least 1.4 M
+completion tokens, and harder items will add reasoning tokens. The
+`max_completion_tokens` 2000 cap bounds the worst case at about 108 M.
+gpt-4o comes to about 6.3 M prompt plus 0.4 M completion tokens. Judge wall
+time was not measured; `label.py` runs `--workers` parallel calls (default 8).
 
 ## Mock smoke run
 
