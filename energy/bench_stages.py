@@ -305,14 +305,47 @@ def main():
 
     if want("tts_piper_subprocess_typical"):
         clauses = split_into_clauses(answers["typical"])
-        cmd = [sys.executable, "-m", "piper", "--model", str(piper_voice()), "--output-raw"]
+        # A venv's python.exe on Windows is a redirector that starts the real
+        # interpreter as a grandchild, hiding its CPU time. Start the base
+        # interpreter directly with the venv's site-packages instead; the work
+        # done is the same as audio/tts.py's `sys.executable -m piper`.
+        import site
+        boot = ("import site,sys,runpy; [site.addsitedir(p) for p in %r]; "
+                "sys.argv=['piper']+sys.argv[1:]; runpy.run_module('piper', run_name='__main__')"
+                % (site.getsitepackages(),))
+        cmd = [getattr(sys, "_base_executable", sys.executable), "-c", boot,
+               "--model", str(piper_voice()), "--output-raw"]
+
+        # psutil cannot see child-process CPU time on Windows, so read each
+        # child's kernel+user time from its process handle after it exits.
+        child = {"cpu_s": 0.0, "ops": 0}
+
+        def child_cpu_s(proc):
+            import ctypes
+            from ctypes import wintypes
+            k32 = ctypes.WinDLL("kernel32")
+            k32.GetProcessTimes.argtypes = [wintypes.HANDLE] + [ctypes.POINTER(wintypes.FILETIME)] * 4
+            ft = [wintypes.FILETIME() for _ in range(4)]
+            ok = k32.GetProcessTimes(wintypes.HANDLE(int(proc._handle)),
+                                     *[ctypes.byref(f) for f in ft])
+            if not ok:
+                return 0.0
+            v = lambda f: ((f.dwHighDateTime << 32) | f.dwLowDateTime) * 1e-7
+            return v(ft[2]) + v(ft[3])
 
         def tts_sub():
             for c in clauses:
-                subprocess.run(cmd, input=c.encode("utf-8"), stdout=subprocess.PIPE,
-                               stderr=subprocess.DEVNULL, check=True)
-        record(run_paired(name="tts_piper_subprocess_typical", fn=tts_sub, warmup=1, **P),
-               chars=len(answers["typical"]), clauses=len(clauses))
+                p = subprocess.Popen(cmd, stdin=subprocess.PIPE, stdout=subprocess.PIPE,
+                                     stderr=subprocess.DEVNULL)
+                p.communicate(input=c.encode("utf-8"))
+                child["cpu_s"] += child_cpu_s(p)
+            child["ops"] += 1
+        ts = run_paired(name="tts_piper_subprocess_typical", fn=tts_sub, warmup=1, **P)
+        per_op = child["cpu_s"] / max(child["ops"], 1)
+        # fold child CPU into the attribution: cpu_s and cpu_attr per trial
+        ts.cpu_s_per_op = [c + per_op for c in ts.cpu_s_per_op]
+        record(ts, chars=len(answers["typical"]), clauses=len(clauses),
+               child_cpu_s_per_op=per_op)
 
     meter.stop()
     results["finished"] = datetime.now(timezone.utc).isoformat()
