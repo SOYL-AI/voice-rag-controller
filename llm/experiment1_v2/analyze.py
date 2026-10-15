@@ -246,6 +246,83 @@ def asr_curves(records, signal, label_maps_, clusters, grid_ms, rel_grid, n_boot
     return out
 
 
+def asr_word_frac_curve(records, signal, label_maps_, clusters, grid, n_boot, c2_threshold) -> dict:
+    """PREREG_V2 H-E1v2 prefix curve: AUC at word_frac in {0.3, 0.5, 0.7, 1.0}
+    on ASR partials, per trace condition. The belief at fraction f is the
+    ASR partial (or the final transcript, f = 1.0) with the largest spoken-
+    word fraction <= f. Adds the paired cluster bootstrap of
+    AUC(max f) - AUC(min f) > 0 and the C2-availability flag AUC(0.5) >= 0.65."""
+    out = {}
+    asr = [r for r in records if r["prefix"]["source"] == "asr"
+           and r["prefix"].get("word_frac") is not None]
+    conditions = sorted({(r["prefix"].get("voice_id"), r["prefix"].get("noise")) for r in asr}, key=str)
+    for voice, noise in conditions:
+        rows = [r for r in asr if (r["prefix"].get("voice_id"), r["prefix"].get("noise")) == (voice, noise)]
+        scores_at = {}
+        for f in grid:
+            best: dict = {}
+            for r in rows:
+                value = r["_flat"].get(signal)
+                wf = r["prefix"]["word_frac"]
+                if value is None or wf > f + 1e-9:
+                    continue
+                key = (r["item_id"], r["draw_seed"])
+                if key not in best or wf > best[key][0]:
+                    best[key] = (wf, value)
+            acc: dict = {}
+            for (item_id, _seed), (_wf, value) in best.items():
+                acc.setdefault(item_id, []).append(value)
+            scores_at[f] = {k: float(np.mean(v)) for k, v in acc.items()}
+        entry = {"curve": [], "paired_diff": {}, "c2_available": {}}
+        for f in grid:
+            point = {"word_frac": f, "n_items": len(scores_at[f])}
+            for name, lm in label_maps_.items():
+                point[name] = item_auc(scores_at[f], lm, clusters, n_boot)
+            entry["curve"].append(point)
+        lo_f, hi_f = min(grid), max(grid)
+        for name, lm in label_maps_.items():
+            ids = [i for i in scores_at[hi_f] if i in scores_at[lo_f] and i in lm]
+            y = np.array([lm[i] for i in ids], float)
+            hi = np.array([scores_at[hi_f][i] for i in ids])
+            lo = np.array([scores_at[lo_f][i] for i in ids])
+
+            def diff(idx):
+                a, b = stats.auc(y[idx], hi[idx]), stats.auc(y[idx], lo[idx])
+                return None if a is None or b is None else a - b
+
+            point = diff(np.arange(len(ids))) if ids else None
+            boot = []
+            if ids and n_boot:
+                rng = np.random.default_rng(1)
+                cl = np.array([clusters.get(i, i) for i in ids])
+                uniq = np.unique(cl)
+                members = {c: np.flatnonzero(cl == c) for c in uniq}
+                for _ in range(int(n_boot)):
+                    idx = np.concatenate([members[c] for c in rng.choice(uniq, len(uniq))])
+                    d = diff(idx)
+                    if d is not None:
+                        boot.append(d)
+            entry["paired_diff"][name] = {
+                "from": lo_f, "to": hi_f, "n_items": len(ids), "auc_diff": point,
+                "ci95": [float(np.percentile(boot, 2.5)), float(np.percentile(boot, 97.5))] if boot else None,
+                "p_one_sided_diff_le_0": float(np.mean(np.array(boot) <= 0)) if boot else None,
+            }
+            mid = next((p[name]["auc"] for p in entry["curve"] if abs(p["word_frac"] - 0.5) < 1e-9), None)
+            entry["c2_available"][name] = None if mid is None else bool(mid >= c2_threshold)
+        out[f"{voice}|{noise}"] = entry
+    return out
+
+
+def boundary_mass(beliefs, b_star, half_width=0.15):
+    """PREREG_V2: fraction of beliefs within +-0.15 of b* = g-/(g+ + g-)."""
+    if b_star is None or beliefs is None or len(beliefs) == 0:
+        return None
+    beliefs = np.asarray(beliefs, float)
+    return {"b_star": b_star, "half_width": half_width, "n": int(beliefs.size),
+            "fraction": float(np.mean(np.abs(beliefs - b_star) <= half_width)),
+            "prediction": ">= 0.15 (v1 had 0.08)"}
+
+
 # ---------------------------------------------------------------------------
 # Calibration
 # ---------------------------------------------------------------------------
@@ -259,7 +336,7 @@ def calibration_block(records, signal, label_map, clusters, cfg_a) -> dict | Non
     if len(np.unique(y)) < 2:
         return None
     groups = [clusters.get(r["item_id"], r["item_id"]) for r in full]
-    cv, _ = stats.cross_validate(x, y, groups, cfg_a["cv_folds"], cfg_a["ece_bins"])
+    cv, oof = stats.cross_validate(x, y, groups, cfg_a["cv_folds"], cfg_a["ece_bins"])
     slope, intercept, info = stats.fit_logistic_safe(x, y)
     iso = stats.fit_isotonic(x, y)
     p_full = stats.sigmoid(slope * x + intercept)
@@ -283,6 +360,9 @@ def calibration_block(records, signal, label_map, clusters, cfg_a) -> dict | Non
         "isotonic": {"thresholds": iso[0].tolist(), "values": iso[1].tolist()},
         "cross_validation": cv,
         "transfer_to_prefixes": transfer,
+        # Beliefs for the boundary-mass check; popped before writing JSON.
+        "_beliefs_oof": [float(v) for v in oof["logistic"] if not np.isnan(v)],
+        "_beliefs_in_sample": [float(v) for v in p_full],
     }
 
 
@@ -658,6 +738,9 @@ def analyze_model(inp, items, cfg_a, headline, n_boot) -> dict:
                 point[name] = item_auc(item_scores(rows, signal), lm, clusters, n_boot)
             curve.append(point)
         result["prefix_curve_text"][signal] = curve
+        result.setdefault("asr_word_frac_curve", {})[signal] = asr_word_frac_curve(
+            records, signal, lmaps, clusters, cfg_a.get("asr_word_frac_grid", [0.3, 0.5, 0.7, 1.0]),
+            n_boot, cfg_a.get("c2_auc_threshold", 0.65))
         result["asr_curves"][signal] = asr_curves(
             records, signal, lmaps, clusters, cfg_a["asr_time_grid_ms"],
             cfg_a["asr_relative_grid"], n_boot, lat_model)
@@ -747,6 +830,14 @@ def main(argv=None) -> int:
         result["calibration"] = cal
         result["calibration_label"] = label_kind
         result["gains"] = gains(inp["labels"], cluster_of(items), n_boot)
+        b_star = ((result["gains"] or {}).get(label_kind) or {}).get("break_even_belief")
+        result["boundary_mass"] = None
+        if cal:
+            result["boundary_mass"] = {
+                "label": label_kind,
+                "dev_out_of_fold": boundary_mass(cal.pop("_beliefs_oof"), b_star),
+                "dev_in_sample": boundary_mass(cal.pop("_beliefs_in_sample"), b_star),
+            }
         analysis["models"][key] = result
         if cal:
             inputs = {

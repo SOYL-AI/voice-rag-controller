@@ -410,6 +410,28 @@ class JudgeTests(unittest.TestCase):
         self.assertTrue(verdict["samples"][3]["request_body_captured"])
         self.assertEqual(len(verdict["judge"]["prompt_sha256"]), 64)
 
+    def test_validation_gate_on_mock_judges(self):
+        rows = ["case_id,dataset,item_id,question,reference,answer,label_a,label_b,path"]
+        for n in range(90):
+            right = n % 2 == 0
+            answer = "It is Paris." if right else "Maybe Lyon."
+            rows.append(f"c{n},d1_open,i{n},Capital of France number {n}?,Paris,{answer},"
+                        f"{int(right)},{int(right)},{'retrieve' if n % 3 else 'skip'}")
+        with tempfile.TemporaryDirectory() as tmp:
+            path = Path(tmp) / "h.csv"
+            path.write_text("\n".join(rows) + "\n", encoding="utf-8")
+            report = score_judges.validate_v2(path, ("primary", "secondary"), "mock", Path(tmp) / "c", 2)
+        gate = report["gate"]
+        self.assertEqual(gate["n_prompt_dev"] + gate["n_holdout_labelled"], 90)
+        self.assertGreater(gate["n_holdout_labelled"], 45)
+        self.assertTrue(gate["human_kappa_ok"])
+        primary = gate["judges"]["primary"]
+        self.assertIsNotNone(primary["fleiss_kappa"])
+        self.assertIsNotNone(primary["path_error_gap"])
+        self.assertIsNone(gate["judges"]["secondary"]["checks"]["fleiss"])  # single sample
+        self.assertEqual(set(primary["checks"]),
+                         {"kappa", "kappa_lower95", "accuracy", "path_error_gap", "unanimous", "fleiss"})
+
     def test_fleiss_kappa(self):
         perfect = score_judges.fleiss_kappa([[True] * 3, [False] * 3, [True] * 3])
         self.assertAlmostEqual(perfect["fleiss_kappa"], 1.0)
@@ -577,6 +599,12 @@ class EndToEndMockSmoke(unittest.TestCase):
                              [0.25, 0.5, 0.75, 1.0])
             self.assertTrue(model["asr_curves"]["mean_entropy_nats"])
             self.assertEqual([r["k"] for r in model["first_k"]], [4, 8, 16, "all"])
+            wf = next(iter(model["asr_word_frac_curve"]["mean_entropy_nats"].values()))
+            self.assertEqual([p["word_frac"] for p in wf["curve"]], [0.3, 0.5, 0.7, 1.0])
+            self.assertIn("auc_diff", wf["paired_diff"]["authored"])
+            self.assertIn("authored", wf["c2_available"])
+            self.assertIn("boundary_mass", model)
+            self.assertNotIn("_beliefs_oof", json.dumps(analysis))
             self.assertTrue(analysis["figures"])
             for paths in analysis["artifacts"].values():  # never into controller/ for mock
                 self.assertTrue(all("controller/baselines" not in p for p in paths))

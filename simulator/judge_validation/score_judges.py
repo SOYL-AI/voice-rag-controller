@@ -57,7 +57,14 @@ FILE is CSV or JSON ({"cases": [...]} or a list) with, per case:
     label_a, label_b   (the two human labels: 1/0, yes/no, true/false, correct/incorrect),
     label_adjudicated  (optional; used when present, else the a/b consensus;
                         cases where a != b with no adjudication are excluded from
-                        judge-vs-human scoring and counted).
+                        judge-vs-human scoring and counted),
+    path        retrieve | skip (for the gate's path error-rate condition).
+
+The report ends with the PREREG_V2 section 2.4 gate, on the ~2/3 holdout
+(sha256(case_id) mod 3 != 0; the rest is prompt-development): human kappa >=
+0.70 first; then per judge kappa >= 0.80 with lower 95% bootstrap bound >=
+0.70, accuracy >= 0.90, |error(retrieve) - error(skip)| <= 0.05, and for the
+k-sample judge unanimity >= 0.90 and Fleiss' kappa >= 0.80.
 """
 import argparse
 import csv
@@ -174,8 +181,87 @@ def load_v2_labels(path: Path) -> list:
             "aliases": _parse_list(row.get("aliases")),
             "label_a": a, "label_b": b, "label_adjudicated": adjudicated,
             "label": reference_label,
+            "path": (row.get("path") or "").strip().lower() or None,  # retrieve | skip
         })
+    for case in cases:
+        case["gate_subset"] = gate_subset(case["case_id"])
     return cases
+
+
+def gate_subset(case_id: str) -> str:
+    """PREREG_V2 2.4: split by sha256 of the answer id, before any judge sees
+    it, into ~100 prompt-development and ~200 gate-holdout answers."""
+    import hashlib  # noqa: PLC0415
+
+    return "prompt_dev" if int(hashlib.sha256(str(case_id).encode()).hexdigest(), 16) % 3 == 0 \
+        else "holdout"
+
+
+GATE = {"human_kappa_min": 0.70, "kappa_min": 0.80, "kappa_lower95_min": 0.70,
+        "accuracy_min": 0.90, "path_error_gap_max": 0.05, "unanimous_min": 0.90,
+        "fleiss_min": 0.80}
+
+
+def _kappa_lower95(judge, human, n_boot=2000, seed=0):
+    import random  # noqa: PLC0415
+
+    pairs = [(j, h) for j, h in zip(judge, human) if j is not None and h is not None]
+    if len(pairs) < 10:
+        return None
+    rng = random.Random(seed)
+    values = []
+    for _ in range(n_boot):
+        sample = [pairs[rng.randrange(len(pairs))] for _ in pairs]
+        k = agreement([a for a, _ in sample], [b for _, b in sample])["cohen_kappa"]
+        if k is not None:
+            values.append(k)
+    values.sort()
+    return values[int(0.025 * len(values))] if values else None
+
+
+def gate_report(cases, verdicts, samples, roles) -> dict:
+    """The judge-validation gate on the holdout subset, criteria as in
+    PREREG_V2 2.4. A criterion that cannot be computed counts as not passed."""
+    human = agreement([c["label_a"] for c in cases], [c["label_b"] for c in cases])
+    hold = [i for i, c in enumerate(cases) if c["gate_subset"] == "holdout" and c["label"] is not None]
+    out = {"criteria": GATE, "n_holdout_labelled": len(hold),
+           "n_prompt_dev": sum(c["gate_subset"] == "prompt_dev" for c in cases),
+           "human_kappa": human["cohen_kappa"],
+           "human_kappa_ok": human["cohen_kappa"] is not None
+           and human["cohen_kappa"] >= GATE["human_kappa_min"], "judges": {}}
+    for role in roles:
+        j = [verdicts[role][i] for i in hold]
+        h = [cases[i]["label"] for i in hold]
+        stats = agreement(j, h)
+        lower = _kappa_lower95(j, h)
+        gaps = {}
+        for path in ("retrieve", "skip"):
+            idx = [n for n, i in enumerate(hold) if cases[i]["path"] == path and j[n] is not None]
+            gaps[path] = (sum(j[n] != h[n] for n in idx) / len(idx)) if idx else None
+        gap = abs(gaps["retrieve"] - gaps["skip"]) if None not in gaps.values() else None
+        ratings = [samples[role][i] for i in hold]
+        k = max((len(r) for r in ratings), default=0)
+        fleiss = fleiss_kappa([r[:k] for r in ratings]) if k > 1 else {"fleiss_kappa": None}
+        unanimous = (sum(1 for r in ratings if len(r) >= k and None not in r[:k] and len(set(r[:k])) == 1)
+                     / len(ratings)) if ratings and k > 1 else None
+        checks = {
+            "kappa": stats["cohen_kappa"] is not None and stats["cohen_kappa"] >= GATE["kappa_min"],
+            "kappa_lower95": lower is not None and lower >= GATE["kappa_lower95_min"],
+            "accuracy": stats["percent_agreement"] is not None
+            and stats["percent_agreement"] >= GATE["accuracy_min"],
+            "path_error_gap": gap is not None and gap <= GATE["path_error_gap_max"],
+            "unanimous": unanimous is not None and unanimous >= GATE["unanimous_min"],
+            "fleiss": fleiss["fleiss_kappa"] is not None and fleiss["fleiss_kappa"] >= GATE["fleiss_min"],
+        }
+        if k <= 1:  # a deterministic single-sample judge has no self-consistency to test
+            checks["unanimous"] = checks["fleiss"] = None
+        out["judges"][role] = {
+            "kappa": stats["cohen_kappa"], "kappa_lower95": lower, "accuracy": stats["percent_agreement"],
+            "n": stats["n"], "error_rate_by_path": gaps, "path_error_gap": gap,
+            "fraction_unanimous": unanimous, "fleiss_kappa": fleiss["fleiss_kappa"], "checks": checks,
+            "passed": out["human_kappa_ok"] and all(v for v in checks.values() if v is not None),
+        }
+    return out
 
 
 def _versus(judge_labels, cases, field):
@@ -207,12 +293,14 @@ def validate_v2(labels_path: Path, roles=("primary", "secondary"), backend="azur
             aliases=case["aliases"], context=contexts.get(case["dataset"], contexts["default"]),
             cache_dir=cache_dir,
         )
-        return verdict["answer_correct"] if verdict["parsed_ok"] else None
+        return verdict
 
-    verdicts = {}
+    verdicts, samples = {}, {}
     with ThreadPoolExecutor(max_workers=max(1, workers)) as pool:
         for role in roles:
-            verdicts[role] = list(pool.map(lambda c, r=role: run(r, c), cases))
+            full = list(pool.map(lambda c, r=role: run(r, c), cases))
+            verdicts[role] = [v["answer_correct"] if v["parsed_ok"] else None for v in full]
+            samples[role] = [[s["answer_correct"] for s in v["samples"]] for v in full]
 
     report = {
         "labels_file": str(labels_path),
@@ -238,6 +326,7 @@ def validate_v2(labels_path: Path, roles=("primary", "secondary"), backend="azur
             role: agreement([verdicts[role][i] for i in index], [c["label"] for c in subset])
             for role in roles
         }
+    report["gate"] = gate_report(cases, verdicts, samples, roles)
     return report
 
 
@@ -262,6 +351,11 @@ def _print_v2(report: dict) -> None:
               f"parse failures: {report['judge_parse_failures'][role]}")
     if "judge_vs_judge" in report:
         print(f"primary vs secondary   : {fmt(report['judge_vs_judge'])}")
+    gate = report["gate"]
+    print(f"GATE (holdout n={gate['n_holdout_labelled']}, prompt-dev n={gate['n_prompt_dev']}): "
+          f"human kappa {gate['human_kappa']} ok={gate['human_kappa_ok']}")
+    for role, g in gate["judges"].items():
+        print(f"   {role:<9} passed={g['passed']}  checks={g['checks']}")
 
 
 def score_production(judge, scenario: dict, answer: str) -> bool:

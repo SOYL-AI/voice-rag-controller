@@ -65,6 +65,8 @@
     "ece_bins": 10,
     "bootstrap": 2000,
     "asr_time_grid_ms": 250,
-    "asr_relative_grid": [0.2, 0.4, 0.6, 0.8, 1.0]
+    "asr_relative_grid": [0.2, 0.4, 0.6, 0.8, 1.0],
+    "asr_word_frac_grid": [0.3, 0.5, 0.7, 1.0],
+    "c2_auc_threshold": 0.65
   }
 }
