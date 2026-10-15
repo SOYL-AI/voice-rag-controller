@@ -516,10 +516,18 @@ class LatencyModel:
         L = float(self._pick(f"ret_{profile}", prof["samples_ms"], u_ret)) + float(prof.get("wan_rtt_ms") or 0.0)
 
         # matched skip counterfactual (also the skip path's answer)
-        n_skip = n_prompt_tokens if (path == "skip" and n_prompt_tokens is not None) else self._default_tokens("skip")
-        skip_over = float(self._pick("skip_over", self.p["skip_overhead_ms"], u_skip))
-        ttft_s, gen_s, tts_s = self._post_llm("skip", n_skip, u_ttft, u_gen, u_tts, mode, engine)
-        skip_first_audio = t_eot + skip_over + ttft_s + gen_s + tts_s
+        has_skip = bool(self.p["generation"].get("skip"))
+        if path == "skip" and not has_skip:
+            raise ValueError("this fit has no skip-path runs; it cannot sample the skip path")
+        if has_skip:
+            # None or <= 0 means "unknown" (simulator/e3v2_decide.py passes
+            # cell.get("n_prompt_tokens", 0)): use the path's fitted median.
+            n_skip = n_prompt_tokens if (path == "skip" and n_prompt_tokens) else self._default_tokens("skip")
+            skip_over = float(self._pick("skip_over", self.p["skip_overhead_ms"], u_skip))
+            ttft_s, gen_s, tts_s = self._post_llm("skip", n_skip, u_ttft, u_gen, u_tts, mode, engine)
+            skip_first_audio = t_eot + skip_over + ttft_s + gen_s + tts_s
+        else:  # e.g. a fit on E2 logs only (no skip runs): pi not estimable
+            skip_first_audio = None
 
         if path == "skip":
             return {
@@ -533,7 +541,7 @@ class LatencyModel:
                 "n_prompt_tokens": n_skip, "tts_mode": mode, "tts_engine": engine, "stub": False,
             }
 
-        n_ret = n_prompt_tokens if n_prompt_tokens is not None else self._default_tokens("retrieve")
+        n_ret = n_prompt_tokens if n_prompt_tokens else self._default_tokens("retrieve")
         d = float(dispatch_ms) if dispatch_ms is not None else t_eot + float(
             self._pick("disp_over", self.p["dispatch_overhead_ms"] or [0.0], u_disp))
         r_done = d + L
@@ -544,11 +552,11 @@ class LatencyModel:
         hidden_first_audio = t_eot + pre + ttft_r + gen_r + tts_r
         return {
             "ttfa_ms": first_audio - user_end_ms,
-            "skip_ttfa_ms": skip_first_audio - user_end_ms,
+            "skip_ttfa_ms": None if skip_first_audio is None else skip_first_audio - user_end_ms,
             "eot_ms": eot, "eot_detect_ms": eot,
             "retrieval_ms": L,
             "exposed_retrieval_ms": exposed, "retrieval_exposed_ms": exposed,
-            "nonhideable_ms": hidden_first_audio - skip_first_audio,
+            "nonhideable_ms": None if skip_first_audio is None else hidden_first_audio - skip_first_audio,
             "llm_request_ms_after_eot": max(t_eot, r_done) + pre - t_eot,
             "ttft_ms": ttft_r, "gen_to_tts_input_ms": gen_r, "tts_first_audio_ms": tts_r,
             "n_prompt_tokens": n_ret, "tts_mode": mode, "tts_engine": engine, "stub": False,

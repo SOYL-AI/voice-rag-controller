@@ -1,0 +1,583 @@
+{
+  "label": "v2_endpoint",
+  "log_globs": [
+    "logs/v2_llm_tts/*.jsonl"
+  ],
+  "group_by": "policy_path_tts",
+  "n_runs": 200,
+  "stages": [
+    "dispatch_wait",
+    "retrieval_exposed",
+    "pre_llm_overhead",
+    "llm_prefill",
+    "llm_to_tts_input",
+    "tts_first_audio"
+  ],
+  "stage_labels": {
+    "dispatch_wait": "ASR final + controller + dispatch wait",
+    "retrieval_exposed": "Retrieval (exposed after user end)",
+    "pre_llm_overhead": "Prompt assembly / hand-off",
+    "llm_prefill": "LLM time to first token",
+    "llm_to_tts_input": "LLM generation until TTS input",
+    "tts_first_audio": "TTS to first audio"
+  },
+  "clock_note": "t_ms from time.monotonic_ns(); ~15.6 ms effective resolution on the Windows run host",
+  "summary": {
+    "unknown/retrieve/batch": {
+      "n_runs": 50,
+      "ttfa_ms": {
+        "n": 50,
+        "mean": 2815.66,
+        "p50": 2664.0,
+        "p95": 4547.599999999999
+      },
+      "stages_ms": {
+        "dispatch_wait": {
+          "n": 50,
+          "mean": 0.0,
+          "p50": 0.0,
+          "p95": 0.0,
+          "share_of_mean_ttfa": 0.0
+        },
+        "retrieval_exposed": {
+          "n": 50,
+          "mean": 71.26,
+          "p50": 47.0,
+          "p95": 255.74999999999966,
+          "share_of_mean_ttfa": 0.025308453435428997
+        },
+        "pre_llm_overhead": {
+          "n": 50,
+          "mean": 2.82,
+          "p50": 0.0,
+          "p95": 0.0,
+          "share_of_mean_ttfa": 0.0010015413792858513
+        },
+        "llm_prefill": {
+          "n": 50,
+          "mean": 428.48,
+          "p50": 328.0,
+          "p95": 876.5999999999999,
+          "share_of_mean_ttfa": 0.15217746460865306
+        },
+        "llm_to_tts_input": {
+          "n": 50,
+          "mean": 1631.54,
+          "p50": 1640.5,
+          "p95": 2995.4499999999994,
+          "share_of_mean_ttfa": 0.5794520645248361
+        },
+        "tts_first_audio": {
+          "n": 50,
+          "mean": 681.56,
+          "p50": 617.0,
+          "p95": 1284.6499999999999,
+          "share_of_mean_ttfa": 0.242060476051796
+        }
+      },
+      "offsets_vs_user_end_ms": {
+        "asr_final": {
+          "n": 50,
+          "mean": 0.0,
+          "p50": 0.0,
+          "p95": 0.0
+        },
+        "controller_action": {
+          "n": 50,
+          "mean": 0.0,
+          "p50": 0.0,
+          "p95": 0.0
+        },
+        "retrieval_launched": {
+          "n": 50,
+          "mean": 0.0,
+          "p50": 0.0,
+          "p95": 0.0
+        },
+        "retrieval_result": {
+          "n": 50,
+          "mean": 71.26,
+          "p50": 47.0,
+          "p95": 255.74999999999966
+        },
+        "llm_request": {
+          "n": 50,
+          "mean": 74.08,
+          "p50": 47.0,
+          "p95": 256.19999999999965
+        },
+        "llm_first_token": {
+          "n": 50,
+          "mean": 502.56,
+          "p50": 390.5,
+          "p95": 930.8
+        },
+        "llm_first_clause": {
+          "n": 0,
+          "mean": null,
+          "p50": null,
+          "p95": null
+        },
+        "llm_final": {
+          "n": 50,
+          "mean": 2134.1,
+          "p50": 2132.5,
+          "p95": 3542.8999999999996
+        },
+        "tts_first_audio": {
+          "n": 50,
+          "mean": 2815.66,
+          "p50": 2664.0,
+          "p95": 4547.599999999999
+        }
+      },
+      "retrieval_duration_ms": {
+        "n": 50,
+        "mean": 71.26,
+        "p50": 47.0,
+        "p95": 255.74999999999966
+      },
+      "retrieval_hidden_ms": {
+        "n": 50,
+        "mean": 0.0,
+        "p50": 0.0,
+        "p95": 0.0
+      },
+      "ttft_ms": {
+        "n": 50,
+        "mean": 428.48,
+        "p50": 328.0,
+        "p95": 876.5999999999999
+      },
+      "generation_ms": {
+        "n": 50,
+        "mean": 1631.54,
+        "p50": 1640.5,
+        "p95": 2995.4499999999994
+      },
+      "n_tokens": {
+        "n": 50,
+        "mean": 51.92,
+        "p50": 52.0,
+        "p95": 94.84999999999998
+      }
+    },
+    "unknown/retrieve/streaming": {
+      "n_runs": 50,
+      "ttfa_ms": {
+        "n": 50,
+        "mean": 1946.28,
+        "p50": 1836.5,
+        "p95": 3084.7499999999995
+      },
+      "stages_ms": {
+        "dispatch_wait": {
+          "n": 50,
+          "mean": 0.3,
+          "p50": 0.0,
+          "p95": 0.0,
+          "share_of_mean_ttfa": 0.00015414020593131512
+        },
+        "retrieval_exposed": {
+          "n": 50,
+          "mean": 76.3,
+          "p50": 47.0,
+          "p95": 235.5999999999999,
+          "share_of_mean_ttfa": 0.03920299237519781
+        },
+        "pre_llm_overhead": {
+          "n": 50,
+          "mean": 5.62,
+          "p50": 0.0,
+          "p95": 16.0,
+          "share_of_mean_ttfa": 0.00288755985777997
+        },
+        "llm_prefill": {
+          "n": 50,
+          "mean": 404.38,
+          "p50": 328.0,
+          "p95": 790.25,
+          "share_of_mean_ttfa": 0.20777072158168403
+        },
+        "llm_to_tts_input": {
+          "n": 50,
+          "mean": 789.94,
+          "p50": 718.0,
+          "p95": 1398.7999999999995,
+          "share_of_mean_ttfa": 0.40587171424461027
+        },
+        "tts_first_audio": {
+          "n": 50,
+          "mean": 669.74,
+          "p50": 586.0,
+          "p95": 1227.25,
+          "share_of_mean_ttfa": 0.34411287173479665
+        }
+      },
+      "offsets_vs_user_end_ms": {
+        "asr_final": {
+          "n": 50,
+          "mean": 0.3,
+          "p50": 0.0,
+          "p95": 0.0
+        },
+        "controller_action": {
+          "n": 50,
+          "mean": 0.3,
+          "p50": 0.0,
+          "p95": 0.0
+        },
+        "retrieval_launched": {
+          "n": 50,
+          "mean": 0.3,
+          "p50": 0.0,
+          "p95": 0.0
+        },
+        "retrieval_result": {
+          "n": 50,
+          "mean": 76.6,
+          "p50": 47.0,
+          "p95": 235.5999999999999
+        },
+        "llm_request": {
+          "n": 50,
+          "mean": 82.22,
+          "p50": 54.5,
+          "p95": 258.79999999999995
+        },
+        "llm_first_token": {
+          "n": 50,
+          "mean": 486.6,
+          "p50": 414.0,
+          "p95": 925.0999999999998
+        },
+        "llm_first_clause": {
+          "n": 50,
+          "mean": 1276.54,
+          "p50": 1172.0,
+          "p95": 1915.25
+        },
+        "llm_final": {
+          "n": 50,
+          "mean": 2097.18,
+          "p50": 2211.0,
+          "p95": 3669.4999999999995
+        },
+        "tts_first_audio": {
+          "n": 50,
+          "mean": 1946.28,
+          "p50": 1836.5,
+          "p95": 3084.7499999999995
+        }
+      },
+      "retrieval_duration_ms": {
+        "n": 50,
+        "mean": 76.3,
+        "p50": 47.0,
+        "p95": 235.5999999999999
+      },
+      "retrieval_hidden_ms": {
+        "n": 50,
+        "mean": 0.0,
+        "p50": 0.0,
+        "p95": 0.0
+      },
+      "ttft_ms": {
+        "n": 50,
+        "mean": 404.38,
+        "p50": 328.0,
+        "p95": 790.25
+      },
+      "generation_ms": {
+        "n": 50,
+        "mean": 1610.58,
+        "p50": 1515.5,
+        "p95": 2945.849999999999
+      },
+      "n_tokens": {
+        "n": 50,
+        "mean": 51.2,
+        "p50": 49.0,
+        "p95": 93.04999999999997
+      }
+    },
+    "unknown/skip/batch": {
+      "n_runs": 50,
+      "ttfa_ms": {
+        "n": 50,
+        "mean": 1889.7,
+        "p50": 1695.5,
+        "p95": 3409.6499999999996
+      },
+      "stages_ms": {
+        "dispatch_wait": {
+          "n": 50,
+          "mean": 0.0,
+          "p50": 0.0,
+          "p95": 0.0,
+          "share_of_mean_ttfa": 0.0
+        },
+        "retrieval_exposed": {
+          "n": 50,
+          "mean": 0.0,
+          "p50": 0.0,
+          "p95": 0.0,
+          "share_of_mean_ttfa": 0.0
+        },
+        "pre_llm_overhead": {
+          "n": 50,
+          "mean": 3.12,
+          "p50": 0.0,
+          "p95": 0.0,
+          "share_of_mean_ttfa": 0.0016510557231306556
+        },
+        "llm_prefill": {
+          "n": 50,
+          "mean": 341.58,
+          "p50": 297.0,
+          "p95": 623.0999999999992,
+          "share_of_mean_ttfa": 0.1807588506112081
+        },
+        "llm_to_tts_input": {
+          "n": 50,
+          "mean": 901.6,
+          "p50": 813.0,
+          "p95": 1792.8999999999999,
+          "share_of_mean_ttfa": 0.4771127692226279
+        },
+        "tts_first_audio": {
+          "n": 50,
+          "mean": 643.4,
+          "p50": 609.0,
+          "p95": 1149.25,
+          "share_of_mean_ttfa": 0.34047732444303325
+        }
+      },
+      "offsets_vs_user_end_ms": {
+        "asr_final": {
+          "n": 50,
+          "mean": 0.0,
+          "p50": 0.0,
+          "p95": 0.0
+        },
+        "controller_action": {
+          "n": 50,
+          "mean": 0.0,
+          "p50": 0.0,
+          "p95": 0.0
+        },
+        "retrieval_launched": {
+          "n": 0,
+          "mean": null,
+          "p50": null,
+          "p95": null
+        },
+        "retrieval_result": {
+          "n": 0,
+          "mean": null,
+          "p50": null,
+          "p95": null
+        },
+        "llm_request": {
+          "n": 50,
+          "mean": 3.12,
+          "p50": 0.0,
+          "p95": 0.0
+        },
+        "llm_first_token": {
+          "n": 50,
+          "mean": 344.7,
+          "p50": 297.0,
+          "p95": 623.0999999999992
+        },
+        "llm_first_clause": {
+          "n": 0,
+          "mean": null,
+          "p50": null,
+          "p95": null
+        },
+        "llm_final": {
+          "n": 50,
+          "mean": 1246.3,
+          "p50": 1140.5,
+          "p95": 2408.6499999999996
+        },
+        "tts_first_audio": {
+          "n": 50,
+          "mean": 1889.7,
+          "p50": 1695.5,
+          "p95": 3409.6499999999996
+        }
+      },
+      "retrieval_duration_ms": {
+        "n": 0,
+        "mean": null,
+        "p50": null,
+        "p95": null
+      },
+      "retrieval_hidden_ms": {
+        "n": 0,
+        "mean": null,
+        "p50": null,
+        "p95": null
+      },
+      "ttft_ms": {
+        "n": 50,
+        "mean": 341.58,
+        "p50": 297.0,
+        "p95": 623.0999999999992
+      },
+      "generation_ms": {
+        "n": 50,
+        "mean": 901.6,
+        "p50": 813.0,
+        "p95": 1792.8999999999999
+      },
+      "n_tokens": {
+        "n": 50,
+        "mean": 29.1,
+        "p50": 26.5,
+        "p95": 57.099999999999994
+      }
+    },
+    "unknown/skip/streaming": {
+      "n_runs": 50,
+      "ttfa_ms": {
+        "n": 50,
+        "mean": 1499.14,
+        "p50": 1429.5,
+        "p95": 2590.049999999999
+      },
+      "stages_ms": {
+        "dispatch_wait": {
+          "n": 50,
+          "mean": 0.0,
+          "p50": 0.0,
+          "p95": 0.0,
+          "share_of_mean_ttfa": 0.0
+        },
+        "retrieval_exposed": {
+          "n": 50,
+          "mean": 0.0,
+          "p50": 0.0,
+          "p95": 0.0,
+          "share_of_mean_ttfa": 0.0
+        },
+        "pre_llm_overhead": {
+          "n": 50,
+          "mean": 4.1,
+          "p50": 0.0,
+          "p95": 16.0,
+          "share_of_mean_ttfa": 0.0027349013434369036
+        },
+        "llm_prefill": {
+          "n": 50,
+          "mean": 345.38,
+          "p50": 313.0,
+          "p95": 742.8,
+          "share_of_mean_ttfa": 0.23038542097469214
+        },
+        "llm_to_tts_input": {
+          "n": 50,
+          "mean": 589.94,
+          "p50": 547.0,
+          "p95": 1016.0,
+          "share_of_mean_ttfa": 0.3935189508651627
+        },
+        "tts_first_audio": {
+          "n": 50,
+          "mean": 559.72,
+          "p50": 500.0,
+          "p95": 1246.0499999999988,
+          "share_of_mean_ttfa": 0.37336072681670823
+        }
+      },
+      "offsets_vs_user_end_ms": {
+        "asr_final": {
+          "n": 50,
+          "mean": 0.0,
+          "p50": 0.0,
+          "p95": 0.0
+        },
+        "controller_action": {
+          "n": 50,
+          "mean": 0.0,
+          "p50": 0.0,
+          "p95": 0.0
+        },
+        "retrieval_launched": {
+          "n": 0,
+          "mean": null,
+          "p50": null,
+          "p95": null
+        },
+        "retrieval_result": {
+          "n": 0,
+          "mean": null,
+          "p50": null,
+          "p95": null
+        },
+        "llm_request": {
+          "n": 50,
+          "mean": 4.1,
+          "p50": 0.0,
+          "p95": 16.0
+        },
+        "llm_first_token": {
+          "n": 50,
+          "mean": 349.48,
+          "p50": 313.0,
+          "p95": 751.5999999999999
+        },
+        "llm_first_clause": {
+          "n": 50,
+          "mean": 939.42,
+          "p50": 907.0,
+          "p95": 1415.25
+        },
+        "llm_final": {
+          "n": 50,
+          "mean": 1255.6,
+          "p50": 1187.5,
+          "p95": 2211.3499999999995
+        },
+        "tts_first_audio": {
+          "n": 50,
+          "mean": 1499.14,
+          "p50": 1429.5,
+          "p95": 2590.049999999999
+        }
+      },
+      "retrieval_duration_ms": {
+        "n": 0,
+        "mean": null,
+        "p50": null,
+        "p95": null
+      },
+      "retrieval_hidden_ms": {
+        "n": 0,
+        "mean": null,
+        "p50": null,
+        "p95": null
+      },
+      "ttft_ms": {
+        "n": 50,
+        "mean": 345.38,
+        "p50": 313.0,
+        "p95": 742.8
+      },
+      "generation_ms": {
+        "n": 50,
+        "mean": 906.12,
+        "p50": 804.5,
+        "p95": 1750.5999999999995
+      },
+      "n_tokens": {
+        "n": 50,
+        "mean": 29.2,
+        "p50": 26.0,
+        "p95": 55.749999999999986
+      }
+    }
+  }
+}

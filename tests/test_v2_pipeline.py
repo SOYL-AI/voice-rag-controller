@@ -369,9 +369,21 @@ def test_latency_model_controller_interface():
     # decomposition: ttfa = skip + exposed + pi (+ pre-LLM overhead difference, which is part of pi)
     assert a["ttfa_ms"] == pytest.approx(a["skip_ttfa_ms"] + a["exposed_retrieval_ms"] + a["nonhideable_ms"])
     if DEFAULT_FIT_PATH.exists():
-        real = LatencyModel(cfg=cfg)
-        r = real.sample_ttfa("retrieve", None, 0.0, "faiss", None, _random.Random(1))
-        assert r["ttfa_ms"] > 0 and r["nonhideable_ms"] == r["nonhideable_ms"]
+        from controller.baselines._objective_v2 import load_e3v2_config
+        from simulator.e3v2_decide import load_latency_model
+
+        e3cfg = load_e3v2_config()
+        real = load_latency_model(e3cfg)  # what the controllers' simulator does
+        assert isinstance(real, LatencyModel)  # the real module, not the stub
+        for profile in e3cfg["latency_profiles"]:
+            r = real.sample_ttfa("retrieve", 800.0, 1000.0, profile, 0, _random.Random(3))
+            s = real.sample_ttfa("skip", None, 1000.0, profile, 0, _random.Random(3))
+            assert r["stub"] is False and r["ttfa_ms"] > 0 and r["nonhideable_ms"] is not None
+            assert s["ttfa_ms"] == pytest.approx(r["skip_ttfa_ms"])
+        sig = real.signals_retrieval("faiss", "streaming")
+        from controller.baselines._objective_v2 import nonhideable_ms
+
+        assert nonhideable_ms(sig, e3cfg) == pytest.approx(sig["nonhideable_increment_ms"])
 
 
 def test_paired_increments():

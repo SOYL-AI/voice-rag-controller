@@ -70,6 +70,14 @@ def load_env_file(path: str) -> list:
     return keys
 
 
+def _complete(log_path: Path) -> bool:
+    """A cell log that reached first audio and the final answer."""
+    if not log_path.exists():
+        return False
+    text = log_path.read_text(encoding="utf-8")
+    return '"tts_first_audio"' in text and '"llm_final"' in text
+
+
 def frozen_query_for(scenario_id: int) -> str:
     """The E3 sweep's precomputed rewrite for this scenario (no request),
     so retrieval runs on the same query E2/E3 used and no live rewrite
@@ -150,6 +158,10 @@ def main(argv=None) -> int:
     ap.add_argument("--warmup", type=int, default=2)
     ap.add_argument("--log-dir", default="logs/v2_llm_tts")
     ap.add_argument("--out", default="analysis/llm_tts_v2/measure_llm_tts.json")
+    ap.add_argument("--resume", action="store_true",
+                    help="reuse complete cell logs from an interrupted run (no new request for them)")
+    ap.add_argument("--already-used", type=int, default=0,
+                    help="requests already spent by interrupted runs; counted against --max-requests")
     ap.add_argument("--skip-pipeline", action="store_true")
     ap.add_argument("--skip-prefill", action="store_true")
     args = ap.parse_args(argv)
@@ -170,12 +182,21 @@ def main(argv=None) -> int:
 
     scenarios = json.loads((_REPO_ROOT / "simulator" / "scenarios.json").read_text(encoding="utf-8"))
     scenarios = scenarios[: args.scenarios]
-    n_pipeline = 0 if args.skip_pipeline else 4 * len(scenarios)
+    log_dir = Path(args.log_dir)
+    n_pipeline = 0
+    if not args.skip_pipeline:
+        for sc in scenarios:
+            for path in ("skip", "retrieve"):
+                for mode in ("batch", "streaming"):
+                    done = log_dir / f"v2llm_{mode}_{path}_s{sc['id']:03d}.jsonl"
+                    if not (args.resume and _complete(done)):
+                        n_pipeline += 1
     n_prefill = 0 if args.skip_prefill else len(args.prefill_k) * args.prefill_questions
-    planned = args.warmup + n_pipeline + n_prefill
+    planned = args.already_used + args.warmup + n_pipeline + n_prefill
     if planned > args.max_requests:
         raise SystemExit(f"planned {planned} requests > budget {args.max_requests}")
     budget = Budget(args.max_requests)
+    budget.used = args.already_used
     print(f"planned requests: {planned} (warm-up {args.warmup}, pipeline {n_pipeline}, prefill {n_prefill})")
 
     from llm.client import VLLMClient, build_messages, make_client
@@ -221,8 +242,24 @@ def main(argv=None) -> int:
             cells = [(p, m) for p in ("skip", "retrieve") for m in ("batch", "streaming")]
             rng.shuffle(cells)
             for path, mode in cells:
-                budget.take()
-                lp = run_pipeline_cell(sc, path, mode, args.seed, log_dir)
+                done_log = log_dir / f"v2llm_{mode}_{path}_s{sc['id']:03d}.jsonl"
+                if args.resume and _complete(done_log):
+                    lp = done_log  # measured in an earlier (interrupted) run
+                else:
+                    lp = None
+                    for attempt in range(2):
+                        budget.take()
+                        try:
+                            lp = run_pipeline_cell(sc, path, mode, args.seed, log_dir)
+                            break
+                        except Exception as exc:  # e.g. TTS out of memory on a loaded host
+                            import gc
+
+                            gc.collect()
+                            print(f"cell s{sc['id']:03d} {path}/{mode} failed ({type(exc).__name__}: {exc}); "
+                                  f"{'retrying' if attempt == 0 else 'giving up on this cell'}")
+                    if lp is None:
+                        continue
                 record["pipeline_logs"].append(
                     {"scenario_id": sc["id"], "path": path, "tts_mode": mode, "log": str(lp)}
                 )
