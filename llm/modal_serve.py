@@ -33,7 +33,9 @@ GPU = os.environ.get("VR_GPU", "A10G")
 
 image = (
     modal.Image.debian_slim(python_version="3.12")
-    .pip_install(f"vllm=={VLLM_VERSION}", "huggingface_hub[hf_transfer]")
+    # transformers is pinned below 4.57: an unpinned install resolves to a
+    # release whose tokenizer API vLLM 0.10.1 cannot load (crash at startup).
+    .pip_install(f"vllm=={VLLM_VERSION}", "transformers>=4.55,<4.57", "huggingface_hub[hf_transfer]")
     .env({"HF_HUB_ENABLE_HF_TRANSFER": "1", "VR_MODEL_HF_ID": MODEL_HF_ID})
 )
 

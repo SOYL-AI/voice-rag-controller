@@ -656,7 +656,7 @@ def make_figures(analysis: dict, out_dir: Path, label_kind: str) -> list:
             drawn = True
         ax.axhline(0.5, color=MUTED, linewidth=1, linestyle=":")
         ax.set_xlabel(f"Words heard (fraction)\n{signal}")
-        ax.set_xticks([0.25, 0.5, 0.75, 1.0])
+        ax.set_xticks([0.3, 0.5, 0.7, 1.0])
     axes[0][0].set_ylabel(f"AUC vs {label_kind} need")
     if drawn:
         if len(models) > 1:

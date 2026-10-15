@@ -3,7 +3,7 @@
   "_protocol_note": "Seeds, generation parameters and the low-confidence threshold are read from protocol_source at run time so E1-v2 cannot drift from v1 E1. logprobs top_k comes from configs/config.yaml llm.logprobs.top_k, exactly as v1 E1 did.",
   "protocol_source": "llm/experiment1/config.json",
   "eligible_models": ["mistral7b_v03"],
-  "word_fracs": [0.25, 0.5, 0.75],
+  "word_fracs": [0.3, 0.5, 0.7],
   "first_k": [4, 8, 16],
   "prompts": {
     "_note": "System prompt per dataset; {org} and {domain} are filled from the item. 'default' is used for any dataset without its own entry.",
