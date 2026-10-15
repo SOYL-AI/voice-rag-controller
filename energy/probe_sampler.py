@@ -48,17 +48,44 @@ def gpu_load(seconds: float):
     return n
 
 
+def counter_polling_test(seconds: float = 6.0):
+    """Slope of NVML's cumulative energy counter vs the reported power, at
+    different counter polling rates, with the GPU idle. On a sane driver the
+    slope equals the mean power whatever the polling rate."""
+    import pynvml as N
+
+    N.nvmlInit()
+    h = N.nvmlDeviceGetHandleByIndex(0)
+    out = {}
+    for hz in (0, 1, 10, 100):          # 0 = read only at the two boundaries
+        time.sleep(2.0)
+        e0 = N.nvmlDeviceGetTotalEnergyConsumption(h)
+        t0 = time.perf_counter()
+        ps = []
+        while time.perf_counter() - t0 < seconds:
+            ps.append(N.nvmlDeviceGetPowerUsage(h) / 1000)
+            if hz:
+                N.nvmlDeviceGetTotalEnergyConsumption(h)
+            time.sleep(1 / hz if hz else 0.05)
+        e1 = N.nvmlDeviceGetTotalEnergyConsumption(h)
+        t1 = time.perf_counter()
+        out[str(hz)] = {"counter_slope_w": (e1 - e0) / 1000 / (t1 - t0),
+                        "mean_reported_power_w": float(np.mean(ps))}
+        print("counter polling", hz, "Hz:", out[str(hz)], flush=True)
+    return out
+
+
 def main():
     import torch  # noqa: F401  (warm CUDA context before timing)
 
     gpu_load(2.0)
-    out = {"rates": {}}
+    out = {"rates": {}, "counter_polling_idle": counter_polling_test()}
     for rate in (20, 50, 100, 200):
         m = EnergyMeter(rate_hz=rate).start()
         time.sleep(1.0)
         with m.measure("idle") as idle:
             time.sleep(4.0)
-        with m.measure("load") as load:
+        with m.measure("load", tail_s=0.75) as load:
             gpu_load(6.0)
         time.sleep(1.5)  # let the power trace settle back
         ts, ps, es, cs = m.snapshot()
