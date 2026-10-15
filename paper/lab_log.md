@@ -252,3 +252,29 @@ Testing both architectures makes the result informative whichever way it falls, 
 **Decided by:** Ryan (PI)
 
 **Recorded by:** Ryan Gomez
+
+### 2026-10-15 — Boundary-test design corrected before freeze (follow-up to the entry above)
+
+**Proposed change** (draft; PREREG_V2 is not frozen and no test data have been touched):
+
+- **New decomposed rival.** **SPEC-θ** (`b11_speculative_gated_v2`) is added to D\*[SPECULATIVE]. SPEC-θ is belief-gated speculative prefetch: the dispatch time comes from the timing policy, and whether to prefetch is decided from the belief and dev-mean scalars only.
+- **P3 replaced.** P3 is now a TOST equivalence test, |Δ[SPECULATIVE]| < m₃ with m₃ = ½·Δ[COMMIT] estimated on dev. It replaces the non-superiority margin λ_c(1+w̄)q̂.
+- **Price rule.** The primary price is now chosen to maximize conjunction power.
+
+**Reasons** (THEORY.md §6.2; `analysis/v2_power.py`, block `boundary_test`):
+
+1. **λ_c(1+w̄)q̂ is not a bound** on the joint speculative controller's advantage over SPEC. There is an analytic counterexample, and the bound is exceeded in simulation in 4 of 6 cells at the lowest price. With partial-query risk active, no compute-only bound exists at all.
+2. **Without SPEC-θ, the speculative contrast measures a decomposable effect.** The joint speculative controller beats {B9+, SPEC} mainly by not prefetching on confident-skip turns, and a decomposed controller can do that from the belief alone. In simulation this makes Δ[SPECULATIVE] (0.013–0.015) larger than Δ[COMMIT] (0.009–0.011), so P2 is predicted false and the conjunction cannot pass at any N. With SPEC-θ, Δ[SPECULATIVE] ≈ 0 and the interaction ≈ Δ[COMMIT].
+3. **The q̂ margin is uninformative.** It is about 3× Δ[COMMIT], so P3 would follow from P2.
+
+**Power** (placeholder assumptions): 80% conjunction power needs about 3,400 (faiss), 4,600 (faiss_rerank) or 6,500 (remote_api) pooled test items. A direct bootstrap check suggests adding about 10%.
+
+**Implementation:**
+
+- `boundary_contrasts` now reports m₃. On test, m₃ must be passed in, as D\* is.
+- q̂ and λ_c(1+w̄)q̂ are kept as labelled diagnostics.
+- `tests/test_v2_speculative.py` checks SPEC ≤ SPEC-θ ≤ Ours-v2[SPEC] in exact expectation. It also checks that SPEC-θ strictly beats SPEC when λ_c > 0, and that its gate ignores the turn's timing state.
+
+**Needs PI sign-off before freeze.**
+
+**Recorded by:** methods/theory workstream

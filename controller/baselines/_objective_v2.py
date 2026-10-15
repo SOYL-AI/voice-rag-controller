@@ -751,17 +751,22 @@ def estimate_policy_constants(turn_ctxs: Iterable, cfg: dict, policies: Sequence
             window = 0.0 if obs.is_final else max(0.0, end_ms - obs.available_ms)
             frac = estimated_frac(obs.speech_elapsed_ms, obs.remaining_ms, obs.is_final)
             row = prof.setdefault(policy, {"hidden_ms": 0.0, "exposed_ms": 0.0, "rho": 0.0,
-                                           "waste": 0.0, "early_rate": 0.0, "n": 0})
+                                           "waste": 0.0, "early_rate": 0.0, "n": 0,
+                                           "remaining_ms": 0.0, "elapsed_ms": 0.0})
             row["hidden_ms"] += lat.expected_hidden_ms(window)
             row["exposed_ms"] += lat.expected_exposed_ms(window)
             row["rho"] += rho_at(frac, obs.query_ready, cfg)
             row["waste"] += waste_at(frac, obs.is_final, cfg)
             row["early_rate"] += 0.0 if obs.is_final else 1.0
+            # predicted remaining speech / elapsed speech at the trigger: the
+            # scalars SPEC-theta (b11) gates on instead of this turn's values
+            row["remaining_ms"] += 0.0 if (obs.is_final or obs.remaining_ms is None) else float(obs.remaining_ms)
+            row["elapsed_ms"] += float(obs.speech_elapsed_ms or 0.0)
             row["n"] += 1
     for prof in acc.values():
         for row in prof.values():
             n = max(1, row["n"])
-            for key in ("hidden_ms", "exposed_ms", "rho", "waste", "early_rate"):
+            for key in ("hidden_ms", "exposed_ms", "rho", "waste", "early_rate", "remaining_ms", "elapsed_ms"):
                 row[key] /= n
     return {
         "prior_belief": (sum(beliefs) / len(beliefs)) if beliefs else float(cfg["belief"]["prior"]),

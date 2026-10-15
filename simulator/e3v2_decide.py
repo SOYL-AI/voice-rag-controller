@@ -375,7 +375,10 @@ def run_architectures(
 # ---------------------------------------------------------------------------
 OURS = "ours_v2"
 D_STAR_COMMIT = "b9plus_v2"
-D_STAR_SPECULATIVE_CANDIDATES = ("b9plus_v2", "b10_speculative_v2")
+# SPEC-theta (b11) is the belief-gated decomposed prefetcher; without it the
+# speculative contrast measures a compute saving any decomposed controller can
+# make (THEORY.md §6.2, Prop. 4'').
+D_STAR_SPECULATIVE_CANDIDATES = ("b9plus_v2", "b10_speculative_v2", "b11_speculative_gated_v2")
 SPEC = "b10_speculative_v2"
 
 
@@ -406,21 +409,26 @@ def _mean(d: Dict[str, float]) -> Optional[float]:
 
 
 def boundary_contrasts(records: List[dict], split: str,
-                       d_star_speculative: Optional[object] = None) -> List[dict]:
+                       d_star_speculative: Optional[object] = None,
+                       m3: Optional[object] = None) -> List[dict]:
     """
     Per (latency profile, price), on the same items:
 
       Delta[COMMIT]      = mean_i (U_i[Ours-v2[COMMIT]]      - U_i[B9+])
       Delta[SPECULATIVE] = mean_i (U_i[Ours-v2[SPECULATIVE]] - U_i[D*])
       interaction        = mean_i (Delta_i[COMMIT] - Delta_i[SPECULATIVE])   (P2)
-      q_hat              = fraction of SPEC dispatches whose passages ended unused
-      w_bar              = mean waste of SPEC dispatches
-      m                  = lambda_c (1 + w_bar) q_hat                      (P3 margin)
+      m3                 = P3 TOST margin, 1/2 * max(Delta[COMMIT], 0) on DEV (PREREG_V2 §3)
+      q_hat, w_bar       = fraction of SPEC dispatches left unused, their mean waste
+      m_c_qhat           = lambda_c (1 + w_bar) q_hat: DIAGNOSTIC ONLY. It is not a
+                           bound on Ours-v2[SPEC] - SPEC (THEORY §6.2, counterexample)
+                           and not the P3 margin.
 
-    D*[SPECULATIVE] is whichever of {B9+, SPEC} has the higher expected
-    utility ON DEV at that (profile, price). On dev it is chosen here and
-    recorded; on test it must be passed in (it is fixed at freeze):
+    D*[SPECULATIVE] is whichever of {B9+, SPEC, SPEC-theta} has the highest
+    expected utility ON DEV at that (profile, price). On dev it is chosen here
+    and recorded; on test it must be passed in (it is fixed at freeze):
     `d_star_speculative` is one name or {"<profile>|<lambda_l>|<lambda_c>": name}.
+    m3 likewise: computed here on dev, and on test it must be passed in as one
+    number or {"<profile>|<lambda_l>|<lambda_c>": value}.
     Per-item paired differences are included so the analysis can run the
     pre-registered paired cluster bootstrap on them.
     """
@@ -460,13 +468,23 @@ def boundary_contrasts(records: List[dict], split: str,
                   if r["decision"].get("dispatch_waste") is not None]
         w_bar = sum(wastes) / len(wastes) if wastes else None
         lam_c = float(pk.split("|")[1])
+        dc_mean = _mean(d_commit)
+        m3_here = None if dc_mean is None else 0.5 * max(dc_mean, 0.0)
+        if isinstance(m3, dict):
+            m3_fixed = m3.get(f"{profile}|{pk}")
+        else:
+            m3_fixed = m3
+        if m3_fixed is None and split != "dev":
+            raise ValueError("the P3 margin m3 must be fixed at freeze for the test split: pass m3")
         row.update({
-            "delta": {"commit": _mean(d_commit), "speculative": _mean(d_spec)},
+            "delta": {"commit": dc_mean, "speculative": _mean(d_spec)},
             "interaction": _mean(inter),
             "n_items": {"commit": len(d_commit), "speculative": len(d_spec), "paired": len(common)},
+            "m3": float(m3_fixed) if m3_fixed is not None else m3_here,
+            "m3_source": "fixed" if m3_fixed is not None else "dev: 0.5*max(Delta[COMMIT],0)",
             "q_hat": q_hat,
             "w_bar": w_bar,
-            "m": (lam_c * (1.0 + w_bar) * q_hat) if (q_hat is not None and w_bar is not None) else None,
+            "m_c_qhat": (lam_c * (1.0 + w_bar) * q_hat) if (q_hat is not None and w_bar is not None) else None,
             "per_item": {"delta_commit": d_commit, "delta_speculative": d_spec, "interaction": inter},
         })
         out.append(row)
@@ -576,8 +594,10 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
     ap.add_argument("--architectures", default="commit,speculative",
                     help="pipeline architectures to report (commit | speculative)")
     ap.add_argument("--d-star-speculative", default=None,
-                    help="D*[SPECULATIVE] fixed at freeze (b9plus_v2 | b10_speculative_v2); "
+                    help="D*[SPECULATIVE] fixed at freeze (b9plus_v2 | b10_speculative_v2 | b11_speculative_gated_v2); "
                          "required for --split test, chosen on dev otherwise")
+    ap.add_argument("--m3", type=float, default=None,
+                    help="P3 TOST margin fixed at freeze (1/2 dev Delta[COMMIT]); required for --split test")
     ap.add_argument("--out", type=Path, default=_REPO_ROOT / "simulator" / "e3v2_results")
     args = ap.parse_args(argv)
 
@@ -605,7 +625,7 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
         print(f"wrote {p}")
     archs = {r["architecture"] for r in records}
     if {"commit", "speculative"} <= archs:
-        contrasts = boundary_contrasts(records, args.split, args.d_star_speculative)
+        contrasts = boundary_contrasts(records, args.split, args.d_star_speculative, args.m3)
         path = args.out / "e3v2_boundary.json"
         with open(path, "w", encoding="utf-8") as fh:
             json.dump(contrasts, fh, indent=1)
@@ -613,7 +633,7 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
         for c in contrasts:
             print(f"  {c['latency_profile']} @ {c['price']}: Delta[commit]={c['delta']['commit']} "
                   f"Delta[spec]={c['delta']['speculative']} (D*={c['d_star'].get('speculative')}) "
-                  f"interaction={c['interaction']} q_hat={c['q_hat']} m={c['m']}")
+                  f"interaction={c['interaction']} m3={c['m3']} q_hat={c['q_hat']} m_c_qhat(diag)={c['m_c_qhat']}")
     return 0
 
 

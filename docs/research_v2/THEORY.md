@@ -57,6 +57,10 @@ exposed latency $e_t(Z)=\mathbb E[\pi+\max(0,L-R_t)\mid Z]$.
 * **Ours (joint).** $\arg\max$ over $\{\text{skip}\}\cup\{(\text{retrieve},t):t\in\mathcal T\}$; ties go to skip, then to the earlier element of `TIMING_ORDER` (`ours.py`).
 * **B9 (decomposed with prices).** Retrieval sub-optimizer: retrieve iff $s b-g^{-}-\lambda_l L-\lambda_c(1+w_{\text{se}})>0$, pricing the *full* latency $L$ (`_optimize_retrieval`). Timing sub-optimizer, run independently: $\tau_B=\arg\max_t[-b\,g^{+}\rho_t+\lambda_l o_t-\lambda_c w_t]$ (`_optimize_timing`). Note that B9's timing optimizer already reads the belief.
 * **B9+ (decomposed, expected-exposure pricing).** Same timing sub-optimizer $\hat\tau$; the retrieval sub-optimizer prices the expected exposed latency of the timing that sub-optimizer will use: retrieve iff $U_{\hat\tau}(b)>0$. It never sees a turn-level timing state, so it stays decomposed. (Implemented as `b9plus_decide` in `analysis/v1_theory_check.py`.)
+* **Speculative architecture (Section 6.2).** A dispatched retrieval may be discarded. The controllers are:
+  * Ours-v2[S], the joint optimal-stopping prefetcher;
+  * SPEC (B10), which always prefetches and decides use with $b_K$;
+  * SPEC-θ (B11), a belief-gated decomposed prefetcher.
 
 **Policy classes (used from Section 5 on).** A policy is a pair $(r,\tau)$ of a
 retrieve indicator and a timing. The *joint class* $\Pi_J$ lets both be
@@ -290,15 +294,99 @@ rather than before.
 
 The stopping region $\{(k,b,z):D_k\ge\mathbb E[V_{k+1}\mid\mathcal F_k]\}$ is not a product of a belief set and a timing set: dispatch early when confident, wait when borderline. That is the trade-off a decomposed controller cannot represent.
 
-### 6.2 Caveat: speculative dispatch removes the C2 advantage when compute is cheap
+### 6.2 The speculative architecture (Props. 4′ and 4″)
 
-Prop. 4 assumes **commit**. Suppose the pipeline instead allows a retrieval to be dispatched speculatively and the decision to *use* it to be taken at $K$ with $b_K$; an unused result costs compute only. Then:
+Prop. 4 assumes **commit**. PREREG_V2 also tests the **speculative** architecture, where a dispatched retrieval may be discarded. This section gives its exact theory. Numbers come from `v2_power.json`, block `boundary_test`.
 
-**Proposition 4′.** With $\rho\equiv0$ and $R_k$ non-increasing pathwise, the decomposed policy SPEC is optimal over all policies when $\lambda_c=0$. SPEC dispatches at the earliest epoch and uses the result iff $A(b_K)-\lambda_lX_1>0$. For $\lambda_c>0$ the joint optimum exceeds SPEC by at most $\lambda_c(1+w_1)$ per turn.
+**Model (S).**
+* **Epochs.** $k_0<\dots<K$: $k_0$ is the first epoch at which a query can be formed (B10's trigger), and $K$ is end of turn.
+* **Prefetch.** At an epoch $k<K$ the controller may prefetch once. This pays compute $c_k=\lambda_c(1+w_k)$ immediately (sunk) and fixes the query risk $\rho_k$.
+* **Use decision at $K$.** If a prefetch was made at $\tau$, the passages are used iff
+$$Y_\tau:=U_{\text{use}}(b_K;\tau)=b_Kg^{+}(1-\rho_\tau)-(1-b_K)g^{-}-\lambda_l\hat X_\tau>0,\qquad \hat X_\tau=\mathbb E[\pi+\max(0,L-W_\tau)\mid\mathcal F_K],$$
+where $W_\tau$ is the realised hiding window. Discarding is worth 0, because the compute is already sunk.
+* **No prefetch.** The controller then dispatches at $K$ iff $U_K:=A_K(b_K)-\lambda_l\hat X_K-c_K>0$, where $A_k(b)=bg^{+}(1-\rho_k)-(1-b)g^{-}$.
+* **Turn payoff.** $-c_\tau+Y_\tau^{+}$ if a prefetch was made, and $U_K^{+}$ otherwise.
 
-*Proof.* Any policy that uses a retrieval dispatched at $\tau\le K$ pays exposure $X_\tau\ge X_1$ pathwise, and its use decision can do no better than the one based on $b_K$. So its value is at most $\mathbb E[(A(b_K)-\lambda_lX_1)^{+}]$, which SPEC attains up to the compute it spends, at most $\lambda_c(1+w_1)$ per turn. ∎
+**Controllers in (S).**
+* **Ours-v2[S] (joint).** The Snell envelope with stopping payoff (prefetch now) $O_k=\mathbb E[Y_k^{+}\mid\mathcal F_k]-c_k$:
+$$V_K=U_K^{+},\qquad V_k=\max\big(O_k,\ \mathbb E[V_{k+1}\mid\mathcal F_k]\big).$$
+  This is `ours_v2._option_value` / `v_wait_spec`, an $n$-step lookahead that is exact when $n\ge$ the number of remaining epochs.
+* **SPEC (B10).** Prefetch at $k_0$ always; use iff $Y_{k_0}>0$.
+* **SPEC-θ (B11, `controller/baselines/b11_speculative_gated_v2.py`).** This is **belief-gated** speculation. Prefetch at $k_0$ iff
+$$\mathbb E[(A_{k_0}(b_K)-\lambda_l\bar X_{k_0})^{+}\mid b_{k_0}]-c_{k_0}>\mathbb E[(A_K(b_K)-\lambda_l\bar X_K-c_K)^{+}\mid b_{k_0}],$$
+  with dev-mean scalar exposures $\bar X$. The use rule is B10's. The dispatch epoch is fixed by timing, and the gate reads only the belief and fixed scalars, so SPEC-θ is in $\Pi_D$ in exactly the sense B9+ is.
 
-So **C2 is a joint-vs-decomposed channel only under commit**, or when compute is expensive. The simulation agrees. In `cells_C1C2_commit`, SPEC beats the joint-commit controller at every price above the median cut in d2_support (joint minus SPEC between −0.0018 and −0.0121), and joint-commit wins only at the lowest price, where SPEC's compute dominates (+0.020 to +0.022). The v2 pipeline must state its architecture. If discarding a retrieval is possible, SPEC is a mandatory pre-registered rival (`PREREG_V2.md`).
+Write $c=c_{k_0}$, $Y=Y_{k_0}$, $q=\Pr(Y\le0)$ (the fraction of SPEC prefetches left unused) and $\Delta\rho=\rho_{k_0}-\min_{k>k_0}\rho_k\ge0$ (the query improvement still available after $k_0$; C3). Assume exposures are pathwise non-decreasing in the dispatch epoch, $\hat X_k\le\hat X_{k+1}$.
+
+**Proposition 4′ (SPEC versus the speculative optimum).** Let $G_{\text{SPEC}}=V^{*}_S-V_{\text{SPEC}}$, and let $D_J$ be the event that Ours-v2[S] does not prefetch at $k_0$.
+1. **Exact gain.** $G_{\text{SPEC}}=\mathbb E\big[(\mathbb E[V_{k_0+1}\mid\mathcal F_{k_0}]-O_{k_0})^{+}\big]\ge0.$
+2. **Bound.** $G_{\text{SPEC}}\le c\,\Pr(D_J)+g^{+}\Delta\rho\,\mathbb E[b_K\mathbf 1_{D_J}]$. With $\Delta\rho=0$ this gives $G_{\text{SPEC}}\le c\Pr(D_J)\le\lambda_c(1+w_{k_0})$, the bound `tests/test_v2_speculative.py` asserts.
+3. **When SPEC is optimal.** SPEC is optimal iff $O_{k_0}\ge\mathbb E[V_{k_0+1}\mid\mathcal F_{k_0}]$ a.s. This holds in particular when $\lambda_c=0$ and $\Delta\rho=0$. With $\lambda_c>0$, SPEC is strictly suboptimal as soon as, with positive probability, the prefix makes the prefetch's option value smaller than its compute, i.e. $\mathbb E[Y^{+}\mid\mathcal F_{k_0}]<c$ (confident-skip prefixes). This is the typical case whenever prefix beliefs are informative. With $\Delta\rho>0$ (C3), waiting for a better query has value of its own, and the compute bound fails.
+4. **Two-epoch prophet bound** (valid; $\Delta\rho=0$, epochs $k_0$ and $K$):
+$$G_{\text{SPEC}}\le m_{\text{prophet}}=c\,q+\mathbb E\big[(c-Y)\mathbf 1\{0<Y<c\}\big]+\mathbb E\big[(c-c_K-\lambda_l(\hat X_K-\hat X_{k_0}))^{+}\mathbf 1\{Y>0\}\big].$$
+
+*Proof.*
+(1) SPEC stops at $k_0$ on every path, while the optimum takes $\max(O_{k_0},\mathbb E[V_{k_0+1}\mid\mathcal F_{k_0}])$ there.
+
+(2) Bound every option available after $k_0$, path by path:
+* A later prefetch at $k$ pays $-c_k+Y_k^{+}\le Y_k^{+}$.
+* $Y_k\le Y+g^{+}b_K(\rho_{k_0}-\rho_k)$, because $\hat X_k\ge\hat X_{k_0}$.
+* $(x+d)^{+}\le x^{+}+d$ for $d\ge0$.
+
+The no-prefetch payoff $U_K^{+}$ obeys the same bound. So $\mathbb E[V_{k_0+1}\mid\mathcal F_{k_0}]\le O_{k_0}+c+g^{+}\Delta\rho\,\mathbb E[b_K\mid\mathcal F_{k_0}]$. Substitute into (1); the integrand is zero off $D_J$.
+
+(3) Follows from (1) and (2).
+
+(4) No non-anticipating policy beats the ex-post best action on any path. Ex post, SPEC earns $-c+Y^{+}$. The only alternative is not prefetching, which earns $(Y-\lambda_l(\hat X_K-\hat X_{k_0})-c_K)^{+}$. The positive part of their difference is $c$ if $Y\le0$, and at most $\max\big((c-Y)^{+},(c-c_K-\lambda_l\Delta\hat X)^{+}\big)$ if $Y>0$. ∎
+
+**The margin $m=\lambda_c(1+\bar w)\hat q$ is not a bound.** It equals $c\,q$, so it drops the second and third terms of $m_{\text{prophet}}$: SPEC prefetches that are used but were not worth their compute ($0<Y<c$), and the waste differential.
+
+*Counterexample.* Suppose $b_K$ is already known at $k_0$, $Y\in(0,c)$ a.s., and $\lambda_l(\hat X_K-\hat X_{k_0})\ge Y$. SPEC always uses its prefetch, so $q=0$ and $m=0$. The optimum never prefetches and earns 0, so $G_{\text{SPEC}}=c-\mathbb E[Y]>0=m$.
+
+*In simulation.* The exact model gain exceeds $c\,\hat q$ at the lowest price in 4 of 6 dataset × profile cells; for example d1_open × faiss gives 0.0256 against $c\hat q=0.0246$ ($m_{\text{prophet}}=0.0258$). $m_{\text{prophet}}$ is never exceeded in any of the 24 cells.
+
+**Proposition 4″ (a belief-gated decomposed prefetcher captures the compute saving).** Take two epochs ($k_0$, $K$) and $\Delta\rho=0$. Let SPEC-θ\* be SPEC-θ with the scalar $\bar X_{k_0}$ also in its use rule, and let $u^{*},u^{\theta}$ indicate "prefetch at $k_0$ and use" under Ours-v2[S] and SPEC-θ\*. Then
+
+$$0\le V^{*}_S-V_{\text{SPEC-}\theta}\le V^{*}_S-V_{\text{SPEC-}\theta^{*}}\le\lambda_l\,\mathbb E\big[|\hat X_{k_0}-\bar X_{k_0}|\,(u^{*}+u^{\theta})\big]=:m_{C1}.$$
+
+The gap is a C1 effect: first order in the spread of exposure as a bound, and second order in expectation by the argument of Prop. 3(6).
+
+*Proof.*
+1. Replace $\hat X_{k_0}$ by the scalar $\bar X_{k_0}$. In this scalar problem only the belief process matters, and the two-epoch optimum is exactly SPEC-θ\*'s gate.
+2. For any fixed policy, payoffs under the true and scalar exposures differ by at most $\lambda_l|\hat X_{k_0}-\bar X_{k_0}|$ on paths where it prefetches at $k_0$ and uses, and by 0 elsewhere.
+3. Hence $V^{*}_S\le V^{\text{scalar}}_{\text{SPEC-}\theta^{*}}+\lambda_l\mathbb E[|\cdot|u^{*}]\le V_{\text{SPEC-}\theta^{*}}+\lambda_l\mathbb E[|\cdot|(u^{*}+u^{\theta})]$.
+4. SPEC-θ's use rule uses the realised window, which is pointwise optimal given its prefetch decisions, so $V_{\text{SPEC-}\theta}\ge V_{\text{SPEC-}\theta^{*}}$.
+5. $V_{\text{SPEC-}\theta}\le V^{*}_S$ because SPEC-θ is a feasible policy. ∎
+
+**What remains joint under speculation beyond Prop. 4″.**
+* **More than two epochs.** Ours-v2[S] can delay a paid prefetch past $k_0$ to observe more of the belief, at most $c\Pr(\text{prefetch after }k_0)$ (the commit-free analogue of Prop. 4's information value).
+* **C3 active.** With $\Delta\rho>0$, the query-improvement term $g^{+}\Delta\rho\,\mathbb E[b_K]$ adds to the gap, because the timing that buys a better query is belief-dependent (Prop. 5) and a fixed-trigger SPEC-θ cannot follow it.
+
+The power simulation is two-epoch with $\Delta\rho=0$, so it does not quantify either term. Both must be estimated on dev before freezing (PREREG_V2 §6).
+
+**Consequences for the boundary test** (simulation, pooled d1+d2, price at the 0.65 belief quantile):
+
+| | faiss | faiss_rerank | remote_api |
+|---|---|---|---|
+| Δ[COMMIT] (Ours-v2[C] − B9+) | 0.0088 | 0.0108 | 0.0097 |
+| Δ[SPEC], D\*[S] ∈ {B9+, SPEC} (current PREREG and `boundary_contrasts`) | 0.0149 | 0.0133 | 0.0151 |
+| → interaction Δ[C] − Δ[S] | **−0.0062** | **−0.0026** | **−0.0054** |
+| Δ[SPEC], SPEC-θ added to D\*[S] | −0.0001 | −0.0002 | −0.0003 |
+| → interaction | 0.0089 | 0.0110 | 0.0100 |
+| $c\hat q$ / $m_{\text{prophet}}$ / $m_{C1}$ / ½Δ[C] | 0.0293 / 0.0303 / 0.0029 / 0.0044 | 0.0287 / 0.0297 / 0.0118 / 0.0054 | 0.0291 / 0.0301 / 0.0175 / 0.0048 |
+
+Across all 24 dataset × profile × price cells:
+* Ours-v2[S] − SPEC-θ lies in [−0.0005, +0.0009];
+* Ours-v2[S] − SPEC lies in [0.012, 0.023] at prices above the median cut.
+
+**Implications.**
+1. **Without SPEC-θ, the speculative contrast measures a decomposable effect.** Δ[SPEC] then measures belief-gated compute saving, which a decomposed controller can do. P2 is predicted false at every price, and its conjunction power is 0 at any N.
+2. **With SPEC-θ, Δ[SPEC] ≈ 0 and the interaction ≈ Δ[COMMIT].**
+3. **The compute-based margins are uninformative.** $c\hat q$ and $m_{\text{prophet}}$ are about 3× Δ[COMMIT], so P3 would follow from P2 almost for free. With C3 active, no compute-only bound is valid.
+4. **Recommended P3: a TOST equivalence**, $|\Delta[\text{SPEC}]|<m_3=\tfrac12\hat\delta_{C,\text{dev}}$.
+   * The upper side says speculation removes at least half the commit advantage.
+   * The lower side checks that the joint speculative controller is not broken.
+   * $m_{C1}$ is reported alongside as the theory bound, valid only under the two-epoch, $\Delta\rho=0$ conditions.
 
 ### 6.3 Proposition 5 (partial-query risk, channel C3)
 
@@ -325,13 +413,14 @@ Keep A2 and A3, and let $\rho_t$ vary with $t$. Then $U_t(b)=s_tb-g^{-}-\kappa_t
 | C3 only | ≥ 0, Prop. 2-type band gap; 0 against a $b$-aware decomposed rule | ≥ 0 | may differ |
 | C1 | $G\ge0$, **second order** (Prop. 3(6)); grows with $\lambda_l^{2}\,\mathrm{Var}(e^{*})$ and $f(\theta^{*})$; about 0 for low-latency retrieval that is almost always hidden | Prop. 2 gap plus $G$ | Ours ⊇ |
 | C1 + C2, commit | first-order gain against the best decomposed rule (Prop. 4) | larger | Ours ⊇ |
-| C1 + C2, speculation allowed | ≤ $\lambda_c(1+w_1)$ per turn against SPEC; can be negative for joint-commit (Prop. 4′) | — | — |
+| C1 + C2, speculative | vs SPEC: first order, ≤ $c\Pr(D_J)$ (+ $g^{+}\Delta\rho\,\mathbb E[b_K\mathbf 1_{D_J}]$ with C3) (Prop. 4′); **vs SPEC-θ: C1-sized**, ≤ $m_{C1}$ for two epochs (Prop. 4″) | — | — |
 
 Simulated effect sizes (`v2_power.json`; assumptions in Section 4 of `PREREG_V2.md`), in utility units per item, at the dev-selected price:
 
 * **C1 only vs B9+.** At most +0.0021 (d2_support × remote_api, four-price average). About 0 for faiss (the call is fully hidden on 89% of d1_open and 98% of d2_support turns).
 * **C1+C2 commit vs the best tuned decomposed rival.** +0.0066 to +0.0148.
 * **vs B9 (full-latency pricing).** +0.0095 to +0.0213 (C1 cells, four-price average).
+* **Boundary test** (pooled, 0.65 price, `boundary_test`). Δ[COMMIT] = 0.0088–0.0108. Δ[SPEC] is −0.0003 to −0.0001 against D\* including SPEC-θ, and 0.0133–0.0151 without it (§6.2).
 
 ---
 
@@ -438,6 +527,10 @@ These high-belief negatives are what enter the band at high prices and drive the
 7. **"C1 gives a positive gain where active."** True in expectation, but the gain is second order (Prop. 3(6)). Against B9+ it requires about $2\times10^{4}$ test items in the best simulated cell (`v2_power.json`). C1 cannot be the confirmatory primary at the planned dataset sizes.
 8. **"Show the band fraction matches the convergence."** Matches exactly at the decision level (Section 8.3). At the outcome level, the predicted gap matches the observed one only after correcting the objective and **the latency model**. The v1 constants understate the TTFA cost of retrieval by more than 2× (1.20 s vs 0.484 s at fixed_early_proxy). v2 must calibrate $L$ as an end-to-end TTFA increment and separate its non-hideable part $\pi$, which caps C1.
 9. **Prop. 2 as "|E[U_Ours] − E[U_B9]| ≤ λ_l o\* P(band)."** Under the model, the gap is signed (≥ 0) and the tighter bound is $(\lambda_lo^{*}-\lambda_c\Delta w)P$. Under misspecification no $O(\lambda_lo^{*})$ bound exists (Remark 2.1), as v1's top prices show.
+10. **"P3: Δ[SPEC] < m with m = λ_c(1+w̄)q̂ is the Prop. 4′ bound"** (PREREG_V2 draft of 2026-10-16; implemented in `simulator/e3v2_decide.boundary_contrasts`). This is wrong on three counts (§6.2):
+    * **It is not a bound.** There is an analytic counterexample, and the simulated model gain exceeds it in 4 of 6 cells at the lowest price. The valid two-epoch bound is $m_{\text{prophet}}$, and with C3 no compute-only bound holds.
+    * **It is uninformative.** At about 3× the predicted Δ[COMMIT], P3 would follow from P2 almost automatically.
+    * **The rival set gives the boundary test the wrong sign.** With D\*[S] ∈ {B9+, SPEC}, the joint speculative controller wins by belief-gating its prefetch, which a decomposed controller can do. So the predicted interaction is negative and the conjunction cannot pass. The fix is to add the belief-gated decomposed prefetcher SPEC-θ to D\*[S] and to replace P3 by a TOST at ½δ̂_C.
 
 ## 10. References
 

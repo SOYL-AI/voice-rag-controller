@@ -95,6 +95,8 @@ ASSUMPTIONS = {
     "remaining_speech_predictor_sigma_log": 0.30,
     "quality_effect_scale": 1.0,
     "c2_prefix_noise_logit_sd": 1.5,
+    "waste_early": 0.08,
+    "waste_end": 0.0,
     "notes": [
         "c2_prefix_noise_logit_sd sets how much less informative the prefix belief is than the "
         "final one; it is reported as the implied prefix-vs-final AUC and must be replaced by the "
@@ -328,6 +330,205 @@ def simulate_c2(rng, dataset, profile, Q, v1_b, n=400_000, A=ASSUMPTIONS, prefix
             "auc_prefix_belief": auc1, "auc_final_belief": aucK, "per_price": out}
 
 
+def _cond_mean_plus(key, values, thresholds, nbins=400):
+    """E[(V - a_i)^+ | key-bin of i] for item-specific thresholds a_i, where V
+    ranges over the bin's members. Sorted prefix sums, O(n log n) per bin."""
+    edges = np.quantile(key, np.linspace(0, 1, nbins + 1))
+    idx = np.clip(np.searchsorted(edges, key, side="right") - 1, 0, nbins - 1)
+    out = np.empty_like(values, dtype=float)
+    order = np.argsort(idx, kind="stable")
+    bounds = np.searchsorted(idx[order], np.arange(nbins + 1))
+    for k in range(nbins):
+        members = order[bounds[k]:bounds[k + 1]]
+        if members.size == 0:
+            continue
+        v = np.sort(values[members])
+        suffix = np.concatenate([np.cumsum(v[::-1])[::-1], [0.0]])
+        pos = np.searchsorted(v, thresholds[members], side="right")
+        cnt = v.size - pos
+        out[members] = (suffix[pos] - thresholds[members] * cnt) / v.size
+    return out
+
+
+def simulate_boundary(rng, dataset, profile, Q, v1_b, n=200_000, A=ASSUMPTIONS):
+    """
+    The PREREG_V2 boundary test: the same items under COMMIT and SPECULATIVE,
+    two decision epochs (first meaningful partial, end of turn), channels
+    C1+C2 active. Compute per dispatch is lambda_c*(1+w) with the v1 waste
+    placeholders (early 0.08, end 0), applied identically to every controller.
+
+    COMMIT
+      Ours-v2[C]  dispatch-and-commit at epoch 1 iff A(b1) - lam*X1_hat - c1
+                  exceeds the continuation E[(A(bK) - lam*XK_hat - cK)^+ | F1];
+                  otherwise decide at end of turn.
+      D*[C]       best (by population mean, i.e. tuned with oracle knowledge)
+                  of the B9+ family {early, late, R-threshold}.
+    SPECULATIVE
+      SPEC        dispatch at epoch 1 always; use iff Y = A(bK) - lam*X1_hat > 0.
+      Ours-v2[S]  dispatch at epoch 1 iff the option value
+                  E[(A(bK) - lam*X1_hat)^+ | F1] - c1 exceeds the value of
+                  deferring, E[(A(bK) - lam*XK_hat - cK)^+ | F1]; use rule as SPEC;
+                  a deferred turn dispatches-and-uses at end iff worthwhile.
+      D*[S]       best of {B9+ family best, SPEC}.
+    Returns per-price summaries and per-item paired differences.
+    """
+    pn = A["c2_prefix_noise_logit_sd"]
+    bK = np.clip(sample_beliefs(rng, A["belief_distributions"][dataset], n, v1_b), 1e-4, 1 - 1e-4)
+    need = rng.random(n) < bK
+    q = np.where(need, rng.choice(Q[True], n), rng.choice(Q[False], n))
+    gp, gm = float(Q[True].mean()), float(-Q[False].mean())
+    s1 = np.log(bK / (1 - bK)) + pn * rng.standard_normal(n)
+    b1 = _bin_mean(s1, bK)
+    sp = A["speech"]["d2_support" if dataset == "d2_support" else "d1_open"]
+    dur = np.exp(np.log(sp["duration_median_s"]) + sp["duration_sigma_log"] * rng.standard_normal(n))
+    R = np.maximum(0.0, A["speech"]["frac_remaining_at_first_meaningful_partial"] * dur - A["speech"]["asr_lag_s"])
+    prof = A["latency_profiles"][profile]
+    Lcall = np.exp(np.log(prof["call_median_s"]) + prof["call_sigma_log"] * rng.standard_normal(n))
+    pre = A["prefill_penalty_s"]
+    X1 = pre + np.maximum(0.0, Lcall - R)
+    XK = pre + Lcall
+    R_hat = R * np.exp(A["remaining_speech_predictor_sigma_log"] * rng.standard_normal(n))
+    X1_hat, XK_hat = expected_exposed(R_hat, prof["call_median_s"], prof["call_sigma_log"], pre, rng)
+    lam_c = A["lambda_c"]
+    w1, wK = A["waste_early"], A["waste_end"]
+    c1, cK = lam_c * (1 + w1), lam_c * (1 + wK)
+    Ab1 = b1 * (gp + gm) - gm
+    AbK = bK * (gp + gm) - gm
+
+    rows, items = [], {}
+    for qtl in A["belief_cut_quantiles"]:
+        b_cut = float(np.quantile(bK, qtl))
+        lam = (b_cut * (gp + gm) - gm - cK) / float(XK.mean())
+        if lam <= 0:
+            continue
+        U_early = q - lam * X1 - c1          # realised, committed early dispatch
+        U_late = q - lam * XK - cK           # realised, end-of-turn dispatch
+        late_go = AbK - lam * XK_hat - cK > 0
+        defer_val = _bin_mean(s1, np.maximum(0.0, AbK - lam * XK_hat - cK))
+        # --- COMMIT
+        go_C = (Ab1 - lam * X1_hat - c1) > defer_val
+        U_OC = np.where(go_C, U_early, np.where(late_go, U_late, 0.0))
+        E_X1 = float(X1.mean())
+        U_bE = np.where(Ab1 - lam * E_X1 - c1 > 0, U_early, 0.0)
+        U_bL = np.where(AbK - lam * float(XK.mean()) - cK > 0, U_late, 0.0)
+        best_r = None
+        for r0 in np.quantile(R_hat, np.linspace(0.0, 1.0, 21)):
+            et = R_hat > r0
+            ex = float(X1[et].mean()) if et.any() else E_X1
+            U_r = np.where(et, np.where(Ab1 - lam * ex - c1 > 0, U_early, 0.0), U_bL)
+            if best_r is None or U_r.mean() > best_r.mean():
+                best_r = U_r
+        fam = {"early": U_bE, "late": U_bL, "R_rule": best_r}
+        b9p_name = max(fam, key=lambda k: fam[k].mean())
+        U_DC = fam[b9p_name]
+        # --- SPECULATIVE
+        Y = AbK - lam * X1_hat                       # model use value of an early retrieval
+        use = Y > 0
+        U_spec_on = -c1 + np.where(use, q - lam * X1, 0.0)   # realised, dispatched early
+        U_SPEC = U_spec_on
+        option = _cond_mean_plus(s1, AbK, lam * X1_hat) - c1
+        go_S = option > defer_val
+        U_OS = np.where(go_S, U_spec_on, np.where(late_go, U_late, 0.0))
+        # SPEC-theta: belief-gated speculation, DECOMPOSED. Identical to
+        # Ours-v2[S] except that every exposure is the population scalar
+        # (X1_bar, XK_bar) instead of the turn-level X1_hat: the prefetch and
+        # use decisions read the belief and fixed prices only.
+        X1_bar, XK_bar = float(X1_hat.mean()), float(XK_hat)
+        use_t = AbK - lam * X1_bar > 0
+        late_t = AbK - lam * XK_bar - cK > 0
+        opt_t = _bin_mean(s1, np.maximum(AbK - lam * X1_bar, 0.0)) - c1
+        def_t = _bin_mean(s1, np.maximum(AbK - lam * XK_bar - cK, 0.0))
+        go_t = opt_t > def_t
+        U_SPECT = np.where(go_t, -c1 + np.where(use_t, q - lam * X1, 0.0),
+                           np.where(late_t, U_late, 0.0))
+        cands = {"SPEC": U_SPEC, "SPEC_theta": U_SPECT, "B9+:" + b9p_name: U_DC}
+        ds_name = max(cands, key=lambda k: cands[k].mean())
+        U_DS = cands[ds_name]
+        # the PI's D*[S] (best of B9+ and plain SPEC), kept for comparison
+        pi_name = "SPEC" if U_SPEC.mean() >= U_DC.mean() else "B9+:" + b9p_name
+        D_S_pi = U_OS - cands[pi_name]
+        D_C = U_OC - U_DC
+        D_S = U_OS - U_DS
+        # rigorous first-order bound vs SPEC-theta (perturbation argument, THEORY Prop. 4'')
+        m_C1_bound = float(lam * np.mean(np.abs(X1_hat - X1_bar)
+                                         * ((go_S & use).astype(float) + (go_t & use_t))))
+        # margins (model quantities, as they would be computed on dev)
+        q_hat = float((~use).mean())
+        m_pi = c1 * q_hat
+        prophet = np.where(Y <= 0, c1, np.maximum(np.maximum(c1 - Y, 0.0),
+                                                    np.maximum(c1 - cK - lam * (XK_hat - X1_hat), 0.0)))
+        m_prophet = float(prophet.mean())
+        pi_defer = float((~go_S).mean())
+        m_defer = c1 * pi_defer
+        M = np.maximum(Y, 0) - np.maximum(AbK - lam * XK_hat - cK, 0)
+        G_exact_model = float(np.mean((~go_S) * (c1 - _bin_mean(s1, M))))
+        G_vs_spec_real = float((U_OS - U_SPEC).mean())
+        rows.append({
+            "quantile": qtl, "lambda_l": float(lam), "c1": c1, "cK": cK,
+            "D_star_commit": "B9+:" + b9p_name, "D_star_spec": ds_name,
+            "delta_commit": float(D_C.mean()), "sd_commit": float(D_C.std(ddof=1)),
+            "delta_spec": float(D_S.mean()), "sd_spec": float(D_S.std(ddof=1)),
+            "delta_interaction": float((D_C - D_S).mean()), "sd_interaction": float((D_C - D_S).std(ddof=1)),
+            "corr_DC_DS": float(np.corrcoef(D_C, D_S)[0, 1]),
+            "ours_spec_minus_SPEC_realised": G_vs_spec_real,
+            "ours_spec_minus_SPEC_model_exact": G_exact_model,
+            "frac_joint_spec_defers": pi_defer,
+            "q_hat_SPEC_unused": q_hat,
+            "frac_SPEC_used_but_below_compute": float(((Y > 0) & (Y < c1)).mean()),
+            "m_PI": m_pi, "m_prophet": m_prophet, "m_defer": m_defer, "m_C1_bound": m_C1_bound,
+            "D_star_spec_PI_definition": pi_name,
+            "delta_spec_PI_definition": float(D_S_pi.mean()),
+            "delta_interaction_PI_definition": float((D_C - D_S_pi).mean()),
+            "ours_spec_minus_SPEC_theta": float((U_OS - U_SPECT).mean()),
+            "SPEC_theta_prefetch_rate": float(go_t.mean()),
+            "E_U": {"ours_commit": float(U_OC.mean()), "ours_spec": float(U_OS.mean()),
+                    "SPEC": float(U_SPEC.mean()), "SPEC_theta": float(U_SPECT.mean()),
+                    "B9plus": float(U_DC.mean())},
+        })
+        items[qtl] = (D_C, D_S, D_S_pi)
+    return {"dataset": dataset, "profile": profile, "per_price": rows, "_items": items}
+
+
+_STD_NORMAL = np.random.default_rng(12345).standard_normal((50_000, 4))
+
+
+def _moments(z):
+    mu = z.mean(axis=0)
+    S = np.cov(z, rowvar=False)
+    # the TOST pair (m - D, D + m) is perfectly anti-correlated in D; jitter keeps Cholesky defined
+    Lc = np.linalg.cholesky(S + 1e-12 * np.eye(S.shape[0]))
+    return mu, S, Lc
+
+
+def conjunction_power(z, N, alpha, rng=None, moments=None):
+    """Power of the intersection-union test: each column of z is a per-item
+    statistic whose mean must be shown > 0 one-sided at alpha. The vector of
+    sample means is approximately N(mu, Sigma/N); 50,000 fixed normal draws
+    (common random numbers, so N-search is monotone)."""
+    mu, S, Lc = moments if moments is not None else _moments(z)
+    k = mu.size
+    sims = mu + (_STD_NORMAL[:, :k] @ Lc.T) / math.sqrt(N)
+    sd = np.sqrt(np.diag(S) / N)
+    rej = sims - Z[alpha] * sd > 0
+    return float(rej.all(axis=1).mean()), [float(x) for x in rej.mean(axis=0)]
+
+
+def n_for_conjunction(z, alpha, target=0.8, rng=None):
+    mom = _moments(z)
+    if np.any(mom[0] <= 0):
+        return math.inf
+    lo, hi = 10, 10_000_000
+    if conjunction_power(z, hi, alpha, moments=mom)[0] < target:
+        return math.inf
+    while hi / lo > 1.01:
+        mid = int(math.sqrt(lo * hi))
+        if conjunction_power(z, mid, alpha, moments=mom)[0] >= target:
+            hi = mid
+        else:
+            lo = mid
+    return hi
+
+
 def n_required(delta, sd, alpha, power):
     if delta <= 0:
         return math.inf
@@ -438,9 +639,12 @@ def main() -> int:
                           "N_total_required_at_30_70": math.ceil(nreq / A["split"]["test"]),
                           "MDE_at_planned_N": mde(sdp, npl, alpha, power)})
 
+    boundary = boundary_test_power(Q, v1_b, n_test, alpha, power)
+
     for c in cells:
         c.pop("_Dbar", None)
     out = {"assumptions": A, "n_test_planned": n_test, "alpha_one_sided": alpha, "power": power,
+           "boundary_test": boundary,
            "cells_C1": cells, "pooled_primary_C1": pooled, "sensitivity_C1_d2_remote_api": sens,
            "cells_C1C2_commit": c2, "C2_prefix_noise_sensitivity_d2_remote_api": c2_noise,
            "C1C2_selected_price_summary": c2_summary, "C1C2_pooled_by_profile": c2_pooled,
@@ -484,7 +688,144 @@ def main() -> int:
         print("C1C2 selected:", r)
     for r in c2_pooled:
         print("C1C2 pooled:", r)
+    for prof, rows in boundary["pooled"].items():
+        for r in rows:
+            print(f"BOUNDARY {prof:12s} q={r['quantile']} dC={r['delta_commit']:+.4f} "
+                  f"dS={r['delta_spec']:+.4f} dS_PI={r['delta_spec_PI']:+.4f} | "
+                  f"mPI={r['m_PI']:.4f} mProph={r['m_prophet']:.4f} mC1={r['m_C1_bound']:.4f} "
+                  f"mHalf={r['m_half']:.4f} | N: " + ", ".join(f"{k}={v['N_test_80pct']}" for k, v in r["designs"].items()))
+    print("BOUNDARY selected:", json.dumps(boundary["selected"], indent=0))
     return 0
+
+
+def boundary_test_power(Q, v1_b, n_test, alpha, power, n=100_000):
+    """
+    Conjunction (intersection-union) power for the PREREG_V2 boundary test,
+    pooled over d1_open and d2_support (item-weighted by planned test size),
+    per latency profile and price. Uses a separate random stream so the
+    earlier sections of this script are unchanged.
+
+    Designs (each column is a per-item statistic whose mean must be shown > 0
+    one-sided at alpha; the conjunction rejects iff every column does):
+      PI      P1: D_C;  P2: D_C - D_S_PI;  P3: m_PI - D_S_PI
+              with D*[S] = best of {B9+, SPEC} and m_PI = lambda_c (1+w) q_hat.
+      PI_prophet  same, with the valid prophet bound as the margin.
+      corrected family: D*[S] = best of {B9+, SPEC, SPEC-theta};
+              P1: D_C;  P2: D_C - D_S;  P3 (TOST, two one-sided tests):
+              m_half - D_S and D_S + m_half, m_half = delta_C / 2.
+      corrected_nonsup   as corrected, P3 one-sided only (m_half - D_S).
+      corrected_C1bound  as corrected_nonsup with the rigorous Prop. 4''
+              margin m_C1 instead of m_half.
+      recommended        = corrected (TOST with m3 = delta_C / 2); the design PREREG_V2 adopts.
+      recommended_C1cap  TOST with m3 = min(m_half, m_C1) (valid only for two
+              epochs and timing-invariant rho; THEORY Prop. 4'').
+    """
+    rng = np.random.default_rng(RNG_SEED + 1)
+    A = ASSUMPTIONS
+    share = {d: n_test[d] / sum(n_test.values()) for d in n_test}
+    sims = {(d, p): simulate_boundary(rng, d, p, Q, v1_b, n=n)
+            for d in ("d1_open", "d2_support") for p in A["latency_profiles"]}
+    pooled = {}
+    for p in A["latency_profiles"]:
+        rows = []
+        for qtl in A["belief_cut_quantiles"]:
+            parts = []
+            meta = {}
+            for d in ("d1_open", "d2_support"):
+                s = sims[(d, p)]
+                if qtl not in s["_items"]:
+                    break
+                D_C, D_S, D_S_pi = s["_items"][qtl]
+                k = int(n * share[d])
+                sel = rng.choice(D_C.size, size=k, replace=False)
+                parts.append(np.column_stack([D_C[sel], D_S[sel], D_S_pi[sel]]))
+                meta[d] = next(r for r in s["per_price"] if r["quantile"] == qtl)
+            if len(parts) < 2:
+                continue
+            X = np.vstack(parts)
+            D_C, D_S, D_S_pi = X[:, 0], X[:, 1], X[:, 2]
+            w = {d: share[d] for d in meta}
+            m_pi = sum(w[d] * meta[d]["m_PI"] for d in meta)
+            m_pr = sum(w[d] * meta[d]["m_prophet"] for d in meta)
+            m_c1 = sum(w[d] * meta[d]["m_C1_bound"] for d in meta)
+            dC = float(D_C.mean())
+            m_half = max(dC, 0.0) / 2
+            m_rec = min(m_half, m_c1)
+            designs = {
+                "recommended": np.column_stack([D_C, D_C - D_S, m_half - D_S, D_S + m_half]),
+                "recommended_C1cap": np.column_stack([D_C, D_C - D_S, m_rec - D_S, D_S + m_rec]),
+                "PI": np.column_stack([D_C, D_C - D_S_pi, m_pi - D_S_pi]),
+                "PI_prophet": np.column_stack([D_C, D_C - D_S_pi, m_pr - D_S_pi]),
+                "corrected_nonsup": np.column_stack([D_C, D_C - D_S, m_half - D_S]),
+                "corrected_C1bound": np.column_stack([D_C, D_C - D_S, m_c1 - D_S]),
+            }
+            if p == "faiss" and qtl == 0.65:
+                check_z = designs["recommended"]
+            res = {}
+            for name, z in designs.items():
+                nreq = n_for_conjunction(z, alpha, power, rng=np.random.default_rng(7))
+                p_at = {N: conjunction_power(z, N, alpha, rng=np.random.default_rng(7))
+                        for N in (1344, 4000)}
+                res[name] = {
+                    "column_means": [float(x) for x in z.mean(axis=0)],
+                    "column_sds": [float(x) for x in z.std(axis=0, ddof=1)],
+                    "N_test_80pct": nreq,
+                    "N_total_80pct_at_30_70": (math.ceil(nreq / A["split"]["test"]) if nreq != math.inf else math.inf),
+                    "power_at_1344": {"conjunction": p_at[1344][0], "individual": p_at[1344][1]},
+                    "power_at_4000": {"conjunction": p_at[4000][0], "individual": p_at[4000][1]},
+                }
+            rows.append({
+                "quantile": qtl,
+                "lambda_l_by_dataset": {d: meta[d]["lambda_l"] for d in meta},
+                "D_star_spec_by_dataset": {d: meta[d]["D_star_spec"] for d in meta},
+                "D_star_spec_PI_by_dataset": {d: meta[d]["D_star_spec_PI_definition"] for d in meta},
+                "delta_commit": dC, "sd_commit": float(D_C.std(ddof=1)),
+                "delta_spec": float(D_S.mean()), "sd_spec": float(D_S.std(ddof=1)),
+                "delta_spec_PI": float(D_S_pi.mean()), "sd_spec_PI": float(D_S_pi.std(ddof=1)),
+                "delta_interaction": float((D_C - D_S).mean()),
+                "delta_interaction_PI": float((D_C - D_S_pi).mean()),
+                "m_PI": m_pi, "m_prophet": m_pr, "m_C1_bound": m_c1, "m_half": m_half, "m_recommended": m_rec,
+                "PI_margin_valid_as_bound_vs_SPEC": bool(all(
+                    meta[d]["ours_spec_minus_SPEC_model_exact"] <= meta[d]["m_PI"] + 1e-12 for d in meta)),
+                "designs": res,
+            })
+        pooled[p] = rows
+    # price selection: (i) the PI's rule (max delta_C / sd_C); (ii) min conjunction N (corrected design)
+    selected = {}
+    for p, rows in pooled.items():
+        r_pi = max(rows, key=lambda r: r["delta_commit"] / max(r["sd_commit"], 1e-12))
+        r_n = min(rows, key=lambda r: r["designs"]["recommended"]["N_test_80pct"])
+        selected[p] = {
+            "rule_max_dC_over_sd": {"quantile": r_pi["quantile"],
+                                    **{k: v["N_test_80pct"] for k, v in r_pi["designs"].items()}},
+            "rule_min_conjunction_N_recommended": {"quantile": r_n["quantile"],
+                                                 **{k: v["N_test_80pct"] for k, v in r_n["designs"].items()}},
+        }
+    import gc
+    for s_ in sims.values():
+        s_.pop("_items", None)
+    gc.collect()
+    # direct check of the normal approximation: simulate test sets of the
+    # required size and run the actual paired percentile bootstrap on each
+    n_chk = pooled["faiss"][[r["quantile"] for r in pooled["faiss"]].index(0.65)]["designs"]["recommended"]["N_test_80pct"]
+    brng = np.random.default_rng(RNG_SEED + 2)
+    hits, reps, B = 0, 200, 1000
+    hits_wald = 0
+    for _ in range(reps):
+        x = check_z[brng.integers(0, check_z.shape[0], size=n_chk)]
+        hits_wald += int(np.all(x.mean(axis=0) - Z[alpha] * x.std(axis=0, ddof=1) / math.sqrt(n_chk) > 0))
+        means = np.vstack([x[brng.integers(0, n_chk, size=(10, n_chk))].mean(axis=1)
+                           for _ in range(B // 10)])
+        lo = np.percentile(means, 100 * alpha, axis=0)
+        hits += int(np.all(lo > 0))
+    boot_check = {"cell": "faiss, q=0.65, recommended design", "N_test": n_chk,
+                  "reps": reps, "B": B, "bootstrap_conjunction_power": hits / reps,
+                  "wald_same_datasets_conjunction_power": hits_wald / reps,
+                  "mc_se": math.sqrt(0.8 * 0.2 / reps),
+                  "normal_approx_conjunction_power": conjunction_power(check_z, n_chk, alpha)[0]}
+    per_dataset = {f"{d}|{p}": s["per_price"] for (d, p), s in sims.items()}
+    return {"pooled": pooled, "selected": selected, "per_dataset": per_dataset,
+            "test_shares": share, "bootstrap_check": boot_check}
 
 
 if __name__ == "__main__":

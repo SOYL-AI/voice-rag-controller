@@ -375,6 +375,7 @@ _FACTORIES: Dict[str, Tuple[str, str, dict]] = {
     "b9_v2": ("controller.baselines.b9_v2", "B9V2", {}),
     "b9plus_v2": ("controller.baselines.b9plus_v2", "B9PlusV2", {}),
     "b10_speculative_v2": ("controller.baselines.b10_speculative_v2", "B10SpeculativeV2", {}),
+    "b11_speculative_gated_v2": ("controller.baselines.b11_speculative_gated_v2", "B11SpeculativeGatedV2", {}),
     "oracle_v2": ("controller.baselines.oracle_v2", "OracleV2", {}),
     "b0_v2": ("controller.baselines.unpriced_v2", "B0V2", {}),
     "b1_v2_sentence_end": ("controller.baselines.unpriced_v2", "B1V2", {"policy": "sentence_end"}),
@@ -387,9 +388,9 @@ _FACTORIES: Dict[str, Tuple[str, str, dict]] = {
     "b8_v2": ("controller.baselines.unpriced_v2", "B8V2", {}),
 }
 
-PRICED_V2 = ("ours_v2", "b9_v2", "b9plus_v2", "b10_speculative_v2")
+PRICED_V2 = ("ours_v2", "b9_v2", "b9plus_v2", "b10_speculative_v2", "b11_speculative_gated_v2")
 #: controllers that need architecture: speculative (they discard dispatches)
-SPECULATIVE_ONLY_V2 = ("b10_speculative_v2",)
+SPECULATIVE_ONLY_V2 = ("b10_speculative_v2", "b11_speculative_gated_v2")
 
 
 def list_controllers_v2() -> List[str]:
