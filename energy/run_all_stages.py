@@ -40,14 +40,20 @@ def main():
     ap.add_argument("--target-s", type=float, default=4.0)
     ap.add_argument("--idle-s", type=float, default=3.0)
     ap.add_argument("--redo", action="store_true")
+    ap.add_argument("--min-gb", type=float, default=2.5)
+    ap.add_argument("--only", default="", help="comma-separated subset of STAGES")
     args = ap.parse_args()
-    for st in STAGES:
+    todo = [s for s in STAGES if not args.only or s in args.only.split(",")]
+    for st in todo:
         if st in done() and not args.redo:
             print("have", st, flush=True)
             continue
         for attempt in (1, 2):
             cmd = [sys.executable, "-u", "-m", "energy.bench_stages", "--trials", str(args.trials),
                    "--target-s", str(args.target_s), "--idle-s", str(args.idle_s), "--only", st]
+            # wait for host RAM (shared with other workloads) before loading models
+            subprocess.call([sys.executable, "-m", "energy.wait_mem", "--gb", str(args.min_gb),
+                             "--timeout-min", "90"])
             print(">>", st, "attempt", attempt, flush=True)
             rc = subprocess.call(cmd)
             if rc == 0 and st in done():
