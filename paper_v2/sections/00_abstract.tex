@@ -1,0 +1,41 @@
+% ============================================================================
+% ABSTRACT -- one paragraph, formal register, about 200 words, no first-person
+% plural informality, no "dramatically". (R1 minor: informal abstract.)
+% Source key used in comments throughout the paper:
+%   [V1T] docs/research_v2/v1_theory_check.json   (all v1 theory-check numbers)
+%   [PN]  analysis/paper_v1_numbers.json            (figures and v1 numbers)
+%   [E1R] llm/experiment1/results/experiment_1_modal_mistral7b_20260811_151212.json
+%   [E2]  harness/e2_bootstrap.py on logs/ ; simulator/e2_results/RUN_MANIFEST.md
+%   [PRE] paper/preregistration.md ; [PRE2] docs/research_v2/PREREG_V2.md
+%   [TH]  docs/research_v2/THEORY.md ; [POW] docs/research_v2/v2_power.json
+% ============================================================================
+%
+% PURPOSE: state the question, the boundary-condition answer, and the
+% two-sided pre-registered test, in that order.
+% SENTENCES THE AUTHORS MUST COVER (one each, in this order):
+%  (1) Setting: a streaming voice assistant decides whether to retrieve and
+%      when to dispatch the retrieval while the user is still speaking.
+%  (2) Question: does deciding the two jointly beat a decomposed controller
+%      that shares the same prices?
+%  (3) Result 1 (theory): under timing-invariant quality, constant overlap and
+%      a dispatch-invariant belief (A1--A3), the joint controller at any
+%      latency price equals the decomposed one at a mapped price, so the two
+%      frontiers coincide [TH Prop. 1].
+%  (4) Result 2 (v1 data): the v1 tie is this equivalence; the exact price map
+%      reproduces 10,000/10,000 off-grid decisions and the decomposed rule
+%      that prices expected exposure reproduces the joint rule on
+%      11,300/11,300 [V1T prop1_dense, b9plus].
+%  (5) Result 3 (boundaries): turn-dependent overlap gives only a second-order
+%      gain; the first-order channel is information versus overlap, which
+%      separates joint from decomposed control only when a dispatched
+%      retrieval is committed; with speculative prefetch a decomposed rule is
+%      within lambda_c(1+w) of the joint optimum [TH Props. 3, 4, 4'].
+%  (6) v2 test: a pre-registered two-sided test on open-domain and
+%      customer-support speech data with live ASR partials:
+%      commit -> joint > best decomposed; speculative -> B10 approx. joint.
+%  (7) v2 outcome sentence: \TBD{results/v2/primary_commit.json and
+%      results/v2/primary_speculative.json; verdicts per PREREG_V2 Sec. 3}.
+% NUMBERS ALLOWED IN THE ABSTRACT: 10,000/10,000 and 11,300/11,300 [V1T];
+%   no v2 number until the artifacts in (7) exist.
+\todo{Abstract, one paragraph covering sentences (1)--(7) above; formal
+register; no v2 numbers until the pre-registered runs exist.}

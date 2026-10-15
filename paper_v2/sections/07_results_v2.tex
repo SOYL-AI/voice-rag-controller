@@ -1,0 +1,134 @@
+% ============================================================================
+% VII. v2 RESULTS: A TWO-SIDED TEST OF THE BOUNDARY
+% PI decision (2026-10-15): the v2 pre-registration covers BOTH architectures
+% with opposite directional predictions:
+%   commit:      joint (Ours-v2) > best decomposed (B9+), via C2 (Prop. 4);
+%   speculative: speculative-prefetch decomposed (B10) ~ joint, with
+%                Ours-v2 - B10 <= lambda_c (1 + w) (Prop. 4').
+% No v2 number exists yet. Every \TBD names the artifact that will produce it.
+% Runs are on the TEST split only after docs/research_v2/PREREG_FROZEN exists.
+% Record locations (CONTRACTS Sec. 9; simulator/e3v2_decide.py):
+%   simulator/e3v2_results/e3_v2_<controller>_seed<seed>.json
+% \PEND{PREREG_V2.md currently has a single [COMMIT | SPECULATIVE] field and
+% one primary at one-sided alpha = 0.025. Before freezing it must state two
+% primaries (one per architecture), how alpha is shared between them, and the
+% speculative test as a one-sided non-superiority test of
+% Ours-v2 - B10 against the margin lambda_c (1 + w).}
+% \PEND{B10 is not implemented on research/v2-base (controller/baselines has
+% no b10 file); it must exist, be unit-tested and be named in PREREG_V2
+% before freezing.}
+% ============================================================================
+\section{v2 Results: A Two-Sided Test of the Boundary}\label{sec:v2}
+
+% ---- P-VII.1 -----------------------------------------------------------------
+% PURPOSE: state the two pre-registered predictions and why they are a test of
+%   the theory rather than of a method (Table~\ref{tab:predictions}).
+% CLAIMS: the same theory predicts a joint advantage under commit and its
+%   absence under speculation; confirming both, or either alone, is
+%   informative; a joint advantage under speculation beyond the bound would
+%   contradict Prop. 4'.
+\todo{P-VII.1: the two-sided test and what each outcome would mean.}
+
+\subsection{Gatekeeping Checks}\label{sec:v2-gates}
+% ---- P-VII.2 -----------------------------------------------------------------
+% PURPOSE: report the gates that condition the main tests, in the order the
+%   pre-registration lists them.
+% NUMBERS (all \TBD):
+\todo{P-VII.2: judge gate, belief validity and prefix informativeness, and the
+timing experiment, each against its pre-registered criterion, with the
+prefix curve of Fig.~\ref{fig:prefix}.}
+% (a) Judge gate on the 200 hold-out answers: kappa
+%     \TBD{simulator/judge_validation/ v2 gate report: Cohen kappa, lower
+%     bound, accuracy, retrieve-vs-skip error gap, self-consistency};
+%     human inter-annotator kappa \TBD{same report}.
+% (b) H-E1v2: test AUC of the chosen signal per dataset
+%     \TBD{llm/experiment1_v2/results/ test-split analysis (llm/experiment1_v2/
+%     stats.py)}; prefix curve AUC at word fractions 0.3/0.5/0.7/1.0
+%     \TBD{same}; C2 "available" iff AUC(0.5) >= 0.65 \TBD{same};
+%     ECE (10 bins) of the dev-fitted calibration on test \TBD{same};
+%     boundary mass within +-0.15 of b* \TBD{same} (v1: 0.08 [V1T
+%     retrieval_effect.frac_v1_beliefs_within_0.15_of_b_star]).
+% (c) H-E2v2 per latency profile: p95 TTFA early vs sentence_end, paired
+%     accuracy non-inferiority (margin 0.02), measured rho(t)
+%     \TBD{v2 E2 analysis over live-partial runs; harness/e2_bootstrap.py
+%     extended to profiles}.
+
+\begin{figure}[t]
+\centering
+\fbox{\parbox[c][3.2cm][c]{0.92\columnwidth}{\centering
+\TBD{fig\_v2\_prefix\_auc.pdf: AUC of the belief signal against transcript
+fraction (0.3, 0.5, 0.7, 1.0) per dataset, ASR partials, test split, with
+95\% cluster-bootstrap bands; dashed line at the C2-availability threshold
+0.65. Script: to be added as analysis/paper_figures_v2.py}}}
+\caption{Belief quality on partial transcripts (v2, test split).}
+\label{fig:prefix}
+\end{figure}
+
+\subsection{Equivalence Replication (Channels Off)}\label{sec:v2-none}
+% ---- P-VII.3 -----------------------------------------------------------------
+% PURPOSE: replicate Prop. 1 on new data with A1--A3 enforced (frozen query,
+%   per-policy constant overlap, final-transcript belief).
+% PREDICTION: identical decisions between Ours-v2 and B9+ (100%); utility
+%   difference inside +-0.005 by TOST [PRE2 Sec. 3].
+% NUMBERS: decision identity \TBD{simulator/e3v2_results/ "none" condition,
+%   Ours-v2 vs B9+}; TOST bounds \TBD{same}.
+\todo{P-VII.3: the channels-off replication of the equivalence.}
+
+\subsection{Primary Test 1: Commit Architecture}\label{sec:v2-commit}
+% ---- P-VII.4 -----------------------------------------------------------------
+% PURPOSE: the first primary: D(Ours-v2 - B9+) > 0 with all channels on,
+%   pooled over d1_open and d2_support test items, at the pre-registered
+%   profile and price.
+% NUMBERS: D-bar, 95% CI, verdict \TBD{simulator/e3v2_results/ commit
+%   condition; primary analysis script named in PREREG_V2 at freeze};
+%   dev-predicted value \TBD{docs/research_v2/v2_predictions.json (written
+%   before freezing)}; power at the realised N \TBD{analysis/v2_power.py
+%   re-run with dev inputs}.
+\todo{P-VII.4: the commit-architecture primary result against its
+prediction (Table~\ref{tab:v2primary}).}
+
+\subsection{Primary Test 2: Speculative Architecture}\label{sec:v2-spec}
+% ---- P-VII.5 -----------------------------------------------------------------
+% PURPOSE: the second primary: Ours-v2 - B10 <= lambda_c (1 + w), i.e. the
+%   speculative decomposed rule is within the compute bound of joint.
+% NUMBERS: D-bar(Ours-v2 - B10), one-sided upper bound, margin
+%   lambda_c(1 + w) at the measured w, verdict \TBD{simulator/e3v2_results/
+%   speculative condition}; compute spent by B10 on discarded retrievals
+%   \TBD{same, retrievals dispatched minus used}.
+\todo{P-VII.5: the speculative-architecture primary result against its
+prediction (Table~\ref{tab:v2primary}, Fig.~\ref{fig:twosided}).}
+
+\input{tables/tab_v2_primary}
+
+\begin{figure}[t]
+\centering
+\fbox{\parbox[c][3.4cm][c]{0.92\columnwidth}{\centering
+\TBD{fig\_v2\_two\_sided.pdf: observed $\bar D$ with 95\% CI per
+architecture (commit: \OursV{} $-$ \Bplus; speculative: \OursV{} $-$
+\Bten) and per dataset $\times$ latency profile, next to the dev-predicted
+value from v2\_predictions.json; shaded region for the speculative margin
+$\lamC(1+w)$. Script: analysis/paper_figures_v2.py (to be written)}}}
+\caption{Two-sided test of the boundary: joint minus best decomposed
+controller under commit and under speculative prefetch (v2, test split).}
+\label{fig:twosided}
+\end{figure}
+
+\subsection{Secondary Analyses}\label{sec:v2-secondary}
+% ---- P-VII.6 -----------------------------------------------------------------
+% PURPOSE: the Holm-adjusted secondary family and the theory-fit criteria.
+% CONTENT:
+%   (a) per dataset x profile x channel set {C1, C1+C2, C1+C2+C3}, both
+%       architectures \TBD{simulator/e3v2_results/ secondary cells};
+%   (b) C1-only cells: predicted second order; report the MDE at the
+%       realised N (planned MDE 0.0040 at 4,000 pooled test items
+%       [PRE2 Sec. 6]) so a null is read correctly;
+%   (c) predicted versus observed agreement: Spearman r_s >= 0.5 and the
+%       slope CI including 1 [PRE2 Sec. 3] \TBD{v2_predictions.json vs test};
+%   (d) v1 frontier-dominance rule on v2 \TBD{analysis/e3_frontier.py on
+%       simulator/e3v2_results/};
+%   (e) secondary judge (GPT-4o v4) re-report of both primaries
+%       \TBD{same records re-scored};
+%   (f) waste-rate sensitivity \TBD{see Sec.~\ref{sec:objective}, P-III.4};
+%   (g) dead-air rate \TBD{v2 pipeline logs; threshold \PEND{}}.
+\todo{P-VII.6: secondary family, theory-fit criteria, frontier dominance,
+judge robustness and sensitivity analyses.}

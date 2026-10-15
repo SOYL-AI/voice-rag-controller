@@ -1,0 +1,393 @@
+{
+ "n_items": 720,
+ "n_pos": 444,
+ "n_groups": 276,
+ "domains": [
+  "airline",
+  "automotive",
+  "banking",
+  "ecommerce",
+  "education",
+  "food_delivery",
+  "government",
+  "healthcare",
+  "insurance",
+  "saas",
+  "telecom",
+  "utilities"
+ ],
+ "label": "final: combined 24 orgs (parts A+B) after revision",
+ "target_auc_max": 0.65,
+ "configs": [
+  {
+   "variant": "question:word+char+len",
+   "C": 0.1,
+   "auc_pooled_oof_mean_over_seeds": 0.5344,
+   "auc_per_seed": [
+    0.5182,
+    0.5348,
+    0.5501
+   ]
+  },
+  {
+   "variant": "question:word+char+len",
+   "C": 1.0,
+   "auc_pooled_oof_mean_over_seeds": 0.5636,
+   "auc_per_seed": [
+    0.5482,
+    0.5736,
+    0.5691
+   ]
+  },
+  {
+   "variant": "question:word+char+len",
+   "C": 10.0,
+   "auc_pooled_oof_mean_over_seeds": 0.5756,
+   "auc_per_seed": [
+    0.5566,
+    0.5935,
+    0.5768
+   ]
+  },
+  {
+   "variant": "question:word",
+   "C": 0.1,
+   "auc_pooled_oof_mean_over_seeds": 0.5387,
+   "auc_per_seed": [
+    0.5398,
+    0.5587,
+    0.5176
+   ]
+  },
+  {
+   "variant": "question:word",
+   "C": 1.0,
+   "auc_pooled_oof_mean_over_seeds": 0.5447,
+   "auc_per_seed": [
+    0.5439,
+    0.5665,
+    0.5238
+   ]
+  },
+  {
+   "variant": "question:word",
+   "C": 10.0,
+   "auc_pooled_oof_mean_over_seeds": 0.5564,
+   "auc_per_seed": [
+    0.5511,
+    0.58,
+    0.538
+   ]
+  },
+  {
+   "variant": "question:char",
+   "C": 0.1,
+   "auc_pooled_oof_mean_over_seeds": 0.5516,
+   "auc_per_seed": [
+    0.5382,
+    0.5632,
+    0.5534
+   ]
+  },
+  {
+   "variant": "question:char",
+   "C": 1.0,
+   "auc_pooled_oof_mean_over_seeds": 0.5586,
+   "auc_per_seed": [
+    0.5415,
+    0.5721,
+    0.5623
+   ]
+  },
+  {
+   "variant": "question:char",
+   "C": 10.0,
+   "auc_pooled_oof_mean_over_seeds": 0.5729,
+   "auc_per_seed": [
+    0.5529,
+    0.5909,
+    0.575
+   ]
+  },
+  {
+   "variant": "question:len_only",
+   "C": 0.1,
+   "auc_pooled_oof_mean_over_seeds": 0.494,
+   "auc_per_seed": [
+    0.4754,
+    0.4946,
+    0.5121
+   ]
+  },
+  {
+   "variant": "question:len_only",
+   "C": 1.0,
+   "auc_pooled_oof_mean_over_seeds": 0.4927,
+   "auc_per_seed": [
+    0.4748,
+    0.4926,
+    0.5107
+   ]
+  },
+  {
+   "variant": "question:len_only",
+   "C": 10.0,
+   "auc_pooled_oof_mean_over_seeds": 0.4926,
+   "auc_per_seed": [
+    0.4747,
+    0.4926,
+    0.5105
+   ]
+  },
+  {
+   "variant": "question+history:word+char+len",
+   "C": 0.1,
+   "auc_pooled_oof_mean_over_seeds": 0.5542,
+   "auc_per_seed": [
+    0.5482,
+    0.5586,
+    0.5559
+   ]
+  },
+  {
+   "variant": "question+history:word+char+len",
+   "C": 1.0,
+   "auc_pooled_oof_mean_over_seeds": 0.5723,
+   "auc_per_seed": [
+    0.566,
+    0.583,
+    0.568
+   ]
+  },
+  {
+   "variant": "question+history:word+char+len",
+   "C": 10.0,
+   "auc_pooled_oof_mean_over_seeds": 0.5834,
+   "auc_per_seed": [
+    0.5766,
+    0.5964,
+    0.5772
+   ]
+  }
+ ],
+ "headline": {
+  "variant": "question:word+char+len",
+  "C": 10.0,
+  "auc": 0.5756,
+  "ci95_group_bootstrap": [
+   0.5407,
+   0.6165
+  ],
+  "pass": true,
+  "by_domain": {
+   "airline": 0.5625,
+   "automotive": 0.5167,
+   "banking": 0.6331,
+   "ecommerce": 0.5822,
+   "education": 0.6663,
+   "food_delivery": 0.6136,
+   "government": 0.5431,
+   "healthcare": 0.5255,
+   "insurance": 0.6551,
+   "saas": 0.5682,
+   "telecom": 0.5324,
+   "utilities": 0.5837
+  },
+  "by_type": {
+   "org_specific_vs_general": 0.5941,
+   "counter_prior_vs_general": 0.5629,
+   "ambiguous_vs_general": 0.5702
+  }
+ },
+ "worst_config_any_variant": {
+  "variant": "question+history:word+char+len",
+  "C": 10.0,
+  "auc_pooled_oof_mean_over_seeds": 0.5834,
+  "auc_per_seed": [
+   0.5766,
+   0.5964,
+   0.5772
+  ]
+ },
+ "leave_one_domain_out": {
+  "pooled_auc": 0.6102,
+  "by_domain": {
+   "airline": 0.588,
+   "automotive": 0.5909,
+   "banking": 0.6076,
+   "ecommerce": 0.669,
+   "education": 0.6531,
+   "food_delivery": 0.6232,
+   "government": 0.5287,
+   "healthcare": 0.684,
+   "insurance": 0.7257,
+   "saas": 0.6112,
+   "telecom": 0.5995,
+   "utilities": 0.5407
+  }
+ },
+ "top_features_retrieval_needed": [
+  [
+   "w:much is",
+   0.434
+  ],
+  [
+   "w:new",
+   0.429
+  ],
+  [
+   "w:the",
+   0.417
+  ],
+  [
+   "w:cost",
+   0.411
+  ],
+  [
+   "c:' we'",
+   0.398
+  ],
+  [
+   "w:deposit",
+   0.39
+  ],
+  [
+   "w:and",
+   0.387
+  ],
+  [
+   "w:have i",
+   0.364
+  ],
+  [
+   "w:all",
+   0.361
+  ],
+  [
+   "w:extra",
+   0.359
+  ],
+  [
+   "w:and how",
+   0.357
+  ],
+  [
+   "w:per",
+   0.354
+  ],
+  [
+   "w:work",
+   0.345
+  ],
+  [
+   "c:'ork '",
+   0.345
+  ],
+  [
+   "c:'ost '",
+   0.343
+  ],
+  [
+   "c:'ome'",
+   0.342
+  ],
+  [
+   "c:'ew'",
+   0.341
+  ],
+  [
+   "w:week",
+   0.337
+  ],
+  [
+   "c:'eek'",
+   0.337
+  ],
+  [
+   "c:' week'",
+   0.337
+  ]
+ ],
+ "top_features_general": [
+  [
+   "c:'ot'",
+   -0.574
+  ],
+  [
+   "w:as",
+   -0.461
+  ],
+  [
+   "w:difference between",
+   -0.46
+  ],
+  [
+   "w:an",
+   -0.437
+  ],
+  [
+   "w:bank",
+   -0.419
+  ],
+  [
+   "c:'rs '",
+   -0.412
+  ],
+  [
+   "w:code",
+   -0.39
+  ],
+  [
+   "w:says",
+   -0.388
+  ],
+  [
+   "w:why do",
+   -0.384
+  ],
+  [
+   "w:if my",
+   -0.384
+  ],
+  [
+   "w:gst",
+   -0.374
+  ],
+  [
+   "w:should",
+   -0.367
+  ],
+  [
+   "w:do i",
+   -0.365
+  ],
+  [
+   "w:need a",
+   -0.364
+  ],
+  [
+   "w:the bank",
+   -0.357
+  ],
+  [
+   "c:'hot'",
+   -0.355
+  ],
+  [
+   "w:long should",
+   -0.353
+  ],
+  [
+   "w:number",
+   -0.352
+  ],
+  [
+   "w:okay",
+   -0.351
+  ],
+  [
+   "w:exactly",
+   -0.35
+  ]
+ ]
+}
