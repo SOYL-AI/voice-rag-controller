@@ -149,6 +149,8 @@ Optional, additive keys read by the v2 controllers (`v2/controllers`):
 signals["timing"]["user_end_ms"]          # VAD end (alias: vad_user_end_ms)
 signals["timing"]["asr_final"]            # {"t_ms": ..., "text": ...}
 signals["timing"]["partial_interval_ms"]  # ASR partial cadence
+signals["retrieval"]["nonhideable_increment_ms"]  # pi: TTFA increment of USING passages
+                                          # (extra prefill/generation) that no timing hides
 # per uncertainty_by_prefix entry (all optional):
 #   "available_ms"    when the prefix signal is usable (default t_ms + config lag)
 #   "kind": "full"    marks the full-transcript entry (or word_frac >= 1)
@@ -183,8 +185,16 @@ decision time, only the causal estimate e/(e+R) (see
   least `ttfa_ms` and `exposed_retrieval_ms` (stub:
   `harness/latency_model_v2_stub.py`).
 - **v2 result records**: v1 frontier schema plus `dispatch_t_ms`,
-  `condition`, `latency_profile`, `exposed_latency_ms`
-  (`analysis/e3_frontier.validate_v2_records`).
+  `condition`, `latency_profile`, `exposed_latency_ms`, `architecture`
+  (`commit | speculative`) and `used` (false = a speculative dispatch was
+  discarded: skip-cell answer, compute counted)
+  (`analysis/e3_frontier.validate_v2_records`). Files:
+  `e3_v2_<architecture>_<controller>_seed<seed>.json`.
+- **Pipeline architecture** (`controller.e3v2.architecture`): `commit` = a
+  dispatched retrieval is always used; `speculative` = it may be discarded
+  at end of turn. The v2 pipeline must state which it implements; under
+  `speculative`, `b10_speculative_v2` (SPEC, THEORY.md Prop. 4′) is a
+  mandatory rival.
 
 ## 7. Splits and sealing (pre-registration hygiene)
 

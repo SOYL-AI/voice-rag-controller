@@ -1477,6 +1477,10 @@ def dominance_test(
         Ours strictly dominates B9 in >= 3 of 5 seeds.
     """
 
+    # Bound once here: the matching loop below reuses the name `ours` for
+    # the challenger's aggregated row.
+    challenger, rival_name = ours, rival
+
     output_dir = Path(
         output_dir
     )
@@ -1491,7 +1495,7 @@ def dominance_test(
             row["seed"]
             for row in aggregated
             if row["baseline"]
-            in {rival, ours}
+            in {rival_name, challenger}
         )
     )
 
@@ -1499,7 +1503,7 @@ def dominance_test(
 
     print()
     print("=" * 70)
-    print(f"E3 DOMINANCE TEST: {ours} vs {rival}")
+    print(f"E3 DOMINANCE TEST: {challenger} vs {rival_name}")
     print("=" * 70)
 
     for seed in seeds:
@@ -1510,7 +1514,7 @@ def dominance_test(
                 for row in aggregated
                 if (
                     row["baseline"]
-                    == ours
+                    == challenger
                     and row["seed"]
                     == seed
                 )
@@ -1526,7 +1530,7 @@ def dominance_test(
             for row in aggregated
             if (
                 row["baseline"]
-                == rival
+                == rival_name
                 and row["seed"]
                 == seed
             )
@@ -1598,7 +1602,7 @@ def dominance_test(
                             "compute_ci_high"
                         ],
                     },
-                    rival: {
+                    rival_name: {
                         "accuracy": matching_b9[
                             "accuracy"
                         ],
@@ -1709,7 +1713,7 @@ def dominance_test(
     ):
 
         overall_verdict = (
-            f"{ours} strictly dominates {rival} "
+            f"{challenger} strictly dominates {rival_name} "
             f"over a contiguous region in "
             f"{dominance_count}/{total_expected_seeds} "
             f"seeds — PREREGISTERED CRITERION MET."
@@ -1718,7 +1722,7 @@ def dominance_test(
     else:
 
         overall_verdict = (
-            f"{ours} does NOT meet the "
+            f"{challenger} does NOT meet the "
             "preregistered dominance criterion: "
             f"{dominance_count}/{total_expected_seeds} "
             f"seeds satisfy contiguous strict dominance "
@@ -1762,14 +1766,14 @@ def dominance_test(
                 "Ours must have a strictly higher "
                 "accuracy with non-overlapping 95% "
                 "bootstrap bands while having no "
-                f"higher p95 TTFA or compute than {rival} "
+                f"higher p95 TTFA or compute than {rival_name} "
                 "at matched price operating points, "
                 "over a contiguous region, in at "
                 "least 3 of 5 seeds."
             ),
         },
 
-        "compared": {"ours": ours, "rival": rival},
+        "compared": {"ours": challenger, "rival": rival_name},
 
         "seeds_with_strict_dominance":
             dominance_count,
@@ -1789,8 +1793,8 @@ def dominance_test(
         output_dir
         / (
             "e3_dominance.json"
-            if (ours, rival) == ("ours", "b9")
-            else f"e3_dominance_{ours}_vs_{rival}.json"
+            if (challenger, rival_name) == ("ours", "b9")
+            else f"e3_dominance_{challenger}_vs_{rival_name}.json"
         )
     )
 
