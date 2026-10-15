@@ -102,6 +102,9 @@ class TrialSet:
 
     def summary(self) -> dict:
         keep = [not f for f in self.flagged] if self.flagged else [True] * len(self.op_s)
+        all_flagged = bool(self.flagged) and not any(keep)
+        if all_flagged:   # nothing clean: report all trials and say so
+            keep = [True] * len(self.op_s)
         sel = lambda xs: [x for x, k in zip(xs, keep) if k]
         tot_net = [g + c for g, c in zip(self.gpu_net_j, self.cpu_net_j)]
         tot_gross = [g + c for g, c in zip(self.gpu_gross_j, self.cpu_gross_j)]
@@ -109,6 +112,7 @@ class TrialSet:
         return {
             "name": self.name, "k_per_window": self.k, "n_trials": len(self.op_s),
             "n_flagged_gpu_contended": int(sum(self.flagged)),
+            "all_trials_flagged_used_anyway": all_flagged,
             "latency_s": mean_ci(sel(self.op_s)),
             "gpu_net_j": mean_ci(sel(self.gpu_net_j)),
             "cpu_net_j": mean_ci(sel(self.cpu_net_j)),

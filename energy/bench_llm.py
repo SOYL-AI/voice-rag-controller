@@ -44,7 +44,7 @@ from energy.protocol import mean_ci, run_paired  # noqa: E402
 from energy.sampler import EnergyMeter  # noqa: E402
 
 OUT = Path(__file__).resolve().parent / "results" / "llm_local.json"
-PREFILL_LENS = (64, 128, 256, 512, 1024, 2048)
+PREFILL_LENS = (128, 512, 2048)
 DECODE_CTX = (80, 530)     # ~ skip / retrieve prompt lengths (energy/results/token_budget.json)
 DECODE_N = 64
 
