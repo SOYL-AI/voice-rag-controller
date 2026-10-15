@@ -6,6 +6,53 @@ streaming TTS, the remaining-speech predictor, the `forecast` policy and the
 trace-driven latency model. The numbers come from committed artifacts. The
 file paths are given so each number can be regenerated.
 
+## 0. Statement for the v1 paper (E2/E3 latency caveats)
+
+These two corrections apply to every v1 TTFA number (E2 and E3).
+
+**(a) TTFA in E2 and E3 ended at a synthetic tone, not real speech
+synthesis.** On the run host the piper package was not installed and the
+voice model (`audio/models/en_US-lessac-medium.onnx`) was absent. In that
+case `audio/tts.py` `StreamingTTS.synthesize_clause_to_raw_pcm()` returns a
+generated sine tone and synthesizes nothing. `tts_first_audio` was
+therefore logged with no synthesis cost.
+
+Evidence:
+- `llm_final` → `tts_first_audio` has a median of 16 ms over the 750 E2
+  runs (p95 55–212 ms by policy) and a median of 0–15 ms in the 1500 E3
+  cells. Batch TTS cannot start before `llm_final`, and real synthesis
+  takes hundreds of ms.
+- With piper installed on the same laptop, the v1 subprocess path
+  (`python -m piper` per clause) costs 3–6 s per clause. A resident voice
+  costs about 0.5–0.6 s for the first clause (section 8).
+- The v1 TTFAs therefore understate a real system's TTFA by roughly the
+  first clause's synthesis time. Relative comparisons between timing
+  policies are unaffected, because all policies share the same stage.
+
+**(b) E2's 0.66 s median retrieval time was CPU contention on the run host,
+not retrieval cost.**
+
+Evidence:
+- **E2 logs.** `retrieval_launched` → `retrieval_result` had a median of
+  657 ms and a p90 of 3.2 s over 750 runs, for one bge-small query
+  embedding plus a flat FAISS search over 61 documents.
+- **Same call in isolation.** On the same machine
+  (`retrieval/latency_profiles_v2.json`) it takes 20–60 ms p50: faiss CPU
+  4 threads 41 ms, CUDA 22 ms, loopback HTTP 23 ms. The flat search
+  itself takes 0.006 ms at 61 vectors.
+- **Default thread count is load-dependent.** With torch's default 16
+  intra-op threads, an in-process run during this work measured ~1.2 s
+  p50. The artifact run measured 26 ms p50.
+- **Capped threads in the real pipeline.** With
+  `VOICE_RAG_TORCH_THREADS=4`, the 100 v2 retrieve-path runs against the
+  real endpoint measured 47 ms median / ~250 ms p95 in-pipeline
+  (`analysis/latency_breakdown/latency_breakdown_v2_endpoint.md`).
+
+Consequence for v1: E2's "exposed retrieval" share of TTFA (25–30%) and
+E3's paired retrieve−skip increment (1.27–1.57 s) are inflated by this
+contention. Of E3's increment, about 0.74–0.81 s is non-hideable and does
+not depend on the retrieval call (section 8).
+
 ## 1. TTFA breakdown of the v1 E2 runs
 
 `python -m harness.latency_breakdown --logs "logs/conv_*.jsonl" --label e2 --paper-dir paper`

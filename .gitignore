@@ -268,3 +268,6 @@ datasets/v2/*/speech/audio/
 
 # local agent worktrees
 .claude/
+
+# built retrieval indexes (regenerate with python -m retrieval.v2_index build)
+retrieval/indexes/
