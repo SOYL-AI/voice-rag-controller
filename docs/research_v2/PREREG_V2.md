@@ -240,11 +240,12 @@ How the tests are decided:
 ### 4.5 Tuning protocol (dev only, equal budget)
 * **Shared estimates.** The belief calibration, the remaining-speech predictor, the latency model (including the non-hideable component π) and $\hat g^{\pm}$ are fitted once on dev and shared by every controller.
 * **Per-controller parameters.** The tunable parameters are:
-  * the B9+ timing rule (early / late / R̂-threshold on a 21-point quantile grid);
-  * the shared SPEC / SPEC-θ trigger policy (immediate or forecast);
-  * the dev-mean scalar exposures used by SPEC-θ, which are estimates and not tuned.
+  * the B9+ timing rule (early / late / R̂-threshold / R̂-below, each threshold on a 21-point quantile grid). R̂-below dispatches at the first query-ready partial with R̂ ≤ r₀ (end of turn if none), priced at that rule's dev-mean realised exposure; added 2026-10-16, before freeze (PI decision), because without a late-partial rule the family had a gap that inflated Δ[COMMIT] on dev ASR (see `paper/lab_log.md`);
+  * the shared SPEC / SPEC-θ trigger policy (immediate, forecast, or R̂-below on the same 21-point grid; added 2026-10-16, before freeze);
+  * the dev-mean scalar exposures used by SPEC-θ, which are estimates and not tuned. For an R̂-below trigger these are the dev means of remaining and elapsed speech at its firing step.
 
   Nothing else is tuned. Every controller gets the same number of dev evaluations. Ours-v2 (both architectures) has no free parameter beyond the shared models and its lookahead depth, which is fixed at freeze.
+* **Ours-v2 lookahead (corrected once, 2026-10-16, before freeze; PI decision).** From a step, the next decision point is another partial with probability p = P(R + gap > s) and the end-of-turn decision otherwise, where R is distributed by the remaining-speech predictor's q10/q50/q90 (aged to the step's availability time, so the ASR lag is in the exposure), gap is the dev-median end gap and s is the dev-median partial-to-partial availability spacing (ASR lag included). The value of waiting is p · (next-partial value) + (1 − p) · (end-of-turn decision value), in both architectures. The previous version assumed the next partial certain whenever R̂ exceeded the nominal partial interval. No other change was made to Ours-v2 and no parameter was selected by looking at Δ on dev. The partial spacing is a shared estimate, like the end gap.
 * **Cost calibration.** The latency model is calibrated as the **end-to-end TTFA increment** of retrieval measured on dev, not the retrieval-call duration. In v1 the call duration understated the TTFA cost by more than 2× (THEORY §8.4).
 
 ### 4.6 What may and may not change after freezing

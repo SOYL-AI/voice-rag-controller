@@ -33,7 +33,8 @@ sub-optimizer is replaced by a rule tuned on dev, one of
                                       decide at the end of turn priced E[L]
 
     {"kind": "r_below", "r0": ms, "late_exposed_ms": ms}
-                                      DIAGNOSTIC (not in the PREREG_V2 §4.5 family):
+                                      (in the PREREG_V2 §4.5 family since
+                                      2026-10-16, pre-freeze; PI decision):
                                       decide at the first query-ready partial whose
                                       R_hat <= r0 (late in the utterance, where a
                                       dispatch is still hidden by the end-of-turn

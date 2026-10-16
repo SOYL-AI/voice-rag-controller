@@ -95,7 +95,8 @@ def frozen_records(bundle: dict, ds: str, split: str, phase_a: Path, e1_results:
         for p in tr["partials"]:
             q = pred.predict(p["text"], float(p["t_ms"]))
             rhat[item_id].append({"t_ms": float(p["t_ms"]), "available_ms": float(p.get("available_ms", p["t_ms"])),
-                                  "remaining_ms": float(q["q50"])})
+                                  "remaining_ms": float(q["q50"]), "remaining_q10_ms": float(q["q10"]),
+                                  "remaining_q90_ms": float(q["q90"])})
     rows = build_signals(inp, cond, rhat)
     cfg = load_e3v2_config(overrides=bundle["overrides"])
     turns = [TurnCtx(item_id=r["item_id"], signals=r["signals"], condition=cond,
@@ -120,7 +121,8 @@ def frozen_records(bundle: dict, ds: str, split: str, phase_a: Path, e1_results:
                 params["b9plus_v2"] = {"timing_rule": t["b9plus_timing_rule"]}
             if t.get("spec_trigger"):
                 params["b10_speculative_v2"] = {"timing": t["spec_trigger"]}
-                params["b11_speculative_gated_v2"] = {"timing": t["spec_trigger"]}
+                params["b11_speculative_gated_v2"] = {"timing": t["spec_trigger"],
+                                                      "trigger_constants": t.get("spec_trigger_constants")}
             records += run_architectures(turns, store, [n for n in names if n in PRICED_V2], [pr], SEEDS, [prof],
                                          cfg, lm, ("commit", "speculative"), split, labels, gold,
                                          controller_params=params)
@@ -142,17 +144,16 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
     ap.add_argument("--e1-results", default=str(_REPO_ROOT / "llm" / "experiment1_v2" / "results"))
     ap.add_argument("--d-star-speculative", default=None)
     ap.add_argument("--m3", type=float, default=None)
-    ap.add_argument("--b9plus-extended", action="store_true", help="plan for the diagnostic B9+ family too")
     args = ap.parse_args(argv)
     check_split(args.split)
     phase_a = Path(args.phase_a) / args.dataset
-    out_path = phase_a / (f"required_{args.split}" + ("_b9x" if args.b9plus_extended else "") + ".json")
+    out_path = phase_a / f"required_{args.split}.json"
 
     if args.command == "plan" and args.split == "dev" and not args.bundle:
         from simulator.e3v2_dev_analysis import run_dataset
         record: set = set()
         run_dataset(argparse.Namespace(phase_a=args.phase_a, e1_results=args.e1_results, primary_condition=None,
-                                       g_plus=None, g_minus=None, b9plus_extended=args.b9plus_extended),
+                                       g_plus=None, g_minus=None),
                     args.dataset, record=record)
         doc = write_plan(out_path, record, {"dataset": args.dataset, "split": "dev",
                                             "source": "dev analysis in recording mode (tuning candidates included)"})

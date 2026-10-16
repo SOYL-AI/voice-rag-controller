@@ -230,6 +230,15 @@ def oof_remaining(traces: Dict[str, dict]) -> Dict[str, List[dict]]:
     return out
 
 
+def partial_spacing(rows: List[dict]) -> Optional[float]:
+    """Median spacing between consecutive partials' availability times (ms)."""
+    d = []
+    for r in rows:
+        av = [float(p["available_ms"]) for p in r["signals"]["timing"]["partials"]]
+        d += [b - a for a, b in zip(av, av[1:]) if b > a]
+    return float(np.median(d)) if d else None
+
+
 def build_signals(inp: dict, cond: str, rhat: Dict[str, List[dict]]) -> List[dict]:
     rows = []
     for item_id, tr in inp["traces"][cond].items():
@@ -367,8 +376,7 @@ def run_dataset(args, ds: str, record: Optional[set] = None) -> dict:
     t0 = time.perf_counter()
     phase_a = Path(args.phase_a) / ds
     plan = record is not None
-    ext = bool(getattr(args, "b9plus_extended", False))
-    out = phase_a / (("analysis_plan" if plan else "analysis") + ("_b9x" if ext else ""))
+    out = phase_a / ("analysis_plan" if plan else "analysis")
     out.mkdir(parents=True, exist_ok=True)
     inp = load_inputs(ds, Path(args.e1_results), phase_a)
     store = CellStore.load(phase_a / "store_dev.jsonl", recording=record)
@@ -417,11 +425,15 @@ def run_dataset(args, ds: str, record: Optional[set] = None) -> dict:
 
     for cond, rows in signals_by_cond.items():
         end_gap = float(np.median([r["end_gap_ms"] for r in rows]))
+        # the measured partial-to-partial AVAILABILITY spacing (ASR lag
+        # included): a shared dev estimate, like the end gap (Ours-v2's
+        # lookahead step; 2026-10-16 fix)
+        spacing = partial_spacing(rows)
         overrides = {
             "quality": {"g_plus": g["g_plus"], "g_minus": g["g_minus"]},
             "calibration": {"inline": cal["calibration"], "signal": SIGNAL_X},
             "ours": {"belief_transitions_artifact": str(trans_path)},
-            "timing": {"eot_detection_ms": 0, "end_gap_ms": end_gap},
+            "timing": {"eot_detection_ms": 0, "end_gap_ms": end_gap, "partial_spacing_ms": spacing},
             "estimates_artifact": None,
         }
         cfg = load_e3v2_config(overrides=overrides)
@@ -443,7 +455,8 @@ def run_dataset(args, ds: str, record: Optional[set] = None) -> dict:
                 z = c["intercept"] + c["frac_slope"] + (c["slope"] + c["interaction"]) * x
                 finals.append(1 / (1 + math.exp(-max(-40, min(40, z)))))
         grid = price_grid(finals, g, cfg)
-        cond_res = {"slug": slug(cond), "end_gap_ms_median": end_gap, "n_turns": len(turns), "price_grid": grid,
+        cond_res = {"slug": slug(cond), "end_gap_ms_median": end_gap, "partial_spacing_ms_median": spacing,
+                    "n_turns": len(turns), "price_grid": grid,
                     "estimates": str(est_path), "profiles": {}}
         for prof in PROFILES:
             prices = [{"lambda_l": row["lambda_l"], "lambda_c": LAMBDA_C} for row in grid[prof] if row["feasible"]]
@@ -459,12 +472,13 @@ def run_dataset(args, ds: str, record: Optional[set] = None) -> dict:
                                      ("commit", "speculative"), "dev", labels, gold)
             tuning = {}
             for pr in prices:
-                b9p = tune_b9plus_timing(turns, store, SEEDS, prof, pr, cfg, lm, extended=ext)
+                b9p = tune_b9plus_timing(turns, store, SEEDS, prof, pr, cfg, lm)
                 trig = tune_spec_trigger(turns, store, SEEDS, prof, pr, cfg, lm)
                 tuning[f"{pr['lambda_l']:g}"] = {"b9plus_timing_rule": b9p, "spec_trigger": trig}
                 params = {"b9plus_v2": {"timing_rule": b9p["chosen"]},
                           "b10_speculative_v2": {"timing": trig["chosen"]},
-                          "b11_speculative_gated_v2": {"timing": trig["chosen"]}}
+                          "b11_speculative_gated_v2": {"timing": trig["chosen"],
+                                                       "trigger_constants": trig["trigger_constants"]}}
                 recs += run_architectures(turns, store, priced, [pr], SEEDS, [prof], cfg, lm,
                                           ("commit", "speculative"), "dev", labels, gold, controller_params=params)
             write_records(recs, out / "phase_b" / slug(cond) / prof)
@@ -501,6 +515,7 @@ def run_dataset(args, ds: str, record: Optional[set] = None) -> dict:
                                  "b9plus_n_evaluated": t["b9plus_timing_rule"]["n_evaluated"],
                                  "b9plus_candidates": t["b9plus_timing_rule"]["candidates"],
                                  "spec_trigger": t["spec_trigger"]["chosen"],
+                                 "spec_trigger_constants": t["spec_trigger"]["trigger_constants"],
                                  "spec_candidates": t["spec_trigger"]["candidates"]}
                            for lam, t in tuning.items()},
                 "mean_utility": {f"{a}|{b}|{l}": float(np.mean(v)) for (a, b, l), v in util.items()},
@@ -616,22 +631,12 @@ def main(argv=None) -> int:
     ap.add_argument("--primary-condition", default=None)
     ap.add_argument("--write-predictions", action="store_true",
                     help="only aggregate existing dev analyses into docs/research_v2/v2_predictions.json")
-    ap.add_argument("--b9plus-extended", action="store_true",
-                    help="DIAGNOSTIC: tune B9+ over the PREREG family plus the r_below rule; outputs to analysis_b9x/")
     ap.add_argument("--g-plus", type=float, default=None, help=argparse.SUPPRESS)
     ap.add_argument("--g-minus", type=float, default=None, help=argparse.SUPPRESS)
     args = ap.parse_args(argv)
     if args.write_predictions:
-        ext = bool(args.b9plus_extended)
-        doc = write_predictions(Path(args.phase_a), args.dataset.split(","),
-                                _REPO_ROOT / "docs" / "research_v2" /
-                                ("v2_predictions_b9plus_extended.json" if ext else "v2_predictions.json"),
-                                "analysis_b9x" if ext else "analysis")
-        if ext:
-            doc["_comment"] = ("DIAGNOSTIC, not the pre-registered comparison: B9+ tuned over the PREREG §4.5 family "
-                               "PLUS the r_below rule (dispatch at the first query-ready partial with R_hat <= r0). "
-                               "Same data, models and prices as v2_predictions.json. " + doc["_comment"])
-            e1common.atomic_write_json(_REPO_ROOT / "docs" / "research_v2" / "v2_predictions_b9plus_extended.json", doc)
+        write_predictions(Path(args.phase_a), args.dataset.split(","),
+                          _REPO_ROOT / "docs" / "research_v2" / "v2_predictions.json")
         return 0
     for ds in args.dataset.split(","):
         run_dataset(args, ds)
