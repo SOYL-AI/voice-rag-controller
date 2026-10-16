@@ -103,6 +103,9 @@ _DEFAULT_E3V2_CFG: dict = {
         # expected speech-end -> end-of-turn-decision gap for the hiding
         # window; null = eot_detection_ms (see hiding_window_ms)
         "end_gap_ms": None,
+        # dev-measured time between consecutive partials becoming available
+        # (ASR queueing included); null = the trace's partial interval
+        "partial_spacing_ms": None,
         "default_partial_interval_ms": 300,
         "fixed_early_fraction": 0.5,
         "forecast_lead_quantile": 0.5,
@@ -490,7 +493,105 @@ def hiding_window_ms(remaining_ms: Optional[float], is_final: bool, cfg: dict) -
     gap = cfg["timing"].get("end_gap_ms")
     if gap is None:
         gap = cfg["timing"]["eot_detection_ms"]
-    return max(0.0, float(remaining_ms)) + float(gap)
+    # A hypothetical later step can fall after the end of speech but inside
+    # the end-of-turn gap (remaining < 0): the window is then what is left of
+    # the gap. For remaining >= 0 this is remaining + gap, as before.
+    return max(0.0, float(remaining_ms) + float(gap))
+
+
+def end_gap_ms(cfg: dict) -> float:
+    gap = cfg["timing"].get("end_gap_ms")
+    return float(cfg["timing"]["eot_detection_ms"] if gap is None else gap)
+
+
+def partial_spacing_ms(obs_interval_ms: float, cfg: dict) -> float:
+    """Time between two consecutive partials becoming AVAILABLE: the dev-
+    measured spacing (timing.partial_spacing_ms, which includes the serial
+    ASR worker's queueing) when set, else the trace's partial interval."""
+    spacing = cfg["timing"].get("partial_spacing_ms")
+    return float(obs_interval_ms if spacing is None else spacing)
+
+
+class RemainingDist:
+    """
+    The remaining-speech predictor's predictive distribution at a step, from
+    its q10 / q50 / q90 (aged to the step's availability time): a piecewise-
+    linear CDF through (lo, 0), (q10, .1), (q50, .5), (q90, .9), (hi, 1), the
+    tails extended at the adjacent slopes. Degenerate (one value) when only a
+    point prediction exists, which reproduces the point-estimate lookahead.
+    """
+
+    def __init__(self, q10: float, q50: float, q90: float):
+        q10, q50, q90 = sorted((float(q10), float(q50), float(q90)))
+        lo = q10 - (q50 - q10) / 4.0
+        hi = q90 + (q90 - q50) / 4.0
+        self.points = [(lo, 0.0), (q10, 0.1), (q50, 0.5), (q90, 0.9), (hi, 1.0)]
+        self.q50 = q50
+        self.degenerate = hi - lo <= 1e-9
+
+    @classmethod
+    def point(cls, r: float) -> "RemainingDist":
+        return cls(r, r, r)
+
+    def cdf(self, x: float) -> float:
+        if self.degenerate:
+            return 1.0 if x >= self.q50 else 0.0
+        pts = self.points
+        if x <= pts[0][0]:
+            return 0.0
+        if x >= pts[-1][0]:
+            return 1.0
+        for (x0, c0), (x1, c1) in zip(pts, pts[1:]):
+            if x0 <= x <= x1:
+                return c0 if x1 == x0 else c0 + (c1 - c0) * (x - x0) / (x1 - x0)
+        return 1.0
+
+    def quantile(self, c: float) -> float:
+        if self.degenerate:
+            return self.q50
+        pts = self.points
+        c = min(1.0, max(0.0, c))
+        for (x0, c0), (x1, c1) in zip(pts, pts[1:]):
+            if c0 <= c <= c1:
+                return x0 if c1 == c0 else x0 + (x1 - x0) * (c - c0) / (c1 - c0)
+        return pts[-1][0]
+
+    def p_greater(self, x: float) -> float:
+        """P(R > x)."""
+        if self.degenerate:
+            return 1.0 if self.q50 > x else 0.0
+        return 1.0 - self.cdf(x)
+
+    def conditional_median_above(self, x: float) -> float:
+        """Median of R given R > x (the point used for the next step)."""
+        if self.degenerate:
+            return self.q50
+        c = self.cdf(x)
+        return self.quantile((1.0 + c) / 2.0)
+
+
+def next_partial_branch(dist: "RemainingDist", spacing: float, cfg: dict,
+                        scheduled_left: Optional[int] = None):
+    """
+    The lookahead's two branches from a step (the Ours-v2 fix; its
+    implementation corrected once, 2026-10-16). The next partial carries NEW
+    information iff speech is still going on when it is cut, i.e. the
+    remaining SPEECH R > spacing, with R from the predictor's aged, unclipped
+    quantiles. Post-speech re-transcription partials carry no new
+    information (identity belief transition), so the alternative branch is
+    the end-of-turn decision. The end gap enters only the exposure (time to
+    the final decision), never p. For a deterministic prefix schedule
+    (text150) p = 1 while a prefix is still to come and 0 after the last.
+    Returns (p_next, remaining speech at the next partial given it carries
+    information). The end-of-turn branch has probability 1 - p_next.
+    """
+    if scheduled_left is not None:
+        if scheduled_left <= 0:
+            return 0.0, None
+        return 1.0, dist.q50 - spacing
+    p_next = dist.p_greater(spacing)
+    r_next = dist.conditional_median_above(spacing) - spacing if p_next > 0 else None
+    return p_next, r_next
 
 
 def expected_exposed_ms(lat: LatencyDist, remaining_ms: Optional[float], is_final: bool, cfg: dict) -> float:
@@ -713,6 +814,23 @@ def step_terms(obs, cfg: dict, calibration: BeliefCalibration, lat: LatencyDist,
 # ---------------------------------------------------------------------------
 # Timing policy triggers (causal: functions of one StepObs)
 # ---------------------------------------------------------------------------
+def trigger_fires(trigger, obs, cfg: dict, lat: LatencyDist) -> bool:
+    """A timing trigger: a policy name (policy_fires) or a parametric rule
+    {"kind": "r_below", "r0": ms} — the first query-ready partial whose
+    predicted remaining speech is <= r0 (always fires at the end of turn)."""
+    if isinstance(trigger, str):
+        return policy_fires(trigger, obs, cfg, lat)
+    if trigger.get("kind") != "r_below":
+        raise ValueError(f"unknown trigger {trigger!r}")
+    if obs.is_final:
+        return True
+    return bool(obs.query_ready and obs.remaining_ms is not None and obs.remaining_ms <= float(trigger["r0"]))
+
+
+def trigger_label(trigger) -> str:
+    return trigger if isinstance(trigger, str) else f"r_below@{float(trigger['r0']):.0f}"
+
+
 def policy_fires(policy: str, obs, cfg: dict, lat: LatencyDist) -> bool:
     """
     Whether `policy` dispatches at this step. Every policy fires at the end

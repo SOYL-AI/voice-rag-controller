@@ -53,6 +53,8 @@ from controller.baselines._objective_v2 import (  # noqa: E402
     POLICIES_V2,
     estimated_frac,
     policy_fires,
+    trigger_fires,
+    trigger_label,
     resolve_policy_constants,
     rho_at,
     step_terms,
@@ -71,15 +73,19 @@ from controller.sequential_v2 import (  # noqa: E402
 class B11SpeculativeGatedV2(OursV2):
     priced = True
 
-    def __init__(self, cfg: Optional[dict] = None, timing: Optional[str] = None,
-                 policy_constants: Optional[dict] = None, **params):
+    def __init__(self, cfg: Optional[dict] = None, timing=None,
+                 policy_constants: Optional[dict] = None, trigger_constants: Optional[dict] = None, **params):
         super().__init__(cfg=cfg, **params)
         # Buildable under any config (as b10 is); it refuses to DECIDE unless the
         # architecture is speculative, and e3v2_decide never runs it under commit.
         b11 = self.cfg.get("b11") or {}
         self.policy = timing or b11.get("timing") or self.cfg["b10"]["timing"]
-        if self.policy not in POLICIES_V2:
-            raise ValueError(f"b11 timing must be one of {POLICIES_V2}, got {self.policy!r}")
+        if not (self.policy in POLICIES_V2 or (isinstance(self.policy, dict)
+                                               and self.policy.get("kind") == "r_below")):
+            raise ValueError(f"b11 timing must be one of {POLICIES_V2} or an r_below trigger, got {self.policy!r}")
+        # for an r_below trigger: {profile: {"remaining_ms", "elapsed_ms"}} dev
+        # means at its firing step (controller/tune_v2.py:tune_spec_trigger)
+        self.trigger_constants = trigger_constants or {}
         self.constants, self.constants_source = resolve_policy_constants(self.cfg, policy_constants)
 
     def begin_turn(self, static: TurnStatic) -> None:
@@ -87,7 +93,8 @@ class B11SpeculativeGatedV2(OursV2):
             raise ValueError("b11_speculative_gated_v2 needs controller.e3v2.architecture: speculative")
         super().begin_turn(static)
         prof = (self.constants.get("profiles") or {}).get(self.lat.profile) or {}
-        row = prof.get(self.policy) or {}
+        row = (prof.get(self.policy) if isinstance(self.policy, str)
+               else self.trigger_constants.get(self.lat.profile)) or {}
         rem = row.get("remaining_ms")
         self.scalar_remaining = None if rem is None else float(rem)
         self.scalar_elapsed = float(row.get("elapsed_ms") or 0.0)
@@ -101,9 +108,9 @@ class B11SpeculativeGatedV2(OursV2):
                 return WAIT, StepTrace(k=obs.k, available_ms=obs.available_ms, action=WAIT,
                                        remaining_ms=obs.remaining_ms, note="gate declined; waiting for end")
             return self._step_commit(obs, memory)
-        if not policy_fires(self.policy, obs, self.cfg, self.lat):
+        if not trigger_fires(self.policy, obs, self.cfg, self.lat):
             return WAIT, StepTrace(k=obs.k, available_ms=obs.available_ms, action=WAIT,
-                                   remaining_ms=obs.remaining_ms, note=f"waiting for {self.policy} trigger")
+                                   remaining_ms=obs.remaining_ms, note=f"waiting for {trigger_label(self.policy)} trigger")
         if obs.is_final:
             return self._step_commit(obs, memory)
 
@@ -133,4 +140,4 @@ class B11SpeculativeGatedV2(OursV2):
         return WAIT, record
 
     def timing_label(self, obs: StepObs, memory: dict) -> str:
-        return self.policy
+        return trigger_label(self.policy)

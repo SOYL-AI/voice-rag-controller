@@ -1,0 +1,1392 @@
+{
+  "_comment": "Dev-predicted power of the PREREG_V2 boundary test (P1, P2, P3 TOST, conjunction) at the planned test N, per composite latency profile and belief-quantile price, on the primary (ASR) condition pooled over d1_open and d2_support. Inputs are the dev Phase B per-item paired utility differences (analysis/v2_power_dev.py); nothing is selected or frozen here.",
+  "generated_by": "python -m analysis.v2_power_dev",
+  "generated_at_utc": "2026-10-16T03:29:23.784324+00:00",
+  "split": "dev",
+  "alpha_one_sided": 0.025,
+  "target_power": 0.8,
+  "n_test": {
+    "d1_open": 3734,
+    "d2_support": 498
+  },
+  "test_shares": {
+    "d1_open": 0.8823251417769377,
+    "d2_support": 0.11767485822306238
+  },
+  "primary_conditions": {
+    "d1_open": "piper-en_US-hfc_male-medium__150wpm__clean",
+    "d2_support": "piper-en_US-hfc_male-medium__150wpm__clean"
+  },
+  "columns": [
+    "P1: D_C",
+    "P2: D_C - D_S",
+    "P3 upper: m3 - D_S",
+    "P3 lower: D_S + m3"
+  ],
+  "m3_rule": "1/2 max(pooled dev Delta[COMMIT], 0), share-weighted over datasets at the test N",
+  "cells": [
+    {
+      "profile": "rewrite_faiss",
+      "belief_quantile": 0.5,
+      "m3_pooled_dev": 0.0,
+      "pooled_test_means": {
+        "P1: D_C": -0.04491332145214868,
+        "P2: D_C - D_S": 0.001956300218954199,
+        "P3 upper: m3 - D_S": 0.04686962167110288,
+        "P3 lower: D_S + m3": -0.04686962167110288
+      },
+      "pooled_test_se": {
+        "P1: D_C": 0.005466344789000803,
+        "P2: D_C - D_S": 0.0021460262042330143,
+        "P3 upper: m3 - D_S": 0.005548520347019866,
+        "P3 lower: D_S + m3": 0.005548520347019866
+      },
+      "mde_80pct_at_planned_N": {
+        "P1: D_C": 0.015314430757973502,
+        "P2: D_C - D_S": 0.0060122752914622945
+      },
+      "p3_tost_half_width_needed": 0.015544652586609895,
+      "power_at_planned_N": {
+        "N_test": 4232,
+        "conjunction": 0.0,
+        "individual": {
+          "P1: D_C": 0.0,
+          "P2: D_C - D_S": 0.14612,
+          "P3 upper: m3 - D_S": 1.0,
+          "P3 lower: D_S + m3": 0.0
+        }
+      },
+      "N_test_80pct_conjunction_same_ratio": Infinity,
+      "per_dataset": {
+        "d1_open": {
+          "n_dev_items": 1566,
+          "price": "0.165707|0.05",
+          "d_star": {
+            "commit": "b9plus_v2",
+            "speculative": "b9plus_v2"
+          },
+          "delta_commit": -0.04894716899140529,
+          "delta_spec": -0.04976848046912034,
+          "interaction": 0.0008213114777150477,
+          "column_means": [
+            -0.04894716899140529,
+            0.0008213114777150484,
+            0.04976848046912034,
+            -0.04976848046912034
+          ],
+          "column_dev_se": [
+            0.009118727514898275,
+            0.003497663910245907,
+            0.009237782477222487,
+            0.009237782477222487
+          ],
+          "column_sd_per_item_clustered": [
+            0.36085283132441665,
+            0.1384120671410967,
+            0.36556415976006984,
+            0.36556415976006984
+          ]
+        },
+        "d2_support": {
+          "n_dev_items": 222,
+          "price": "0.205286|0.05",
+          "d_star": {
+            "commit": "b9plus_v2",
+            "speculative": "b9plus_v2"
+          },
+          "delta_commit": -0.014667565003184488,
+          "delta_spec": -0.025134001687574407,
+          "interaction": 0.01046643668438992,
+          "column_means": [
+            -0.014667565003184474,
+            0.01046643668438992,
+            0.0251340016875744,
+            -0.0251340016875744
+          ],
+          "column_dev_se": [
+            0.0210398003663424,
+            0.009950678641403187,
+            0.021765008842398674,
+            0.021765008842398674
+          ],
+          "column_sd_per_item_clustered": [
+            0.3134859650433019,
+            0.14826177256539874,
+            0.32429132797525084,
+            0.32429132797525084
+          ]
+        }
+      },
+      "per_dataset_alone_at_own_N": {
+        "d1_open": {
+          "conjunction": 0.0,
+          "individual": {
+            "P1: D_C": 0.0,
+            "P2: D_C - D_S": 0.05468,
+            "P3 upper: m3 - D_S": 1.0,
+            "P3 lower: D_S + m3": 0.0
+          }
+        },
+        "d2_support": {
+          "conjunction": 0.0,
+          "individual": {
+            "P1: D_C": 0.00132,
+            "P2: D_C - D_S": 0.34538,
+            "P3 upper: m3 - D_S": 0.40744,
+            "P3 lower: D_S + m3": 0.0001
+          }
+        }
+      }
+    },
+    {
+      "profile": "rewrite_faiss",
+      "belief_quantile": 0.65,
+      "m3_pooled_dev": 0.0,
+      "pooled_test_means": {
+        "P1: D_C": -0.04113453526326522,
+        "P2: D_C - D_S": 0.0035715558906418486,
+        "P3 upper: m3 - D_S": 0.04470609115390707,
+        "P3 lower: D_S + m3": -0.04470609115390707
+      },
+      "pooled_test_se": {
+        "P1: D_C": 0.005535400345365052,
+        "P2: D_C - D_S": 0.002416614611944413,
+        "P3 upper: m3 - D_S": 0.00557397544748476,
+        "P3 lower: D_S + m3": 0.00557397544748476
+      },
+      "mde_80pct_at_planned_N": {
+        "P1: D_C": 0.01550789578391215,
+        "P2: D_C - D_S": 0.006770351774699275
+      },
+      "p3_tost_half_width_needed": 0.015615967219797923,
+      "power_at_planned_N": {
+        "N_test": 4232,
+        "conjunction": 0.0,
+        "individual": {
+          "P1: D_C": 0.0,
+          "P2: D_C - D_S": 0.31154,
+          "P3 upper: m3 - D_S": 1.0,
+          "P3 lower: D_S + m3": 0.0
+        }
+      },
+      "N_test_80pct_conjunction_same_ratio": Infinity,
+      "per_dataset": {
+        "d1_open": {
+          "n_dev_items": 1566,
+          "price": "0.173057|0.05",
+          "d_star": {
+            "commit": "b9plus_v2",
+            "speculative": "b9plus_v2"
+          },
+          "delta_commit": -0.04538454350514699,
+          "delta_spec": -0.04782077825178419,
+          "interaction": 0.0024362347466372032,
+          "column_means": [
+            -0.045384543505147014,
+            0.0024362347466372037,
+            0.04782077825178421,
+            -0.04782077825178421
+          ],
+          "column_dev_se": [
+            0.009294725097740134,
+            0.0034996177451811837,
+            0.009287270132510864,
+            0.009287270132510864
+          ],
+          "column_sd_per_item_clustered": [
+            0.3678175340168675,
+            0.13848938569976435,
+            0.367522520781083,
+            0.367522520781083
+          ]
+        },
+        "d2_support": {
+          "n_dev_items": 222,
+          "price": "0.215782|0.05",
+          "d_star": {
+            "commit": "b9plus_v2",
+            "speculative": "b10_speculative_v2"
+          },
+          "delta_commit": -0.009268007602247939,
+          "delta_spec": -0.021352192311591273,
+          "interaction": 0.012084184709343332,
+          "column_means": [
+            -0.00926800760224793,
+            0.012084184709343342,
+            0.02135219231159128,
+            -0.02135219231159128
+          ],
+          "column_dev_se": [
+            0.019858050040893565,
+            0.017271217709762563,
+            0.02170466434212248,
+            0.02170466434212248
+          ],
+          "column_sd_per_item_clustered": [
+            0.2958782817590918,
+            0.2573353480995558,
+            0.32339221517119593,
+            0.32339221517119593
+          ]
+        }
+      },
+      "per_dataset_alone_at_own_N": {
+        "d1_open": {
+          "conjunction": 0.0,
+          "individual": {
+            "P1: D_C": 0.0,
+            "P2: D_C - D_S": 0.18738,
+            "P3 upper: m3 - D_S": 1.0,
+            "P3 lower: D_S + m3": 0.0
+          }
+        },
+        "d2_support": {
+          "conjunction": 0.0,
+          "individual": {
+            "P1: D_C": 0.0039,
+            "P2: D_C - D_S": 0.17892,
+            "P3 upper: m3 - D_S": 0.3111,
+            "P3 lower: D_S + m3": 0.00032
+          }
+        }
+      }
+    },
+    {
+      "profile": "rewrite_faiss",
+      "belief_quantile": 0.8,
+      "m3_pooled_dev": 0.0,
+      "pooled_test_means": {
+        "P1: D_C": -0.041540142971558065,
+        "P2: D_C - D_S": 0.005322819768760815,
+        "P3 upper: m3 - D_S": 0.04686296274031887,
+        "P3 lower: D_S + m3": -0.04686296274031887
+      },
+      "pooled_test_se": {
+        "P1: D_C": 0.005655511153371931,
+        "P2: D_C - D_S": 0.002257650745560244,
+        "P3 upper: m3 - D_S": 0.005549724724331061,
+        "P3 lower: D_S + m3": 0.005549724724331061
+      },
+      "mde_80pct_at_planned_N": {
+        "P1: D_C": 0.015844396448159825,
+        "P2: D_C - D_S": 0.006325000956423302
+      },
+      "p3_tost_half_width_needed": 0.015548026752281969,
+      "power_at_planned_N": {
+        "N_test": 4232,
+        "conjunction": 0.0,
+        "individual": {
+          "P1: D_C": 0.0,
+          "P2: D_C - D_S": 0.65168,
+          "P3 upper: m3 - D_S": 1.0,
+          "P3 lower: D_S + m3": 0.0
+        }
+      },
+      "N_test_80pct_conjunction_same_ratio": Infinity,
+      "per_dataset": {
+        "d1_open": {
+          "n_dev_items": 1566,
+          "price": "0.18069|0.05",
+          "d_star": {
+            "commit": "b9plus_v2",
+            "speculative": "b9plus_v2"
+          },
+          "delta_commit": -0.04561660537401945,
+          "delta_spec": -0.049891416430912806,
+          "interaction": 0.004274811056893366,
+          "column_means": [
+            -0.04561660537401946,
+            0.004274811056893365,
+            0.04989141643091281,
+            -0.04989141643091281
+          ],
+          "column_dev_se": [
+            0.009434489785397973,
+            0.0035873548231251957,
+            0.009244944365636071,
+            0.009244944365636071
+          ],
+          "column_sd_per_item_clustered": [
+            0.37334840257041335,
+            0.1419613803324037,
+            0.3658475751497115,
+            0.3658475751497115
+          ]
+        },
+        "d2_support": {
+          "n_dev_items": 222,
+          "price": "0.224506|0.05",
+          "d_star": {
+            "commit": "b9plus_v2",
+            "speculative": "b10_speculative_v2"
+          },
+          "delta_commit": -0.01097486062057242,
+          "delta_spec": -0.02415564129317472,
+          "interaction": 0.013180780672602298,
+          "column_means": [
+            -0.01097486062057242,
+            0.0131807806726023,
+            0.024155641293174716,
+            -0.024155641293174716
+          ],
+          "column_dev_se": [
+            0.021763245349901893,
+            0.012043130982924798,
+            0.021653629496494693,
+            0.021653629496494693
+          ],
+          "column_sd_per_item_clustered": [
+            0.3242650525288315,
+            0.17943861028094837,
+            0.32263181309732186,
+            0.32263181309732186
+          ]
+        }
+      },
+      "per_dataset_alone_at_own_N": {
+        "d1_open": {
+          "conjunction": 0.0,
+          "individual": {
+            "P1: D_C": 0.0,
+            "P2: D_C - D_S": 0.45016,
+            "P3 upper: m3 - D_S": 1.0,
+            "P3 lower: D_S + m3": 0.0
+          }
+        },
+        "d2_support": {
+          "conjunction": 0.0,
+          "individual": {
+            "P1: D_C": 0.00334,
+            "P2: D_C - D_S": 0.37058,
+            "P3 upper: m3 - D_S": 0.38392,
+            "P3 lower: D_S + m3": 0.00014
+          }
+        }
+      }
+    },
+    {
+      "profile": "rewrite_faiss",
+      "belief_quantile": 0.9,
+      "m3_pooled_dev": 0.0,
+      "pooled_test_means": {
+        "P1: D_C": -0.04795577125964237,
+        "P2: D_C - D_S": 0.004642232595490358,
+        "P3 upper: m3 - D_S": 0.052598003855132684,
+        "P3 lower: D_S + m3": -0.052598003855132684
+      },
+      "pooled_test_se": {
+        "P1: D_C": 0.005694576592638879,
+        "P2: D_C - D_S": 0.0022026602094834236,
+        "P3 upper: m3 - D_S": 0.005485463826871829,
+        "P3 lower: D_S + m3": 0.005485463826871829
+      },
+      "mde_80pct_at_planned_N": {
+        "P1: D_C": 0.015953841605349198,
+        "P2: D_C - D_S": 0.006170940283414374
+      },
+      "p3_tost_half_width_needed": 0.015367994371857511,
+      "power_at_planned_N": {
+        "N_test": 4232,
+        "conjunction": 0.0,
+        "individual": {
+          "P1: D_C": 0.0,
+          "P2: D_C - D_S": 0.55584,
+          "P3 upper: m3 - D_S": 1.0,
+          "P3 lower: D_S + m3": 0.0
+        }
+      },
+      "N_test_80pct_conjunction_same_ratio": Infinity,
+      "per_dataset": {
+        "d1_open": {
+          "n_dev_items": 1566,
+          "price": "0.188924|0.05",
+          "d_star": {
+            "commit": "b9plus_v2",
+            "speculative": "b9plus_v2"
+          },
+          "delta_commit": -0.05338438069531225,
+          "delta_spec": -0.05761487932606143,
+          "interaction": 0.004230498630749187,
+          "column_means": [
+            -0.05338438069531223,
+            0.00423049863074919,
+            0.05761487932606137,
+            -0.05761487932606137
+          ],
+          "column_dev_se": [
+            0.009633926782928837,
+            0.003566587699254178,
+            0.0092757152348321,
+            0.0092757152348321
+          ],
+          "column_sd_per_item_clustered": [
+            0.3812406666075032,
+            0.14113956879838452,
+            0.36706526207516893,
+            0.36706526207516893
+          ]
+        },
+        "d2_support": {
+          "n_dev_items": 222,
+          "price": "0.233687|0.05",
+          "d_star": {
+            "commit": "b9plus_v2",
+            "speculative": "b9plus_v2"
+          },
+          "delta_commit": -0.007252101314278365,
+          "delta_spec": -0.01498151187029788,
+          "interaction": 0.007729410556019516,
+          "column_means": [
+            -0.0072521013142783615,
+            0.007729410556019516,
+            0.014981511870297868,
+            -0.014981511870297868
+          ],
+          "column_dev_se": [
+            0.018556007316857866,
+            0.010637711442873444,
+            0.017996095998868884,
+            0.017996095998868884
+          ],
+          "column_sd_per_item_clustered": [
+            0.2764782821029687,
+            0.1584983307567894,
+            0.26813579135675275,
+            0.26813579135675275
+          ]
+        }
+      },
+      "per_dataset_alone_at_own_N": {
+        "d1_open": {
+          "conjunction": 0.0,
+          "individual": {
+            "P1: D_C": 0.0,
+            "P2: D_C - D_S": 0.44622,
+            "P3 upper: m3 - D_S": 1.0,
+            "P3 lower: D_S + m3": 0.0
+          }
+        },
+        "d2_support": {
+          "conjunction": 0.0,
+          "individual": {
+            "P1: D_C": 0.00558,
+            "P2: D_C - D_S": 0.18952,
+            "P3 upper: m3 - D_S": 0.23622,
+            "P3 lower: D_S + m3": 0.00068
+          }
+        }
+      }
+    },
+    {
+      "profile": "rewrite_faiss_rerank",
+      "belief_quantile": 0.5,
+      "m3_pooled_dev": 0.0,
+      "pooled_test_means": {
+        "P1: D_C": -0.04518046706495757,
+        "P2: D_C - D_S": 0.0014962733182650278,
+        "P3 upper: m3 - D_S": 0.04667674038322256,
+        "P3 lower: D_S + m3": -0.04667674038322256
+      },
+      "pooled_test_se": {
+        "P1: D_C": 0.005467904367404122,
+        "P2: D_C - D_S": 0.0021366467898852083,
+        "P3 upper: m3 - D_S": 0.005538361473939915,
+        "P3 lower: D_S + m3": 0.005538361473939915
+      },
+      "mde_80pct_at_planned_N": {
+        "P1: D_C": 0.015318800049774728,
+        "P2: D_C - D_S": 0.005985998062870925
+      },
+      "p3_tost_half_width_needed": 0.015516191637956419,
+      "power_at_planned_N": {
+        "N_test": 4232,
+        "conjunction": 0.0,
+        "individual": {
+          "P1: D_C": 0.0,
+          "P2: D_C - D_S": 0.10462,
+          "P3 upper: m3 - D_S": 1.0,
+          "P3 lower: D_S + m3": 0.0
+        }
+      },
+      "N_test_80pct_conjunction_same_ratio": Infinity,
+      "per_dataset": {
+        "d1_open": {
+          "n_dev_items": 1566,
+          "price": "0.167562|0.05",
+          "d_star": {
+            "commit": "b9plus_v2",
+            "speculative": "b9plus_v2"
+          },
+          "delta_commit": -0.0493778724507749,
+          "delta_spec": -0.049714203539429215,
+          "interaction": 0.0003363310886543112,
+          "column_means": [
+            -0.049377872450774914,
+            0.00033633108865431126,
+            0.04971420353942918,
+            -0.04971420353942918
+          ],
+          "column_dev_se": [
+            0.009119999250932128,
+            0.003479993214069247,
+            0.009217374339514044,
+            0.009217374339514044
+          ],
+          "column_sd_per_item_clustered": [
+            0.3609031573756955,
+            0.13771278966664605,
+            0.3647565542841832,
+            0.3647565542841832
+          ]
+        },
+        "d2_support": {
+          "n_dev_items": 222,
+          "price": "0.207584|0.05",
+          "d_star": {
+            "commit": "b9plus_v2",
+            "speculative": "b9plus_v2"
+          },
+          "delta_commit": -0.013708355196198597,
+          "delta_spec": -0.02390186603527972,
+          "interaction": 0.010193510839081123,
+          "column_means": [
+            -0.013708355196198597,
+            0.010193510839081125,
+            0.02390186603527972,
+            -0.02390186603527972
+          ],
+          "column_dev_se": [
+            0.021076264224745896,
+            0.009951392685104773,
+            0.021803451072650467,
+            0.021803451072650467
+          ],
+          "column_sd_per_item_clustered": [
+            0.3140292642971821,
+            0.14827241157693768,
+            0.32486410430578005,
+            0.32486410430578005
+          ]
+        }
+      },
+      "per_dataset_alone_at_own_N": {
+        "d1_open": {
+          "conjunction": 0.0,
+          "individual": {
+            "P1: D_C": 0.0,
+            "P2: D_C - D_S": 0.03598,
+            "P3 upper: m3 - D_S": 1.0,
+            "P3 lower: D_S + m3": 0.0
+          }
+        },
+        "d2_support": {
+          "conjunction": 0.0,
+          "individual": {
+            "P1: D_C": 0.00164,
+            "P2: D_C - D_S": 0.33026,
+            "P3 upper: m3 - D_S": 0.37244,
+            "P3 lower: D_S + m3": 0.00018
+          }
+        }
+      }
+    },
+    {
+      "profile": "rewrite_faiss_rerank",
+      "belief_quantile": 0.65,
+      "m3_pooled_dev": 0.0,
+      "pooled_test_means": {
+        "P1: D_C": -0.040315268292698894,
+        "P2: D_C - D_S": 0.00423629649244537,
+        "P3 upper: m3 - D_S": 0.044551564785144264,
+        "P3 lower: D_S + m3": -0.044551564785144264
+      },
+      "pooled_test_se": {
+        "P1: D_C": 0.0055062474895812025,
+        "P2: D_C - D_S": 0.0023561002121958085,
+        "P3 upper: m3 - D_S": 0.0055582199510809,
+        "P3 lower: D_S + m3": 0.0055582199510809
+      },
+      "mde_80pct_at_planned_N": {
+        "P1: D_C": 0.015426221574082338,
+        "P2: D_C - D_S": 0.0066008155268806054
+      },
+      "p3_tost_half_width_needed": 0.015571826853968837,
+      "power_at_planned_N": {
+        "N_test": 4232,
+        "conjunction": 0.0,
+        "individual": {
+          "P1: D_C": 0.0,
+          "P2: D_C - D_S": 0.433,
+          "P3 upper: m3 - D_S": 1.0,
+          "P3 lower: D_S + m3": 0.0
+        }
+      },
+      "N_test_80pct_conjunction_same_ratio": Infinity,
+      "per_dataset": {
+        "d1_open": {
+          "n_dev_items": 1566,
+          "price": "0.174995|0.05",
+          "d_star": {
+            "commit": "b9plus_v2",
+            "speculative": "b9plus_v2"
+          },
+          "delta_commit": -0.04452069378660196,
+          "delta_spec": -0.04778586086276371,
+          "interaction": 0.003265167076161747,
+          "column_means": [
+            -0.044520693786601985,
+            0.0032651670761617456,
+            0.047785860862763735,
+            -0.047785860862763735
+          ],
+          "column_dev_se": [
+            0.009236922590568854,
+            0.0033700745967347274,
+            0.009259522880293976,
+            0.009259522880293976
+          ],
+          "column_sd_per_item_clustered": [
+            0.36553013170812126,
+            0.13336301123367697,
+            0.3664244865973027,
+            0.3664244865973027
+          ]
+        },
+        "d2_support": {
+          "n_dev_items": 222,
+          "price": "0.218198|0.05",
+          "d_star": {
+            "commit": "b9plus_v2",
+            "speculative": "b10_speculative_v2"
+          },
+          "delta_commit": -0.008783021717931506,
+          "delta_spec": -0.020300838773435227,
+          "interaction": 0.01151781705550371,
+          "column_means": [
+            -0.008783021717931511,
+            0.011517817055503709,
+            0.020300838773435213,
+            -0.020300838773435213
+          ],
+          "column_dev_se": [
+            0.019971269446113816,
+            0.017279356285286398,
+            0.02167713457945205,
+            0.02167713457945205
+          ],
+          "column_sd_per_item_clustered": [
+            0.2975652129033567,
+            0.2574566101437646,
+            0.32298203094568595,
+            0.32298203094568595
+          ]
+        }
+      },
+      "per_dataset_alone_at_own_N": {
+        "d1_open": {
+          "conjunction": 0.0,
+          "individual": {
+            "P1: D_C": 0.0,
+            "P2: D_C - D_S": 0.31792,
+            "P3 upper: m3 - D_S": 1.0,
+            "P3 lower: D_S + m3": 0.0
+          }
+        },
+        "d2_support": {
+          "conjunction": 0.0,
+          "individual": {
+            "P1: D_C": 0.00456,
+            "P2: D_C - D_S": 0.16654,
+            "P3 upper: m3 - D_S": 0.28718,
+            "P3 lower: D_S + m3": 0.0004
+          }
+        }
+      }
+    },
+    {
+      "profile": "rewrite_faiss_rerank",
+      "belief_quantile": 0.8,
+      "m3_pooled_dev": 0.0,
+      "pooled_test_means": {
+        "P1: D_C": -0.042088633510054325,
+        "P2: D_C - D_S": 0.00527858259528528,
+        "P3 upper: m3 - D_S": 0.04736721610533962,
+        "P3 lower: D_S + m3": -0.04736721610533962
+      },
+      "pooled_test_se": {
+        "P1: D_C": 0.005599706853965516,
+        "P2: D_C - D_S": 0.002324997844955212,
+        "P3 upper: m3 - D_S": 0.005486346684962186,
+        "P3 lower: D_S + m3": 0.005486346684962186
+      },
+      "mde_80pct_at_planned_N": {
+        "P1: D_C": 0.015688055947835663,
+        "P2: D_C - D_S": 0.006513679594571028
+      },
+      "p3_tost_half_width_needed": 0.015370467774033147,
+      "power_at_planned_N": {
+        "N_test": 4232,
+        "conjunction": 0.0,
+        "individual": {
+          "P1: D_C": 0.0,
+          "P2: D_C - D_S": 0.61944,
+          "P3 upper: m3 - D_S": 1.0,
+          "P3 lower: D_S + m3": 0.0
+        }
+      },
+      "N_test_80pct_conjunction_same_ratio": Infinity,
+      "per_dataset": {
+        "d1_open": {
+          "n_dev_items": 1566,
+          "price": "0.182713|0.05",
+          "d_star": {
+            "commit": "b9plus_v2",
+            "speculative": "b9plus_v2"
+          },
+          "delta_commit": -0.04635983846725853,
+          "delta_spec": -0.05058696052487125,
+          "interaction": 0.0042271220576127165,
+          "column_means": [
+            -0.04635983846725845,
+            0.004227122057612717,
+            0.05058696052487118,
+            -0.05058696052487118
+          ],
+          "column_dev_se": [
+            0.009335764308548745,
+            0.003717064429121267,
+            0.009131859208742347,
+            0.009131859208742347
+          ],
+          "column_sd_per_item_clustered": [
+            0.3694415671280019,
+            0.14709434197614016,
+            0.36137248814012657,
+            0.36137248814012657
+          ]
+        },
+        "d2_support": {
+          "n_dev_items": 222,
+          "price": "0.227019|0.05",
+          "d_star": {
+            "commit": "b9plus_v2",
+            "speculative": "b10_speculative_v2"
+          },
+          "delta_commit": -0.010063173047804939,
+          "delta_spec": -0.023225598309092925,
+          "interaction": 0.013162425261287986,
+          "column_means": [
+            -0.010063173047804939,
+            0.013162425261287988,
+            0.02322559830909293,
+            -0.02322559830909293
+          ],
+          "column_dev_se": [
+            0.02167723755531759,
+            0.0120383586665078,
+            0.02157514353708392,
+            0.02157514353708392
+          ],
+          "column_sd_per_item_clustered": [
+            0.32298356525152644,
+            0.1793675043678016,
+            0.3214623986399682,
+            0.3214623986399682
+          ]
+        }
+      },
+      "per_dataset_alone_at_own_N": {
+        "d1_open": {
+          "conjunction": 0.0,
+          "individual": {
+            "P1: D_C": 0.0,
+            "P2: D_C - D_S": 0.41546,
+            "P3 upper: m3 - D_S": 1.0,
+            "P3 lower: D_S + m3": 0.0
+          }
+        },
+        "d2_support": {
+          "conjunction": 0.0,
+          "individual": {
+            "P1: D_C": 0.0039,
+            "P2: D_C - D_S": 0.36978,
+            "P3 upper: m3 - D_S": 0.36242,
+            "P3 lower: D_S + m3": 0.00022
+          }
+        }
+      }
+    },
+    {
+      "profile": "rewrite_faiss_rerank",
+      "belief_quantile": 0.9,
+      "m3_pooled_dev": 0.0,
+      "pooled_test_means": {
+        "P1: D_C": -0.04723852855222649,
+        "P2: D_C - D_S": 0.0029152835684976225,
+        "P3 upper: m3 - D_S": 0.05015381212072406,
+        "P3 lower: D_S + m3": -0.05015381212072406
+      },
+      "pooled_test_se": {
+        "P1: D_C": 0.005671863537012296,
+        "P2: D_C - D_S": 0.002274036303112178,
+        "P3 upper: m3 - D_S": 0.005454469279078061,
+        "P3 lower: D_S + m3": 0.005454469279078061
+      },
+      "mde_80pct_at_planned_N": {
+        "P1: D_C": 0.015890209044447583,
+        "P2: D_C - D_S": 0.006370906492251339
+      },
+      "p3_tost_half_width_needed": 0.015281160504916395,
+      "power_at_planned_N": {
+        "N_test": 4232,
+        "conjunction": 0.0,
+        "individual": {
+          "P1: D_C": 0.0,
+          "P2: D_C - D_S": 0.24604,
+          "P3 upper: m3 - D_S": 1.0,
+          "P3 lower: D_S + m3": 0.0
+        }
+      },
+      "N_test_80pct_conjunction_same_ratio": Infinity,
+      "per_dataset": {
+        "d1_open": {
+          "n_dev_items": 1566,
+          "price": "0.191039|0.05",
+          "d_star": {
+            "commit": "b9plus_v2",
+            "speculative": "b9plus_v2"
+          },
+          "delta_commit": -0.05253737204508199,
+          "delta_spec": -0.05484956217286109,
+          "interaction": 0.002312190127779101,
+          "column_means": [
+            -0.05253737204508199,
+            0.0023121901277791,
+            0.05484956217286104,
+            -0.05484956217286104
+          ],
+          "column_dev_se": [
+            0.009587786236543492,
+            0.003700252419262603,
+            0.009215671504870283,
+            0.009215671504870283
+          ],
+          "column_sd_per_item_clustered": [
+            0.3794147597828059,
+            0.14642904505309456,
+            0.3646891684892381,
+            0.3646891684892381
+          ]
+        },
+        "d2_support": {
+          "n_dev_items": 222,
+          "price": "0.236303|0.05",
+          "d_star": {
+            "commit": "b9plus_v2",
+            "speculative": "b9plus_v2"
+          },
+          "delta_commit": -0.00750784260378779,
+          "delta_spec": -0.014945115946668872,
+          "interaction": 0.007437273342881087,
+          "column_means": [
+            -0.007507842603787784,
+            0.007437273342881085,
+            0.014945115946668867,
+            -0.014945115946668867
+          ],
+          "column_dev_se": [
+            0.018692572293493276,
+            0.010655964335547509,
+            0.018101222693733342,
+            0.018101222693733342
+          ],
+          "column_sd_per_item_clustered": [
+            0.2785130544271469,
+            0.15877029273243223,
+            0.26970214383242147,
+            0.26970214383242147
+          ]
+        }
+      },
+      "per_dataset_alone_at_own_N": {
+        "d1_open": {
+          "conjunction": 0.0,
+          "individual": {
+            "P1: D_C": 0.0,
+            "P2: D_C - D_S": 0.1589,
+            "P3 upper: m3 - D_S": 1.0,
+            "P3 lower: D_S + m3": 0.0
+          }
+        },
+        "d2_support": {
+          "conjunction": 0.0,
+          "individual": {
+            "P1: D_C": 0.0054,
+            "P2: D_C - D_S": 0.17838,
+            "P3 upper: m3 - D_S": 0.2326,
+            "P3 lower: D_S + m3": 0.00068
+          }
+        }
+      }
+    },
+    {
+      "profile": "rewrite_remote",
+      "belief_quantile": 0.5,
+      "m3_pooled_dev": 0.0,
+      "pooled_test_means": {
+        "P1: D_C": -0.0432163762916639,
+        "P2: D_C - D_S": 0.0035696768767148087,
+        "P3 upper: m3 - D_S": 0.04678605316837868,
+        "P3 lower: D_S + m3": -0.04678605316837868
+      },
+      "pooled_test_se": {
+        "P1: D_C": 0.005573329298682323,
+        "P2: D_C - D_S": 0.0021001229559394407,
+        "P3 upper: m3 - D_S": 0.005646124669507159,
+        "P3 lower: D_S + m3": 0.005646124669507159
+      },
+      "mde_80pct_at_planned_N": {
+        "P1: D_C": 0.015614156978864313,
+        "P2: D_C - D_S": 0.0058836734295796495
+      },
+      "p3_tost_half_width_needed": 0.015818099413714225,
+      "power_at_planned_N": {
+        "N_test": 4232,
+        "conjunction": 0.0,
+        "individual": {
+          "P1: D_C": 0.0,
+          "P2: D_C - D_S": 0.39332,
+          "P3 upper: m3 - D_S": 1.0,
+          "P3 lower: D_S + m3": 0.0
+        }
+      },
+      "N_test_80pct_conjunction_same_ratio": Infinity,
+      "per_dataset": {
+        "d1_open": {
+          "n_dev_items": 1566,
+          "price": "0.147414|0.05",
+          "d_star": {
+            "commit": "b9plus_v2",
+            "speculative": "b9plus_v2"
+          },
+          "delta_commit": -0.04784004587783049,
+          "delta_spec": -0.050478612754552406,
+          "interaction": 0.002638566876721919,
+          "column_means": [
+            -0.04784004587783042,
+            0.002638566876721921,
+            0.0504786127545523,
+            -0.0504786127545523
+          ],
+          "column_dev_se": [
+            0.009313892271792,
+            0.00341178543800134,
+            0.009414859217174972,
+            0.009414859217174972
+          ],
+          "column_sd_per_item_clustered": [
+            0.3685760311880795,
+            0.13501362258744198,
+            0.3725715676324021,
+            0.3725715676324021
+          ]
+        },
+        "d2_support": {
+          "n_dev_items": 222,
+          "price": "0.182624|0.05",
+          "d_star": {
+            "commit": "b9plus_v2",
+            "speculative": "b9plus_v2"
+          },
+          "delta_commit": -0.00854813887249567,
+          "delta_spec": -0.01909927105036197,
+          "interaction": 0.0105511321778663,
+          "column_means": [
+            -0.008548138872495668,
+            0.010551132177866301,
+            0.019099271050361962,
+            -0.019099271050361962
+          ],
+          "column_dev_se": [
+            0.02106498817510047,
+            0.009941072578248278,
+            0.02181799027576368,
+            0.02181799027576368
+          ],
+          "column_sd_per_item_clustered": [
+            0.3138612549414171,
+            0.148118645447938,
+            0.3250807335531848,
+            0.3250807335531848
+          ]
+        }
+      },
+      "per_dataset_alone_at_own_N": {
+        "d1_open": {
+          "conjunction": 0.0,
+          "individual": {
+            "P1: D_C": 0.0,
+            "P2: D_C - D_S": 0.22042,
+            "P3 upper: m3 - D_S": 1.0,
+            "P3 lower: D_S + m3": 0.0
+          }
+        },
+        "d2_support": {
+          "conjunction": 0.0,
+          "individual": {
+            "P1: D_C": 0.0053,
+            "P2: D_C - D_S": 0.351,
+            "P3 upper: m3 - D_S": 0.25672,
+            "P3 lower: D_S + m3": 0.00044
+          }
+        }
+      }
+    },
+    {
+      "profile": "rewrite_remote",
+      "belief_quantile": 0.65,
+      "m3_pooled_dev": 0.0,
+      "pooled_test_means": {
+        "P1: D_C": -0.040949207975288275,
+        "P2: D_C - D_S": 0.0026684712022802225,
+        "P3 upper: m3 - D_S": 0.043617679177568466,
+        "P3 lower: D_S + m3": -0.043617679177568466
+      },
+      "pooled_test_se": {
+        "P1: D_C": 0.006055608014317925,
+        "P2: D_C - D_S": 0.002122766714309387,
+        "P3 upper: m3 - D_S": 0.006102013831050682,
+        "P3 lower: D_S + m3": 0.006102013831050682
+      },
+      "mde_80pct_at_planned_N": {
+        "P1: D_C": 0.016965301899599522,
+        "P2: D_C - D_S": 0.005947111848311414
+      },
+      "p3_tost_half_width_needed": 0.017095311749792477,
+      "power_at_planned_N": {
+        "N_test": 4232,
+        "conjunction": 0.0,
+        "individual": {
+          "P1: D_C": 0.0,
+          "P2: D_C - D_S": 0.23954,
+          "P3 upper: m3 - D_S": 1.0,
+          "P3 lower: D_S + m3": 0.0
+        }
+      },
+      "N_test_80pct_conjunction_same_ratio": Infinity,
+      "per_dataset": {
+        "d1_open": {
+          "n_dev_items": 1566,
+          "price": "0.153953|0.05",
+          "d_star": {
+            "commit": "b9plus_v2",
+            "speculative": "b9plus_v2"
+          },
+          "delta_commit": -0.04525442309635753,
+          "delta_spec": -0.04759847710259579,
+          "interaction": 0.0023440540062382724,
+          "column_means": [
+            -0.04525442309635754,
+            0.0023440540062382715,
+            0.04759847710259578,
+            -0.04759847710259578
+          ],
+          "column_dev_se": [
+            0.010282248678790027,
+            0.003443151429600729,
+            0.010311832845199438,
+            0.010311832845199438
+          ],
+          "column_sd_per_item_clustered": [
+            0.4068965260844857,
+            0.13625486012386853,
+            0.40806725195536697,
+            0.40806725195536697
+          ]
+        },
+        "d2_support": {
+          "n_dev_items": 222,
+          "price": "0.191962|0.05",
+          "d_star": {
+            "commit": "b9plus_v2",
+            "speculative": "b9plus_v2"
+          },
+          "delta_commit": -0.008668739577551992,
+          "delta_spec": -0.013769688309994152,
+          "interaction": 0.005100948732442159,
+          "column_means": [
+            -0.008668739577551998,
+            0.005100948732442159,
+            0.013769688309994152,
+            -0.013769688309994152
+          ],
+          "column_dev_se": [
+            0.018671191742965554,
+            0.01014609495778683,
+            0.02019370083240257,
+            0.02019370083240257
+          ],
+          "column_sd_per_item_clustered": [
+            0.27819449139904606,
+            0.15117341010283147,
+            0.3008793659168138,
+            0.3008793659168138
+          ]
+        }
+      },
+      "per_dataset_alone_at_own_N": {
+        "d1_open": {
+          "conjunction": 0.0,
+          "individual": {
+            "P1: D_C": 0.0,
+            "P2: D_C - D_S": 0.18062,
+            "P3 upper: m3 - D_S": 1.0,
+            "P3 lower: D_S + m3": 0.0
+          }
+        },
+        "d2_support": {
+          "conjunction": 0.0,
+          "individual": {
+            "P1: D_C": 0.0039,
+            "P2: D_C - D_S": 0.11282,
+            "P3 upper: m3 - D_S": 0.16988,
+            "P3 lower: D_S + m3": 0.0012
+          }
+        }
+      }
+    },
+    {
+      "profile": "rewrite_remote",
+      "belief_quantile": 0.8,
+      "m3_pooled_dev": 0.0,
+      "pooled_test_means": {
+        "P1: D_C": -0.04398989488783068,
+        "P2: D_C - D_S": 0.00254778420660295,
+        "P3 upper: m3 - D_S": 0.04653767909443353,
+        "P3 lower: D_S + m3": -0.04653767909443353
+      },
+      "pooled_test_se": {
+        "P1: D_C": 0.0057548005834046215,
+        "P2: D_C - D_S": 0.002211589144513884,
+        "P3 upper: m3 - D_S": 0.005658829793197887,
+        "P3 lower: D_S + m3": 0.005658829793197887
+      },
+      "mde_80pct_at_planned_N": {
+        "P1: D_C": 0.016122564247654275,
+        "P2: D_C - D_S": 0.006195955455809202
+      },
+      "p3_tost_half_width_needed": 0.015853693900440467,
+      "power_at_planned_N": {
+        "N_test": 4232,
+        "conjunction": 0.0,
+        "individual": {
+          "P1: D_C": 0.0,
+          "P2: D_C - D_S": 0.20836,
+          "P3 upper: m3 - D_S": 1.0,
+          "P3 lower: D_S + m3": 0.0
+        }
+      },
+      "N_test_80pct_conjunction_same_ratio": Infinity,
+      "per_dataset": {
+        "d1_open": {
+          "n_dev_items": 1566,
+          "price": "0.160743|0.05",
+          "d_star": {
+            "commit": "b9plus_v2",
+            "speculative": "b9plus_v2"
+          },
+          "delta_commit": -0.04868800627954896,
+          "delta_spec": -0.05090167597827486,
+          "interaction": 0.0022136696987258902,
+          "column_means": [
+            -0.048688006279548994,
+            0.0022136696987258902,
+            0.05090167597827476,
+            -0.05090167597827476
+          ],
+          "column_dev_se": [
+            0.009738220544273268,
+            0.0036102245422314945,
+            0.009505917312208878,
+            0.009505917312208878
+          ],
+          "column_sd_per_item_clustered": [
+            0.38536785420129,
+            0.14286639727447362,
+            0.37617498393739734,
+            0.37617498393739734
+          ]
+        },
+        "d2_support": {
+          "n_dev_items": 222,
+          "price": "0.199722|0.05",
+          "d_star": {
+            "commit": "b9plus_v2",
+            "speculative": "b9plus_v2"
+          },
+          "delta_commit": -0.008763493408561245,
+          "delta_spec": -0.013816465511575726,
+          "interaction": 0.00505297210301448,
+          "column_means": [
+            -0.008763493408561248,
+            0.005052972103014477,
+            0.013816465511575721,
+            -0.013816465511575721
+          ],
+          "column_dev_se": [
+            0.018685987096044764,
+            0.010147996922612224,
+            0.020203138166279857,
+            0.020203138166279857
+          ],
+          "column_sd_per_item_clustered": [
+            0.2784149371949867,
+            0.15120174874047942,
+            0.30101997902465916,
+            0.30101997902465916
+          ]
+        }
+      },
+      "per_dataset_alone_at_own_N": {
+        "d1_open": {
+          "conjunction": 0.0,
+          "individual": {
+            "P1: D_C": 0.0,
+            "P2: D_C - D_S": 0.15464,
+            "P3 upper: m3 - D_S": 1.0,
+            "P3 lower: D_S + m3": 0.0
+          }
+        },
+        "d2_support": {
+          "conjunction": 0.0,
+          "individual": {
+            "P1: D_C": 0.00386,
+            "P2: D_C - D_S": 0.11176,
+            "P3 upper: m3 - D_S": 0.17066,
+            "P3 lower: D_S + m3": 0.0012
+          }
+        }
+      }
+    },
+    {
+      "profile": "rewrite_remote",
+      "belief_quantile": 0.9,
+      "m3_pooled_dev": 0.0,
+      "pooled_test_means": {
+        "P1: D_C": -0.047010744363816914,
+        "P2: D_C - D_S": 0.004481518081043714,
+        "P3 upper: m3 - D_S": 0.05149226244486054,
+        "P3 lower: D_S + m3": -0.05149226244486054
+      },
+      "pooled_test_se": {
+        "P1: D_C": 0.005886210719274255,
+        "P2: D_C - D_S": 0.002323097353096346,
+        "P3 upper: m3 - D_S": 0.005743546213626804,
+        "P3 lower: D_S + m3": 0.005743546213626804
+      },
+      "mde_80pct_at_planned_N": {
+        "P1: D_C": 0.016490720941816858,
+        "P2: D_C - D_S": 0.006508355204672086
+      },
+      "p3_tost_half_width_needed": 0.016091034171645563,
+      "power_at_planned_N": {
+        "N_test": 4232,
+        "conjunction": 0.0,
+        "individual": {
+          "P1: D_C": 0.0,
+          "P2: D_C - D_S": 0.48576,
+          "P3 upper: m3 - D_S": 1.0,
+          "P3 lower: D_S + m3": 0.0
+        }
+      },
+      "N_test_80pct_conjunction_same_ratio": Infinity,
+      "per_dataset": {
+        "d1_open": {
+          "n_dev_items": 1566,
+          "price": "0.168068|0.05",
+          "d_star": {
+            "commit": "b9plus_v2",
+            "speculative": "b9plus_v2"
+          },
+          "delta_commit": -0.05209823699265963,
+          "delta_spec": -0.056510481250907046,
+          "interaction": 0.004412244258247427,
+          "column_means": [
+            -0.05209823699265961,
+            0.004412244258247427,
+            0.05651048125090695,
+            -0.05651048125090695
+          ],
+          "column_dev_se": [
+            0.009975325478126885,
+            0.003818594084999933,
+            0.00965988233476772,
+            0.00965988233476772
+          ],
+          "column_sd_per_item_clustered": [
+            0.3947507408554068,
+            0.15111214640415402,
+            0.3822677983377085,
+            0.3822677983377085
+          ]
+        },
+        "d2_support": {
+          "n_dev_items": 222,
+          "price": "0.20789|0.05",
+          "d_star": {
+            "commit": "b9plus_v2",
+            "speculative": "b9plus_v2"
+          },
+          "delta_commit": -0.008864765496148924,
+          "delta_spec": -0.013865698144102951,
+          "interaction": 0.005000932647954025,
+          "column_means": [
+            -0.008864765496148926,
+            0.0050009326479540225,
+            0.013865698144102953,
+            -0.013865698144102953
+          ],
+          "column_dev_se": [
+            0.018701832761716622,
+            0.010150090487425812,
+            0.020213280918344345,
+            0.020213280918344345
+          ],
+          "column_sd_per_item_clustered": [
+            0.2786510322961001,
+            0.15123294215365543,
+            0.3011711026267736,
+            0.3011711026267736
+          ]
+        }
+      },
+      "per_dataset_alone_at_own_N": {
+        "d1_open": {
+          "conjunction": 0.0,
+          "individual": {
+            "P1: D_C": 0.0,
+            "P2: D_C - D_S": 0.4273,
+            "P3 upper: m3 - D_S": 1.0,
+            "P3 lower: D_S + m3": 0.0
+          }
+        },
+        "d2_support": {
+          "conjunction": 0.0,
+          "individual": {
+            "P1: D_C": 0.00382,
+            "P2: D_C - D_S": 0.11044,
+            "P3 upper: m3 - D_S": 0.17156,
+            "P3 lower: D_S + m3": 0.00118
+          }
+        }
+      }
+    }
+  ],
+  "normal_approximation_check": {
+    "cell": "rewrite_faiss q=0.5",
+    "reps": 200,
+    "wald_on_resampled_test_sets": 0.0,
+    "normal_approx": 0.0,
+    "mc_se": 0.007071067811865475
+  }
+}

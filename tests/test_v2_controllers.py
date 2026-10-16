@@ -321,7 +321,7 @@ def test_b9plus_timing_rules_and_tuning():
     assert hi.dispatch_t_ms == 300 and lo.dispatch_t_ms == 2700
     with pytest.raises(ValueError):
         get_controller_v2("b9plus_v2", cfg=cfg, timing_rule={"kind": "sometimes"})
-    # diagnostic r_below: first ready partial with R_hat <= r0 (R_hat = 2700 - t here)
+    # r_below (PREREG family since 2026-10-16): first ready partial with R_hat <= r0 (R_hat = 2700 - t here)
     rb = get_controller_v2("b9plus_v2", cfg=cfg, timing_rule={"kind": "r_below", "r0": 700,
                                                              "late_exposed_ms": 0.0}).decide_turn(long_turn)
     assert rb.dispatch_t_ms == 2100 and rb.timing_label == "r_below_partial"
@@ -334,10 +334,21 @@ def test_b9plus_timing_rules_and_tuning():
     lm = load_latency_model(cfg)
     price = {"lambda_l": 0.4, "lambda_c": 0.05}
     out = tune_b9plus_timing(list(turns.values()), store, [11, 23], "faiss", price, cfg, lm)
-    assert out["n_evaluated"] == len(out["candidates"]) <= 23
+    assert out["n_evaluated"] == len(out["candidates"]) <= 2 + 21 + 21
+    kinds = {c["kind"] for c in out["candidates"]}
+    assert {"early", "late", "r_threshold", "r_below"} <= kinds  # r_below is in the default family
     assert out["dev_utility"] == max(c["dev_utility"] for c in out["candidates"])
     spec = tune_spec_trigger(list(turns.values()), store, [11, 23], "faiss", price, cfg, lm)
-    assert spec["chosen"] in ("immediate", "forecast") and spec["n_evaluated"] == 4
+    trigs = [r["trigger"] for r in spec["candidates"]]
+    assert trigs[:2] == ["immediate", "forecast"] and len(trigs) == 2 + 21
+    assert all(t["kind"] == "r_below" for t in trigs[2:])
+    assert spec["n_evaluated"] == 2 * len(trigs)
+    assert spec["chosen"] in trigs
+    best = max(r["best"] for r in spec["candidates"])
+    assert next(r for r in spec["candidates"] if r["trigger"] == spec["chosen"])["best"] == best
+    for r in spec["candidates"][2:]:  # SPEC-theta's scalars at the firing step
+        c = r["trigger_constants"]["faiss"]
+        assert c["elapsed_ms"] >= 0.0 and (c["remaining_ms"] is None or c["remaining_ms"] <= r["trigger"]["r0"] + 1e-9)
 
 
 def test_quantile_grid():

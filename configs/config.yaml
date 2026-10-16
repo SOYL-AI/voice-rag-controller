@@ -494,6 +494,10 @@ controller:
       # VAD end (speech end + 800 ms hang) and the final transcript's
       # availability; set it to the dev median of that gap (a shared estimate).
       end_gap_ms: null
+      # Dev-measured time between two consecutive partials becoming AVAILABLE
+      # (serial ASR queueing included), the step spacing of Ours-v2's
+      # lookahead. null -> the trace's partial_interval_ms.
+      partial_spacing_ms: null
       default_partial_interval_ms: 300
       fixed_early_fraction: 0.5      # fixed_early_proxy fires at est. word fraction >= this
       forecast_lead_quantile: 0.5    # forecast fires when R_t + eot <= this latency quantile

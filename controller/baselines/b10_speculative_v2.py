@@ -51,6 +51,8 @@ from controller.baselines._objective_v2 import (  # noqa: E402
     latency_dist_for,
     load_belief_calibration,
     policy_fires,
+    trigger_fires,
+    trigger_label,
     quality_model,
     read_prices_v2,
     rho_at,
@@ -76,11 +78,14 @@ from controller.sequential_v2 import (  # noqa: E402
 class B10SpeculativeV2(SequentialController):
     priced = True
 
-    def __init__(self, cfg: Optional[dict] = None, timing: Optional[str] = None, **params):
+    def __init__(self, cfg: Optional[dict] = None, timing=None, **params):
         super().__init__(cfg=cfg, **params)
         self.policy = timing or self.cfg["b10"]["timing"]
-        if self.policy not in POLICIES_V2:
-            raise ValueError(f"b10 timing must be one of {POLICIES_V2}, got {self.policy!r}")
+        # a policy name, or the pre-registered parametric trigger
+        # {"kind": "r_below", "r0": ms} (PREREG_V2 §4.5, added 2026-10-16)
+        if not (self.policy in POLICIES_V2 or (isinstance(self.policy, dict)
+                                               and self.policy.get("kind") == "r_below")):
+            raise ValueError(f"b10 timing must be one of {POLICIES_V2} or an r_below trigger, got {self.policy!r}")
         self.calibration = load_belief_calibration(self.cfg)
         self.quality = quality_model(self.cfg)
 
@@ -93,8 +98,8 @@ class B10SpeculativeV2(SequentialController):
                            remaining_ms=obs.remaining_ms)
         spec = memory.get("spec")
         if spec is None:
-            if not policy_fires(self.policy, obs, self.cfg, self.lat):
-                record.note = f"waiting for {self.policy} trigger"
+            if not trigger_fires(self.policy, obs, self.cfg, self.lat):
+                record.note = f"waiting for {trigger_label(self.policy)} trigger"
                 return WAIT, record
             if obs.is_final:
                 # Nothing was speculated: an ordinary end-of-turn decision.
@@ -129,4 +134,4 @@ class B10SpeculativeV2(SequentialController):
         return action, record
 
     def timing_label(self, obs: StepObs, memory: dict) -> str:
-        return self.policy
+        return trigger_label(self.policy)

@@ -1,0 +1,2152 @@
+{
+ "_comment": "DEV-ONLY predicted gaps for PREREG_V2 \u00a73, computed by python -m simulator.e3v2_dev_analysis from Phase A cells (real Mistral-7B generations, real grading) and Phase B on dev. Nothing is selected or frozen here: the primary (profile, price), D*[SPEC] and m3 are fixed at freeze.",
+ "generated_at_utc": "2026-10-16T02:30:07.211999+00:00",
+ "git_commit": "f0446e64362d731e6383501c21145d59c8710064",
+ "split": "dev",
+ "definitions": {
+  "delta_commit": "mean_i [U_i(Ours-v2[COMMIT]) - U_i(B9+)]",
+  "delta_speculative": "mean_i [U_i(Ours-v2[SPEC]) - U_i(D*[SPEC])], D*[SPEC] = dev-best of B9+, SPEC, SPEC-theta",
+  "interaction": "mean_i [Delta_i[COMMIT] - Delta_i[SPEC]] on the same items",
+  "m3": "1/2 max(Delta[COMMIT], 0) on dev (PREREG_V2 \u00a73 P3 margin)",
+  "U_i": "Q - lambda_l (TTFA - skip TTFA)/1000 - lambda_c n_retrievals, mean over 5 seeds",
+  "se": "paired cluster bootstrap over items (pair_id clusters for d2_support), B=2000",
+  "price_grid": "lambda_l = (b_q (g+ + g-) - g- - lambda_c) / ((E[L] + pi)/1000), b_q = dev end-of-turn belief quantile"
+ },
+ "inputs": {
+  "d1_open": {
+   "primary_condition": "piper-en_US-hfc_male-medium__150wpm__clean",
+   "g": {
+    "g_plus": 0.44082098061573544,
+    "g_minus": -0.1123367198838897,
+    "n_needed": 877,
+    "n_not_needed": 689,
+    "source": "Phase A cells, condition piper-en_US-hfc_male-medium__150wpm__clean: final-transcript dispatch vs skip, per item mean over seeds"
+   },
+   "g_text150": {
+    "g_plus": 0.7176738882554161,
+    "g_minus": 0.023222060957910014,
+    "n_needed": 877,
+    "n_not_needed": 689,
+    "source": "Phase A cells, condition text150: final-transcript dispatch vs skip, per item mean over seeds"
+   },
+   "calibration": {
+    "calibration": {
+     "signal": "self_assessed_need_logit",
+     "kind": "logistic",
+     "intercept": 0.41730283839180443,
+     "slope": 0.04510120034607392,
+     "frac_slope": 0.15913158886955633,
+     "interaction": 0.02173169705331019,
+     "calibrated": true,
+     "source": "Fitted on d1_open dev (1566 items, 23413 prefix records over 2 conditions): P(empirical need) = sigmoid(a + b*logit(SA) + c*f + d*logit(SA)*f), SA = self_assessed_need (sa-v1-frozen), f = spoken word fraction",
+     "auc": 0.5720139142163917
+    },
+    "diagnostics": {
+     "auc_in_sample": 0.5720139142163917,
+     "auc_oof_grouped5": 0.5659196851361246,
+     "auc_oof_by_frac": {
+      "[0,0.4)": {
+       "n": 5099,
+       "auc_oof": 0.538890498690608
+      },
+      "[0.4,0.8)": {
+       "n": 8803,
+       "auc_oof": 0.5547532676771263
+      },
+      "[0.8,0.999)": {
+       "n": 3204,
+       "auc_oof": 0.5625223030064845
+      },
+      "[0.999,1.01)": {
+       "n": 6307,
+       "auc_oof": 0.6007796414761307
+      }
+     },
+     "n_records": 23413,
+     "n_items": 1566,
+     "base_rate": 0.5570836714645709
+    }
+   },
+   "sa_lag_ms": 548.0733500153292,
+   "calibration_artifact": "controller/baselines/e3v2_calibration_d1_open_mistral7b_v03_self_assessed_need_logit.json",
+   "belief_transitions_artifact": "controller/baselines/belief_transitions_v2_d1_open.json"
+  },
+  "d2_support": {
+   "primary_condition": "piper-en_US-hfc_male-medium__150wpm__clean",
+   "g": {
+    "g_plus": 0.4445714285714286,
+    "g_minus": 0.03404255319148937,
+    "n_needed": 175,
+    "n_not_needed": 47,
+    "source": "Phase A cells, condition piper-en_US-hfc_male-medium__150wpm__clean: final-transcript dispatch vs skip, per item mean over seeds"
+   },
+   "g_text150": {
+    "g_plus": 0.46285714285714286,
+    "g_minus": 0.16595744680851068,
+    "n_needed": 175,
+    "n_not_needed": 47,
+    "source": "Phase A cells, condition text150: final-transcript dispatch vs skip, per item mean over seeds"
+   },
+   "calibration": {
+    "calibration": {
+     "signal": "self_assessed_need_logit",
+     "kind": "logistic",
+     "intercept": 1.1426060442936508,
+     "slope": 0.053354333588240384,
+     "frac_slope": -0.22672721387701986,
+     "interaction": 0.08676156240485391,
+     "calibrated": true,
+     "source": "Fitted on d2_support dev (222 items, 4737 prefix records over 2 conditions): P(empirical need) = sigmoid(a + b*logit(SA) + c*f + d*logit(SA)*f), SA = self_assessed_need (sa-v1-frozen), f = spoken word fraction",
+     "auc": 0.6051501691823593
+    },
+    "diagnostics": {
+     "auc_in_sample": 0.6051501691823593,
+     "auc_oof_grouped5": 0.5958869324349775,
+     "auc_oof_by_frac": {
+      "[0,0.4)": {
+       "n": 1417,
+       "auc_oof": 0.5500321916784511
+      },
+      "[0.4,0.8)": {
+       "n": 1815,
+       "auc_oof": 0.5701953312321315
+      },
+      "[0.8,0.999)": {
+       "n": 620,
+       "auc_oof": 0.628283345752608
+      },
+      "[0.999,1.01)": {
+       "n": 885,
+       "auc_oof": 0.6588725617884559
+      }
+     },
+     "n_records": 4737,
+     "n_items": 222,
+     "base_rate": 0.7855182605024277
+    }
+   },
+   "sa_lag_ms": 544.2979999643285,
+   "calibration_artifact": "controller/baselines/e3v2_calibration_d2_support_mistral7b_v03_self_assessed_need_logit.json",
+   "belief_transitions_artifact": "controller/baselines/belief_transitions_v2_d2_support.json"
+  }
+ },
+ "cells": [
+  {
+   "dataset": "d1_open",
+   "condition": "text150",
+   "condition_role": "secondary",
+   "profile": "rewrite_faiss",
+   "belief_quantile": 0.5,
+   "b_cut": 0.504188452590562,
+   "lambda_l": 0.15545383408577537,
+   "lambda_c": 0.05,
+   "d_star": {
+    "commit": "b9plus_v2",
+    "speculative": "b9plus_v2"
+   },
+   "delta_commit": -0.0018559722268421568,
+   "se_commit": 0.0018258333387625746,
+   "delta_speculative": -0.0018559722268421568,
+   "se_speculative": 0.0018258333387625746,
+   "interaction": 0.0,
+   "se_interaction": 0.0,
+   "z_commit": -1.0165069217653833,
+   "m3": 0.0,
+   "q_hat": 0.0028388928317956,
+   "w_bar": 0.04238890055070701,
+   "n_items": {
+    "commit": 1566,
+    "speculative": 1566,
+    "paired": 1566
+   },
+   "d_star_speculative_dev_utilities": {
+    "b9plus_v2": 0.5353713610710816,
+    "b10_speculative_v2": 0.3093373049100531,
+    "b11_speculative_gated_v2": 0.5335153888442393
+   }
+  },
+  {
+   "dataset": "d1_open",
+   "condition": "text150",
+   "condition_role": "secondary",
+   "profile": "rewrite_faiss",
+   "belief_quantile": 0.65,
+   "b_cut": 0.531287981341974,
+   "lambda_l": 0.16152440040539134,
+   "lambda_c": 0.05,
+   "d_star": {
+    "commit": "b9plus_v2",
+    "speculative": "b9plus_v2"
+   },
+   "delta_commit": -0.0006264500153698206,
+   "se_commit": 0.002890806830455038,
+   "delta_speculative": -0.0006264500153698206,
+   "se_speculative": 0.002890806830455038,
+   "interaction": 0.0,
+   "se_interaction": 0.0,
+   "z_commit": -0.21670421169968382,
+   "m3": 0.0,
+   "q_hat": 0.006526468455402465,
+   "w_bar": 0.04238890055070701,
+   "n_items": {
+    "commit": 1566,
+    "speculative": 1566,
+    "paired": 1566
+   },
+   "d_star_speculative_dev_utilities": {
+    "b9plus_v2": 0.5128800828098756,
+    "b10_speculative_v2": 0.30104211958107346,
+    "b11_speculative_gated_v2": 0.5122536327945056
+   }
+  },
+  {
+   "dataset": "d1_open",
+   "condition": "text150",
+   "condition_role": "secondary",
+   "profile": "rewrite_faiss",
+   "belief_quantile": 0.8,
+   "b_cut": 0.5684880001809465,
+   "lambda_l": 0.16985757783900926,
+   "lambda_c": 0.05,
+   "d_star": {
+    "commit": "b9plus_v2",
+    "speculative": "b9plus_v2"
+   },
+   "delta_commit": 0.0,
+   "se_commit": 0.0,
+   "delta_speculative": 0.0,
+   "se_speculative": 0.0,
+   "interaction": 0.0,
+   "se_interaction": 0.0,
+   "z_commit": null,
+   "m3": 0.0,
+   "q_hat": 0.011102886750555145,
+   "w_bar": 0.04238890055070701,
+   "n_items": {
+    "commit": 1566,
+    "speculative": 1566,
+    "paired": 1566
+   },
+   "d_star_speculative_dev_utilities": {
+    "b9plus_v2": 0.48436357263680857,
+    "b10_speculative_v2": 0.29272084953940386,
+    "b11_speculative_gated_v2": 0.48436357263680857
+   }
+  },
+  {
+   "dataset": "d1_open",
+   "condition": "text150",
+   "condition_role": "secondary",
+   "profile": "rewrite_faiss",
+   "belief_quantile": 0.9,
+   "b_cut": 0.598926949977104,
+   "lambda_l": 0.17667620797579375,
+   "lambda_c": 0.05,
+   "d_star": {
+    "commit": "b9plus_v2",
+    "speculative": "b9plus_v2"
+   },
+   "delta_commit": -0.0010609919949096202,
+   "se_commit": 0.0016723146341443473,
+   "delta_speculative": -0.0010609919949096202,
+   "se_speculative": 0.0016723146341443473,
+   "interaction": 0.0,
+   "se_interaction": 0.0,
+   "z_commit": -0.6344452014273528,
+   "m3": 0.0,
+   "q_hat": 0.018754688672168042,
+   "w_bar": 0.04238890055070701,
+   "n_items": {
+    "commit": 1566,
+    "speculative": 1566,
+    "paired": 1566
+   },
+   "d_star_speculative_dev_utilities": {
+    "b9plus_v2": 0.4581231027076231,
+    "b10_speculative_v2": 0.28644083116683333,
+    "b11_speculative_gated_v2": 0.4570621107127134
+   }
+  },
+  {
+   "dataset": "d1_open",
+   "condition": "text150",
+   "condition_role": "secondary",
+   "profile": "rewrite_faiss_rerank",
+   "belief_quantile": 0.5,
+   "b_cut": 0.504188452590562,
+   "lambda_l": 0.15719417014433795,
+   "lambda_c": 0.05,
+   "d_star": {
+    "commit": "b9plus_v2",
+    "speculative": "b9plus_v2"
+   },
+   "delta_commit": -0.0019406923516727304,
+   "se_commit": 0.0018732027360437611,
+   "delta_speculative": -0.0019406923516727304,
+   "se_speculative": 0.0018732027360437611,
+   "interaction": 0.0,
+   "se_interaction": 0.0,
+   "z_commit": -1.0360289969314846,
+   "m3": 0.0,
+   "q_hat": 0.0028388928317956,
+   "w_bar": 0.04238890055070701,
+   "n_items": {
+    "commit": 1566,
+    "speculative": 1566,
+    "paired": 1566
+   },
+   "d_star_speculative_dev_utilities": {
+    "b9plus_v2": 0.5338745066203587,
+    "b10_speculative_v2": 0.3083443262433741,
+    "b11_speculative_gated_v2": 0.531933814268686
+   }
+  },
+  {
+   "dataset": "d1_open",
+   "condition": "text150",
+   "condition_role": "secondary",
+   "profile": "rewrite_faiss_rerank",
+   "belief_quantile": 0.65,
+   "b_cut": 0.531287981341974,
+   "lambda_l": 0.16333269764049263,
+   "lambda_c": 0.05,
+   "d_star": {
+    "commit": "b9plus_v2",
+    "speculative": "b9plus_v2"
+   },
+   "delta_commit": -0.001376931144938814,
+   "se_commit": 0.002911976591204936,
+   "delta_speculative": -0.001376931144938814,
+   "se_speculative": 0.002911976591204936,
+   "interaction": 0.0,
+   "se_interaction": 0.0,
+   "z_commit": -0.4728510349628391,
+   "m3": 0.0,
+   "q_hat": 0.007251631617113851,
+   "w_bar": 0.04238890055070701,
+   "n_items": {
+    "commit": 1566,
+    "speculative": 1566,
+    "paired": 1566
+   },
+   "d_star_speculative_dev_utilities": {
+    "b9plus_v2": 0.5123812951407232,
+    "b10_speculative_v2": 0.30015472136902227,
+    "b11_speculative_gated_v2": 0.5110043639957844
+   }
+  },
+  {
+   "dataset": "d1_open",
+   "condition": "text150",
+   "condition_role": "secondary",
+   "profile": "rewrite_faiss_rerank",
+   "belief_quantile": 0.8,
+   "b_cut": 0.5684880001809465,
+   "lambda_l": 0.17175916662433457,
+   "lambda_c": 0.05,
+   "d_star": {
+    "commit": "b9plus_v2",
+    "speculative": "b9plus_v2"
+   },
+   "delta_commit": -0.0003906893347701999,
+   "se_commit": 0.00039800293490733785,
+   "delta_speculative": -0.0003906893347701999,
+   "se_speculative": 0.00039800293490733785,
+   "interaction": 0.0,
+   "se_interaction": 0.0,
+   "z_commit": -0.9816242557637403,
+   "m3": 0.0,
+   "q_hat": 0.011102886750555145,
+   "w_bar": 0.04238890055070701,
+   "n_items": {
+    "commit": 1566,
+    "speculative": 1566,
+    "paired": 1566
+   },
+   "d_star_speculative_dev_utilities": {
+    "b9plus_v2": 0.4831385977412841,
+    "b10_speculative_v2": 0.29214568423851517,
+    "b11_speculative_gated_v2": 0.4827479084065139
+   }
+  },
+  {
+   "dataset": "d1_open",
+   "condition": "text150",
+   "condition_role": "secondary",
+   "profile": "rewrite_faiss_rerank",
+   "belief_quantile": 0.9,
+   "b_cut": 0.598926949977104,
+   "lambda_l": 0.17865413265831218,
+   "lambda_c": 0.05,
+   "d_star": {
+    "commit": "b9plus_v2",
+    "speculative": "b9plus_v2"
+   },
+   "delta_commit": -0.0017299455092983536,
+   "se_commit": 0.006774296820255887,
+   "delta_speculative": -0.0017299455092983536,
+   "se_speculative": 0.006774296820255887,
+   "interaction": 0.0,
+   "se_interaction": 0.0,
+   "z_commit": -0.2553690154416659,
+   "m3": 0.0,
+   "q_hat": 0.024006001500375095,
+   "w_bar": 0.04238890055070701,
+   "n_items": {
+    "commit": 1566,
+    "speculative": 1566,
+    "paired": 1566
+   },
+   "d_star_speculative_dev_utilities": {
+    "b9plus_v2": 0.45755600309268357,
+    "b10_speculative_v2": 0.2857099200358443,
+    "b11_speculative_gated_v2": 0.4558260575833852
+   }
+  },
+  {
+   "dataset": "d1_open",
+   "condition": "text150",
+   "condition_role": "secondary",
+   "profile": "rewrite_remote",
+   "belief_quantile": 0.5,
+   "b_cut": 0.504188452590562,
+   "lambda_l": 0.13829289289504307,
+   "lambda_c": 0.05,
+   "d_star": {
+    "commit": "b9plus_v2",
+    "speculative": "b9plus_v2"
+   },
+   "delta_commit": -0.0016910891509992257,
+   "se_commit": 0.0018713896252931976,
+   "delta_speculative": -0.0016910891509992257,
+   "se_speculative": 0.0018713896252931976,
+   "interaction": 0.0,
+   "se_interaction": 0.0,
+   "z_commit": -0.9036542300667486,
+   "m3": 0.0,
+   "q_hat": 0.0007097232079489,
+   "w_bar": 0.04238890055070701,
+   "n_items": {
+    "commit": 1566,
+    "speculative": 1566,
+    "paired": 1566
+   },
+   "d_star_speculative_dev_utilities": {
+    "b9plus_v2": 0.5343123183554339,
+    "b10_speculative_v2": 0.31465518670465237,
+    "b11_speculative_gated_v2": 0.5326212292044346
+   }
+  },
+  {
+   "dataset": "d1_open",
+   "condition": "text150",
+   "condition_role": "secondary",
+   "profile": "rewrite_remote",
+   "belief_quantile": 0.65,
+   "b_cut": 0.531287981341974,
+   "lambda_l": 0.14369331407338262,
+   "lambda_c": 0.05,
+   "d_star": {
+    "commit": "b9plus_v2",
+    "speculative": "b9plus_v2"
+   },
+   "delta_commit": -0.0009440611065376934,
+   "se_commit": 0.0029514253668465815,
+   "delta_speculative": -0.0009440611065376934,
+   "se_speculative": 0.0029514253668465815,
+   "interaction": 0.0,
+   "se_interaction": 0.0,
+   "z_commit": -0.31986616268273294,
+   "m3": 0.0,
+   "q_hat": 0.0014503263234227702,
+   "w_bar": 0.04238890055070701,
+   "n_items": {
+    "commit": 1566,
+    "speculative": 1566,
+    "paired": 1566
+   },
+   "d_star_speculative_dev_utilities": {
+    "b9plus_v2": 0.5124059529063066,
+    "b10_speculative_v2": 0.3078127149261129,
+    "b11_speculative_gated_v2": 0.511461891799769
+   }
+  },
+  {
+   "dataset": "d1_open",
+   "condition": "text150",
+   "condition_role": "secondary",
+   "profile": "rewrite_remote",
+   "belief_quantile": 0.8,
+   "b_cut": 0.5684880001809465,
+   "lambda_l": 0.15110657101284697,
+   "lambda_c": 0.05,
+   "d_star": {
+    "commit": "b9plus_v2",
+    "speculative": "b9plus_v2"
+   },
+   "delta_commit": -0.00044824599250488394,
+   "se_commit": 0.000456637037922552,
+   "delta_speculative": -0.00044824599250488394,
+   "se_speculative": 0.000456637037922552,
+   "interaction": 0.0,
+   "se_interaction": 0.0,
+   "z_commit": -0.9816242557637402,
+   "m3": 0.0,
+   "q_hat": 0.0022205773501110288,
+   "w_bar": 0.04238890055070701,
+   "n_items": {
+    "commit": 1566,
+    "speculative": 1566,
+    "paired": 1566
+   },
+   "d_star_speculative_dev_utilities": {
+    "b9plus_v2": 0.48345617126748175,
+    "b10_speculative_v2": 0.30025264681776676,
+    "b11_speculative_gated_v2": 0.4830079252749769
+   }
+  },
+  {
+   "dataset": "d1_open",
+   "condition": "text150",
+   "condition_role": "secondary",
+   "profile": "rewrite_remote",
+   "belief_quantile": 0.9,
+   "b_cut": 0.598926949977104,
+   "lambda_l": 0.15717247535507725,
+   "lambda_c": 0.05,
+   "d_star": {
+    "commit": "b9plus_v2",
+    "speculative": "b9plus_v2"
+   },
+   "delta_commit": -0.001260703870601529,
+   "se_commit": 0.001956602674809541,
+   "delta_speculative": -0.001260703870601529,
+   "se_speculative": 0.001956602674809541,
+   "interaction": 0.0,
+   "se_interaction": 0.0,
+   "z_commit": -0.6443331018773385,
+   "m3": 0.0,
+   "q_hat": 0.0037509377344336083,
+   "w_bar": 0.04238890055070701,
+   "n_items": {
+    "commit": 1566,
+    "speculative": 1566,
+    "paired": 1566
+   },
+   "d_star_speculative_dev_utilities": {
+    "b9plus_v2": 0.45756570711300976,
+    "b10_speculative_v2": 0.29438399294391115,
+    "b11_speculative_gated_v2": 0.45630500324240836
+   }
+  },
+  {
+   "dataset": "d1_open",
+   "condition": "piper-en_US-hfc_male-medium__150wpm__clean",
+   "condition_role": "primary",
+   "profile": "rewrite_faiss",
+   "belief_quantile": 0.5,
+   "b_cut": 0.5499578726104248,
+   "lambda_l": 0.16570664335746646,
+   "lambda_c": 0.05,
+   "d_star": {
+    "commit": "b9plus_v2",
+    "speculative": "b9plus_v2"
+   },
+   "delta_commit": -0.03951955796114227,
+   "se_commit": 0.010092527583660192,
+   "delta_speculative": -0.041335384571386455,
+   "se_speculative": 0.009941783654715146,
+   "interaction": 0.0018158266102442076,
+   "se_interaction": 0.00200091688360079,
+   "z_commit": -3.915724543089132,
+   "m3": 0.0,
+   "q_hat": 0.025974025974025976,
+   "w_bar": 0.015511531491816936,
+   "n_items": {
+    "commit": 1566,
+    "speculative": 1566,
+    "paired": 1566
+   },
+   "d_star_speculative_dev_utilities": {
+    "b9plus_v2": 0.34535317162240176,
+    "b10_speculative_v2": 0.34170132939931475,
+    "b11_speculative_gated_v2": 0.34170132939931475
+   }
+  },
+  {
+   "dataset": "d1_open",
+   "condition": "piper-en_US-hfc_male-medium__150wpm__clean",
+   "condition_role": "primary",
+   "profile": "rewrite_faiss",
+   "belief_quantile": 0.65,
+   "b_cut": 0.5827720769778276,
+   "lambda_l": 0.17305735434823866,
+   "lambda_c": 0.05,
+   "d_star": {
+    "commit": "b9plus_v2",
+    "speculative": "b9plus_v2"
+   },
+   "delta_commit": -0.04858887693353511,
+   "se_commit": 0.010537753773307571,
+   "delta_speculative": -0.05169247080312693,
+   "se_speculative": 0.010482219732171857,
+   "interaction": 0.003103593869591842,
+   "se_interaction": 0.0019986241537237512,
+   "z_commit": -4.6109330298276765,
+   "m3": 0.0,
+   "q_hat": 0.04580152671755725,
+   "w_bar": 0.015511531491816936,
+   "n_items": {
+    "commit": 1566,
+    "speculative": 1566,
+    "paired": 1566
+   },
+   "d_star_speculative_dev_utilities": {
+    "b9plus_v2": 0.3397536586899538,
+    "b10_speculative_v2": 0.3324933311004737,
+    "b11_speculative_gated_v2": 0.3324933311004737
+   }
+  },
+  {
+   "dataset": "d1_open",
+   "condition": "piper-en_US-hfc_male-medium__150wpm__clean",
+   "condition_role": "primary",
+   "profile": "rewrite_faiss",
+   "belief_quantile": 0.8,
+   "b_cut": 0.6168459286337942,
+   "lambda_l": 0.18069023896921288,
+   "lambda_c": 0.05,
+   "d_star": {
+    "commit": "b9plus_v2",
+    "speculative": "b9plus_v2"
+   },
+   "delta_commit": -0.05048328635748476,
+   "se_commit": 0.010627122988072293,
+   "delta_speculative": -0.05297474760534045,
+   "se_speculative": 0.010677781768675189,
+   "interaction": 0.002491461247855673,
+   "se_interaction": 0.0019901279239565956,
+   "z_commit": -4.750418943503934,
+   "m3": 0.0,
+   "q_hat": 0.06594982078853047,
+   "w_bar": 0.015511531491816936,
+   "n_items": {
+    "commit": 1566,
+    "speculative": 1566,
+    "paired": 1566
+   },
+   "d_star_speculative_dev_utilities": {
+    "b9plus_v2": 0.3389047830077183,
+    "b10_speculative_v2": 0.3281464396895135,
+    "b11_speculative_gated_v2": 0.3281464396895135
+   }
+  },
+  {
+   "dataset": "d1_open",
+   "condition": "piper-en_US-hfc_male-medium__150wpm__clean",
+   "condition_role": "primary",
+   "profile": "rewrite_faiss",
+   "belief_quantile": 0.9,
+   "b_cut": 0.653600946029145,
+   "lambda_l": 0.18892373161492873,
+   "lambda_c": 0.05,
+   "d_star": {
+    "commit": "b9plus_v2",
+    "speculative": "b9plus_v2"
+   },
+   "delta_commit": -0.05782104763566884,
+   "se_commit": 0.010504913635920932,
+   "delta_speculative": -0.061466043645893725,
+   "se_speculative": 0.010553945027257466,
+   "interaction": 0.0036449960102248216,
+   "se_interaction": 0.0018855346527343515,
+   "z_commit": -5.504190671111582,
+   "m3": 0.0,
+   "q_hat": 0.09117647058823529,
+   "w_bar": 0.015511531491816936,
+   "n_items": {
+    "commit": 1566,
+    "speculative": 1566,
+    "paired": 1566
+   },
+   "d_star_speculative_dev_utilities": {
+    "b9plus_v2": 0.3420244308347413,
+    "b10_speculative_v2": 0.32124891332890226,
+    "b11_speculative_gated_v2": 0.32124891332890226
+   }
+  },
+  {
+   "dataset": "d1_open",
+   "condition": "piper-en_US-hfc_male-medium__150wpm__clean",
+   "condition_role": "primary",
+   "profile": "rewrite_faiss_rerank",
+   "belief_quantile": 0.5,
+   "b_cut": 0.5499578726104248,
+   "lambda_l": 0.16756176161990344,
+   "lambda_c": 0.05,
+   "d_star": {
+    "commit": "b9plus_v2",
+    "speculative": "b9plus_v2"
+   },
+   "delta_commit": -0.04013501083522753,
+   "se_commit": 0.010086428017849283,
+   "delta_speculative": -0.040986683078375975,
+   "se_speculative": 0.009966633289331705,
+   "interaction": 0.0008516722431484191,
+   "se_interaction": 0.0019167143073214018,
+   "z_commit": -3.97911042087479,
+   "m3": 0.0,
+   "q_hat": 0.02460697197539303,
+   "w_bar": 0.015511531491816936,
+   "n_items": {
+    "commit": 1566,
+    "speculative": 1566,
+    "paired": 1566
+   },
+   "d_star_speculative_dev_utilities": {
+    "b9plus_v2": 0.34462634635477785,
+    "b10_speculative_v2": 0.3408832149168624,
+    "b11_speculative_gated_v2": 0.3408832149168624
+   }
+  },
+  {
+   "dataset": "d1_open",
+   "condition": "piper-en_US-hfc_male-medium__150wpm__clean",
+   "condition_role": "primary",
+   "profile": "rewrite_faiss_rerank",
+   "belief_quantile": 0.65,
+   "b_cut": 0.5827720769778276,
+   "lambda_l": 0.17499476525703297,
+   "lambda_c": 0.05,
+   "d_star": {
+    "commit": "b9plus_v2",
+    "speculative": "b9plus_v2"
+   },
+   "delta_commit": -0.047493928622825685,
+   "se_commit": 0.01057599452088128,
+   "delta_speculative": -0.049256838143456015,
+   "se_speculative": 0.010493049448787999,
+   "interaction": 0.0017629095206303147,
+   "se_interaction": 0.0018059083478142903,
+   "z_commit": -4.490729314302641,
+   "m3": 0.0,
+   "q_hat": 0.04441360166551006,
+   "w_bar": 0.015511531491816936,
+   "n_items": {
+    "commit": 1566,
+    "speculative": 1566,
+    "paired": 1566
+   },
+   "d_star_speculative_dev_utilities": {
+    "b9plus_v2": 0.338965037929589,
+    "b10_speculative_v2": 0.3326304752947037,
+    "b11_speculative_gated_v2": 0.3326304752947037
+   }
+  },
+  {
+   "dataset": "d1_open",
+   "condition": "piper-en_US-hfc_male-medium__150wpm__clean",
+   "condition_role": "primary",
+   "profile": "rewrite_faiss_rerank",
+   "belief_quantile": 0.8,
+   "b_cut": 0.6168459286337942,
+   "lambda_l": 0.18271310151331008,
+   "lambda_c": 0.05,
+   "d_star": {
+    "commit": "b9plus_v2",
+    "speculative": "b9plus_v2"
+   },
+   "delta_commit": -0.05050974418336678,
+   "se_commit": 0.01068641221877666,
+   "delta_speculative": -0.05137301950425764,
+   "se_speculative": 0.010708827977314475,
+   "interaction": 0.0008632753208908812,
+   "se_interaction": 0.0017345055999079732,
+   "z_commit": -4.726539005730864,
+   "m3": 0.0,
+   "q_hat": 0.06594982078853047,
+   "w_bar": 0.015511531491816936,
+   "n_items": {
+    "commit": 1566,
+    "speculative": 1566,
+    "paired": 1566
+   },
+   "d_star_speculative_dev_utilities": {
+    "b9plus_v2": 0.3384689428413891,
+    "b10_speculative_v2": 0.32769763326000156,
+    "b11_speculative_gated_v2": 0.32769763326000156
+   }
+  },
+  {
+   "dataset": "d1_open",
+   "condition": "piper-en_US-hfc_male-medium__150wpm__clean",
+   "condition_role": "primary",
+   "profile": "rewrite_faiss_rerank",
+   "belief_quantile": 0.9,
+   "b_cut": 0.653600946029145,
+   "lambda_l": 0.19103876971856434,
+   "lambda_c": 0.05,
+   "d_star": {
+    "commit": "b9plus_v2",
+    "speculative": "b9plus_v2"
+   },
+   "delta_commit": -0.05635212746336659,
+   "se_commit": 0.010506074705300182,
+   "delta_speculative": -0.058264411101979156,
+   "se_speculative": 0.010603112726766152,
+   "interaction": 0.0019122836386125423,
+   "se_interaction": 0.001808088200734488,
+   "z_commit": -5.363766110946998,
+   "m3": 0.0,
+   "q_hat": 0.08970588235294118,
+   "w_bar": 0.015511531491816936,
+   "n_items": {
+    "commit": 1566,
+    "speculative": 1566,
+    "paired": 1566
+   },
+   "d_star_speculative_dev_utilities": {
+    "b9plus_v2": 0.3402240730939795,
+    "b10_speculative_v2": 0.3214246325079296,
+    "b11_speculative_gated_v2": 0.3214246325079296
+   }
+  },
+  {
+   "dataset": "d1_open",
+   "condition": "piper-en_US-hfc_male-medium__150wpm__clean",
+   "condition_role": "primary",
+   "profile": "rewrite_remote",
+   "belief_quantile": 0.5,
+   "b_cut": 0.5499578726104248,
+   "lambda_l": 0.14741386866783054,
+   "lambda_c": 0.05,
+   "d_star": {
+    "commit": "b9plus_v2",
+    "speculative": "b9plus_v2"
+   },
+   "delta_commit": -0.03887291942705493,
+   "se_commit": 0.009758347943126945,
+   "delta_speculative": -0.037367805312224195,
+   "se_speculative": 0.009800127368627246,
+   "interaction": -0.0015051141148307277,
+   "se_interaction": 0.001411086620609007,
+   "z_commit": -3.9835553777762276,
+   "m3": 0.0,
+   "q_hat": 0.03759398496240601,
+   "w_bar": 0.015511531491816936,
+   "n_items": {
+    "commit": 1566,
+    "speculative": 1566,
+    "paired": 1566
+   },
+   "d_star_speculative_dev_utilities": {
+    "b9plus_v2": 0.34529592829658806,
+    "b10_speculative_v2": 0.3412406940386616,
+    "b11_speculative_gated_v2": 0.3412406940386616
+   }
+  },
+  {
+   "dataset": "d1_open",
+   "condition": "piper-en_US-hfc_male-medium__150wpm__clean",
+   "condition_role": "primary",
+   "profile": "rewrite_remote",
+   "belief_quantile": 0.65,
+   "b_cut": 0.5827720769778276,
+   "lambda_l": 0.1539531161153291,
+   "lambda_c": 0.05,
+   "d_star": {
+    "commit": "b9plus_v2",
+    "speculative": "b9plus_v2"
+   },
+   "delta_commit": -0.047845682762266056,
+   "se_commit": 0.009233433737610293,
+   "delta_speculative": -0.04695617036794066,
+   "se_speculative": 0.009225999963003346,
+   "interaction": -0.0008895123943253898,
+   "se_interaction": 0.0018575254630038389,
+   "z_commit": -5.18178655112643,
+   "m3": 0.0,
+   "q_hat": 0.05898681471200555,
+   "w_bar": 0.015511531491816936,
+   "n_items": {
+    "commit": 1566,
+    "speculative": 1566,
+    "paired": 1566
+   },
+   "d_star_speculative_dev_utilities": {
+    "b9plus_v2": 0.3392651245939949,
+    "b10_speculative_v2": 0.331531506809502,
+    "b11_speculative_gated_v2": 0.331531506809502
+   }
+  },
+  {
+   "dataset": "d1_open",
+   "condition": "piper-en_US-hfc_male-medium__150wpm__clean",
+   "condition_role": "primary",
+   "profile": "rewrite_remote",
+   "belief_quantile": 0.8,
+   "b_cut": 0.6168459286337942,
+   "lambda_l": 0.16074338733363933,
+   "lambda_c": 0.05,
+   "d_star": {
+    "commit": "b9plus_v2",
+    "speculative": "b9plus_v2"
+   },
+   "delta_commit": -0.05045965495792847,
+   "se_commit": 0.010146149454746215,
+   "delta_speculative": -0.05159353730909257,
+   "se_speculative": 0.010241938565718799,
+   "interaction": 0.0011338823511640999,
+   "se_interaction": 0.00159129811338305,
+   "z_commit": -4.973281261328573,
+   "m3": 0.0,
+   "q_hat": 0.08458781362007169,
+   "w_bar": 0.015511531491816936,
+   "n_items": {
+    "commit": 1566,
+    "speculative": 1566,
+    "paired": 1566
+   },
+   "d_star_speculative_dev_utilities": {
+    "b9plus_v2": 0.33863520165100597,
+    "b10_speculative_v2": 0.32744508050231913,
+    "b11_speculative_gated_v2": 0.32744508050231913
+   }
+  },
+  {
+   "dataset": "d1_open",
+   "condition": "piper-en_US-hfc_male-medium__150wpm__clean",
+   "condition_role": "primary",
+   "profile": "rewrite_remote",
+   "belief_quantile": 0.9,
+   "b_cut": 0.653600946029145,
+   "lambda_l": 0.16806796394059415,
+   "lambda_c": 0.05,
+   "d_star": {
+    "commit": "b9plus_v2",
+    "speculative": "b9plus_v2"
+   },
+   "delta_commit": -0.056817252889898084,
+   "se_commit": 0.009901787540974245,
+   "delta_speculative": -0.056954220468407195,
+   "se_speculative": 0.00996558581231292,
+   "interaction": 0.00013696757850917258,
+   "se_interaction": 0.001812810809508715,
+   "z_commit": -5.738080387484035,
+   "m3": 0.0,
+   "q_hat": 0.11029411764705882,
+   "w_bar": 0.015511531491816936,
+   "n_items": {
+    "commit": 1566,
+    "speculative": 1566,
+    "paired": 1566
+   },
+   "d_star_speculative_dev_utilities": {
+    "b9plus_v2": 0.3384201183830862,
+    "b10_speculative_v2": 0.3185515393547107,
+    "b11_speculative_gated_v2": 0.3185515393547107
+   }
+  },
+  {
+   "dataset": "d2_support",
+   "condition": "text150",
+   "condition_role": "secondary",
+   "profile": "rewrite_faiss",
+   "belief_quantile": 0.5,
+   "b_cut": 0.800394272013035,
+   "lambda_l": 0.2039286853926718,
+   "lambda_c": 0.05,
+   "d_star": {
+    "commit": "b9plus_v2",
+    "speculative": "b9plus_v2"
+   },
+   "delta_commit": -0.08543939968450297,
+   "se_commit": 0.02809138107930628,
+   "delta_speculative": -0.08721156966888663,
+   "se_speculative": 0.028094683761036864,
+   "interaction": 0.0017721699843836827,
+   "se_interaction": 0.0012285290148108564,
+   "z_commit": -3.041480924106025,
+   "m3": 0.0,
+   "q_hat": 0.0,
+   "w_bar": 0.038705052700888566,
+   "n_items": {
+    "commit": 222,
+    "speculative": 222,
+    "paired": 222
+   },
+   "d_star_speculative_dev_utilities": {
+    "b9plus_v2": 0.35683540227117055,
+    "b10_speculative_v2": 0.35675429988581164,
+    "b11_speculative_gated_v2": 0.35675429988581164
+   }
+  },
+  {
+   "dataset": "d2_support",
+   "condition": "text150",
+   "condition_role": "secondary",
+   "profile": "rewrite_faiss",
+   "belief_quantile": 0.65,
+   "b_cut": 0.8367112700288105,
+   "lambda_l": 0.2157822297128537,
+   "lambda_c": 0.05,
+   "d_star": {
+    "commit": "b9plus_v2",
+    "speculative": "b9plus_v2"
+   },
+   "delta_commit": -0.10224198951271748,
+   "se_commit": 0.02979221325584662,
+   "delta_speculative": -0.10346009837876272,
+   "se_speculative": 0.029883433312072917,
+   "interaction": 0.0012181088660452165,
+   "se_interaction": 0.001468064736963197,
+   "z_commit": -3.4318359846142967,
+   "m3": 0.0,
+   "q_hat": 0.0,
+   "w_bar": 0.038705052700888566,
+   "n_items": {
+    "commit": 222,
+    "speculative": 222,
+    "paired": 222
+   },
+   "d_star_speculative_dev_utilities": {
+    "b9plus_v2": 0.35032976413487704,
+    "b10_speculative_v2": 0.34880337492319785,
+    "b11_speculative_gated_v2": 0.34880337492319785
+   }
+  },
+  {
+   "dataset": "d2_support",
+   "condition": "text150",
+   "condition_role": "secondary",
+   "profile": "rewrite_faiss",
+   "belief_quantile": 0.8,
+   "b_cut": 0.8695164419164605,
+   "lambda_l": 0.2264895452991401,
+   "lambda_c": 0.05,
+   "d_star": {
+    "commit": "b9plus_v2",
+    "speculative": "b9plus_v2"
+   },
+   "delta_commit": -0.10431765433821913,
+   "se_commit": 0.03144424606233393,
+   "delta_speculative": -0.10528444877530628,
+   "se_speculative": 0.03148543054539198,
+   "interaction": 0.0009667944370871678,
+   "se_interaction": 0.0009612639816107562,
+   "z_commit": -3.3175435064152468,
+   "m3": 0.0,
+   "q_hat": 0.0,
+   "w_bar": 0.03691625848121765,
+   "n_items": {
+    "commit": 222,
+    "speculative": 222,
+    "paired": 222
+   },
+   "d_star_speculative_dev_utilities": {
+    "b9plus_v2": 0.3431471930173793,
+    "b10_speculative_v2": 0.3425442725560351,
+    "b11_speculative_gated_v2": 0.3425442725560351
+   }
+  },
+  {
+   "dataset": "d2_support",
+   "condition": "text150",
+   "condition_role": "secondary",
+   "profile": "rewrite_faiss",
+   "belief_quantile": 0.9,
+   "b_cut": 0.8913971840918344,
+   "lambda_l": 0.23363122443852286,
+   "lambda_c": 0.05,
+   "d_star": {
+    "commit": "b9plus_v2",
+    "speculative": "b9plus_v2"
+   },
+   "delta_commit": -0.10426083839027124,
+   "se_commit": 0.03199915743431465,
+   "delta_speculative": -0.10525811783563682,
+   "se_speculative": 0.032043581031811874,
+   "interaction": 0.0009972794453655747,
+   "se_interaction": 0.000991574603303438,
+   "z_commit": -3.258236989654796,
+   "m3": 0.0,
+   "q_hat": 0.0,
+   "w_bar": 0.038705052700888566,
+   "n_items": {
+    "commit": 222,
+    "speculative": 222,
+    "paired": 222
+   },
+   "d_star_speculative_dev_utilities": {
+    "b9plus_v2": 0.34192624490547063,
+    "b10_speculative_v2": 0.34031085658900023,
+    "b11_speculative_gated_v2": 0.3413075488861289
+   }
+  },
+  {
+   "dataset": "d2_support",
+   "condition": "text150",
+   "condition_role": "secondary",
+   "profile": "rewrite_faiss_rerank",
+   "belief_quantile": 0.5,
+   "b_cut": 0.800394272013035,
+   "lambda_l": 0.20621170688681073,
+   "lambda_c": 0.05,
+   "d_star": {
+    "commit": "b9plus_v2",
+    "speculative": "b9plus_v2"
+   },
+   "delta_commit": -0.08549962156129719,
+   "se_commit": 0.028266273061494606,
+   "delta_speculative": -0.08646107188589845,
+   "se_speculative": 0.02828500717751233,
+   "interaction": 0.0009614503246012686,
+   "se_interaction": 0.0009559504396112298,
+   "z_commit": -3.024792882149293,
+   "m3": 0.0,
+   "q_hat": 0.0,
+   "w_bar": 0.03691625848121765,
+   "n_items": {
+    "commit": 222,
+    "speculative": 222,
+    "paired": 222
+   },
+   "d_star_speculative_dev_utilities": {
+    "b9plus_v2": 0.35489815105717654,
+    "b10_speculative_v2": 0.3535406043033346,
+    "b11_speculative_gated_v2": 0.3535406043033346
+   }
+  },
+  {
+   "dataset": "d2_support",
+   "condition": "text150",
+   "condition_role": "secondary",
+   "profile": "rewrite_faiss_rerank",
+   "belief_quantile": 0.65,
+   "b_cut": 0.8367112700288105,
+   "lambda_l": 0.2181979539526245,
+   "lambda_c": 0.05,
+   "d_star": {
+    "commit": "b9plus_v2",
+    "speculative": "b9plus_v2"
+   },
+   "delta_commit": -0.09835018907676603,
+   "se_commit": 0.02941319539802139,
+   "delta_speculative": -0.10035030783689886,
+   "se_speculative": 0.029419579378710953,
+   "interaction": 0.002000118760132812,
+   "se_interaction": 0.0013862166207646816,
+   "z_commit": -3.343743777100192,
+   "m3": 0.0,
+   "q_hat": 0.0,
+   "w_bar": 0.03691625848121765,
+   "n_items": {
+    "commit": 222,
+    "speculative": 222,
+    "paired": 222
+   },
+   "d_star_speculative_dev_utilities": {
+    "b9plus_v2": 0.34686175622283766,
+    "b10_speculative_v2": 0.34545148365352635,
+    "b11_speculative_gated_v2": 0.34545148365352635
+   }
+  },
+  {
+   "dataset": "d2_support",
+   "condition": "text150",
+   "condition_role": "secondary",
+   "profile": "rewrite_faiss_rerank",
+   "belief_quantile": 0.8,
+   "b_cut": 0.8695164419164605,
+   "lambda_l": 0.2290251400298178,
+   "lambda_c": 0.05,
+   "d_star": {
+    "commit": "b9plus_v2",
+    "speculative": "b9plus_v2"
+   },
+   "delta_commit": -0.10048586255923106,
+   "se_commit": 0.030871727471574836,
+   "delta_speculative": -0.10258522907856675,
+   "se_speculative": 0.03087739905707098,
+   "interaction": 0.0020993665193356553,
+   "se_interaction": 0.0014550019829756217,
+   "z_commit": -3.254947837038063,
+   "m3": 0.0,
+   "q_hat": 0.0,
+   "w_bar": 0.03691625848121765,
+   "n_items": {
+    "commit": 222,
+    "speculative": 222,
+    "paired": 222
+   },
+   "d_star_speculative_dev_utilities": {
+    "b9plus_v2": 0.3414500728935344,
+    "b10_speculative_v2": 0.3408718162339937,
+    "b11_speculative_gated_v2": 0.3408718162339937
+   }
+  },
+  {
+   "dataset": "d2_support",
+   "condition": "text150",
+   "condition_role": "secondary",
+   "profile": "rewrite_faiss_rerank",
+   "belief_quantile": 0.9,
+   "b_cut": 0.8913971840918344,
+   "lambda_l": 0.23624677166312294,
+   "lambda_c": 0.05,
+   "d_star": {
+    "commit": "b9plus_v2",
+    "speculative": "b9plus_v2"
+   },
+   "delta_commit": -0.09910231264892597,
+   "se_commit": 0.031666308713855264,
+   "delta_speculative": -0.10309809187087605,
+   "se_speculative": 0.031624208244129995,
+   "interaction": 0.003995779221950078,
+   "se_interaction": 0.0030609712791979855,
+   "z_commit": -3.1295820913147603,
+   "m3": 0.0,
+   "q_hat": 0.0,
+   "w_bar": 0.03691625848121765,
+   "n_items": {
+    "commit": 222,
+    "speculative": 222,
+    "paired": 222
+   },
+   "d_star_speculative_dev_utilities": {
+    "b9plus_v2": 0.33757384782207955,
+    "b10_speculative_v2": 0.33729056049610057,
+    "b11_speculative_gated_v2": 0.33729056049610057
+   }
+  },
+  {
+   "dataset": "d2_support",
+   "condition": "text150",
+   "condition_role": "secondary",
+   "profile": "rewrite_remote",
+   "belief_quantile": 0.5,
+   "b_cut": 0.800394272013035,
+   "lambda_l": 0.18141648299053614,
+   "lambda_c": 0.05,
+   "d_star": {
+    "commit": "b9plus_v2",
+    "speculative": "b9plus_v2"
+   },
+   "delta_commit": -0.08880672225678997,
+   "se_commit": 0.027773109764578505,
+   "delta_speculative": -0.08827957840112349,
+   "se_speculative": 0.027781954210969247,
+   "interaction": -0.0005271438556664933,
+   "se_interaction": 0.0005257729104546909,
+   "z_commit": -3.197579349578383,
+   "m3": 0.0,
+   "q_hat": 0.0,
+   "w_bar": 0.038705052700888566,
+   "n_items": {
+    "commit": 222,
+    "speculative": 222,
+    "paired": 222
+   },
+   "d_star_speculative_dev_utilities": {
+    "b9plus_v2": 0.3627298543768264,
+    "b10_speculative_v2": 0.3627298543768264,
+    "b11_speculative_gated_v2": 0.3627298543768264
+   }
+  },
+  {
+   "dataset": "d2_support",
+   "condition": "text150",
+   "condition_role": "secondary",
+   "profile": "rewrite_remote",
+   "belief_quantile": 0.65,
+   "b_cut": 0.8367112700288105,
+   "lambda_l": 0.19196148462872706,
+   "lambda_c": 0.05,
+   "d_star": {
+    "commit": "b9plus_v2",
+    "speculative": "b9plus_v2"
+   },
+   "delta_commit": -0.10322281722861538,
+   "se_commit": 0.029564012657263147,
+   "delta_speculative": -0.10267812407202469,
+   "se_speculative": 0.02956478910696274,
+   "interaction": -0.0005446931565906528,
+   "se_interaction": 0.0005432765708391498,
+   "z_commit": -3.49150226747911,
+   "m3": 0.0,
+   "q_hat": 0.0,
+   "w_bar": 0.038705052700888566,
+   "n_items": {
+    "commit": 222,
+    "speculative": 222,
+    "paired": 222
+   },
+   "d_star_speculative_dev_utilities": {
+    "b9plus_v2": 0.35568042266226235,
+    "b10_speculative_v2": 0.35495186731119704,
+    "b11_speculative_gated_v2": 0.35495186731119704
+   }
+  },
+  {
+   "dataset": "d2_support",
+   "condition": "text150",
+   "condition_role": "secondary",
+   "profile": "rewrite_remote",
+   "belief_quantile": 0.8,
+   "b_cut": 0.8695164419164605,
+   "lambda_l": 0.20148679261663227,
+   "lambda_c": 0.05,
+   "d_star": {
+    "commit": "b9plus_v2",
+    "speculative": "b9plus_v2"
+   },
+   "delta_commit": -0.106539859769582,
+   "se_commit": 0.031412341893674305,
+   "delta_speculative": -0.106539859769582,
+   "se_speculative": 0.031412341893674305,
+   "interaction": 0.0,
+   "se_interaction": 0.0,
+   "z_commit": -3.391656060863026,
+   "m3": 0.0,
+   "q_hat": 0.0,
+   "w_bar": 0.03691625848121765,
+   "n_items": {
+    "commit": 222,
+    "speculative": 222,
+    "paired": 222
+   },
+   "d_star_speculative_dev_utilities": {
+    "b9plus_v2": 0.35072885432958173,
+    "b10_speculative_v2": 0.3494157790399735,
+    "b11_speculative_gated_v2": 0.3494157790399735
+   }
+  },
+  {
+   "dataset": "d2_support",
+   "condition": "text150",
+   "condition_role": "secondary",
+   "profile": "rewrite_remote",
+   "belief_quantile": 0.9,
+   "b_cut": 0.8913971840918344,
+   "lambda_l": 0.207840083766521,
+   "lambda_c": 0.05,
+   "d_star": {
+    "commit": "b9plus_v2",
+    "speculative": "b9plus_v2"
+   },
+   "delta_commit": -0.10251298270644972,
+   "se_commit": 0.03131411769533667,
+   "delta_speculative": -0.10251298270644972,
+   "se_speculative": 0.03131411769533667,
+   "interaction": 0.0,
+   "se_interaction": 0.0,
+   "z_commit": -3.2736985823399407,
+   "m3": 0.0,
+   "q_hat": 0.0,
+   "w_bar": 0.038705052700888566,
+   "n_items": {
+    "commit": 222,
+    "speculative": 222,
+    "paired": 222
+   },
+   "d_star_speculative_dev_utilities": {
+    "b9plus_v2": 0.34796231175973685,
+    "b10_speculative_v2": 0.346069070225269,
+    "b11_speculative_gated_v2": 0.346069070225269
+   }
+  },
+  {
+   "dataset": "d2_support",
+   "condition": "piper-en_US-hfc_male-medium__150wpm__clean",
+   "condition_role": "primary",
+   "profile": "rewrite_faiss",
+   "belief_quantile": 0.5,
+   "b_cut": 0.8045529726099572,
+   "lambda_l": 0.20528604818511875,
+   "lambda_c": 0.05,
+   "d_star": {
+    "commit": "b9plus_v2",
+    "speculative": "b9plus_v2"
+   },
+   "delta_commit": -0.02111475364776163,
+   "se_commit": 0.016375492858011726,
+   "delta_speculative": -0.011782006345714505,
+   "se_speculative": 0.01275236202955467,
+   "interaction": -0.009332747302047136,
+   "se_interaction": 0.016540652573995136,
+   "z_commit": -1.289411795470401,
+   "m3": 0.0,
+   "q_hat": 0.0,
+   "w_bar": 0.0029215292568881297,
+   "n_items": {
+    "commit": 222,
+    "speculative": 222,
+    "paired": 222
+   },
+   "d_star_speculative_dev_utilities": {
+    "b9plus_v2": 0.36692176718396624,
+    "b10_speculative_v2": 0.3650069949065913,
+    "b11_speculative_gated_v2": 0.3650069949065913
+   }
+  },
+  {
+   "dataset": "d2_support",
+   "condition": "piper-en_US-hfc_male-medium__150wpm__clean",
+   "condition_role": "primary",
+   "profile": "rewrite_faiss",
+   "belief_quantile": 0.65,
+   "b_cut": 0.8367117041322052,
+   "lambda_l": 0.2157823714003309,
+   "lambda_c": 0.05,
+   "d_star": {
+    "commit": "b9plus_v2",
+    "speculative": "b10_speculative_v2"
+   },
+   "delta_commit": -0.01730020560550569,
+   "se_commit": 0.017124293002024796,
+   "delta_speculative": -0.00753317161315752,
+   "se_speculative": 0.01322897007174636,
+   "interaction": -0.009767033992348177,
+   "se_interaction": 0.01842399872266002,
+   "z_commit": -1.0102726929199408,
+   "m3": 0.0,
+   "q_hat": 0.0,
+   "w_bar": 0.0029215292568881297,
+   "n_items": {
+    "commit": 222,
+    "speculative": 222,
+    "paired": 222
+   },
+   "d_star_speculative_dev_utilities": {
+    "b9plus_v2": 0.35740440109676885,
+    "b10_speculative_v2": 0.35795466948934684,
+    "b11_speculative_gated_v2": 0.35795466948934684
+   }
+  },
+  {
+   "dataset": "d2_support",
+   "condition": "piper-en_US-hfc_male-medium__150wpm__clean",
+   "condition_role": "primary",
+   "profile": "rewrite_faiss",
+   "belief_quantile": 0.8,
+   "b_cut": 0.8634386996534952,
+   "lambda_l": 0.22450582441864753,
+   "lambda_c": 0.05,
+   "d_star": {
+    "commit": "b9plus_v2",
+    "speculative": "b10_speculative_v2"
+   },
+   "delta_commit": -0.013085982842243223,
+   "se_commit": 0.01789587519207685,
+   "delta_speculative": -0.004080347878178752,
+   "se_speculative": 0.013235686390442319,
+   "interaction": -0.009005634964064467,
+   "se_interaction": 0.017017010335011795,
+   "z_commit": -0.7312289956088238,
+   "m3": 0.0,
+   "q_hat": 0.0,
+   "w_bar": 0.0029215292568881297,
+   "n_items": {
+    "commit": 222,
+    "speculative": 222,
+    "paired": 222
+   },
+   "d_star_speculative_dev_utilities": {
+    "b9plus_v2": 0.35547351252774845,
+    "b10_speculative_v2": 0.3563363991631108,
+    "b11_speculative_gated_v2": 0.3563363991631108
+   }
+  },
+  {
+   "dataset": "d2_support",
+   "condition": "piper-en_US-hfc_male-medium__150wpm__clean",
+   "condition_role": "primary",
+   "profile": "rewrite_faiss",
+   "belief_quantile": 0.9,
+   "b_cut": 0.8915686498122626,
+   "lambda_l": 0.2336871893207415,
+   "lambda_c": 0.05,
+   "d_star": {
+    "commit": "b9plus_v2",
+    "speculative": "b9plus_v2"
+   },
+   "delta_commit": -0.00924513878662789,
+   "se_commit": 0.026598722632422626,
+   "delta_speculative": -0.006382179748524786,
+   "se_speculative": 0.02320816203933218,
+   "interaction": -0.002862959038103102,
+   "se_interaction": 0.016987679032261147,
+   "z_commit": -0.3475782996946811,
+   "m3": 0.0,
+   "q_hat": 0.0,
+   "w_bar": 0.024046139143929127,
+   "n_items": {
+    "commit": 222,
+    "speculative": 222,
+    "paired": 222
+   },
+   "d_star_speculative_dev_utilities": {
+    "b9plus_v2": 0.3483738630753892,
+    "b10_speculative_v2": 0.3483738630753892,
+    "b11_speculative_gated_v2": 0.3483738630753892
+   }
+  },
+  {
+   "dataset": "d2_support",
+   "condition": "piper-en_US-hfc_male-medium__150wpm__clean",
+   "condition_role": "primary",
+   "profile": "rewrite_faiss_rerank",
+   "belief_quantile": 0.5,
+   "b_cut": 0.8045529726099572,
+   "lambda_l": 0.20758426562103768,
+   "lambda_c": 0.05,
+   "d_star": {
+    "commit": "b9plus_v2",
+    "speculative": "b9plus_v2"
+   },
+   "delta_commit": -0.01898290135629267,
+   "se_commit": 0.016835196158836142,
+   "delta_speculative": -0.009423842129590663,
+   "se_speculative": 0.014252161607003043,
+   "interaction": -0.009559059226702013,
+   "se_interaction": 0.017374079782395562,
+   "z_commit": -1.1275723298495266,
+   "m3": 0.0,
+   "q_hat": 0.0,
+   "w_bar": 0.0029215292568881297,
+   "n_items": {
+    "commit": 222,
+    "speculative": 222,
+    "paired": 222
+   },
+   "d_star_speculative_dev_utilities": {
+    "b9plus_v2": 0.3655789197583559,
+    "b10_speculative_v2": 0.36385093189138906,
+    "b11_speculative_gated_v2": 0.36385093189138906
+   }
+  },
+  {
+   "dataset": "d2_support",
+   "condition": "piper-en_US-hfc_male-medium__150wpm__clean",
+   "condition_role": "primary",
+   "profile": "rewrite_faiss_rerank",
+   "belief_quantile": 0.65,
+   "b_cut": 0.8367117041322052,
+   "lambda_l": 0.21819809722632072,
+   "lambda_c": 0.05,
+   "d_star": {
+    "commit": "b9plus_v2",
+    "speculative": "b10_speculative_v2"
+   },
+   "delta_commit": -0.01669096916738925,
+   "se_commit": 0.017673055370115768,
+   "delta_speculative": -0.00565002263844595,
+   "se_speculative": 0.014726406184030063,
+   "interaction": -0.011040946528943291,
+   "se_interaction": 0.018675844688596344,
+   "z_commit": -0.9444303103136782,
+   "m3": 0.0,
+   "q_hat": 0.0,
+   "w_bar": 0.0029215292568881297,
+   "n_items": {
+    "commit": 222,
+    "speculative": 222,
+    "paired": 222
+   },
+   "d_star_speculative_dev_utilities": {
+    "b9plus_v2": 0.35685121391275854,
+    "b10_speculative_v2": 0.3571745882663967,
+    "b11_speculative_gated_v2": 0.3571745882663967
+   }
+  },
+  {
+   "dataset": "d2_support",
+   "condition": "piper-en_US-hfc_male-medium__150wpm__clean",
+   "condition_role": "primary",
+   "profile": "rewrite_faiss_rerank",
+   "belief_quantile": 0.8,
+   "b_cut": 0.8634386996534952,
+   "lambda_l": 0.2270192110063177,
+   "lambda_c": 0.05,
+   "d_star": {
+    "commit": "b9plus_v2",
+    "speculative": "b10_speculative_v2"
+   },
+   "delta_commit": -0.016906124084440775,
+   "se_commit": 0.019001498233594653,
+   "delta_speculative": -0.0019483676027515237,
+   "se_speculative": 0.014780487060651822,
+   "interaction": -0.014957756481689243,
+   "se_interaction": 0.01787068234584764,
+   "z_commit": -0.8897258456467788,
+   "m3": 0.0,
+   "q_hat": 0.0,
+   "w_bar": 0.0029215292568881297,
+   "n_items": {
+    "commit": 222,
+    "speculative": 222,
+    "paired": 222
+   },
+   "d_star_speculative_dev_utilities": {
+    "b9plus_v2": 0.3550099281889282,
+    "b10_speculative_v2": 0.35613875709751236,
+    "b11_speculative_gated_v2": 0.35613875709751236
+   }
+  },
+  {
+   "dataset": "d2_support",
+   "condition": "piper-en_US-hfc_male-medium__150wpm__clean",
+   "condition_role": "primary",
+   "profile": "rewrite_faiss_rerank",
+   "belief_quantile": 0.9,
+   "b_cut": 0.8915686498122626,
+   "lambda_l": 0.23630336308313726,
+   "lambda_c": 0.05,
+   "d_star": {
+    "commit": "b9plus_v2",
+    "speculative": "b9plus_v2"
+   },
+   "delta_commit": -0.014538534340711314,
+   "se_commit": 0.02619109258924917,
+   "delta_speculative": -0.0036947068432576086,
+   "se_speculative": 0.023859630528718055,
+   "interaction": -0.010843827497453693,
+   "se_interaction": 0.018273869215586092,
+   "z_commit": -0.5550946105501167,
+   "m3": 0.0,
+   "q_hat": 0.0,
+   "w_bar": 0.024046139143929127,
+   "n_items": {
+    "commit": 222,
+    "speculative": 222,
+    "paired": 222
+   },
+   "d_star_speculative_dev_utilities": {
+    "b9plus_v2": 0.34889457523102474,
+    "b10_speculative_v2": 0.34889457523102474,
+    "b11_speculative_gated_v2": 0.34889457523102474
+   }
+  },
+  {
+   "dataset": "d2_support",
+   "condition": "piper-en_US-hfc_male-medium__150wpm__clean",
+   "condition_role": "primary",
+   "profile": "rewrite_remote",
+   "belief_quantile": 0.5,
+   "b_cut": 0.8045529726099572,
+   "lambda_l": 0.18262400307763804,
+   "lambda_c": 0.05,
+   "d_star": {
+    "commit": "b9plus_v2",
+    "speculative": "b9plus_v2"
+   },
+   "delta_commit": -0.015349374645869716,
+   "se_commit": 0.01622141837277559,
+   "delta_speculative": -0.014371539274760037,
+   "se_speculative": 0.012540073246002625,
+   "interaction": -0.0009778353711096875,
+   "se_interaction": 0.01620734384142308,
+   "z_commit": -0.9462412159734795,
+   "m3": 0.0,
+   "q_hat": 0.0,
+   "w_bar": 0.024046139143929127,
+   "n_items": {
+    "commit": 222,
+    "speculative": 222,
+    "paired": 222
+   },
+   "d_star_speculative_dev_utilities": {
+    "b9plus_v2": 0.3676615364345931,
+    "b10_speculative_v2": 0.36684096020679946,
+    "b11_speculative_gated_v2": 0.36684096020679946
+   }
+  },
+  {
+   "dataset": "d2_support",
+   "condition": "piper-en_US-hfc_male-medium__150wpm__clean",
+   "condition_role": "primary",
+   "profile": "rewrite_remote",
+   "belief_quantile": 0.65,
+   "b_cut": 0.8367117041322052,
+   "lambda_l": 0.19196161067496598,
+   "lambda_c": 0.05,
+   "d_star": {
+    "commit": "b9plus_v2",
+    "speculative": "b9plus_v2"
+   },
+   "delta_commit": -0.017770516872479134,
+   "se_commit": 0.02548311484013763,
+   "delta_speculative": -0.014832767965242336,
+   "se_speculative": 0.023631222643966374,
+   "interaction": -0.002937748907236803,
+   "se_interaction": 0.015984011781217493,
+   "z_commit": -0.6973447706043128,
+   "m3": 0.0,
+   "q_hat": 0.0,
+   "w_bar": 0.024046139143929127,
+   "n_items": {
+    "commit": 222,
+    "speculative": 222,
+    "paired": 222
+   },
+   "d_star_speculative_dev_utilities": {
+    "b9plus_v2": 0.36393491567115976,
+    "b10_speculative_v2": 0.36393491567115976,
+    "b11_speculative_gated_v2": 0.36393491567115976
+   }
+  },
+  {
+   "dataset": "d2_support",
+   "condition": "piper-en_US-hfc_male-medium__150wpm__clean",
+   "condition_role": "primary",
+   "profile": "rewrite_remote",
+   "belief_quantile": 0.8,
+   "b_cut": 0.8634386996534952,
+   "lambda_l": 0.19972205969207635,
+   "lambda_c": 0.05,
+   "d_star": {
+    "commit": "b9plus_v2",
+    "speculative": "b9plus_v2"
+   },
+   "delta_commit": -0.015227712885977612,
+   "se_commit": 0.02543933777703346,
+   "delta_speculative": -0.009782116001365247,
+   "se_speculative": 0.023423346571685898,
+   "interaction": -0.005445596884612371,
+   "se_interaction": 0.0158609038229848,
+   "z_commit": -0.5985892014738345,
+   "m3": 0.0,
+   "q_hat": 0.0,
+   "w_bar": 0.024046139143929127,
+   "n_items": {
+    "commit": 222,
+    "speculative": 222,
+    "paired": 222
+   },
+   "d_star_speculative_dev_utilities": {
+    "b9plus_v2": 0.3608711204268415,
+    "b10_speculative_v2": 0.3608711204268415,
+    "b11_speculative_gated_v2": 0.3608711204268415
+   }
+  },
+  {
+   "dataset": "d2_support",
+   "condition": "piper-en_US-hfc_male-medium__150wpm__clean",
+   "condition_role": "primary",
+   "profile": "rewrite_remote",
+   "belief_quantile": 0.9,
+   "b_cut": 0.8915686498122626,
+   "lambda_l": 0.20788987054410715,
+   "lambda_c": 0.05,
+   "d_star": {
+    "commit": "b9plus_v2",
+    "speculative": "b9plus_v2"
+   },
+   "delta_commit": -0.02011520212675861,
+   "se_commit": 0.025768752825119763,
+   "delta_speculative": -0.01823746193925353,
+   "se_speculative": 0.023007777644756193,
+   "interaction": -0.001877740187505089,
+   "se_interaction": 0.016296991096225767,
+   "z_commit": -0.7806044112134916,
+   "m3": 0.0,
+   "q_hat": 0.0,
+   "w_bar": 0.024046139143929127,
+   "n_items": {
+    "commit": 222,
+    "speculative": 222,
+    "paired": 222
+   },
+   "d_star_speculative_dev_utilities": {
+    "b9plus_v2": 0.35797719230741815,
+    "b10_speculative_v2": 0.35797719230741815,
+    "b11_speculative_gated_v2": 0.35797719230741815
+   }
+  }
+ ],
+ "pooled_primary": [
+  {
+   "profile": "rewrite_faiss",
+   "belief_quantile": 0.5,
+   "datasets": [
+    "d1_open",
+    "d2_support"
+   ],
+   "n_items": 1788,
+   "delta_commit": -0.03723439769404467,
+   "se_commit": 0.009070247728258804,
+   "delta_speculative": -0.037666005395715775,
+   "se_speculative": 0.008850187674741114,
+   "interaction": 0.0004316077016711212,
+   "se_interaction": 0.0026997952282832804,
+   "m3": 0.0,
+   "z_commit": -4.105113642931611,
+   "lambda_l_by_dataset": {
+    "d1_open": 0.16570664335746646,
+    "d2_support": 0.20528604818511875
+   },
+   "d_star_by_dataset": {
+    "d1_open": {
+     "commit": "b9plus_v2",
+     "speculative": "b9plus_v2"
+    },
+    "d2_support": {
+     "commit": "b9plus_v2",
+     "speculative": "b9plus_v2"
+    }
+   }
+  },
+  {
+   "profile": "rewrite_faiss",
+   "belief_quantile": 0.65,
+   "datasets": [
+    "d1_open",
+    "d2_support"
+   ],
+   "n_items": 1788,
+   "delta_commit": -0.04470404190287375,
+   "se_commit": 0.009471112046847118,
+   "delta_speculative": -0.04620960479631865,
+   "se_speculative": 0.009326510445759037,
+   "interaction": 0.0015055628934449268,
+   "se_interaction": 0.002880453131818669,
+   "m3": 0.0,
+   "z_commit": -4.720041499008079,
+   "lambda_l_by_dataset": {
+    "d1_open": 0.17305735434823866,
+    "d2_support": 0.2157823714003309
+   },
+   "d_star_by_dataset": {
+    "d1_open": {
+     "commit": "b9plus_v2",
+     "speculative": "b9plus_v2"
+    },
+    "d2_support": {
+     "commit": "b9plus_v2",
+     "speculative": "b10_speculative_v2"
+    }
+   }
+  },
+  {
+   "profile": "rewrite_faiss",
+   "belief_quantile": 0.8,
+   "datasets": [
+    "d1_open",
+    "d2_support"
+   ],
+   "n_items": 1788,
+   "delta_commit": -0.045839996994854096,
+   "se_commit": 0.009569193619072765,
+   "delta_speculative": -0.04690396643116265,
+   "se_speculative": 0.009495306355405428,
+   "interaction": 0.0010639694363085415,
+   "se_interaction": 0.002739031784109192,
+   "m3": 0.0,
+   "z_commit": -4.790371981134173,
+   "lambda_l_by_dataset": {
+    "d1_open": 0.18069023896921288,
+    "d2_support": 0.22450582441864753
+   },
+   "d_star_by_dataset": {
+    "d1_open": {
+     "commit": "b9plus_v2",
+     "speculative": "b9plus_v2"
+    },
+    "d2_support": {
+     "commit": "b9plus_v2",
+     "speculative": "b10_speculative_v2"
+    }
+   }
+  },
+  {
+   "profile": "rewrite_faiss",
+   "belief_quantile": 0.9,
+   "datasets": [
+    "d1_open",
+    "d2_support"
+   ],
+   "n_items": 1788,
+   "delta_commit": -0.05178981063092214,
+   "se_commit": 0.009775374368479146,
+   "delta_speculative": -0.05462677195393853,
+   "se_speculative": 0.009682285760470673,
+   "interaction": 0.002836961323016321,
+   "se_interaction": 0.002678798934528,
+   "m3": 0.0,
+   "z_commit": -5.2979874405546274,
+   "lambda_l_by_dataset": {
+    "d1_open": 0.18892373161492873,
+    "d2_support": 0.2336871893207415
+   },
+   "d_star_by_dataset": {
+    "d1_open": {
+     "commit": "b9plus_v2",
+     "speculative": "b9plus_v2"
+    },
+    "d2_support": {
+     "commit": "b9plus_v2",
+     "speculative": "b9plus_v2"
+    }
+   }
+  },
+  {
+   "profile": "rewrite_faiss_rerank",
+   "belief_quantile": 0.5,
+   "datasets": [
+    "d1_open",
+    "d2_support"
+   ],
+   "n_items": 1788,
+   "delta_commit": -0.03750874220864837,
+   "se_commit": 0.009078013789892276,
+   "delta_speculative": -0.03706780685319122,
+   "se_speculative": 0.008906721293018874,
+   "interaction": -0.0004409353554571714,
+   "se_interaction": 0.0027334207568735004,
+   "m3": 0.0,
+   "z_commit": -4.131822563478774,
+   "lambda_l_by_dataset": {
+    "d1_open": 0.16756176161990344,
+    "d2_support": 0.20758426562103768
+   },
+   "d_star_by_dataset": {
+    "d1_open": {
+     "commit": "b9plus_v2",
+     "speculative": "b9plus_v2"
+    },
+    "d2_support": {
+     "commit": "b9plus_v2",
+     "speculative": "b9plus_v2"
+    }
+   }
+  },
+  {
+   "profile": "rewrite_faiss_rerank",
+   "belief_quantile": 0.65,
+   "datasets": [
+    "d1_open",
+    "d2_support"
+   ],
+   "n_items": 1788,
+   "delta_commit": -0.043669400099835255,
+   "se_commit": 0.00951922762143678,
+   "delta_speculative": -0.04384256910424336,
+   "se_speculative": 0.009370345845010886,
+   "interaction": 0.00017316900440808849,
+   "se_interaction": 0.0028068880107868337,
+   "m3": 0.0,
+   "z_commit": -4.587494052720638,
+   "lambda_l_by_dataset": {
+    "d1_open": 0.17499476525703297,
+    "d2_support": 0.21819809722632072
+   },
+   "d_star_by_dataset": {
+    "d1_open": {
+     "commit": "b9plus_v2",
+     "speculative": "b9plus_v2"
+    },
+    "d2_support": {
+     "commit": "b9plus_v2",
+     "speculative": "b10_speculative_v2"
+    }
+   }
+  },
+  {
+   "profile": "rewrite_faiss_rerank",
+   "belief_quantile": 0.8,
+   "datasets": [
+    "d1_open",
+    "d2_support"
+   ],
+   "n_items": 1788,
+   "delta_commit": -0.04633748262745986,
+   "se_commit": 0.009652341834690987,
+   "delta_speculative": -0.045236401650714936,
+   "se_speculative": 0.00955705846841009,
+   "interaction": -0.001101080976744906,
+   "se_interaction": 0.0026890656259824894,
+   "m3": 0.0,
+   "z_commit": -4.800646663892558,
+   "lambda_l_by_dataset": {
+    "d1_open": 0.18271310151331008,
+    "d2_support": 0.2270192110063177
+   },
+   "d_star_by_dataset": {
+    "d1_open": {
+     "commit": "b9plus_v2",
+     "speculative": "b9plus_v2"
+    },
+    "d2_support": {
+     "commit": "b9plus_v2",
+     "speculative": "b10_speculative_v2"
+    }
+   }
+  },
+  {
+   "profile": "rewrite_faiss_rerank",
+   "belief_quantile": 0.9,
+   "datasets": [
+    "d1_open",
+    "d2_support"
+   ],
+   "n_items": 1788,
+   "delta_commit": -0.05116050684075503,
+   "se_commit": 0.00975935067280319,
+   "delta_speculative": -0.05148897802287614,
+   "se_speculative": 0.009747683056837129,
+   "interaction": 0.00032847118212109706,
+   "se_interaction": 0.002766892099327916,
+   "m3": 0.0,
+   "z_commit": -5.242203969914336,
+   "lambda_l_by_dataset": {
+    "d1_open": 0.19103876971856434,
+    "d2_support": 0.23630336308313726
+   },
+   "d_star_by_dataset": {
+    "d1_open": {
+     "commit": "b9plus_v2",
+     "speculative": "b9plus_v2"
+    },
+    "d2_support": {
+     "commit": "b9plus_v2",
+     "speculative": "b9plus_v2"
+    }
+   }
+  },
+  {
+   "profile": "rewrite_remote",
+   "belief_quantile": 0.5,
+   "datasets": [
+    "d1_open",
+    "d2_support"
+   ],
+   "n_items": 1788,
+   "delta_commit": -0.035952210846840665,
+   "se_commit": 0.0087808458743323,
+   "delta_speculative": -0.03451256422703569,
+   "se_speculative": 0.008723406475760146,
+   "interaction": -0.001439646619804961,
+   "se_interaction": 0.0023615349657168196,
+   "m3": 0.0,
+   "z_commit": -4.094390376664537,
+   "lambda_l_by_dataset": {
+    "d1_open": 0.14741386866783054,
+    "d2_support": 0.18262400307763804
+   },
+   "d_star_by_dataset": {
+    "d1_open": {
+     "commit": "b9plus_v2",
+     "speculative": "b9plus_v2"
+    },
+    "d2_support": {
+     "commit": "b9plus_v2",
+     "speculative": "b9plus_v2"
+    }
+   }
+  },
+  {
+   "profile": "rewrite_remote",
+   "belief_quantile": 0.65,
+   "datasets": [
+    "d1_open",
+    "d2_support"
+   ],
+   "n_items": 1788,
+   "delta_commit": -0.044111517869909966,
+   "se_commit": 0.008683924524576727,
+   "delta_speculative": -0.04296769423069288,
+   "se_speculative": 0.008596693004890089,
+   "interaction": -0.0011438236392170753,
+   "se_interaction": 0.0025662008597794965,
+   "m3": 0.0,
+   "z_commit": -5.079675410014006,
+   "lambda_l_by_dataset": {
+    "d1_open": 0.1539531161153291,
+    "d2_support": 0.19196161067496598
+   },
+   "d_star_by_dataset": {
+    "d1_open": {
+     "commit": "b9plus_v2",
+     "speculative": "b9plus_v2"
+    },
+    "d2_support": {
+     "commit": "b9plus_v2",
+     "speculative": "b9plus_v2"
+    }
+   }
+  },
+  {
+   "profile": "rewrite_remote",
+   "belief_quantile": 0.8,
+   "datasets": [
+    "d1_open",
+    "d2_support"
+   ],
+   "n_items": 1788,
+   "delta_commit": -0.04608521919731712,
+   "se_commit": 0.009431043069180129,
+   "delta_speculative": -0.046402186341354616,
+   "se_speculative": 0.009429957438580073,
+   "interaction": 0.00031696714403749106,
+   "se_interaction": 0.0024125976095875196,
+   "m3": 0.0,
+   "z_commit": -4.886545301433286,
+   "lambda_l_by_dataset": {
+    "d1_open": 0.16074338733363933,
+    "d2_support": 0.19972205969207635
+   },
+   "d_star_by_dataset": {
+    "d1_open": {
+     "commit": "b9plus_v2",
+     "speculative": "b9plus_v2"
+    },
+    "d2_support": {
+     "commit": "b9plus_v2",
+     "speculative": "b9plus_v2"
+    }
+   }
+  },
+  {
+   "profile": "rewrite_remote",
+   "belief_quantile": 0.9,
+   "datasets": [
+    "d1_open",
+    "d2_support"
+   ],
+   "n_items": 1788,
+   "delta_commit": -0.052260286855548545,
+   "se_commit": 0.009243736528357614,
+   "delta_speculative": -0.05214710615438476,
+   "se_speculative": 0.009183837890166604,
+   "interaction": -0.00011318070116373911,
+   "se_interaction": 0.002572011872029204,
+   "m3": 0.0,
+   "z_commit": -5.653588967537776,
+   "lambda_l_by_dataset": {
+    "d1_open": 0.16806796394059415,
+    "d2_support": 0.20788987054410715
+   },
+   "d_star_by_dataset": {
+    "d1_open": {
+     "commit": "b9plus_v2",
+     "speculative": "b9plus_v2"
+    },
+    "d2_support": {
+     "commit": "b9plus_v2",
+     "speculative": "b9plus_v2"
+    }
+   }
+  }
+ ],
+ "revision": {
+  "date": "2026-10-16",
+  "status": "the single pre-freeze dev rerun (PI decision); nothing frozen",
+  "changes": [
+   "r_below added to the pre-registered B9+ timing family and to the shared SPEC/SPEC-theta trigger family (21-point dev grid each)",
+   "Ours-v2 lookahead corrected once: value of waiting = p * next-partial value + (1-p) * end-of-turn value, p from the remaining-speech quantiles, measured partial availability spacing; same in Ours-v2[SPECULATIVE]",
+   "Phase A top-up for 5 re-traced dev items (d1_open-popqa-2474729; d2_support-03210, -03215, -06201, -10123)"
+  ],
+  "previous": "docs/research_v2/v2_predictions_pre_lookahead_fix.json (B9+ family without r_below, lookahead before the correction)",
+  "caveat": "As implemented, p(another partial) = P(R + end_gap > spacing) with aged R quantiles clipped at 0; on every dev condition end_gap >= spacing, so p is ~1.00 at every partial step (including the last). The mixture therefore never takes its end-of-turn branch on dev and this rerun does not exercise the intended correction. See paper/lab_log.md 2026-10-16."
+ }
+}

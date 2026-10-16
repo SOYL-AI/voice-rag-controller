@@ -217,13 +217,63 @@ def _mean_utility(records: List[dict]) -> float:
     return sum(vals) / len(vals) if vals else float("-inf")
 
 
+def r_below_grid(turns: Sequence[TurnCtx], profile: str, cfg: dict, n_grid: int = 21) -> List[dict]:
+    """
+    The pre-registered r_below grid (PREREG_V2 §4.5, added 2026-10-16):
+    r0 at n_grid quantiles of R_hat over every query-ready partial of the dev
+    turns, and for each r0 the dev means at the rule's FIRING step (the first
+    query-ready partial with R_hat <= r0; the end of turn if none): realised
+    exposed retrieval latency (B9+'s price), and remaining / elapsed speech
+    (SPEC-theta's gate scalars).
+    """
+    import numpy as np
+
+    from controller.baselines._objective_v2 import latency_dist_for
+    from controller.sequential_v2 import end_of_turn_ms
+
+    ccfg = {**cfg, "architecture": "commit"}
+    all_r, per_turn = [], []
+    for t in turns:
+        ctx = with_profile(t, profile, ccfg)
+        lat = latency_dist_for(ctx.signals["retrieval"], ccfg)
+        end = end_of_turn_ms(ctx, ccfg)
+        rs = [(float(o.remaining_ms), max(0.0, end - o.available_ms), float(o.speech_elapsed_ms))
+              for o in build_steps(ctx, ccfg)
+              if not o.is_final and o.query_ready and o.remaining_ms is not None]
+        all_r += [r for r, _, _ in rs]
+        per_turn.append((rs, lat))
+    out = []
+    if not all_r:
+        return out
+    for r0 in np.quantile(np.asarray(all_r), np.linspace(0.0, 1.0, n_grid)):
+        ex, rem, ela, fired = [], [], [], 0
+        for rs, lat in per_turn:
+            hit = next(((r, w, e) for r, w, e in rs if r <= r0), None)
+            if hit is None:
+                ex.append(lat.mean_ms)
+                continue
+            fired += 1
+            ex.append(lat.expected_exposed_ms(hit[1]))
+            rem.append(hit[0])
+            ela.append(hit[2])
+        out.append({"r0": float(r0), "late_exposed_ms": float(np.mean(ex)),
+                    "remaining_ms": float(np.mean(rem)) if rem else None,
+                    "elapsed_ms": float(np.mean(ela)) if ela else 0.0,
+                    "fire_fraction": fired / max(1, len(per_turn))})
+    return out
+
+
 def tune_b9plus_timing(turns: Sequence[TurnCtx], store: CellStore, seeds: Sequence[int], profile: str,
-                       prices: dict, cfg: dict, lm, n_grid: int = 21, extended: bool = False) -> dict:
+                       prices: dict, cfg: dict, lm, n_grid: int = 21) -> dict:
     """
     PREREG_V2 §4.5: B9+'s timing rule, tuned on dev at one (profile, price)
-    by mean realised utility over {early, late, R_hat-threshold on a
-    n_grid-point quantile grid}. The early branch of a threshold rule is
-    priced at the dev-mean realised exposure of the turns it sends early.
+    by mean realised utility over the pre-registered family
+      early | late | r_threshold (dispatch at the first query-ready partial
+      iff R_hat > r0) | r_below (dispatch at the first query-ready partial
+      with R_hat <= r0; added 2026-10-16),
+    each r0 on an n_grid-point quantile grid. A branch that dispatches
+    before the end of turn is priced at the dev-mean realised exposure of the
+    turns it applies to.
     """
     import numpy as np
 
@@ -250,28 +300,8 @@ def tune_b9plus_timing(turns: Sequence[TurnCtx], store: CellStore, seeds: Sequen
                 candidates.append({"kind": "r_threshold", "r0": float(r0),
                                    "early_exposed_ms": float(exposed[sel].mean()),
                                    "early_fraction": float(sel.mean())})
-    if extended:
-        # DIAGNOSTIC family extension (not PREREG_V2 §4.5): dispatch at the
-        # first query-ready partial with R_hat <= r0, priced at the dev-mean
-        # realised exposure of the turns' firing steps (E[L] when it never fires).
-        all_r = []
-        firing = []
-        for t in turns:
-            ctx = with_profile(t, profile, ccfg)
-            lat = latency_dist_for(ctx.signals["retrieval"], ccfg)
-            end = end_of_turn_ms(ctx, ccfg)
-            steps = build_steps(ctx, ccfg)
-            rs = [(o.remaining_ms, max(0.0, end - o.available_ms)) for o in steps
-                  if not o.is_final and o.query_ready and o.remaining_ms is not None]
-            all_r += [r for r, _ in rs]
-            firing.append((rs, lat))
-        if all_r:
-            for r0 in np.quantile(np.asarray(all_r), np.linspace(0.0, 1.0, n_grid)):
-                ex = []
-                for rs, lat in firing:
-                    w = next((win for r, win in rs if r <= r0), None)
-                    ex.append(lat.mean_ms if w is None else lat.expected_exposed_ms(w))
-                candidates.append({"kind": "r_below", "r0": float(r0), "late_exposed_ms": float(np.mean(ex))})
+    for row in r_below_grid(turns, profile, cfg, n_grid):
+        candidates.append({"kind": "r_below", "r0": row["r0"], "late_exposed_ms": row["late_exposed_ms"]})
     scores = []
     for rule in candidates:
         ctrl = get_controller_v2("b9plus_v2", cfg=ccfg, timing_rule=rule)
@@ -283,20 +313,29 @@ def tune_b9plus_timing(turns: Sequence[TurnCtx], store: CellStore, seeds: Sequen
 
 
 def tune_spec_trigger(turns: Sequence[TurnCtx], store: CellStore, seeds: Sequence[int], profile: str,
-                      prices: dict, cfg: dict, lm, triggers: Sequence[str] = ("immediate", "forecast")) -> dict:
-    """PREREG_V2 §4.5: the SHARED SPEC / SPEC-theta trigger, tuned on dev:
-    the trigger under which the better of the two has the higher mean
-    realised utility (D*[SPEC] is the better of them)."""
+                      prices: dict, cfg: dict, lm, triggers: Sequence = ("immediate", "forecast"),
+                      n_grid: int = 21) -> dict:
+    """PREREG_V2 §4.5: the SHARED SPEC / SPEC-theta trigger, tuned on dev
+    over {immediate, forecast} + the r_below grid (added 2026-10-16): the
+    trigger under which the better of the two has the higher mean realised
+    utility (D*[SPEC] is the better of them). For an r_below trigger SPEC-
+    theta's gate scalars are its dev means at the firing step."""
     scfg = {**cfg, "architecture": "speculative"}
+    cands = [(t, None) for t in triggers]
+    for row in r_below_grid(turns, profile, cfg, n_grid):
+        cands.append(({"kind": "r_below", "r0": row["r0"]},
+                      {profile: {"remaining_ms": row["remaining_ms"], "elapsed_ms": row["elapsed_ms"]}}))
     rows = []
-    for trig in triggers:
-        ctrls = {n: get_controller_v2(n, cfg=scfg, timing=trig)
-                 for n in ("b10_speculative_v2", "b11_speculative_gated_v2")}
+    for trig, consts in cands:
+        ctrls = {"b10_speculative_v2": get_controller_v2("b10_speculative_v2", cfg=scfg, timing=trig),
+                 "b11_speculative_gated_v2": get_controller_v2("b11_speculative_gated_v2", cfg=scfg, timing=trig,
+                                                               trigger_constants=consts)}
         recs = run_phase_b(turns, store, ctrls, [prices], seeds, [profile], scfg, lm)
         per = {n: _mean_utility([r for r in recs if r["baseline"] == n]) for n in ctrls}
-        rows.append({"trigger": trig, "dev_utility": per, "best": max(per.values())})
+        rows.append({"trigger": trig, "trigger_constants": consts, "dev_utility": per, "best": max(per.values())})
     best = max(range(len(rows)), key=lambda i: (rows[i]["best"], -i))
-    return {"chosen": rows[best]["trigger"], "n_evaluated": 2 * len(rows), "candidates": rows}
+    return {"chosen": rows[best]["trigger"], "trigger_constants": rows[best]["trigger_constants"],
+            "n_evaluated": 2 * len(rows), "candidates": rows}
 
 
 def tune_all(turns: Sequence[TurnCtx], store: CellStore, seeds: Sequence[int], profiles: Sequence[str],

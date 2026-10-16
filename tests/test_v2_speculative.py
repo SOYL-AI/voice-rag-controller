@@ -412,3 +412,25 @@ def test_boundary_contrasts_delta_interaction_and_q_hat():
     fixed = boundary_contrasts(recs, "test", d_star_speculative="b10_speculative_v2", m3=0.004)
     assert all(r["d_star"]["speculative"] == "b10_speculative_v2" for r in fixed)
     assert all(r["m3"] == 0.004 and r["m3_source"] == "fixed" for r in fixed)
+
+
+def test_spec_and_spec_theta_r_below_trigger():
+    """The pre-registered r_below trigger (2026-10-16): SPEC and SPEC-theta
+    dispatch at the first query-ready partial whose R_hat <= r0."""
+    cfg = cfg_with(architecture="speculative", nonhideable_increment_ms=400.0,
+                   quality={"g_plus": 0.72, "g_minus": 0.59})
+    prices = {"lambda_l": 0.5, "lambda_c": 0.05}
+    turn = synthetic_turn("rb", [0.9] * 8, 0.9, interval_ms=300.0, retrieval=SPREAD, prices=prices)
+    trig = {"kind": "r_below", "r0": 700.0}
+    b10 = get_controller_v2("b10_speculative_v2", cfg=cfg, timing=trig)
+    d = b10.decide_turn(turn)
+    assert d.dispatch_t_ms == 2100  # R_hat = 2700 - t
+    assert b10.decide_turn(turn).dispatch_t_ms == get_controller_v2(
+        "b10_speculative_v2", cfg=cfg, timing="immediate").decide_turn(turn).dispatch_t_ms + 1800
+    chain = martingale_chain()
+    b11 = get_controller_v2("b11_speculative_gated_v2", cfg=cfg, transitions=chain, lookahead_steps=6,
+                            timing=trig, trigger_constants={"synthetic": {"remaining_ms": 600.0, "elapsed_ms": 2100.0}})
+    d11 = b11.decide_turn(turn)
+    assert d11.dispatch_t_ms in (None, 2100)
+    with pytest.raises(ValueError):
+        get_controller_v2("b10_speculative_v2", cfg=cfg, timing={"kind": "sometimes"})

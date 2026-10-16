@@ -1,0 +1,154 @@
+{
+  "_comment": "DIAGNOSTIC, not used for any choice: Ours-v2's lookahead p(next partial carries new information) on dev, after the 2026-10-16 implementation correction.",
+  "generated_by": "python -m analysis.v2_lookahead_p_diag",
+  "generated_at_utc": "2026-10-16T03:28:24.988343+00:00",
+  "split": "dev",
+  "cells": {
+    "d1_open|text150": {
+      "condition_role": "secondary",
+      "partial_spacing_ms": 400.0,
+      "end_gap_ms": 800.0,
+      "p_at_last_partial": {
+        "n": 1566,
+        "mean": 0.0,
+        "p10": 0.0,
+        "p25": 0.0,
+        "median": 0.0,
+        "p75": 0.0,
+        "p90": 0.0,
+        "share_below_0.5": 1.0,
+        "share_below_0.1": 1.0,
+        "share_above_0.99": 0.0
+      },
+      "p_at_every_partial": {
+        "n": 4698,
+        "mean": 0.6666666666666666,
+        "p10": 0.0,
+        "p25": 0.0,
+        "median": 1.0,
+        "p75": 1.0,
+        "p90": 1.0,
+        "share_below_0.5": 0.3333333333333333,
+        "share_below_0.1": 0.3333333333333333,
+        "share_above_0.99": 0.6666666666666666
+      },
+      "p_at_post_speech_partials": {
+        "n": 0
+      }
+    },
+    "d1_open|piper-en_US-hfc_male-medium__150wpm__clean": {
+      "condition_role": "primary",
+      "partial_spacing_ms": 421.0,
+      "end_gap_ms": 1090.0,
+      "p_at_last_partial": {
+        "n": 1566,
+        "mean": 0.5540363704069861,
+        "p10": 0.44842106515508207,
+        "p25": 0.4779227428032833,
+        "median": 0.5219036482502697,
+        "p75": 0.620079586363927,
+        "p90": 0.7120469912342151,
+        "share_below_0.5": 0.4648786717752235,
+        "share_below_0.1": 0.0038314176245210726,
+        "share_above_0.99": 0.0038314176245210726
+      },
+      "p_at_every_partial": {
+        "n": 15583,
+        "mean": 0.7891396851680735,
+        "p10": 0.49504738105024393,
+        "p25": 0.6306078661323673,
+        "median": 0.806343087397213,
+        "p75": 1.0,
+        "p90": 1.0,
+        "share_below_0.5": 0.11416286979400629,
+        "share_below_0.1": 0.0030802797920811142,
+        "share_above_0.99": 0.3396650195726112
+      },
+      "p_at_post_speech_partials": {
+        "n": 3171,
+        "mean": 0.5834758229303774,
+        "p10": 0.45940461578151404,
+        "p25": 0.48872376176900056,
+        "median": 0.5626325706306091,
+        "p75": 0.6560769712579054,
+        "p90": 0.746442294700934,
+        "share_below_0.5": 0.3547776726584674,
+        "share_below_0.1": 0.003784295175023652,
+        "share_above_0.99": 0.006937874487543362
+      }
+    },
+    "d2_support|text150": {
+      "condition_role": "secondary",
+      "partial_spacing_ms": 1200.0,
+      "end_gap_ms": 800.0,
+      "p_at_last_partial": {
+        "n": 222,
+        "mean": 0.0,
+        "p10": 0.0,
+        "p25": 0.0,
+        "median": 0.0,
+        "p75": 0.0,
+        "p90": 0.0,
+        "share_below_0.5": 1.0,
+        "share_below_0.1": 1.0,
+        "share_above_0.99": 0.0
+      },
+      "p_at_every_partial": {
+        "n": 666,
+        "mean": 0.6666666666666666,
+        "p10": 0.0,
+        "p25": 0.0,
+        "median": 1.0,
+        "p75": 1.0,
+        "p90": 1.0,
+        "share_below_0.5": 0.3333333333333333,
+        "share_below_0.1": 0.3333333333333333,
+        "share_above_0.99": 0.6666666666666666
+      },
+      "p_at_post_speech_partials": {
+        "n": 0
+      }
+    },
+    "d2_support|piper-en_US-hfc_male-medium__150wpm__clean": {
+      "condition_role": "primary",
+      "partial_spacing_ms": 433.0,
+      "end_gap_ms": 1730.5,
+      "p_at_last_partial": {
+        "n": 222,
+        "mean": 0.23171433515291093,
+        "p10": 0.0,
+        "p25": 0.0,
+        "median": 0.14968467798547397,
+        "p75": 0.3789856406227191,
+        "p90": 0.6117303290387499,
+        "share_below_0.5": 0.8603603603603603,
+        "share_below_0.1": 0.44594594594594594,
+        "share_above_0.99": 0.04504504504504504
+      },
+      "p_at_every_partial": {
+        "n": 3627,
+        "mean": 0.7758001140479985,
+        "p10": 0.12482953458461106,
+        "p25": 0.576653846885437,
+        "median": 1.0,
+        "p75": 1.0,
+        "p90": 1.0,
+        "share_below_0.5": 0.224703611800386,
+        "share_below_0.1": 0.09429280397022333,
+        "share_above_0.99": 0.6043562172594431
+      },
+      "p_at_post_speech_partials": {
+        "n": 440,
+        "mean": 0.2418856453603262,
+        "p10": 0.0,
+        "p25": 0.0,
+        "median": 0.20872215887847284,
+        "p75": 0.4010023055210171,
+        "p90": 0.5878953582403244,
+        "share_below_0.5": 0.8454545454545455,
+        "share_below_0.1": 0.40454545454545454,
+        "share_above_0.99": 0.00909090909090909
+      }
+    }
+  }
+}
