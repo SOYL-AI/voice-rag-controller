@@ -418,3 +418,34 @@ Tests (`tests/test_v2_lookahead_fix.py`) check that:
 **Spend.** No new grounded answers were needed. gpt-6.1-sol: ₹8,338 spent of the ₹20,000 cap. gpt-4o: ₹3,094.
 
 **Hard pre-commitment.** This is the last change to any controller before the freeze. The test split will be run with exactly the code frozen after this rerun, whatever its outcome. No further correction, tuning or rerun of Ours-v2 or any baseline will be made on the basis of these or any later dev numbers.
+
+### 2026-10-16 — PREREG_V2 made freeze-ready (PI decisions, pre-freeze; nothing frozen)
+
+**Status:** the controller code is frozen at `ddde67f`. The test split is sealed, and no test outcome has been seen.
+
+**PI decisions written into `docs/research_v2/PREREG_V2.md`:**
+
+1. **Primary cell: `rewrite_faiss` at the 0.65 dev belief-quantile price.**
+   * Values: λ_l = 0.17305735434823866 (d1_open) and 0.2157823714003309 (d2_support); λ_c = 0.05.
+   * Why: the §4.3 rule (maximum dev conjunction power) is degenerate, because power is 0 at every cell. Its fallback is written in now, and the choice was made without reference to Δ.
+2. **P3 margin m₃ = 0.016**, a pre-specified smallest effect size of interest equal to the dev MDE at test N. It replaces ½·δ̂_C, which is 0 on dev.
+3. **Rivals.**
+   * D\*[COMMIT] = B9+.
+   * D\*[SPECULATIVE] = B9+ for d1_open, and SPEC (`b10_speculative_v2`) for d2_support. For d2 this is the dev tuning's pick: it ties SPEC-θ at 0.35795, and the tie is broken by candidate order.
+4. **P1–P3 and the IUT are unchanged.**
+5. **H-REV added:** Δ[COMMIT] < 0 at the primary cell, pooled, one-sided α = 0.025. Dev: −0.041 (SE 0.0085). It sits in one Holm family with P1–P3 for individual claims.
+6. **Headline:** Δ[COMMIT] with its 95% CI, per dataset and pooled, reported whatever the test outcomes.
+7. **Judge.** gpt-6.1-sol 2026-09-29; k = 1; reasoning_effort medium; max_completion_tokens 2000; seed 20261015. Rubric e1v2-r3, sha256 `83fde728…a7ccbc23`. The GPT-4o 30% subsample uses seed 20261016.
+8. **Freeze procedure.** Test generation starts right after the freeze. d2_support test grading waits for the human judge-validation gate.
+
+**Removed before freeze** (not implementable in the frozen code): the channel-set ablation cells of the earlier draft.
+
+**Open items:**
+* the human judge gate;
+* the d2 authored-label review;
+* the max_completion_tokens truncation rate;
+* a run-time check of the test guards;
+* OSF;
+* **the d1_open secondary judge.** The draft lists it, but the test budget has no d1 judge calls. The PI must decide before the freeze.
+
+**Recorded by:** methods/theory workstream
