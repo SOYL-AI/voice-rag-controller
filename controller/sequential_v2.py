@@ -110,9 +110,13 @@ class StepObs:
     retrieval: dict
     prices: dict
     history_texts: Tuple[str, ...]
-    #: the predictor's (q10, q50, q90) remaining speech aged to available_ms;
-    #: None when only a point prediction (or none) exists
+    #: the predictor's (q10, q50, q90) remaining SPEECH aged to available_ms,
+    #: NOT clipped at 0 (negative = predicted time since speech ended); None
+    #: when only a point prediction (or none) exists. Read only by Ours-v2.
     remaining_quantiles: Optional[Tuple[float, float, float]] = None
+    #: for a deterministic prefix schedule (the text150 timeline), the number
+    #: of partials still to come in this turn; None for a streaming ASR turn
+    scheduled_partials_left: Optional[int] = None
 
 
 # ---------------------------------------------------------------------------
@@ -274,7 +278,9 @@ def build_steps(ctx: TurnCtx, cfg: Optional[dict] = None) -> List[StepObs]:
         if last.get("remaining_q10_ms") is None or last.get("remaining_q90_ms") is None:
             return None
         age = at - float(last["t_ms"])
-        return tuple(max(0.0, float(last[k]) - age) for k in ("remaining_q10_ms", "remaining_ms", "remaining_q90_ms"))
+        # unclipped (2026-10-16 implementation correction): after the predicted
+        # end of speech the quantiles go negative, so P(more speech) -> 0
+        return tuple(float(last[k]) - age for k in ("remaining_q10_ms", "remaining_ms", "remaining_q90_ms"))
 
     def predicted_remaining(at: float) -> Optional[float]:
         # usable once its partial is available; aged from the audio time the
@@ -285,6 +291,8 @@ def build_steps(ctx: TurnCtx, cfg: Optional[dict] = None) -> List[StepObs]:
         last = avail[-1]
         return max(0.0, float(last["remaining_ms"]) - (at - float(last["t_ms"])))
 
+    fixed_schedule = (timing.get("partial_schedule") == "fixed"
+                      or timing.get("endpoint_reason") == "text_timeline")
     steps: List[StepObs] = []
     history: List[str] = []
     for idx, part in enumerate(partials):
@@ -299,6 +307,7 @@ def build_steps(ctx: TurnCtx, cfg: Optional[dict] = None) -> List[StepObs]:
             belief_entry=entry, belief_source=source, partial_interval_ms=interval,
             retrieval=retrieval, prices=prices, history_texts=tuple(history),
             remaining_quantiles=predicted_quantiles(at),
+            scheduled_partials_left=(len(partials) - idx - 1) if fixed_schedule else None,
         ))
 
     final_text = (timing.get("asr_final") or {}).get("text") or ctx.transcript_final or (

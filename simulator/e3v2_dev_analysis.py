@@ -251,7 +251,10 @@ def build_signals(inp: dict, cond: str, rhat: Dict[str, List[dict]]) -> List[dic
                                 "text": p["text"]} for p in tr["partials"]],
                   "asr_final": tr["asr_final"], "partial_interval_ms": tr.get("partial_interval_ms"),
                   "predicted_remaining_speech_ms": rhat.get(item_id, []),
-                  "endpoint_reason": tr.get("endpoint_reason")}
+                  "endpoint_reason": tr.get("endpoint_reason"),
+                  # the text150 timeline is a fixed prefix schedule (0.3/0.5/0.7, final)
+                  "partial_schedule": ("fixed" if tr.get("endpoint_reason") == "text_timeline"
+                                       or str(tr.get("trace_version", "")).startswith("text150") else "streaming")}
         by_prefix = []
         for k, p in enumerate(tr["partials"]):
             text = normalize_text(p["text"])
@@ -294,7 +297,15 @@ def belief_sequences(rows: List[dict], cal: dict) -> List[list]:
 
     seqs = []
     for r in rows:
-        es = sorted(r["signals"]["model"]["uncertainty_by_prefix"], key=lambda e: (e["kind"] == "full", e["t_ms"]))
+        # A post-speech re-transcription partial (cut after the trace's speech
+        # end) carries no new information: its transition is the identity, so
+        # it is merged into the previous step (2026-10-16 correction). The
+        # fitted next-partial transitions are then those of information-
+        # carrying partials, which is what the lookahead's p-branch models.
+        se = float(r["signals"]["timing"].get("speech_end_ms") or math.inf)
+        es = sorted([e for e in r["signals"]["model"]["uncertainty_by_prefix"]
+                     if e["kind"] == "full" or float(e["t_ms"]) <= se],
+                    key=lambda e: (e["kind"] == "full", e["t_ms"]))
         seq = [(float(e.get("word_frac") or 0.0) if e["kind"] != "full" else 1.0, b(e)) for e in es]
         if len(seq) >= 2:
             seqs.append(seq)

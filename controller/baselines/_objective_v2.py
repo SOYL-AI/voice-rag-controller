@@ -570,18 +570,27 @@ class RemainingDist:
         return self.quantile((1.0 + c) / 2.0)
 
 
-def next_partial_branch(dist: "RemainingDist", spacing: float, cfg: dict):
+def next_partial_branch(dist: "RemainingDist", spacing: float, cfg: dict,
+                        scheduled_left: Optional[int] = None):
     """
-    The lookahead's two branches from a step (the Ours-v2 fix, applied
-    once): another partial becomes available before the end-of-turn decision
-    iff it arrives `spacing` from now while speech + end gap still remain,
-    i.e. R + gap > spacing. Returns (p_next, remaining at the next step given
-    it comes). The end-of-turn branch has probability 1 - p_next.
+    The lookahead's two branches from a step (the Ours-v2 fix; its
+    implementation corrected once, 2026-10-16). The next partial carries NEW
+    information iff speech is still going on when it is cut, i.e. the
+    remaining SPEECH R > spacing, with R from the predictor's aged, unclipped
+    quantiles. Post-speech re-transcription partials carry no new
+    information (identity belief transition), so the alternative branch is
+    the end-of-turn decision. The end gap enters only the exposure (time to
+    the final decision), never p. For a deterministic prefix schedule
+    (text150) p = 1 while a prefix is still to come and 0 after the last.
+    Returns (p_next, remaining speech at the next partial given it carries
+    information). The end-of-turn branch has probability 1 - p_next.
     """
-    gap = end_gap_ms(cfg)
-    threshold = spacing - gap
-    p_next = dist.p_greater(threshold)
-    r_next = dist.conditional_median_above(threshold) - spacing if p_next > 0 else None
+    if scheduled_left is not None:
+        if scheduled_left <= 0:
+            return 0.0, None
+        return 1.0, dist.q50 - spacing
+    p_next = dist.p_greater(spacing)
+    r_next = dist.conditional_median_above(spacing) - spacing if p_next > 0 else None
     return p_next, r_next
 
 
