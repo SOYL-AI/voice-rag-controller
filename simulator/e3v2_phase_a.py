@@ -100,6 +100,7 @@ from llm.experiment1_v2.prompts import build_messages as e1_build_messages  # no
 PREREG_FROZEN = _REPO_ROOT / "docs" / "research_v2" / "PREREG_FROZEN"
 SEEDS = (11, 23, 37, 53, 71)
 TEXT_CONDITION = "text150"
+PRIMARY_TRACE_STEM = "piper-en_US-hfc_male-medium__150wpm__clean"  # the primary ASR condition
 TEXT_MS_PER_WORD = 400.0       # 150 wpm
 TEXT_VAD_HANG_MS = 800.0       # the live VAD's silence hang (SPEECH.md)
 TEXT_FRACS = (0.3, 0.5, 0.7)   # E1-v2's word fractions (config.json)
@@ -732,7 +733,11 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
     ap = argparse.ArgumentParser(description="E3-v2 Phase A: real cells for the Phase B evaluator.")
     ap.add_argument("--dataset", required=True)
     ap.add_argument("--split", required=True)
-    ap.add_argument("--conditions", default="all", help="all | text150 | <trace stem>[,...]")
+    # the E3-v2 conditions: text150 (secondary) + the primary ASR trace stem.
+    # "all" also picks up the speech-robustness-grid traces, which are not
+    # E3-v2 conditions.
+    ap.add_argument("--conditions", default=f"{TEXT_CONDITION},{PRIMARY_TRACE_STEM}",
+                    help="text150 | <trace stem>[,...] | all")
     ap.add_argument("--seeds", default=",".join(str(s) for s in SEEDS))
     ap.add_argument("--e1-results", default=str(_REPO_ROOT / "llm" / "experiment1_v2" / "results"))
     ap.add_argument("--index-dir", default=None)
