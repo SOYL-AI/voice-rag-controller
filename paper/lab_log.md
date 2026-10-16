@@ -488,3 +488,29 @@ Tests (`tests/test_v2_lookahead_fix.py`) check that:
   3. d2 store rebuild;
   4. the d1 400-answer judge subsample;
   5. `simulator.e3v2_lazy evaluate` with D*[SPEC] and m3 = 0.016 fixed (§9 step 9).
+
+### 2026-10-17 — d1_open-only test analysis (PI go-ahead; NOT the confirmatory pooled test)
+
+**Status:** d1_open only. The pooled confirmatory results wait for d2_support grading after the judge gate. Frozen code plus D1, with no judge calls. Sources: `docs/research_v2/v2_test_results_d1.json` and `.md` (`analysis/v2_test_d1.py`), and the frozen `simulator.e3v2_lazy evaluate` (D\*[COMMIT] = D\*[SPEC] = B9+, m₃ = 0.016). Recorded by Ryan Gomez.
+
+- **Primary cell** (rewrite_faiss, q = 0.65, λ_l = 0.17305735434823866, primary ASR, 3,734 items; paired bootstrap B = 10,000):
+
+  | contrast | estimate | 95% CI |
+  |---|---|---|
+  | Δ[COMMIT] | −0.0367 | [−0.0481, −0.0252] |
+  | Δ[SPEC] | −0.0415 | [−0.0528, −0.0302] |
+  | interaction | +0.0047 | [+0.0007, +0.0088] |
+
+- **d1-only one-sided tests:**
+  - P1: p = 1.0, does not reject.
+  - H-REV: p < 1e-4, rejects.
+  - P2: p = 0.0097. Rejects at α = 0.025, but not after Holm (threshold 0.0083).
+  - P3 TOST: fails on the lower side.
+  - Boundary claim: false.
+  - These are the outcomes the dev predictions gave (§3.6).
+- **E1-v2 on d1 test:**
+  - Full-question AUC is 0.665 [0.648, 0.682]: below the 0.70 success line, above 0.60.
+  - Text prefix curve: 0.537 / 0.543 / 0.582 / 0.665.
+  - C2 is not available.
+  - The dev-fitted calibration has ECE 0.077 on the full question.
+  - The boundary mass is 0 (b* < 0 with dev ĝ⁻ < 0), as predicted.
