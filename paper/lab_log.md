@@ -462,3 +462,29 @@ Tests (`tests/test_v2_lookahead_fix.py`) check that:
   - The extra prefix records are not used by any pre-registered analysis.
   - Skip answers are E1's answers that ended on "stop", reused, or regenerated at 256 tokens where truncated, as on dev.
 - **Grading on hold.** The d1_open 400-answer judge subsample (O6) also waits for the gate.
+
+### 2026-10-17 — Test generation complete (PREREG_V2 §9 step 7); no judge call, no outcome analysis
+
+**Status:** frozen code `ddde67f` plus deviation D1 (`43ca350`). Every stage ran from `simulator/e3v2_phase_a/test_logs/` (gitignored), in two resumable per-dataset pipelines. Recorded by Ryan Gomez.
+
+| | d1_open | d2_support |
+|---|---|---|
+| E1 self-assessment calls | 45,590 | 8,704 |
+| E1 closed-book calls (text prefixes + full, 80-token cap; N1) | 74,515 | 9,960 |
+| rewrites | 25,900 | 8,397 |
+| lazy plan (written before any grading) | 29,261 cells (21,793 retrieve, 7,468 skip) | 4,897 cells (3,901 retrieve, 996 skip) |
+| plan sha256 | c49c44f7781a4ef5210724fbcc6e18ceb9b2f5d83dd8bfe63f8e4e1f1ed33a54 | f59b33bce622fb2a637da0f418d3ca3d05eae27f0bf80313a18a161e3b8d50fc |
+| grounded answers | 103,560 | 18,045 |
+| skip answers regenerated at 256 | 15,278 | 2,580 |
+| grading | alias only (118,838 Phase A answers + E1 labels), done | none; waits for the judge gate |
+
+- **Index path.** d1_open retrieval used this worktree's `retrieval/indexes/d1_open`, the index dev used (same corpus_sha256 724624b9…). d2_support used the main checkout's index, as on dev. Only the path argument changed; no code changed.
+- **Duplicate run.** For about 6 seconds two d2 continuation processes ran the store stage together. The resulting `store_test.jsonl` was verified afterwards: 10,707 retrieval rows equal the 10,707 dispatch points, and 996 skip-prompt rows.
+- **Judge spend.** The ledger is unchanged throughout: gpt-6.1-sol ₹8,338, gpt-4o ₹3,094.
+- **No outcome analysis has been run.** The E1 label step printed d1's empirical-need base rate by design. It has not been used.
+- **Next, after the PI's go (gate passed):**
+  1. d2 Phase A `grade,store` on the required cells;
+  2. d2 E1 labels;
+  3. d2 store rebuild;
+  4. the d1 400-answer judge subsample;
+  5. `simulator.e3v2_lazy evaluate` with D*[SPEC] and m3 = 0.016 fixed (§9 step 9).
