@@ -1,6 +1,6 @@
-# Pre-Registration Addendum v2 — FREEZE-READY DRAFT (NOT FROZEN)
+# Pre-Registration Addendum v2 — FROZEN
 
-> **Status: DRAFT, ready for freeze.** Every value is filled from dev artifacts except the open items in §11. Nothing in this file binds until the freeze procedure in §9 is complete. Until then the test split stays sealed (`CONTRACTS.md` §7): no generation, signal extraction, tuning or judging may touch test items.
+> **Status: FROZEN at 2026-10-16T14:25:27Z.** Signed off by Ryan Gomez (PI) on 2026-10-16. Open items O1 (human judge-validation gate, which blocks d2_support test grading), O2 (authored-label review) and O5 (OSF registration) are tracked in §11; none of them blocks the freeze. From this point only the "Deviations" section may be appended (§4.7).
 >
 > * **Controller and analysis code: frozen at commit `ddde67fdae9b80d80e295f20da45efe9b0dc2540`** (`ddde67f`, "Merge final pre-freeze dev rerun"). The test split is run with exactly this code.
 > * **Dev predictions of record:** `docs/research_v2/v2_predictions.json` (generated 2026-10-16T03:28:25Z from commit `d771276`).
