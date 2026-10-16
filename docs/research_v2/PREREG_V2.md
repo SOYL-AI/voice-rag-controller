@@ -45,7 +45,7 @@
 
 | dataset | primary correctness | secondary correctness |
 |---|---|---|
-| `d1_open` | **normalized alias match**: lower-case and strip punctuation, articles and whitespace; correct iff any normalized alias of `expected_answer` / `answer_aliases` is a substring of the normalized answer | **open item O6**. The earlier draft listed an LLM-judge secondary for d1_open, but the test budget (`v2_test_budget.json`) contains no d1_open judge calls. |
+| `d1_open` | **normalized alias match**: lower-case and strip punctuation, articles and whitespace; correct iff any normalized alias of `expected_answer` / `answer_aliases` is a substring of the normalized answer | **Secondary (decided by the PI before the freeze, O6):** both LLM judges (gpt-6.1-sol k = 1 and GPT-4o v4) grade a **stratified 400-answer subsample** of d1_open test answers (strata: item type × popularity tercile × alias verdict; seed 20261017). This mirrors the dev agreement check (`label.py --judge-subsample 400`; dev alias vs gpt-6.1-sol κ = 0.78). It is reported as an alias-vs-judge agreement check and as a sensitivity analysis of Δ[COMMIT] on that subsample. Estimated cost: under ₹100 of gpt-6.1-sol, inside the cap. |
 | `d2_support` | **LLM judge (2.2)**, conditional on passing the gate (2.4) | GPT-4o v4 judge (2.3), on a 30% subsample |
 
 ### 2.2 Primary LLM judge: Azure OpenAI GPT-6.1-sol
@@ -414,12 +414,12 @@ It predicted Δ[COMMIT] ≈ +0.009 to +0.011 and the need for SPEC-θ as a rival
 | Primary cell, price grid, D\*, m₃, H-REV written in (§3, §4.3) | **done** (PI decisions 2026-10-16) | Renya (grid) | Ryan |
 | Dev predictions and dev power written (§3.6, §6.1) | **done** (`v2_predictions.json`, `v2_power_dev.json`) | Yashmita | Ryan |
 | All runners refuse `--split test` without `PREREG_FROZEN` (CONTRACTS §7) | guard code present; run-time check at freeze (O4) | Yashmita | Ryan |
-| d1_open secondary judge decided (§2.1) | **OPEN (O6)**; must be decided before the freeze | Ryan (PI) | Ryan |
+| d1_open secondary judge decided (§2.1) | **DECIDED (O6):** both judges on a stratified 400-answer subsample | Ryan (PI) | Ryan |
 | Final read of this document | open | Ryan (PI) | Ryan |
 
 ## 9. Freeze procedure (instructions; NOT executed)
 
-Run these only after every item in §8 is signed off, with two exceptions. O1 (human judge gate) does not block the freeze; it blocks test grading. O2 (authored-label review) does not block either. **O6 must be decided before step 2.**
+Run these only after every item in §8 is signed off, with two exceptions. O1 (human judge gate) does not block the freeze; it blocks test grading. O2 (authored-label review) does not block either. O6 is decided (§2.1).
 
 1. **Check the frozen code.** Confirm that the controller, simulator and analysis code equal commit `ddde67f`:
    `git diff --stat ddde67f HEAD -- controller simulator analysis/e3_frontier.py analysis/v2_power_dev.py configs/config.yaml`
@@ -463,8 +463,4 @@ Run these only after every item in §8 is signed off, with two exceptions. O1 (h
 * **O3 — truncation check for `max_completion_tokens` = 2000.** The dev rate of finish_reason = `length` has not been reported in a committed artifact. The value 2000 is fixed regardless. The observed rate is reported, and if it is ≥ 1% the affected verdicts are treated as parse failures (§4.4).
 * **O4 — test-split guard.** The guard code is present in `simulator/e3v2_decide.py`, `simulator/e3v2_phase_a.py`, `simulator/e3v2_lazy.py` and `llm/experiment1_v2/common.py` (checked by reading). Before freeze step 7, confirm at run time that each refuses `--split test` without `PREREG_FROZEN`.
 * **O5 — OSF registration** (DOI and URL): at freeze step 6.
-* **O6 — d1_open secondary judge.** The PI must choose before the freeze:
-  * (a) **no LLM-judge secondary for d1_open in E3-v2.** Alias match is deterministic, and the frozen test budget has no d1 judge calls.
-  * (b) **a GPT-4o v4 grading of a 30% stratified d1_open subsample.** This is not in the budget; its cost would be estimated with `simulator/e3v2_test_budget.py` before deciding.
-
-  Until decided, the d1_open secondary analysis is not pre-registered.
+* **O6 — d1_open secondary judge: DECIDED** (2026-10-16, PI). Both judges grade a stratified 400-answer d1_open test subsample (§2.1).
