@@ -358,3 +358,63 @@ Testing both architectures makes the result informative whichever way it falls, 
   - B9+ retrieves on 1,406 turns, 1,309 of them at its R̂-below partial.
 
 **Whether to correct this implementation and rerun is the PI's decision.** It would be a second rerun, against the pre-commitment in (4). Nothing has been changed or rerun since the finding.
+
+### 2026-10-16 — E3-v2 dev: the lookahead correction re-implemented once (code defect), second and final dev rerun
+
+**Status:** dev only; the test split is sealed and no test outcome has been seen. Nothing is frozen and no profile or price has been chosen. Decision by the PI; recorded by Ryan Gomez.
+
+**Why a second correction.** It is justified by a verifiable code-level defect, not by Δ. The entry above (§6) shows that the first implementation of the lookahead correction computed p = P(R + end gap > spacing), with the aged R̂ quantiles clipped at 0. On every dev condition the end gap is at least the spacing, so p ≈ 1.00 at every partial step and the specified mixture never took its end-of-turn branch. The PI therefore had the *implementation* of the already-specified fix corrected, once, with no new tunable parameter:
+1. **Information channel.** p is the probability that the next partial carries *new information*: p = P(remaining speech R > spacing).
+   - R uses the predictor's q10/q50/q90, aged to the step's availability time and **not clipped**, so p → 0 after the predicted end of speech.
+   - Post-speech re-transcription partials carry no information, so their belief transition is the identity. In the transition fit they are merged into the previous step (cut after the trace's speech end).
+2. **Latency channel.** The end-of-turn gap enters only the exposure term, never p.
+3. **text150.** The prefix schedule is deterministic: p = 1 while a prefix is still to come, and p = 0 after the last prefix.
+4. **Scope.** The same correction applies in Ours-v2[SPECULATIVE], and through the shared option machinery in SPEC-θ (whose point scalars now give p = 1[R̄ > spacing]).
+
+Tests (`tests/test_v2_lookahead_fix.py`) check that:
+- p < 0.5 at the last pre-end partial of a synthetic ASR-like trace;
+- post-speech partials give identity transitions and p = 0;
+- p = 0 after text150's last prefix;
+- the gap does not enter p.
+
+**Diagnostic, reported and not used for any choice** (`docs/research_v2/v2_lookahead_p_diagnostic.json`). p at each turn's last partial:
+
+| dataset × condition | mean p | share of turns with p < 0.5 | note |
+|---|---|---|---|
+| d1 ASR | 0.55 | 0.47 | 3,171 post-speech partials, mean p 0.58: the d1 remaining-speech predictor over-predicts remaining speech |
+| d2 ASR | 0.23 | 0.86 | |
+| d1 text150 | 0 | 1.00 | |
+| d2 text150 | 0 | 1.00 | |
+
+**Both dev results** (primary ASR condition; the first column is the rerun with r_below and the inert correction, `v2_predictions_post_rbelow_inert_fix.json`; the second is this rerun, `v2_predictions.json`):
+
+| | rerun 1 | rerun 2 (final) |
+|---|---|---|
+| d1 ASR Δ[COMMIT], rewrite_faiss, q = 0.5…0.9 | −0.040 … −0.058 | −0.049, −0.045, −0.046, −0.053 (SE ≈ 0.009) |
+| d2 ASR Δ[COMMIT], rewrite_faiss | −0.021 … −0.009 | −0.015, −0.009, −0.011, −0.007 (SE ≈ 0.018–0.021) |
+| pooled Δ[COMMIT], all profiles | −0.036 … −0.052 | −0.040 … −0.048 (SE ≈ 0.009) |
+| pooled interaction | within ±0.003 | +0.002 … +0.005 (SE ≈ 0.003) |
+| d2 text150 Δ[COMMIT] | −0.085 … −0.107 | +0.006 … +0.010 (SE ≈ 0.018) |
+| d1 text150 Δ[COMMIT] | ≈ 0 | −0.001 … −0.005 |
+
+**Action counts** (rewrite_faiss, belief-quantile 0.65 price, seed 11, commit; Ours-v2 vs B9+), as retrieve-at-partial / retrieve-at-end / skip:
+
+| dataset × condition | Ours-v2 | B9+ |
+|---|---|---|
+| d1 ASR | 1,541 / 9 / 16 | 1,309 / 97 / 160 |
+| d2 ASR | 210 / 2 / 10 | 199 / 4 / 19 |
+| d2 text150 | 222 / 0 / 0 | 196 / 7 / 19 |
+| d1 text150 | 48 / 530 / 988 | 0 / 463 / 1,103 |
+
+- **The end-of-turn branch now fires.** Ours-v2 no longer waits for the end of turn and then skips.
+- **On d1 ASR it now retrieves on 99% of turns,** dispatching earlier than B9+ (median partial index 5 vs 6). Its accuracy is 0.438 against B9+'s 0.500, at a similar p95 TTFA.
+- **The d1 ASR loss now comes from dispatching too early,** on partial queries that retrieve worse. It no longer comes from skipping.
+
+**Power** (`docs/research_v2/v2_power_dev.json`, dev per-item paired differences, test N = 3,734 + 498):
+- P1 and the conjunction have power 0 in every profile and at every price, because dev Δ[COMMIT] < 0.
+- P2 alone has power 0.10–0.65.
+- The minimum detectable Δ[COMMIT] at that N is 0.015–0.017 (P2: 0.006–0.007).
+
+**Spend.** No new grounded answers were needed. gpt-6.1-sol: ₹8,338 spent of the ₹20,000 cap. gpt-4o: ₹3,094.
+
+**Hard pre-commitment.** This is the last change to any controller before the freeze. The test split will be run with exactly the code frozen after this rerun, whatever its outcome. No further correction, tuning or rerun of Ours-v2 or any baseline will be made on the basis of these or any later dev numbers.
