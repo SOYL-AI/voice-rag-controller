@@ -635,6 +635,6 @@
     "split": "dev",
     "n_sequences": 3132,
     "calibration": "e3v2_calibration_d1_open_mistral7b_v03_self_assessed_need_logit.json",
-    "fitted_at_utc": "2026-10-15T17:57:43.132411+00:00"
+    "fitted_at_utc": "2026-10-16T01:13:04.462722+00:00"
   }
 }

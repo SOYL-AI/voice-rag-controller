@@ -2,33 +2,33 @@
   "calibration": {
     "signal": "self_assessed_need_logit",
     "kind": "logistic",
-    "intercept": 1.1448825648665424,
-    "slope": 0.05308692236488279,
-    "frac_slope": -0.22967800639995906,
-    "interaction": 0.08714766655866524,
+    "intercept": 1.1426060442936508,
+    "slope": 0.053354333588240384,
+    "frac_slope": -0.22672721387701986,
+    "interaction": 0.08676156240485391,
     "calibrated": true,
     "source": "Fitted on d2_support dev (222 items, 4737 prefix records over 2 conditions): P(empirical need) = sigmoid(a + b*logit(SA) + c*f + d*logit(SA)*f), SA = self_assessed_need (sa-v1-frozen), f = spoken word fraction",
-    "auc": 0.6049491394870993
+    "auc": 0.6051501691823593
   },
   "diagnostics": {
-    "auc_in_sample": 0.6049491394870993,
-    "auc_oof_grouped5": 0.5958565134679316,
+    "auc_in_sample": 0.6051501691823593,
+    "auc_oof_grouped5": 0.5958869324349775,
     "auc_oof_by_frac": {
       "[0,0.4)": {
         "n": 1417,
-        "auc_oof": 0.5500465629634739
+        "auc_oof": 0.5500321916784511
       },
       "[0.4,0.8)": {
         "n": 1815,
-        "auc_oof": 0.570479030079399
+        "auc_oof": 0.5701953312321315
       },
       "[0.8,0.999)": {
         "n": 620,
-        "auc_oof": 0.6275847615499255
+        "auc_oof": 0.628283345752608
       },
       "[0.999,1.01)": {
         "n": 885,
-        "auc_oof": 0.6588419165530239
+        "auc_oof": 0.6588725617884559
       }
     },
     "n_records": 4737,
@@ -36,6 +36,6 @@
     "base_rate": 0.7855182605024277
   },
   "generated_by": "python -m simulator.e3v2_dev_analysis",
-  "fitted_at_utc": "2026-10-15T19:39:39.235359+00:00",
+  "fitted_at_utc": "2026-10-16T01:34:55.619524+00:00",
   "split": "dev"
 }
