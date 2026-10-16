@@ -21,9 +21,17 @@ THE LOOKAHEAD MODEL (n-step, n = controller.e3v2.ours.lookahead_steps):
     controller/fit_belief_transitions.py. The jump to the end-of-turn
     belief uses final_dist(b, phase). Unfitted -> identity (A3: waiting
     buys no information).
-  * Remaining speech: deterministic R_{k+1} = R_k - Delta, Delta the ASR
-    partial interval; elapsed speech e_{k+1} = e_k + Delta. If R_k <= Delta
-    the next step is the end of turn.
+  * Next decision point (CORRECTED 2026-10-16, applied once): another
+    partial becomes available before the end-of-turn decision with
+    probability p = P(R + gap > Delta) under the remaining-speech
+    predictor's quantiles (aged to this step's availability, so the ASR lag
+    is in the exposure), Delta = the dev-measured partial-to-partial
+    availability spacing, gap = the dev end-of-turn gap. The continuation is
+    the mixture p * (next-partial value at R' = median(R | next) - Delta)
+    + (1 - p) * (end-of-turn decision value). Before the fix the next
+    partial was assumed certain whenever the point R_hat exceeded Delta,
+    which made the controller wait for partials that never came. Deeper
+    hypothetical steps use the point R'.
   * The next partial is assumed query-ready (its rho is the word-fraction
     rho); a not-yet-ready partial now has rho = rho.not_ready.
   * Continuation C(k+1): with depth left, V_wait(k+1) (recursive); with the
@@ -139,33 +147,67 @@ class OursV2(SequentialController):
         return utility_retrieve(b, 0.0, cost, 0.0, self.prices, self.quality)
 
     def _u_partial(self, b: float, remaining: float, elapsed: float) -> float:
-        frac = estimated_frac(elapsed, remaining, False)
+        # a hypothetical step after the end of speech (remaining < 0, still
+        # inside the end gap) hears the whole question: f = 1
+        frac = estimated_frac(elapsed, max(0.0, remaining), False)
         return utility_retrieve(
             b, rho_at(frac, True, self.cfg),
             priced_latency_ms(self.lat, expected_exposed_ms(self.lat, remaining, False, self.cfg)),
             waste_at(frac, False, self.cfg), self.prices, self.quality)
 
+    def _branches(self, remaining: Optional[float], interval: float, rq=None):
+        """
+        THE LOOKAHEAD FIX (applied once, 2026-10-16). From a step, the next
+        decision point is another partial with probability p and the end-of-
+        turn decision otherwise; p = P(R + gap > spacing) from the remaining-
+        speech predictor's quantiles `rq` (aged to this step's availability,
+        so the ASR lag is in the exposure), spacing = the measured partial-
+        to-partial availability spacing (ASR lag included). Returns
+        [(prob, remaining at the next partial | None for end of turn)].
+        Before the fix the next partial was assumed certain whenever the
+        point R_hat exceeded the partial interval.
+        """
+        from controller.baselines._objective_v2 import RemainingDist, next_partial_branch, partial_spacing_ms
+        if remaining is None:
+            return [(1.0, None)], partial_spacing_ms(interval, self.cfg)
+        dist = RemainingDist(*rq) if rq else RemainingDist.point(remaining)
+        spacing = partial_spacing_ms(interval, self.cfg)
+        p_next, r_next = next_partial_branch(dist, spacing, self.cfg)
+        out = []
+        if p_next > 0:
+            out.append((p_next, r_next))
+        if p_next < 1:
+            out.append((1.0 - p_next, None))
+        return out, spacing
+
     def _v_end(self, b: float, frac: Optional[float]) -> float:
         """Value of waiting until the end of turn and deciding then."""
         return sum(p * max(self._u_final(b2), 0.0) for p, b2 in self.transitions.final_dist(b, frac))
 
-    def v_wait(self, b: float, remaining: Optional[float], elapsed: float, interval: float, depth: int) -> float:
-        """n-step lookahead value of waiting from a step with belief b."""
+    def v_wait(self, b: float, remaining: Optional[float], elapsed: float, interval: float, depth: int,
+               rq=None) -> float:
+        """n-step lookahead value of waiting from a step with belief b: a
+        mixture of the next-partial value (probability p) and the end-of-turn
+        decision value (1 - p); see _branches."""
         key = (round(b, 12), None if remaining is None else round(remaining, 6),
-               round(elapsed, 6), round(interval, 6), depth)
+               round(elapsed, 6), round(interval, 6), depth, rq)
         if key in self._memo:
             return self._memo[key]
         frac = estimated_frac(elapsed, remaining, False)
-        if remaining is None or remaining <= interval:
-            value = self._v_end(b, frac)
-        else:
-            r1, e1 = remaining - interval, elapsed + interval
-            f1 = estimated_frac(e1, r1, False)
-            value = 0.0
+        branches, spacing = self._branches(remaining, interval, rq)
+        value = 0.0
+        for prob, r1 in branches:
+            if r1 is None:
+                value += prob * self._v_end(b, frac)
+                continue
+            e1 = elapsed + spacing
+            f1 = estimated_frac(e1, max(0.0, r1), False)
+            sub = 0.0
             for p, b1 in self.transitions.next_dist(b, frac):
                 cont = (self.v_wait(b1, r1, e1, interval, depth - 1) if depth > 1
                         else self._v_end(b1, f1))
-                value += p * max(self._u_partial(b1, r1, e1), cont)
+                sub += p * max(self._u_partial(b1, r1, e1), cont)
+            value += prob * sub
         self._memo[key] = value
         return value
 
@@ -176,9 +218,9 @@ class OursV2(SequentialController):
         return speculative_use_utility(b, rho, self.lat, window, self.prices, self.quality)
 
     def _option_value(self, b: float, remaining: Optional[float], elapsed: float, interval: float,
-                      query_ready: bool = True) -> Tuple[float, float, float]:
+                      query_ready: bool = True, rq=None) -> Tuple[float, float, float]:
         """S(k) for a speculative dispatch now: (S, rho_k, w_k)."""
-        frac = estimated_frac(elapsed, remaining, False)
+        frac = estimated_frac(elapsed, None if remaining is None else max(0.0, remaining), False)
         rho = rho_at(frac, query_ready, self.cfg)
         waste = waste_at(frac, False, self.cfg)
         from controller.baselines._objective_v2 import hiding_window_ms
@@ -186,51 +228,59 @@ class OursV2(SequentialController):
         use = lambda b_end, w=window, r=rho: max(self._use_value(b_end, w, r), 0.0)  # noqa: E731
         # memo key must identify the function: use its (window, rho) parameters
         use.__qualname__ = f"use[{round(window, 6)},{round(rho, 12)}]"
-        option = self._end_expect_named(use, b, remaining, elapsed, interval)
+        option = self._end_expect_named(use, b, remaining, elapsed, interval, rq)
         return option - self.prices.lambda_c * (1.0 + waste), rho, waste
 
-    def _end_expect_named(self, fn, b, remaining, elapsed, interval) -> float:
+    def _end_expect_named(self, fn, b, remaining, elapsed, interval, rq=None) -> float:
         """E[fn(b_end) | b at a partial with (remaining, elapsed)] under the
         model: next_dist down to the last partial, then final_dist. fn is
         re-created per call, so the memo is keyed on its __qualname__, which
         callers set to encode its parameters."""
         key_fn = fn.__qualname__
         key = ("endn", key_fn, round(b, 12), None if remaining is None else round(remaining, 6),
-               round(elapsed, 6), round(interval, 6))
+               round(elapsed, 6), round(interval, 6), rq)
         if key in self._memo:
             return self._memo[key]
-        frac = estimated_frac(elapsed, remaining, False)
-        if remaining is None or remaining <= interval:
-            value = sum(p * fn(b2) for p, b2 in self.transitions.final_dist(b, frac))
-        else:
-            value = sum(p * self._end_expect_named(fn, b1, remaining - interval, elapsed + interval, interval)
-                        for p, b1 in self.transitions.next_dist(b, frac))
+        frac = estimated_frac(elapsed, None if remaining is None else max(0.0, remaining), False)
+        branches, spacing = self._branches(remaining, interval, rq)
+        value = 0.0
+        for prob, r1 in branches:
+            if r1 is None:
+                value += prob * sum(p * fn(b2) for p, b2 in self.transitions.final_dist(b, frac))
+            else:
+                value += prob * sum(p * self._end_expect_named(fn, b1, r1, elapsed + spacing, interval)
+                                    for p, b1 in self.transitions.next_dist(b, frac))
         self._memo[key] = value
         return value
 
-    def _no_dispatch_value(self, b, remaining, elapsed, interval) -> float:
+    def _no_dispatch_value(self, b, remaining, elapsed, interval, rq=None) -> float:
         """Wait to the end without dispatching, then commit-decide there."""
         fn = lambda b_end: max(self._u_final(b_end), 0.0)  # noqa: E731
         fn.__qualname__ = "final_commit"
-        return self._end_expect_named(fn, b, remaining, elapsed, interval)
+        return self._end_expect_named(fn, b, remaining, elapsed, interval, rq)
 
     def v_wait_spec(self, b: float, remaining: Optional[float], elapsed: float, interval: float,
-                    depth: int) -> float:
+                    depth: int, rq=None) -> float:
         key = ("vws", round(b, 12), None if remaining is None else round(remaining, 6),
-               round(elapsed, 6), round(interval, 6), depth)
+               round(elapsed, 6), round(interval, 6), depth, rq)
         if key in self._memo:
             return self._memo[key]
-        frac = estimated_frac(elapsed, remaining, False)
-        if remaining is None or remaining <= interval:
-            value = sum(p * max(self._u_final(b2), 0.0) for p, b2 in self.transitions.final_dist(b, frac))
-        else:
-            r1, e1 = remaining - interval, elapsed + interval
-            value = 0.0
+        frac = estimated_frac(elapsed, None if remaining is None else max(0.0, remaining), False)
+        branches, spacing = self._branches(remaining, interval, rq)
+        value = 0.0
+        for prob, r1 in branches:
+            if r1 is None:
+                value += prob * sum(p * max(self._u_final(b2), 0.0)
+                                    for p, b2 in self.transitions.final_dist(b, frac))
+                continue
+            e1 = elapsed + spacing
+            sub = 0.0
             for p, b1 in self.transitions.next_dist(b, frac):
                 s1 = self._option_value(b1, r1, e1, interval)[0]
                 cont = (self.v_wait_spec(b1, r1, e1, interval, depth - 1) if depth > 1
                         else self._no_dispatch_value(b1, r1, e1, interval))
-                value += p * max(s1, cont)
+                sub += p * max(s1, cont)
+            value += prob * sub
         self._memo[key] = value
         return value
 
@@ -256,9 +306,9 @@ class OursV2(SequentialController):
             return self._step_commit(obs, memory)
         terms = step_terms(obs, self.cfg, self.calibration, self.lat)
         s_now, rho, waste = self._option_value(terms.belief, obs.remaining_ms, obs.speech_elapsed_ms,
-                                               obs.partial_interval_ms, obs.query_ready)
+                                               obs.partial_interval_ms, obs.query_ready, obs.remaining_quantiles)
         v = self.v_wait_spec(terms.belief, obs.remaining_ms, obs.speech_elapsed_ms,
-                             obs.partial_interval_ms, self.lookahead)
+                             obs.partial_interval_ms, self.lookahead, obs.remaining_quantiles)
         record.belief, record.rho, record.waste = terms.belief, rho, waste
         record.u_retrieve, record.v_wait, record.exposed_ms = s_now, v, terms.exposed_ms
         if s_now > 0 and s_now >= v:
@@ -295,7 +345,7 @@ class OursV2(SequentialController):
             return action, record
 
         v = self.v_wait(terms.belief, obs.remaining_ms, obs.speech_elapsed_ms,
-                        obs.partial_interval_ms, self.lookahead)
+                        obs.partial_interval_ms, self.lookahead, obs.remaining_quantiles)
         record.v_wait = v
         if u > 0 and u >= v:
             action = RETRIEVE

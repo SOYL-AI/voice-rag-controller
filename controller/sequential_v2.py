@@ -110,6 +110,9 @@ class StepObs:
     retrieval: dict
     prices: dict
     history_texts: Tuple[str, ...]
+    #: the predictor's (q10, q50, q90) remaining speech aged to available_ms;
+    #: None when only a point prediction (or none) exists
+    remaining_quantiles: Optional[Tuple[float, float, float]] = None
 
 
 # ---------------------------------------------------------------------------
@@ -263,6 +266,16 @@ def build_steps(ctx: TurnCtx, cfg: Optional[dict] = None) -> List[StepObs]:
             return avail[-1], ("full" if _is_full_entry(avail[-1]) else "prefix")
         return None, "none"
 
+    def predicted_quantiles(at: float):
+        avail = [p for p in preds if _available(p) <= at]
+        if not avail:
+            return None
+        last = avail[-1]
+        if last.get("remaining_q10_ms") is None or last.get("remaining_q90_ms") is None:
+            return None
+        age = at - float(last["t_ms"])
+        return tuple(max(0.0, float(last[k]) - age) for k in ("remaining_q10_ms", "remaining_ms", "remaining_q90_ms"))
+
     def predicted_remaining(at: float) -> Optional[float]:
         # usable once its partial is available; aged from the audio time the
         # prediction refers to (t_ms)
@@ -285,6 +298,7 @@ def build_steps(ctx: TurnCtx, cfg: Optional[dict] = None) -> List[StepObs]:
             speech_elapsed_ms=max(0.0, at - onset), remaining_ms=predicted_remaining(at),
             belief_entry=entry, belief_source=source, partial_interval_ms=interval,
             retrieval=retrieval, prices=prices, history_texts=tuple(history),
+            remaining_quantiles=predicted_quantiles(at),
         ))
 
     final_text = (timing.get("asr_final") or {}).get("text") or ctx.transcript_final or (
