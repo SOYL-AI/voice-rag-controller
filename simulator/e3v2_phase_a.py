@@ -379,7 +379,12 @@ class PhaseA:
                 out[(r["item_id"], int(r["draw_seed"]))] = {
                     "answer": r.get("closed_book_answer") or "", "finish_reason": r.get("finish_reason"),
                     "n_tokens": r.get("n_tokens"), "call_key": r.get("call_key")}
-        labels = e1common.load_json(self.e1dir / f"labels_{self.args.split}.json")
+        # Deviation D1 (2026-10-16, PI-approved): without labels_<split>.json
+        # (d2_support test before the judge gate) no verdicts are attached; the
+        # reused skip cells stay unresolved until the store is rebuilt after
+        # grading. Decisions and the lazy plan never read verdicts.
+        labels_path = self.e1dir / f"labels_{self.args.split}.json"
+        labels = e1common.load_json(labels_path) if labels_path.exists() else {"draws": []}
         for d in labels["draws"]:
             key = (d["item_id"], int(d["draw_seed"]))
             if d.get("condition", "closed_book") == "closed_book" and key in out:

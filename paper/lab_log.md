@@ -449,3 +449,16 @@ Tests (`tests/test_v2_lookahead_fix.py`) check that:
 * **the d1_open secondary judge.** The draft lists it, but the test budget has no d1 judge calls. The PI must decide before the freeze.
 
 **Recorded by:** methods/theory workstream
+
+### 2026-10-16 — Test run launched; deviation D1 (d2_support Phase A before labels) and note N1
+
+**Status:** v2 pre-registration FROZEN (tag `prereg-v2-frozen`, frozen code `ddde67f`). Test generation started at 14:32 UTC per PREREG_V2 §9 step 7, on the frozen code. No test outcome has been seen, and no test answer has been sent to any judge. Recorded by Ryan Gomez; decisions by the PI.
+
+- **D1 (approved by the PI).** `PhaseA.e1_closed_book` loaded `labels_<split>.json` unconditionally. For d2_support test, that file exists only after judge grading, which waits for the human judge-validation gate (§9 step 8). This blocked the d2_support Phase A store, the Phase B lazy plan and the required-cell generation.
+  - **Change:** when the labels file is missing, no verdicts are attached. Reused skip cells stay unresolved until the store is rebuilt after gate-approved grading.
+  - **Effect:** none on results. Decisions and the lazy plan never read verdicts; `tests/test_v2_deviation_d1.py` shows they are identical with and without verdicts.
+  - Recorded in PREREG_V2 "Deviations".
+- **N1 (accepted by the PI; not a deviation in method).** The frozen E1 runner cannot generate the full question alone. It runs its frozen default (`--no-asr`): text prefixes 0.3 / 0.5 / 0.7 plus the full question, at the frozen 80-token protocol cap.
+  - The extra prefix records are not used by any pre-registered analysis.
+  - Skip answers are E1's answers that ended on "stop", reused, or regenerated at 256 tokens where truncated, as on dev.
+- **Grading on hold.** The d1_open 400-answer judge subsample (O6) also waits for the gate.

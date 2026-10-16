@@ -464,3 +464,22 @@ Run these only after every item in §8 is signed off, with two exceptions. O1 (h
 * **O4 — test-split guard.** The guard code is present in `simulator/e3v2_decide.py`, `simulator/e3v2_phase_a.py`, `simulator/e3v2_lazy.py` and `llm/experiment1_v2/common.py` (checked by reading). Before freeze step 7, confirm at run time that each refuses `--split test` without `PREREG_FROZEN`.
 * **O5 — OSF registration** (DOI and URL): at freeze step 6.
 * **O6 — d1_open secondary judge: DECIDED** (2026-10-16, PI). Both judges grade a stratified 400-answer d1_open test subsample (§2.1).
+
+## Deviations
+
+*Appended after the freeze (§4.7). This is the only section that may be appended.*
+
+### D1 — Phase A runs before d2_support labels exist (2026-10-16, 14:40 UTC; approved by the PI)
+* **What changed.** One guard in `simulator/e3v2_phase_a.py` (`PhaseA.e1_closed_book`):
+  * if `labels_<split>.json` is missing, no E1 verdicts are attached to the reused closed-book (skip) answers;
+  * those skip cells are then unresolved, so `build_store` leaves them out of the store until it is rebuilt after grading.
+  * Test: `tests/test_v2_deviation_d1.py`.
+* **Why.** The frozen code loaded `labels_<split>.json` unconditionally. For d2_support test that file can only be produced by judge grading, which waits for the judge-validation gate (§9 step 8). So the frozen code could not run the d2_support Phase A store, the Phase B lazy plan or the required-cell generation (§9 step 7) before the gate.
+* **Effect on results: none.** Controller decisions and the lazy cell plan read beliefs, timing and the latency model, never verdicts. The unit test shows that decisions and the plan are identical with and without verdicts. Verdicts enter only when the store is rebuilt after gate-approved grading, exactly as before.
+* **Test outcomes seen: none.** No test outcome had been seen and no test answer had been graded by any judge when this was decided.
+
+### Note N1 — E1-v2 closed-book records on test include text prefixes (2026-10-16; accepted by the PI; not a deviation in method)
+* **What happens.** The frozen `llm/experiment1_v2/run.py` cannot generate the full question alone: `--no-text-prefixes` also drops it. The test run therefore uses the frozen default `--no-asr`, which covers the text prefixes at word fractions 0.3 / 0.5 / 0.7 plus the full question, under the frozen E1 protocol (80-token cap, 5 seeds).
+* **What it does not change.**
+  * The extra prefix records are not used by any pre-registered analysis; the E1 comparison uses the full question only (§4.8).
+  * As on dev, Phase A reuses E1 answers that ended with finish_reason "stop" as skip answers, and regenerates the truncated ones at the 256-token pipeline cap.
