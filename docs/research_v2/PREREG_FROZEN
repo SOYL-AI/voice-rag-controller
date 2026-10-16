@@ -1,0 +1,11 @@
+v2 pre-registration FROZEN
+frozen_at_utc: 2026-10-16T14:25:48Z
+prereg_commit: d9ef38f092119652a272a0eae94c187cdb8a963e
+frozen_code_commit: ddde67fdae9b80d80e295f20da45efe9b0dc2540
+signed_off_by: Ryan Gomez (PI), 2026-10-16
+sha256:
+  529960031be89b510600b8d2df05176343b0d4534e55d0105219945be8a46dac  docs/research_v2/PREREG_V2.md
+  00f4e7f4f5d757db3beaa952c3107e62d35765afa7a902941ca0f7d22b7e9ddf  docs/research_v2/v2_predictions.json
+  a7098c5eff22abb704f3740331565fc17b16fbe20dbff894d795de33a5e998a8  docs/research_v2/v2_power_dev.json
+  599e19ba2d7d3738c3d0c84a76b29010037648d46a88d34c12acf56c9dd6d861  docs/research_v2/THEORY.md
+osf_registration: PENDING (O5) - to be added by the PI
