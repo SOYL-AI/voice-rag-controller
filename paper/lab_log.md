@@ -527,3 +527,25 @@ The frozen lazy plan includes `oracle_v2` only once test labels exist, and the d
 - The oracle's extra cells are generated and graded, and the store is rebuilt. They are pre-approved up to ₹1,000.
 - The other controllers' cells and decisions are unchanged; this was verified on 747,000 decision records. The oracle enters no confirmatory test. Recorded as PREREG_V2 note N3.
 - Recorded by Ryan Gomez.
+
+### 2026-10-17 — Confirmatory d2_support sequence pre-staged; judge config for test labels at k = 1
+
+**Judge config.**
+- `llm/experiment1_v2/judges_test_k1.json` is `judges.json` with only the primary judge's `samples` changed, 3 → 1 (PREREG §2.2: k = 1 on test; k = 3 is for the gate, §2.4).
+  - sha256 `995c7bef2520fdfa216922c8005da42117ea1b6e501a94125dc4f34c3ab91354`.
+  - `judges.json` itself is unchanged (sha256 `5183c8f7…`).
+- `label.py` uses it for the d2_support test labels and for the d1_open 400-answer subsample.
+- **Check against Phase A's k = 1 grading (`grade_primary_k1`):**
+  - The judge identity (model, API version, rubric and its sha) is equal, and so is the cache directory.
+  - The cache KEY differs, because `judges.cache_key` hashes the whole request config, including `samples`. Phase A deliberately keys on the k = 3 configured request and takes sample 0.
+  - Overlap: 111 (item, answer) texts on d2_support test appear both among the E1 closed-book draws `label.py` grades (2,271 distinct) and among the Phase A answers (17,246 distinct). They would be graded once under each key.
+  - Nothing graded earlier is re-bought: no test answer has been judged.
+
+**Pre-staged sequence.** `simulator/e3v2_confirmatory_d2.py` runs frozen modules only, with resumable stages:
+1. labels;
+2. grade on the original plan (sha f59b33bc…);
+3. oracle (N3: assert that the non-oracle cells equal the original plan; at most ₹1,000 pre-approved);
+4. d1_open 400-answer subsample;
+5. E1 analyze, evaluate, and `analysis/v2_test_final.py` (pooled stratified cluster bootstrap; tested; it reproduces the d1-only CIs exactly).
+
+Every judge stage stops if the gpt-6.1-sol headroom after it would fall below ₹1,500. Recorded by Ryan Gomez.
