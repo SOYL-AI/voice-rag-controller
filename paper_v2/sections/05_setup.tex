@@ -59,7 +59,7 @@ scenario-cluster bootstrap used for every interval.}
 %       [simulator/judge_validation/score_judges.py docstring; labels.json
 %       (19 cases, one labeller); paper/lab_log.md 2026-08-19]. State that
 %       19 single-annotator labels are not a human validation in the sense
-%       R1.10 asks for; v2 adds a 300-answer, two-annotator gate (Sec. V-B).
+%       R1.10 asks for; v2 adds one human labelling of 300 answers (Sec. V-B).
 %   (d) Pre-registration: the E3 success criterion was committed in b9ba0c9
 %       (2026-08-06) and the dominance code in cd5d145 (2026-08-17), both
 %       before the full sweep commit 6addd89 (2026-08-19). The consolidated
@@ -128,11 +128,14 @@ and what this does and does not settle.}
 %       end-to-end TTFA increment on dev, not the call duration [PRE2 4.5].
 %   (c) Judge: primary Azure gpt-6.1-sol (version 2026-09-29, reasoning model,
 %       temperature fixed at 1 by the service, fixed reasoning_effort, k = 3
-%       majority); secondary GPT-4o v4 (temperature 0); gate on about 300
-%       double-labelled dev answers: Cohen's kappa >= 0.80 with lower bound
-%       >= 0.70, accuracy >= 0.90, path-error gap <= 0.05 [PRE2 Sec. 2].
-%       Gate result \TBD{judge-gate report from
-%       simulator/judge_validation/ (v2 gate run)}.
+%       majority on dev, k = 1 on test); secondary GPT-4o v4 (temperature 0).
+%       Human check, ONE sentence only (PI decision 2026-10-17): one human
+%       annotator labelled 300 d2_support dev answers; the primary judge
+%       agrees on 240/300 (80.0%, Cohen's kappa 0.55), GPT-4o on 244/300
+%       (81.3%, kappa 0.58); the judge errs towards "incorrect" (54 of 60
+%       disagreements). Do NOT describe gates, thresholds, a second annotator
+%       or the supplement. Do NOT say the judge is "validated".
+%       [simulator/judge_validation/v2_labeling/results/gate_report_v2.json]
 %   (d) Statistics: item (d1) or pair-group (d2) cluster bootstrap,
 %       B = 10,000; one primary test per architecture; Holm-adjusted
 %       secondary family [PRE2 Secs. 4--5]. The boundary claim is an
@@ -142,6 +145,6 @@ and what this does and does not settle.}
 %       remote_api; plan about 10% more, because a direct bootstrap check
 %       gave 0.765 where the normal approximation gave 0.80
 %       [PRE2 Sec. 6.1; POW boundary_test].
-% NUMBERS: 300, 0.80, 0.70, 0.90, 0.05, 10,000, 3,417, 4,631, 6,492, 0.765.
+% NUMBERS: 300, 80.0%, 0.55, 81.3%, 0.58, 10,000, 3,417, 4,631, 6,492, 0.765.
 \todo{P-V.6: commit and speculative architectures, latency profiles, the
-judge and its gate, and the statistical plan with the power analysis.}
+judge and the human check, and the statistical plan with the power analysis.}
