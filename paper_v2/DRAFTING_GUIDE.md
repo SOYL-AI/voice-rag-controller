@@ -162,7 +162,7 @@ The propositions:
 5. The v2 pre-registration is frozen (tag `prereg-v2-frozen`, OSF link `\TBD`), with one logged deviation that does not affect results.
 
 ## Final checks before submission (Oct 18)
-1. **Title and authors:** Title Case title; authors with numeric affiliations and no honorifics; one corresponding-author mark.
+1. **Title and authors:** the title is FIXED as submitted ("Joint vs. Decomposed Control of Retrieval and Timing in Streaming Voice RAG", already Title Case; do not change it); authors with numeric affiliations and no honorifics; one corresponding-author mark.
 2. **References:** 15 maximum (the new `references.bib` has exactly 15), all cited with `\cite{}`.
 3. **Figures:** refer to each in the text as "Fig. N shows …".
 4. **Template:** port to the official INDICON Overleaf template, compile, check the page limit.

@@ -66,7 +66,7 @@ be discarded.
 | R1.m6 | [9] should be [7]/[8] for TurnGPT/VAP. | The review is no longer used for these claims. VAP is cited directly as the audio-based turn-shift predictor that supplies our remaining-speech estimate. TurnGPT and the review were removed under the 15-reference limit, because the revised related work had to cover recent streaming-retrieval systems. | Sec. II | done (outline) |
 | R1.m7 | Cite Howard 1966 for VoI. | Added and verified (IEEE Trans. SSC 2(1):22–26). It is cited where the value of waiting is defined (Prop. 4). | Secs. II, IV; references.bib | done |
 | R1.m8 | Give a pre-registration link or timestamp. | The E3 success criterion was committed on 2026-08-06 (commit b9ba0c9) and the dominance analysis code on 2026-08-17 (cd5d145), both before the full sweep (2026-08-19, 6addd89). The consolidated document was marked frozen on 2026-08-21, after the run, and we say so. A public link will be given. The v2 addendum will be frozen with a sentinel commit, a tag and an OSF registration before any test-split run. | Sec. V-A (P-V.3) | pending author (public URL) |
-| R1.m9 | "Multi-timescale" overstates. | The term is removed. | Title, Secs. I, III | done |
+| R1.m9 | "Multi-timescale" overstates. | The term is removed from the text. | Secs. I, III | done |
 
 ## Reviewer 1: figures
 

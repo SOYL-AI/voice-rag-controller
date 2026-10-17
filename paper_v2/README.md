@@ -155,7 +155,7 @@ RetrievalQA (Zhang et al., Findings of ACL 2024).
 
 - Write every `\todo` paragraph (42 markers). Do not paste the outline
   comments in as prose.
-- Choose the title. A title change may need the TPC chair's consent.
+- Title: fixed as submitted ("Joint vs. Decomposed Control of Retrieval and Timing in Streaming Voice RAG"); not to be changed.
 - Complete the author list, order and e-mails. The corresponding-author
   marker is a placeholder on Ryan Gomez; confirm it, and keep exactly one.
 - Fill the pre-registration link (public repo commit URLs or OSF) for

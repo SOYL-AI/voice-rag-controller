@@ -10,7 +10,7 @@ Status values:
 |---|---|---|---|
 | 1 | Official INDICON 2026 IEEE LaTeX template (IEEEtran conference) | **pending** | `main.tex` uses stock `IEEEtran` `[conference]`. It must be ported into the official template (Overleaf share link in `README.md`), keeping that template's class options and copyright block. |
 | 2 | The paper compiles | **pending** | No TeX installation on the authoring machine. `tools/check_tex.py` passes: braces, environments, labels and references, citation keys, figure files. The paper has never been compiled; compile in Overleaf. |
-| 3 | Title in Title Case | **pass** | Current title and all options in `main.tex` are in Title Case. The final choice is pending author, and a title change may need TPC consent. |
+| 3 | Title in Title Case | **pass** | The submitted title is kept unchanged and is in Title Case: "Joint vs. Decomposed Control of Retrieval and Timing in Streaming Voice RAG". |
 | 4 | No honorifics or designations in author names | **pass** | The author block lists names only (no "Dr.", "Prof." or job titles). Re-check when the remaining authors are added. |
 | 5 | Numeric affiliation superscripts | **pass** | `\textsuperscript{1}` is used for SOYL AI Private Limited, Bengaluru. |
 | 6 | Exactly one corresponding-author marker | **pending** | One `*` is placed on Ryan Gomez as a placeholder. Authors must confirm who it is. |
