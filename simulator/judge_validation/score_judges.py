@@ -355,7 +355,8 @@ def _print_v2(report: dict) -> None:
     print(f"human A vs B           : {fmt(report['human_a_vs_b'])}")
     for role, ident in report["judges"].items():
         vs = report["vs_reference"][role]
-        print(f"{role:<9} {ident['deployment']}[{ident['model_id']}]@{ident['api_version']}")
+        deployment = ident.get("deployment") or ",".join(ident.get("deployments") or []) or "pool"
+        print(f"{role:<9} {deployment}[{ident.get('model_id')}]@{ident.get('api_version')}")
         print(f"   vs reference label  : {fmt(vs)}")
         print(f"   vs labeller A / B   : {fmt(report['vs_label_a'][role])} | "
               f"{fmt(report['vs_label_b'][role])}")
