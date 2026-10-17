@@ -19,7 +19,25 @@
 \todo{P-III.1: the per-turn decision and a walk-through of
 Fig.~\ref{fig:arch}.}
 
-\input{figures/fig1_architecture}
+% Fig. 1 is drawn by paper_v2/tools/make_fig_framework.py (vector PDF).
+% It replaces system_flow.jpeg and the earlier TikZ draft
+% (figures/fig1_architecture.tex, kept for reference only).
+\begin{figure*}[t]
+\centering
+\includegraphics[width=\textwidth]{fig_framework.pdf}
+\caption{Streaming pipeline and the decision structures compared. A streaming
+ASR emits partial transcripts $x_k$. From each partial the system estimates the
+belief $b_k$ that retrieval is needed, and an end-of-turn predictor estimates
+the remaining speech $\hat R_k$. The controller either dispatches a retrieval
+or skips it and answers closed-book. Every controller maximises the same
+objective. (a) The joint controller decides at every partial whether to
+dispatch now or wait, using $b_k$ and $\hat R_k$ together. (b) The decomposed
+controllers fix the trigger without the belief and decide whether to retrieve
+only at that trigger. (c) The speculative controllers prefetch early and
+decide at the end of the turn whether to use the result. All controllers share
+the back end and are scored by time to first audio (TTFA).}
+\label{fig:arch}
+\end{figure*}
 
 \subsection{Belief}\label{sec:belief}
 % ---- P-III.2 ----------------------------------------------------------------
