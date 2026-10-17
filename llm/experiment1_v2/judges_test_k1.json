@@ -1,0 +1,121 @@
+{
+  "_comment": "Judge registry for E1-v2. Identity (deployment, model id, API version) and credentials come from the environment ONLY; this file names the variables, never their values. Request parameters are per judge because reasoning-model deployments reject a temperature override and take max_completion_tokens instead of max_tokens. Every request parameter here can be overridden by the matching *_TEMPERATURE / *_TOKEN_PARAM / *_MAX_TOKENS / *_REASONING_EFFORT / *_SEED / *_SAMPLES environment variable (value 'none' omits the parameter). The exact parameters sent are recorded on every verdict.",
+  "prompt_version": "e1v2-r3",
+  "_prompt_versions": "e1v2-r3 (rubrics/e1v2-r3/*.txt, core facts) is current; e1v2-r2 (every key fact) and e1v2-reasoned-strip-r1 (built in judges.py) are kept to reproduce the earlier d2_support dev gradings. Select with label.py --rubric.",
+  "spend": {
+    "_note": "Spend ledger: llm/experiment1_v2/spend.py (python -m llm.experiment1_v2.spend). Ledger path: VOICE_RAG_JUDGE_LEDGER, default the main checkout's llm/experiment1_v2/results/_spend_ledger.json (shared by all worktrees).",
+    "inr_per_usd": 88,
+    "log_every": 50
+  },
+  "judges": {
+    "primary": {
+      "label": "gpt6",
+      "provider": "azure_openai",
+      "_note": "GPT-6.1-sol on Azure (deployment and api version from env; 2025-04-01-preview verified). It is a reasoning model: max_tokens and any non-default temperature are rejected, so temperature is never sent and sampling is stochastic. reasoning_effort and seed are pinned and each answer is graded by `samples` independent draws (seed, seed+1, ...) with a majority vote; every draw is recorded so self-consistency can be reported. The completion budget covers reasoning tokens.",
+      "env": {
+        "deployments": [
+          "VOICE_RAG_JUDGE_DEPLOYMENTS"
+        ],
+        "deployment": [
+          "VOICE_RAG_JUDGE_DEPLOYMENT"
+        ],
+        "api_version": [
+          "VOICE_RAG_JUDGE_API_VERSION"
+        ],
+        "model_id": [
+          "VOICE_RAG_JUDGE_MODEL"
+        ],
+        "endpoint": [
+          "VOICE_RAG_JUDGE_ENDPOINT",
+          "AZURE_OPENAI_ENDPOINT"
+        ],
+        "api_key": [
+          "VOICE_RAG_JUDGE_API_KEY",
+          "AZURE_OPENAI_API_KEY"
+        ]
+      },
+      "env_overrides_prefix": "VOICE_RAG_JUDGE",
+      "budget": {
+        "_note": "HARD CAP (PI): INR 20,000 total for GPT-6.1-Sol across all its deployments. Baseline = Azure metrics for gpt-6.1-sol + gpt-6.1-sol-dz up to 2026-10-16 ($88.85 at the prices below).",
+        "ledger_key": "gpt-6.1-sol",
+        "price_usd_per_1m": {
+          "input": 2.0,
+          "output": 10.0
+        },
+        "cap_inr": 20000,
+        "cap_env": "VOICE_RAG_JUDGE_CAP_INR",
+        "baseline": {
+          "input_tokens": 29602115,
+          "output_tokens": 3237689,
+          "as_of": "2026-10-16 (live Azure metrics refresh)",
+          "source": "Azure metrics InputTokens/OutputTokens, gpt-6.1-sol + gpt-6.1-sol-dz"
+        }
+      },
+      "request": {
+        "temperature": null,
+        "token_param": "max_completion_tokens",
+        "max_output_tokens": 2000,
+        "reasoning_effort": "medium",
+        "seed": 20261015,
+        "samples": 1,
+        "max_extra_samples": 3
+      }
+    },
+    "secondary": {
+      "label": "gpt4o-v4",
+      "provider": "azure_openai",
+      "_note": "The validated v4 'reasoned + strip' judge used for the real E3 sweep (azure-openai/gpt-4o@2025-01-01-preview). Falls back to the AZURE_OPENAI_* variables the E3 runner reads.",
+      "env": {
+        "deployments": [
+          "VOICE_RAG_JUDGE2_DEPLOYMENTS"
+        ],
+        "deployment": [
+          "VOICE_RAG_JUDGE2_DEPLOYMENT",
+          "AZURE_OPENAI_DEPLOYMENT"
+        ],
+        "api_version": [
+          "VOICE_RAG_JUDGE2_API_VERSION",
+          "AZURE_OPENAI_API_VERSION"
+        ],
+        "model_id": [
+          "VOICE_RAG_JUDGE2_MODEL"
+        ],
+        "endpoint": [
+          "VOICE_RAG_JUDGE2_ENDPOINT",
+          "AZURE_OPENAI_ENDPOINT"
+        ],
+        "api_key": [
+          "VOICE_RAG_JUDGE2_API_KEY",
+          "AZURE_OPENAI_API_KEY"
+        ]
+      },
+      "default_model_id": "gpt-4o",
+      "env_overrides_prefix": "VOICE_RAG_JUDGE2",
+      "budget": {
+        "_note": "Tracked and reported only (no cap unless VOICE_RAG_JUDGE2_CAP_INR is set). No baseline was provided for earlier gpt-4o spend.",
+        "ledger_key": "gpt-4o",
+        "price_usd_per_1m": {
+          "input": 2.5,
+          "output": 10.0
+        },
+        "cap_inr": null,
+        "cap_env": "VOICE_RAG_JUDGE2_CAP_INR",
+        "baseline": {
+          "input_tokens": 9837826,
+          "output_tokens": 788663,
+          "as_of": "2026-10-16 (live Azure metrics refresh)",
+          "source": "Azure metrics InputTokens/OutputTokens, gpt-4o"
+        }
+      },
+      "request": {
+        "temperature": 0,
+        "token_param": "max_tokens",
+        "max_output_tokens": 300,
+        "reasoning_effort": null,
+        "seed": null,
+        "samples": 1,
+        "max_extra_samples": 0
+      }
+    }
+  }
+}
