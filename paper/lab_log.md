@@ -519,3 +519,11 @@ Tests (`tests/test_v2_lookahead_fix.py`) check that:
 * **Gate supplement (D2).** The human-labelling kit had closed-book answers only, so the pre-registered retrieve-vs-skip judge criterion could not be evaluated. 100 d2 dev retrieval-path answers were added (`build_supplement.py`, seed 20261017). The same two annotators label them. Recorded before any d2 test judging.
 * **Per-company retrieval (N2).** The d2 retriever searches all 24 companies' documents together: on dev, the top-1 doc came from the caller's company 37% of the time, with 64% vs 17% correct on org-specific questions. The confirmatory analysis is unchanged (frozen). It is reported as a limitation, with a clearly labelled exploratory rerun of d2 test using per-company retrieval.
 * **Decided by:** Ryan (PI). **Recorded by:** Ryan Gomez.
+
+### 2026-10-17 — Note N3: the d2_support lazy plan is re-run after test labels (PI decision; transparency)
+
+The frozen lazy plan includes `oracle_v2` only once test labels exist, and the d2_support plan was written before the judge gate.
+- After `label.py`, the plan is re-run deterministically. It is asserted that the non-oracle cells equal the original plan (f59b33bc…).
+- The oracle's extra cells are generated and graded, and the store is rebuilt. They are pre-approved up to ₹1,000.
+- The other controllers' cells and decisions are unchanged; this was verified on 747,000 decision records. The oracle enters no confirmatory test. Recorded as PREREG_V2 note N3.
+- Recorded by Ryan Gomez.

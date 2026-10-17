@@ -505,3 +505,11 @@ Run these only after every item in §8 is signed off, with two exceptions. O1 (h
   * the controller decisions and the lazy cell list are unchanged, because decisions never read the retrieved content;
   * the answers are graded with the same judge configuration, under the spend cap;
   * it is reported separately and labelled exploratory and post hoc. It does not enter any pre-registered test or verdict.
+
+### Note N3 — the d2_support lazy plan is re-run once test labels exist (2026-10-17; PI decision; transparency, not a deviation in method)
+* **What happens.** The frozen lazy plan (`simulator/e3v2_lazy.py:frozen_records`) includes `oracle_v2` only once test labels exist. The d2_support plan was written before the judge gate (deviation D1), so it has no oracle cells.
+* **What is done.** After `label.py` writes the d2_support test labels:
+  * the frozen plan is re-run deterministically;
+  * it is asserted that the non-oracle cells equal the original plan exactly (sha256 f59b33bce622fb2a637da0f418d3ca3d05eae27f0bf80313a18a161e3b8d50fc);
+  * the oracle's extra cells are generated and graded with the same configuration, and the store is rebuilt.
+* **Effect.** The other controllers' cells and decisions are unchanged; this was verified on all 747,000 non-oracle decision records. The oracle enters no confirmatory test. d1_open is unaffected, because its labels existed before its plan.
