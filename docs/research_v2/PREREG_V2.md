@@ -513,3 +513,19 @@ Run these only after every item in §8 is signed off, with two exceptions. O1 (h
   * it is asserted that the non-oracle cells equal the original plan exactly (sha256 f59b33bce622fb2a637da0f418d3ca3d05eae27f0bf80313a18a161e3b8d50fc);
   * the oracle's extra cells are generated and graded with the same configuration, and the store is rebuilt.
 * **Effect.** The other controllers' cells and decisions are unchanged; this was verified on all 747,000 non-oracle decision records. The oracle enters no confirmatory test. d1_open is unaffected, because its labels existed before its plan.
+
+### Deviation D3 — human reference labels and the judge-validation gate outcome (2026-10-17T18:14Z; PI decision)
+* **Human labels.** Two annotators independently labelled the 300-answer kit (closed-book d2 dev answers):
+  * A = Ryan Gomez, B = Renya;
+  * agreement 236/300 = 78.7%, Cohen's κ_human = 0.523 (0.482 on the 200-answer holdout), below the §2.4 precondition κ_human ≥ 0.70;
+  * 53 of the 64 disagreements are A "incorrect" vs B "correct", concentrated on `general` items (44/114).
+* **Deviation.** Instead of revising the guideline and re-labelling (§2.4), the PI designated annotator B's labels as the single reference, before any judge-vs-human comparison had been computed. A's labels and κ_human are retained and reported.
+* **Supplement withdrawn.** The 100-answer retrieval-path supplement (D2) was not labelled and is withdrawn. The path-error criterion therefore could not be evaluated, and the judge is not human-validated on retrieval-grounded answers.
+* **Gate result (single reference = B, rubric r3)** (`simulator/judge_validation/v2_labeling/results/gate_report_v2.json`):
+  * primary gpt-6.1-sol: 240/300 (80.0%), κ = 0.549;
+  * secondary GPT-4o v4: 244/300 (81.3%), κ = 0.579;
+  * both fail κ ≥ 0.80 and accuracy ≥ 0.90. Errors are mostly judge "incorrect" where B says "correct" (54 and 52).
+* **Pre-registered consequence (§2.4 fallback chain).** The primary failed, and the GPT-4o fallback also failed. So **all d2_support accuracy-based hypotheses, and every pooled result that includes d2_support, are reported as EXPLORATORY.**
+  * d1_open (alias-match primary, no judge) is unaffected. Its pre-registered per-dataset analysis is the clean evidence.
+  * No prompt revision was attempted, because of the deadline.
+* **Test outcomes seen.** Only the d1_open alias results; no d2_support test answer had been judged.

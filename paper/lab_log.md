@@ -560,3 +560,12 @@ Every judge stage stops if the gpt-6.1-sol headroom after it would fall below �
 - **Status.** The sequence is otherwise approved as staged and waits for the GATE GO.
 
 Recorded by Ryan Gomez.
+
+### 2026-10-17T18:14Z — Judge-validation gate outcome (D3)
+- **Humans:** A vs B κ = 0.523, below 0.70.
+- **Reference labels:** the PI chose B (Renya) as the single reference before any judge comparison. A's labels are retained and reported.
+- **Supplement:** withdrawn, so the judge is not validated on retrieval-grounded answers.
+- **Judges vs B:** primary gpt-6.1-sol κ 0.549 (80.0%); GPT-4o κ 0.579 (81.3%). Both fail.
+- **Consequence:** per the pre-registered fallback, d2_support accuracy hypotheses and the pooled results are EXPLORATORY. d1_open (alias) is unaffected.
+- **Observation:** the judges agree with each human about as well as the humans agree with each other.
+- **Decided by:** Ryan (PI). **Recorded by:** Ryan Gomez.
