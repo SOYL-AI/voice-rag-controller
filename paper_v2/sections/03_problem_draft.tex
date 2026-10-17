@@ -1,11 +1,8 @@
 % ============================================================================
-% Section III: Problem Formulation and Controllers (draft for Overleaf)
-% Needs in the preamble: amsmath, amssymb, graphicx, booktabs, xcolor,
-% algorithm, algpseudocode. Figure file: fig_framework.pdf.
-% Red [TBD ...] markers are numbers that do not exist yet; do not invent them.
-% Labels kept from the previous draft: subsec:problem_formulation,
-% subsec:belief_state, subsec:action_space, subsec:priced_objective,
-% subsec:decision_rule, fig:system_flow, subsec:e1_results, subsec:e2_results.
+% Section III: Problem Formulation and Controllers (compact draft, ~1.5 pages)
+% Preamble needs: amsmath, amssymb, booktabs, xcolor, algorithm, algpseudocode.
+% No figure in this section (PI decision 2026-10-18).
+% Red [TBD] = number not computed yet; do not invent it.
 % ============================================================================
 \section{Problem Formulation and Controllers}
 \label{sec:problem}
@@ -13,304 +10,168 @@
 \subsection{Problem Formulation}
 \label{subsec:problem_formulation}
 
-A voice assistant answers one user turn at a time. While the user is still
-speaking, a streaming speech recogniser produces partial transcripts
-$x_1, x_2, \dots, x_K$, where $x_K$ is the transcript available when voice
-activity detection (VAD) declares the end of the turn. The assistant may
-retrieve documents before answering, or it may skip retrieval and answer from
-the language model alone (closed-book). It therefore has to make two
-decisions in every turn: \emph{whether} to retrieve, and \emph{when} to send
-the retrieval request. A request sent while the user is still talking runs in
-parallel with the remaining speech, so part of its latency is hidden. A
-request sent too early, however, is built from an incomplete question and can
-fetch the wrong documents.
-
-Fig.~\ref{fig:system_flow} shows the pipeline. After each partial $x_k$ the
-system updates two quantities: a belief $b_k$ that retrieval is needed for
-this turn, and a prediction $\hat R_k$ of how much speech remains. A
-controller reads them and either dispatches a retrieval, waits for the next
-partial, or (at the end of the turn) skips retrieval. The retrieved passages,
-if any, go to the generator (Mistral-7B), whose answer is spoken by a
-text-to-speech engine. We measure the delay the user experiences as the time
-to first audio,
-\begin{equation}
-\mathrm{TTFA}=t_{\text{first audio}}-t_{\text{user end}},
-\label{eq:ttfa}
-\end{equation}
-where $t_{\text{user end}}$ is the VAD end of turn.
-
-All controllers in this paper choose actions by maximising the same expected
-utility, which rewards answer quality and charges for latency and compute
-(Section~\ref{subsec:priced_objective}). No policy is learned by reinforcement
-learning; each controller evaluates the objective directly. The controllers
-differ only in how they organise the two decisions: a \emph{joint} controller
-chooses whether and when in one decision, while a \emph{decomposed}
-controller makes them in separate modules that do not share state
-(Section~\ref{subsec:decision_rule}). The question this paper asks is when
-that difference changes the outcome.
-
-\begin{figure*}[t]
-\centering
-\includegraphics[width=\textwidth]{fig_framework.pdf}
-\caption{Streaming pipeline and the decision structures compared. From each
-ASR partial $x_k$ the system estimates the belief $b_k$ that retrieval is
-needed and the remaining speech $\hat R_k$. (a) The joint controller decides
-at every partial whether to dispatch now or wait, using both. (b) Decomposed
-controllers fix the trigger without the belief and decide retrieval only at
-that trigger. (c) Speculative controllers prefetch early and decide at the end
-of the turn whether to use the result. All share one objective and are scored
-by time to first audio (TTFA).}
-\label{fig:system_flow}
-\end{figure*}
+While the user speaks, a streaming recogniser emits partial transcripts
+$x_1,\dots,x_K$; $x_K$ is the transcript at the voice-activity (VAD) end of
+turn. For each turn the assistant decides \emph{whether} to retrieve
+documents or answer closed-book, and \emph{when} to send the retrieval
+request. A request sent during speech overlaps the remaining speech and hides
+part of its latency, but it is built from an incomplete question. After each
+partial the system updates a belief $b_k$ that the turn needs retrieval and a
+prediction $\hat R_k$ of the remaining speech. The controller then
+dispatches, waits, or (at the end of the turn) skips. Passages go to the
+generator (Mistral-7B), whose answer is spoken by TTS. User-perceived delay
+is the time to first audio,
+$\mathrm{TTFA}=t_{\text{first audio}}-t_{\text{user end}}$.
+All controllers maximise the same priced objective
+(Section~\ref{subsec:priced_objective}); they differ only in whether the two
+decisions are made jointly or by separate modules
+(Section~\ref{subsec:decision_rule}).
 
 \subsection{Belief State}
 \label{subsec:belief_state}
 
-The belief $b_k\in[0,1]$ is the controller's estimate of the probability that
-the current turn needs retrieval. The two studies in this paper use
-different belief signals.
-
-\textit{Study 1 (v1).} The signal $s$ is the mean per-token entropy (in nats)
-of a closed-book draft,
+\textit{v1.} The signal is the mean per-token entropy (nats) of a closed-book
+draft of the full question $q$, averaged over five drafts,
 \begin{equation}
-s=\frac{1}{N}\sum_{i=1}^{N}H\!\left(p_\theta(\cdot\mid y_{<i},q)\right),\qquad
-b=\max\!\big(\beta,\ \sigma(w\,s+c)\big),
+s=\tfrac{1}{N}\textstyle\sum_{i=1}^{N}H\!\left(p_\theta(\cdot\mid y_{<i},q)\right),\qquad
+b=\max\!\big(0.05,\ \sigma(w\,s+c)\big),
 \label{eq:belief}
 \end{equation}
-averaged over five drafts (temperature 0.2, top-$p$ 0.9, 80 tokens). Here $q$
-is the \emph{full} question, $\sigma$ is the logistic function, and
-$\beta=0.05$ is a floor. The logistic map ($w=11.288$, $c=-3.633$) was fitted
-on the 180 samples of Experiment~1 (36 items, five seeds) and was evaluated on
-the same samples, so this calibration is in-sample. Maximum per-token entropy
-ranked the items better than the mean
-(Section~\ref{subsec:e1_results}). We kept the mean because its
-distribution is smoother, which suits a logistic calibration. Because the v1 belief was computed once per item from the complete
-question, it did not change with the dispatch time, even for policies that
-dispatched before the question was finished.
+with $w=11.288$, $c=-3.633$ fitted in-sample on the 180 samples of
+Experiment~1. Maximum entropy ranked items better
+(Section~\ref{subsec:e1_results}), but the mean is smoother and suits a
+logistic fit. Because it is computed once from the full question, the v1
+belief does not depend on dispatch time.
 
-\textit{Study 2 (v2).} Here an item counts as needing retrieval when
-the model's closed-book answer is wrong in at least three of five sampled
-drafts. In a real streaming system the belief can only use what
-has been heard so far. We therefore recompute it on every partial $x_k$. The
-signal is a self-assessment: we ask Mistral-7B whether the question can be
-answered from general knowledge alone, without the organisation's own
-information, and read the probability it assigns to ``No'' from its token
-probabilities. This probe costs one forward pass instead of a full draft. The
-probability is calibrated separately for each dataset on the development
-split only, with a logistic model in the logit of the signal, the fraction of
-the question heard so far, and their interaction. All test numbers use this
-frozen calibration.
+\textit{v2.} The belief is recomputed on every partial $x_k$. Mistral-7B is
+asked whether the question can be answered from general knowledge alone,
+without the organisation's own information; the signal is the probability it
+gives to ``No'' (one generated token). It is calibrated per dataset on the
+development split only, as a logistic function of the signal's logit, the
+fraction of the question heard, and their interaction. An item needs
+retrieval when its closed-book answer is wrong in at least three of five
+drafts.
 
-\subsection{Action Space and Dispatch Timing}
+\subsection{Actions and Dispatch Timing}
 \label{subsec:action_space}
 
-In v1 the controller chooses from four actions: skip, or retrieve with one of
-three timing policies, $\mathcal T=\{\textsc{sentence\_end},
-\textsc{immediate}, \textsc{fixed\_early\_proxy}\}$. Speech was simulated on
-text at 150 words per minute, so a question of $n$ words lasts
-$T=60n/150$~s. A prefix is \emph{query-ready} once it contains at least four
-words, one of them a content word; let $t_{\text{ready}}$ be the first time
-this holds.
-\begin{itemize}
-\item \textsc{sentence\_end} dispatches at $T$, with the full question.
-\item \textsc{immediate} dispatches at the first partial after
-$t_{\text{ready}}$, i.e.\ at $\min(\max(t_1,\ t_{\text{ready}}+\Delta),\ T)$,
-where $t_1$ is the time of the first partial and $\Delta$ the partial
-interval.
-\item \textsc{fixed\_early\_proxy} dispatches at
-$\min(\max(0.35T,\ t_{\text{ready}}),\ T)$, with $0.35T$ capped at $0.8\,t_1$.
-\end{itemize}
-Neither early policy predicts anything; \textsc{fixed\_early\_proxy} is a
-fixed rule, not a forecast of the end of the turn.
-
-In v2 the dispatch time is no longer one of a few fixed policies. At every
-partial $k$ the controller may dispatch now or wait, and at the end of the
-turn it either retrieves or skips. Deciding \emph{when} becomes an
-optimal-stopping problem over the stream of partials.
-
-We study two retrieval architectures. Under \textsc{commit}, a dispatched
-retrieval is always used. Under \textsc{speculative}, a retrieval can be sent
-early and then discarded at the end of the turn if the final belief says it
-is not worth using; the compute it used is still paid. Both architectures are
-run on the same items, seeds, latency profile and prices.
+In v1 the action is skip or retrieve with one of three timing policies,
+applied to text read at 150 words per minute ($T$ = question duration;
+$t_{\text{ready}}$ = first time the prefix has four words including a content
+word; $t_1$ = first partial). \textsc{sentence\_end} dispatches at $T$;
+\textsc{immediate} at the first partial after $t_{\text{ready}}$;
+\textsc{fixed\_early\_proxy} at $\max(0.35T, t_{\text{ready}})$, with $0.35T$
+capped at $0.8\,t_1$. Neither early rule forecasts the end of the turn. In v2
+the controller may dispatch at any partial, so timing becomes an
+optimal-stopping problem. We test two architectures on the same items and
+prices: under \textsc{commit} a dispatched retrieval is always used; under
+\textsc{speculative} it may be discarded at the end of the turn, at the cost
+of its compute.
 
 \subsection{Latency- and Compute-Priced Objective}
 \label{subsec:priced_objective}
 
-Retrieving when the belief is $b$ and the request is sent at time $t$ has
-expected utility
+Retrieving with belief $b$, dispatched at $t$, has utility
 \begin{equation}
-U_t(b)=b\,g^{+}(1-\rho_t)-(1-b)\,g^{-}-\lambda_l\,e_t-\lambda_c\,(1+w_t),
-\qquad U(\text{skip})=0 .
+U_t(b)=b\,g^{+}(1-\rho_t)-(1-b)\,g^{-}-\lambda_l\,e_t-\lambda_c(1+w_t),
+\quad U(\text{skip})=0,
 \label{eq:obj}
 \end{equation}
-Each term has a measured meaning:
-\begin{itemize}
-\item $g^{+}$ is the accuracy gained by retrieving on turns that need it, and
-$g^{-}$ the accuracy lost by retrieving on turns that do not. Retrieval can
-hurt: irrelevant passages can pull a correct closed-book answer off course.
-\item $\rho_t$ is the fraction of $g^{+}$ lost because the query was built from
-a partial transcript. It is measured as
-$\rho(t)=1-\text{hit@3}(t)/\text{hit@3}(\text{end})$, and $\rho=0$ at the end
-of the turn.
-\item $e_t$ is the expected exposed latency in seconds, i.e.\ the part of
-retrieval's cost the user still waits for (Eq.~\ref{eq:exposure}).
-\item $w_t$ is the expected number of wasted retrievals caused by dispatching
-early (for example a request that has to be re-sent).
-\item $\lambda_l$ (accuracy per second) and $\lambda_c$ (accuracy per
-retrieval) are prices that set how much latency and compute are worth
-relative to accuracy.
-\end{itemize}
+where $g^{+}$ is the accuracy gained by retrieving on turns that need it,
+$g^{-}$ the accuracy lost on turns that do not, $\rho_t$ the share of $g^{+}$
+lost to a partial query, $\rho(t)=1-\text{hit@3}(t)/\text{hit@3}(\text{end})$,
+$e_t$ the exposed latency (s), $w_t$ the expected wasted retrievals, and
+$\lambda_l$, $\lambda_c$ the prices of latency and compute in accuracy units.
 
-The v1 objective was the special case $g^{+}=1$, $g^{-}=0$, $\rho_t=0$, which
-sets the quality term to $b$. That form treats the probability that
-retrieval is needed as if it were the size of the gain, and assumes retrieval
-never hurts. Measured on the v1 scenarios, retrieval raised accuracy from
-0.112 to 0.832 on turns that needed it ($g^{+}=0.720$, 95\% CI
-[0.504, 0.888]) and lowered it from 0.704 to 0.112 on turns that did not
-($g^{-}=0.592$, [0.408, 0.768]). At zero prices, Eq.~(\ref{eq:obj}) therefore
-retrieves only when $b>b^{*}=g^{-}/(g^{+}+g^{-})=0.451$, not whenever
-$b>0.05$ as the v1 form implied. In v2, $g^{\pm}$ are estimated on the
-development split of each dataset. On d1\_open with recognised speech,
-$\hat g^{+}=0.441$ and $\hat g^{-}=-0.112$: retrieval did not hurt items that
-did not need it. On d2\_support, $\hat g^{+}=0.445$ and $\hat g^{-}=0.034$.
+The v1 objective set $g^{+}=1$, $g^{-}=\rho_t=0$, i.e.\ it used $b$ itself as
+the gain and assumed retrieval never hurts. On the v1 scenarios retrieval
+added $g^{+}=0.720$ [0.504, 0.888] on needed turns but cost $g^{-}=0.592$
+[0.408, 0.768] on the others, so at zero prices one should retrieve only when
+$b>g^{-}/(g^{+}+g^{-})=0.451$, not when $b>0.05$. In v2, $g^{\pm}$ are
+estimated on the development split: $\hat g^{+}=0.441$, $\hat g^{-}=-0.112$
+on d1\_open (retrieval did not hurt) and $0.445$, $0.034$ on d2\_support.
 
-\textit{Exposed latency.} In v1, $e_t=L-o_t$, where $L$ is the retrieval
-latency and $o_t$ is a constant overlap per timing policy. In v2 the overlap
-depends on the turn:
+In v1 the exposure was $e_t=L-o_t$ with a fixed overlap $o_t$ per policy. In
+v2 it depends on the turn,
 \begin{equation}
-e_k=\mathbb{E}_L\!\left[\max(0,\ L-W_k)\right]+\pi ,
+e_k=\mathbb{E}_L\!\left[\max(0,\ L-W_k)\right]+\pi,
 \label{eq:exposure}
 \end{equation}
-where $W_k=\hat R_k+d$ is the predicted remaining speech plus the end-of-turn
-detection delay $d$ ($W_K=0$). The term $\pi$ is the part of retrieval's cost
-that no timing can hide, mainly the longer prompt the generator must read;
-measured end to end with streaming TTS on the development split,
-$\pi=371$~ms. We use three latency profiles: query rewriting followed by
-FAISS search, by FAISS search with re-ranking, or by a remote retrieval API.
-Their median retrieval latencies are 1{,}044, 1{,}043 and 1{,}241~ms. The
-latency cost the controllers use is not the call duration but the end-to-end
-TTFA increment, measured on the development split.
+where $L$ is the retrieval latency, $W_k=\hat R_k+d$ the predicted remaining
+speech plus end-of-turn detection delay ($W_K=0$), and $\pi=371$~ms the cost
+no timing can hide (mainly the longer prompt). $L$ is taken as the end-to-end
+TTFA increment measured on the development split for three profiles (query
+rewrite plus FAISS, plus re-ranking, or a remote API; medians 1{,}044,
+1{,}043 and 1{,}241~ms). The waste $w_t$ was an unmeasured placeholder in
+v1; in v2 it is \textcolor{red}{[TBD: measured value]}, with a sensitivity
+check over $w\in\{0,0.04,0.08,0.16\}$ in Section~VII. We fix
+$\lambda_c=0.05$. v1 sweeps $\lambda_l$; the v2 primary test uses one
+pre-registered price per dataset, $\lambda_l=0.173$ (d1\_open) and $0.216$
+(d2\_support) per second.
 
-\textit{Waste rate.} In v1, $w_t$ was a placeholder (0, 0.02 or 0.08 per
-policy) that we never measured: all 751 retrievals logged in v1 ran on text,
-where no early request was ever invalidated, so the logs cannot estimate it.
-In v2, $w$ is measured as the cancellation rate of early dispatches
-\textcolor{red}{[TBD: measured rate]}, and we report how the results change
-for $w\in\{0, 0.04, 0.08, 0.16\}$ \textcolor{red}{[TBD: sensitivity
-analysis, Section~VII]}.
-
-\textit{Prices.} Following v1, $\lambda_c=0.05$ throughout. In v1 we swept a
-grid of $\lambda_l$ values. In v2 the primary test uses one pre-registered
-price per dataset, the point of the grid at the 0.65 quantile of the
-development-split end-of-turn belief: $\lambda_l=0.173$~s$^{-1}$ on
-d1\_open and $0.216$~s$^{-1}$ on d2\_support.
-
-\subsection{Controllers and Decision Rules}
+\subsection{Controllers}
 \label{subsec:decision_rule}
 
 Table~\ref{tab:controllers} lists the controllers. All priced controllers
-use the same Eq.~(\ref{eq:obj}), the same belief calibration, the same
-remaining-speech predictor, the same latency model and the same $g^{\pm}$.
-They differ only in how the whether and when decisions are combined. All
-thresholds and timing rules of the baselines are tuned on the development
-split with an equal budget of evaluations.
+share Eq.~(\ref{eq:obj}), the belief calibration, the remaining-speech
+predictor, the latency model and $g^{\pm}$. In v2 all baseline thresholds
+and timing rules are tuned on the development split with an equal budget
+(v1 used fixed defaults).
 
-\textbf{Joint, v1 (Ours).} The controller scores skip ($U=0$) and every
-(retrieve, $t$) pair with Eq.~(\ref{eq:obj}) and takes the best; ties go to
-skip.
+\textbf{Ours} (v1) scores skip and every (retrieve, $t$) pair and takes the
+best. \textbf{B9} splits the choice into a timing module and a retrieval
+module that share no state, so it prices retrieval at the full latency $L$
+and can skip turns that early dispatch would make worthwhile. \textbf{B9+}
+keeps the split but prices the expected exposure of its own timing choice.
+When the belief does not depend on dispatch time and the overlap is the same
+for every turn (assumptions A1--A3, Section~IV), B9+ and Ours are
+equivalent; on v1 they agreed on all 11{,}300 decisions. A gain from joint
+control can therefore only come from turns where these assumptions fail.
 
-\textbf{B9 (decomposed, full-latency pricing).} One module picks the timing
-policy and another decides whether to retrieve. The two modules share no
-state. Because the retrieval module does not know which timing will be used,
-it prices retrieval at the full latency $L$ and never credits the overlap.
-B9 can therefore skip a turn that would be worth retrieving with early
-dispatch.
-
-\textbf{B9+ (decomposed, expected-exposure pricing).} B9+ is still two separate
-modules, but the retrieval module prices the expected exposure of the timing
-its own timing module picks. This is the decomposed controller a careful
-engineer would build, and it is the strongest decomposed rival under
-\textsc{commit}. When the belief does not change with dispatch time and the
-overlap is the same for every turn (the v1 setting; assumptions A1--A3 in
-Section~IV), B9+ and Ours make the same decision: on v1 they agreed on all
-11{,}300 decisions. Any advantage of joint control must therefore come from
-the situations those assumptions exclude.
-
-\textbf{Joint, v2 (Ours-v2).} Algorithm~\ref{alg:oursv2} treats dispatch as an
-optimal-stopping problem. At each partial it compares the value of
-dispatching now, $U_k(b_k)$, with the expected value of waiting for the next
-partial. The next partial is assumed to carry new information with
-probability $P(R>s)$, where $R$ is the predicted remaining speech and $s$ the
-median spacing between partials on the development split. The belief
-transitions are fitted on the development split. Ours-v2 has no tuned
-parameter apart from its lookahead depth, which was fixed before the test.
-Under \textsc{speculative} the same controller compares the value of having
-the passages ready with the value of waiting.
-
-\textbf{B10 (SPEC) and B11 (SPEC-$\theta$).} These are decomposed controllers
-for the speculative architecture. B10 always prefetches at its trigger (the
-first query-ready partial, or a tuned alternative) and, at the end of the
-turn, uses the passages only if Eq.~(\ref{eq:obj}) evaluated at the final
-belief $b_K$ is positive. B11 prefetches at the same trigger only if a
-belief-only estimate of the prefetch's value, computed with fixed
-development-split exposures, exceeds that of not prefetching; it then uses
-B10's rule.
-
-\textbf{Unpriced baselines.} B0 never retrieves. B4 and B6 are single-turn
-proxies in the style of FLARE~\cite{jiang2023flare} and
-DRAGIN~\cite{su2024dragin}: they retrieve at sentence end when one minus the
-mean token confidence of the closed-book draft is at least 0.5 (B4), or when
-its maximum token entropy is at least 1.0 (B6). B8 retrieves with a fixed
-early dispatch when the maximum token entropy is at least 1.2. In v1 these
-thresholds were fixed defaults and were not tuned; in v2 they are tuned on
-the development split.
+\textbf{Ours-v2} (Algorithm~\ref{alg:oursv2}) compares, at each partial, the
+value of dispatching now with the expected value of waiting. The next
+partial carries new information with probability $P(R>s)$, where $s$ is the
+median gap between partials; belief transitions are fitted on the
+development split, and the lookahead depth was fixed before the test. Under
+\textsc{speculative} the same rule values having the passages ready.
+\textbf{B10} (SPEC) always prefetches at its trigger and uses the passages
+only if $U(b_K)>0$; \textbf{B11} (SPEC-$\theta$) prefetches only when a
+belief-only estimate says the prefetch is worth it.
 
 \begin{table}[t]
-\caption{Controllers Compared. ``Priced'' means the controller reads
-$(\lambda_l,\lambda_c)$; ``Joint'' means whether and when are chosen in one
-decision.}
+\caption{Controllers. ``Priced'': reads $(\lambda_l,\lambda_c)$. ``Joint'':
+whether and when chosen in one decision.}
 \label{tab:controllers}
 \centering
 \footnotesize
 \setlength{\tabcolsep}{3pt}
-\begin{tabular}{@{}l p{3.55cm} c c c@{}}
+\begin{tabular}{@{}l p{4.1cm} c c@{}}
 \toprule
-ID & Retrieve rule / dispatch rule & Priced & Joint & Study\\
+ID & Rule & Priced & Joint\\
 \midrule
-B0 & never retrieve & -- & -- & v1, v2\\
-B4 & $1-\bar p\ge0.5$ on closed-book draft (FLARE-style); sentence end & no & no & v1, v2\\
-B6 & $s^{\max}\ge1.0$ (DRAGIN-style); sentence end & no & no & v1, v2\\
-B8 & $s^{\max}\ge1.2$; fixed early dispatch & no & no & v1, v2\\
-B9 & Eq.~(\ref{eq:obj}) with full latency $L$; timing chosen separately & yes & no & v1, v2\\
-B9+ & Eq.~(\ref{eq:obj}) with the expected exposure of its own timing & yes & no & v1 (analysis), v2\\
-B10 (SPEC) & always prefetch at trigger; use iff Eq.~(\ref{eq:obj}) $>0$ at end of turn & yes & no & v2\\
-B11 (SPEC-$\theta$) & prefetch iff belief-only value (dev exposures) exceeds not prefetching; use rule of B10 & yes & no & v2\\
-Ours & $\arg\max$ of Eq.~(\ref{eq:obj}) over skip and $(\text{retrieve},t)$ & yes & yes & v1\\
-Ours-v2 & optimal stopping over partials (Alg.~\ref{alg:oursv2}) & yes & yes & v2\\
+B0 & never retrieve & -- & --\\
+B4 & $1-\bar p\ge0.5$ (FLARE-style~\cite{jiang2023flare}); sentence end & no & no\\
+B6 & $s^{\max}\ge1.0$ (DRAGIN-style~\cite{su2024dragin}); sentence end & no & no\\
+B8 & $s^{\max}\ge1.2$; fixed early dispatch & no & no\\
+B9 & Eq.~(\ref{eq:obj}) at full latency; timing separate & yes & no\\
+B9+ & Eq.~(\ref{eq:obj}) at expected exposure of own timing & yes & no\\
+B10 & always prefetch; use iff $U(b_K)>0$ (v2) & yes & no\\
+B11 & B10 with a belief gate on prefetch (v2) & yes & no\\
+Ours & $\arg\max$ over skip and $(\text{retrieve},t)$ (v1) & yes & yes\\
+Ours-v2 & optimal stopping over partials (v2) & yes & yes\\
 \bottomrule
-\multicolumn{5}{@{}p{0.95\columnwidth}@{}}{\scriptsize v1 thresholds of B4, B6
-and B8 were fixed defaults. v2 also runs B1, B5 and an oracle; all v2
-thresholds are tuned on the development split with an equal budget.}\\
 \end{tabular}
 \end{table}
 
 \begin{algorithm}[t]
-\caption{Ours-v2: joint retrieve and dispatch decision for one turn
-(\textsc{commit})}
+\caption{Ours-v2 for one turn (\textsc{commit})}
 \label{alg:oursv2}
 \begin{algorithmic}[1]
-\Require prices $(\lambda_l,\lambda_c)$; latency distribution of $L$;
-belief-transition model fitted on dev; lookahead depth $n\ge1$
-\For{$k=1,2,\dots$ \textbf{as} partial $k$ arrives at time $t_k$}
-  \State observe $x_k$, $b_k$, $\hat R_k$ \Comment{only data available at $t_k$}
-  \State $u\gets U_k(b_k)$ \Comment{Eq.~(\ref{eq:obj}) with $e_k$ from Eq.~(\ref{eq:exposure})}
-  \If{$k=K$ (end of turn)}
-    \State \Return \textsc{Retrieve} \textbf{if} $u>0$ \textbf{else} \textsc{Skip}
+\For{each partial $k$ as it arrives}
+  \State $u\gets U_k(b_k)$ \Comment{Eqs.~(\ref{eq:obj}), (\ref{eq:exposure})}
+  \If{$k=K$} \Return \textsc{Retrieve} \textbf{if} $u>0$ \textbf{else} \textsc{Skip}
   \EndIf
-  \State $v\gets\textsc{Wait}(b_k,\hat R_k,n)$ \Comment{expected value of waiting}
-  \If{$u>0$ \textbf{and} $u\ge v$}
-    \State \Return \textsc{Retrieve} \Comment{dispatch now}
+  \If{$u>0$ \textbf{and} $u\ge\textsc{Wait}(b_k,\hat R_k)$} \Return \textsc{Retrieve}
   \EndIf
 \EndFor
 \end{algorithmic}
