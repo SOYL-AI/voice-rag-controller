@@ -102,9 +102,13 @@ speech plus end-of-turn detection delay ($W_K=0$), and $\pi=371$~ms the cost
 no timing can hide (mainly the longer prompt). $L$ is taken as the end-to-end
 TTFA increment measured on the development split for three profiles (query
 rewrite plus FAISS, plus re-ranking, or a remote API; medians 1{,}044,
-1{,}043 and 1{,}241~ms). The waste $w_t$ was an unmeasured placeholder in
-v1; in v2 it is \textcolor{red}{[TBD: measured value]}, with a sensitivity
-check over $w\in\{0,0.04,0.08,0.16\}$ in Section~VII. We fix
+1{,}043 and 1{,}241~ms). The waste term $w_t$ is not measured in either
+study: v1 used fixed placeholders (0.02 and 0.08 for the two early policies,
+0 at sentence end), and v2 uses $w(f)=0.1(1-f)$ for a dispatch made with a
+fraction $f$ of the question heard ($w=0$ at the end of the turn). It enters
+only the decision; the scored utility charges $\lambda_c$ per dispatched
+retrieval. Section~VII reports a sensitivity check over
+$w\in\{0,0.04,0.08,0.16\}$. We fix
 $\lambda_c=0.05$. v1 sweeps $\lambda_l$; the v2 primary test uses one
 pre-registered price per dataset, $\lambda_l=0.173$ (d1\_open) and $0.216$
 (d2\_support) per second.
