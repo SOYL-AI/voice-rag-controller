@@ -190,7 +190,8 @@ def stage_evaluate(args, env):
     run("evaluate", [sys.executable, "-u", "-m", "simulator.e3v2_lazy", "evaluate", "--dataset", "d2_support",
                      "--split", "test", "--e1-results", str(E1)] + sum((["--bundle", b] for b in BUNDLES), [])
         + ["--d-star-speculative", "b10_speculative_v2", "--m3", "0.016"], env)
-    run("final_analysis", [sys.executable, "-u", "-m", "analysis.v2_test_final"], env)
+    run("final_analysis", [sys.executable, "-u", "-m", "analysis.v2_test_final"]
+        + ([] if args.d2_exploratory_reason is None else ["--d2-exploratory-reason", args.d2_exploratory_reason]), env)
 
 
 STAGES = {"labels": stage_labels, "grade": stage_grade, "oracle": stage_oracle, "d1sub": stage_d1sub,
@@ -200,6 +201,9 @@ STAGES = {"labels": stage_labels, "grade": stage_grade, "oracle": stage_oracle, 
 def main(argv=None) -> int:
     ap = argparse.ArgumentParser(description=__doc__.split("\n\n")[0])
     ap.add_argument("--env-file", required=True)
+    ap.add_argument("--d2-exploratory-reason", default=None,
+                    help="passed to analysis.v2_test_final (e.g. 'D3: kappa_human < 0.70'): d2_support-dependent "
+                         "and pooled verdicts tagged exploratory, d1_open results confirmatory and primary")
     ap.add_argument("stage", choices=list(STAGES) + ["all"])
     args = ap.parse_args(argv)
     from dotenv import load_dotenv

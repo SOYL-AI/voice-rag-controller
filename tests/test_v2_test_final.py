@@ -46,6 +46,31 @@ def test_pooled_estimate_is_the_test_weighted_mean_and_rules_follow_the_ci():
     assert len(out["secondary_family"]) == 6
 
 
+@pytest.mark.parametrize("reason", [None, "D3: kappa_human < 0.70"])
+def test_status_tagging_keeps_d1_confirmatory(reason, tmp_path, monkeypatch):
+    d1 = _ds("d1_open", 200, -0.04, -0.045, 1)
+    d2 = _ds("d2_support", 40, -0.01, -0.02, 2, pairs=True)
+    doc = F.analyse({"d1_open": d1, "d2_support": d2}, {"cells": []})
+    doc.update({"e1_gate": {"d1_open": {}, "d2_support": {}}, "judge_checks": {"status_note": "pending"}})
+    F.apply_status(doc, reason)
+    assert doc["per_dataset"]["d1_open"]["status"] == "confirmatory"
+    expl = "confirmatory" if reason is None else f"exploratory ({reason})"
+    assert doc["per_dataset"]["d2_support"]["status"] == expl
+    assert doc["pooled"]["status"] == expl and doc["secondary_family_status"] == expl
+    assert doc["e1_gate"]["kill_rule_status"] == expl and doc["e1_gate"]["d1_open"]["status"] == "confirmatory"
+    assert all(c["status"] == "descriptive" for c in doc["cells"] if c["dataset"] == "d1_open")
+    assert all(c["status"] == ("descriptive" if reason is None else f"descriptive; exploratory ({reason})")
+               for c in doc["cells"] if c["dataset"] == "d2_support")
+    monkeypatch.setattr(F, "OUT_MD", tmp_path / "r.md")
+    F.write_md(doc)
+    md = (tmp_path / "r.md").read_text(encoding="utf-8")
+    if reason is None:
+        assert "EXPLORATORY" not in md
+    else:
+        assert md.index("## Confirmatory: d1_open") < md.index("\n# EXPLORATORY (D3")
+        assert "*[EXPLORATORY (D3: KAPPA_HUMAN < 0.70)]*" in md
+
+
 def test_holm_and_two_sided_p():
     h = F.holm({"a": 0.001, "b": 0.02, "c": 0.04}, 0.05)
     assert h["a"]["reject"] and h["b"]["reject"] and h["c"]["reject"]
