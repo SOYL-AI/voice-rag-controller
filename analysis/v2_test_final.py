@@ -248,6 +248,65 @@ def e1_gate(datasets) -> dict:
     return out
 
 
+def judge_checks() -> dict:
+    """(1) The 111-type cross-key check (PI 2026-10-17): (item, answer) texts graded
+    both by label.py at k = 1 (judges_test_k1.json key) and by Phase A's
+    grade_primary_k1 (k = 3 configured key, sample 0); agreement of the two
+    primary verdicts. (2) Secondary judge on the E1 label draws: label.py ran
+    gpt-4o on ALL draws (a superset); the pre-registered result is the
+    stratified 30% subsample (dataset x item_type x primary verdict, seed
+    20261016, simulator/e3v2_phase_a.py:secondary_subsample); both reported.
+    (3) Phase A secondary agreement on its 30% subsample."""
+    from simulator.e3v2_phase_a import secondary_subsample
+    out = {}
+    lab_path = E1 / "d2_support" / "mistral7b_v03" / "labels_test.json"
+    pa = PA / "d2_support"
+    if not lab_path.exists() or not (pa / "grades_k1_test.jsonl").exists():
+        return {"status": "pending d2_support grading"}
+    items = {it["id"]: it for it in e1common.load_items(e1common.resolve_dataset_paths("d2_support")["items"])}
+    draws = e1common.load_json(lab_path)["draws"]
+
+    def verdict(d, role):
+        j = (d.get("judges") or {}).get(role) or {}
+        return j.get("answer_correct") if j.get("parsed_ok") else None
+
+    lab = {}
+    for d in draws:
+        if d.get("condition", "closed_book") == "closed_book":
+            v = verdict(d, "primary")
+            if v is not None:
+                lab[(d["item_id"], (d.get("answer") or "").strip())] = bool(v)
+    text = {}
+    for name in ("answers_test.jsonl", "skip_answers_test.jsonl"):
+        for r in e1common.read_jsonl(pa / name):
+            text[r["key"]] = (r["item_id"], (r.get("text") or "").strip())
+    phase = {}
+    for r in e1common.read_jsonl(pa / "grades_k1_test.jsonl"):
+        if r.get("primary") is not None and r["key"] in text:
+            phase[text[r["key"]]] = bool(r["primary"])
+    both = sorted(set(lab) & set(phase))
+    out["cross_key_primary_agreement"] = {
+        "n_shared_item_answer_texts": len(both),
+        "agreement": None if not both else float(np.mean([lab[k] == phase[k] for k in both])),
+        "note": "label.py (judges_test_k1.json key) vs Phase A grade_primary_k1 (k = 3 configured key, sample 0)"}
+    rows = [{"key": f"{d['item_id']}|{d['draw_seed']}", "item_id": d["item_id"], "primary": verdict(d, "primary"),
+             "secondary": verdict(d, "secondary")} for d in draws if d.get("condition", "closed_book") == "closed_book"]
+    sub = secondary_subsample([r for r in rows if r["primary"] is not None], items)
+
+    def agree(rs):
+        rs = [r for r in rs if r["primary"] is not None and r["secondary"] is not None]
+        return {"n": len(rs), "agreement": None if not rs else float(np.mean([r["primary"] == r["secondary"]
+                                                                               for r in rs]))}
+    out["e1_labels_secondary"] = {"preregistered_stratified_30pct": agree([r for r in rows if r["key"] in sub]),
+                                  "all_draws_superset": agree(rows)}
+    sec_path = pa / "grades_secondary_test.jsonl"
+    if sec_path.exists():
+        prim = {r["key"]: r.get("primary") for r in e1common.read_jsonl(pa / "grades_k1_test.jsonl")}
+        pr = [{"primary": prim.get(r["key"]), "secondary": r.get("secondary")} for r in e1common.read_jsonl(sec_path)]
+        out["phase_a_secondary_30pct"] = agree(pr)
+    return out
+
+
 def load_dataset(d: str, seed: int, n_boot: int = B) -> Dataset:
     doc = e1common.load_json(PA / d / "contrasts_test.json")
     bundles = {}
@@ -275,7 +334,7 @@ def main() -> int:
            "bootstrap": {"B": B, "seeds": {"d1_open": SEED, "d2_support": SEED + 1},
                          "unit": {"d1_open": "item", "d2_support": "pair_id cluster"},
                          "stratified_by_dataset": True, "same_resamples_for_every_contrast": True},
-           **res, "e1_gate": e1_gate(dsets)}
+           **res, "e1_gate": e1_gate(dsets), "judge_checks": judge_checks()}
     e1common.atomic_write_json(OUT_JSON, doc)
     write_md(doc)
     print(json.dumps({"pooled": {k: doc["pooled"][k] for k in KINDS}, "tests": doc["pooled"]["confirmatory_tests"],
@@ -333,6 +392,17 @@ def write_md(doc):
             L.append(f"* {d}: AUC {v['auc_full']['auc']:.3f} [{v['auc_full']['ci95'][0]:.3f}, "
                      f"{v['auc_full']['ci95'][1]:.3f}]; success {v['success_ge_0.70']}; C2 available {v['c2_available']}.")
     L.append(f"* Kill (AUC < 0.60 on both): {g.get('kill_auc_below_0.60_on_both')}.")
+    jc = doc.get("judge_checks") or {}
+    if "cross_key_primary_agreement" in jc:
+        c = jc["cross_key_primary_agreement"]
+        s = jc["e1_labels_secondary"]
+        L += ["", "## Judge checks (d2_support)", "",
+              f"* Cross-key consistency: {c['n_shared_item_answer_texts']} (item, answer) texts graded by both label.py "
+              f"(k = 1 key) and Phase A (k = 3 key, sample 0); primary agreement {c['agreement']}.",
+              f"* E1 label draws, primary vs secondary: pre-registered stratified 30% subsample "
+              f"{s['preregistered_stratified_30pct']}; all draws (superset run) {s['all_draws_superset']}."]
+        if "phase_a_secondary_30pct" in jc:
+            L.append(f"* Phase A answers, primary vs secondary (30% subsample): {jc['phase_a_secondary_30pct']}.")
     L += ["", "## All cells (descriptive)", "", "| dataset | condition | profile | q | Δ[COMMIT] | Δ[SPEC] | interaction |",
           "|---|---|---|---|---|---|---|"]
     for c in doc["cells"]:
