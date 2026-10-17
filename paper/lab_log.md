@@ -514,3 +514,8 @@ Tests (`tests/test_v2_lookahead_fix.py`) check that:
   - C2 is not available.
   - The dev-fitted calibration has ECE 0.077 on the full question.
   - The boundary mass is 0 (b* < 0 with dev ĝ⁻ < 0), as predicted.
+
+### 2026-10-17T17:13Z — Gate supplement (deviation D2) and per-company retrieval finding (note N2)
+* **Gate supplement (D2).** The human-labelling kit had closed-book answers only, so the pre-registered retrieve-vs-skip judge criterion could not be evaluated. 100 d2 dev retrieval-path answers were added (`build_supplement.py`, seed 20261017). The same two annotators label them. Recorded before any d2 test judging.
+* **Per-company retrieval (N2).** The d2 retriever searches all 24 companies' documents together: on dev, the top-1 doc came from the caller's company 37% of the time, with 64% vs 17% correct on org-specific questions. The confirmatory analysis is unchanged (frozen). It is reported as a limitation, with a clearly labelled exploratory rerun of d2 test using per-company retrieval.
+* **Decided by:** Ryan (PI). **Recorded by:** Ryan Gomez.

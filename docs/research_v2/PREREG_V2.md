@@ -483,3 +483,25 @@ Run these only after every item in §8 is signed off, with two exceptions. O1 (h
 * **What it does not change.**
   * The extra prefix records are not used by any pre-registered analysis; the E1 comparison uses the full question only (§4.8).
   * As on dev, Phase A reuses E1 answers that ended with finish_reason "stop" as skip answers, and regenerates the truncated ones at the 256-token pipeline cap.
+
+### Deviation D2 — judge-validation set extended with 100 retrieval-path answers (2026-10-17T17:13Z; PI-approved)
+* **What changed.** The human judge-validation set (§2.4) is extended with **100 d2_support dev retrieval-path answers** from E3-v2 Phase A.
+  * Built by `simulator/judge_validation/v2_labeling/build_supplement.py` with seed 20261017: one answer per item, stratified by item_type and by the primary judge verdict.
+  * Master sha256: `e5b88f0f4a7d6ec1c429b17ae58c7e077d07dbe809ed8265be855a5f143a2f94`.
+  * The same two annotators label it under rubric r3.
+  * All 100 count toward the holdout used for the gate criteria.
+* **Why.** The original 300-answer kit contains closed-book (skip-path) answers only. So the pre-registered criterion |error rate on retrieve-path − error rate on skip-path| ≤ 0.05 could not be computed, and the judge would not have been validated on grounded answers, which are most of the test grading.
+* **Effect.** It restores a pre-registered criterion. Gate thresholds are unchanged.
+* **Test outcomes seen: none.** No d2_support test answer had been sent to any judge, and no pooled test outcome had been computed. The d1_open-only alias-graded results (§9 step 9) were already known to the PI; they do not involve the judge.
+
+### Note N2 — exploratory sensitivity analysis: per-company retrieval for d2_support (2026-10-17T17:13Z; PI decision; NOT confirmatory)
+* **Finding (dev).** The frozen d2_support retriever searches one shared index over all 24 fictional companies, with no per-company filter.
+  * On dev retrieval-path answers, the top-1 document came from the caller's own company only 37% of the time.
+  * At least one own-company document appeared in the top-k only 52% of the time.
+  * On org-specific questions, the judge marked answers correct 64% of the time when the top-1 document was from the caller's company, and 17% when it was not.
+  * A deployed support agent would search only its own company's knowledge base.
+* **Decision.** The confirmatory analysis stays EXACTLY as frozen. All controllers share the same retriever, so the controller contrasts remain valid comparisons. The cross-company index is reported as a limitation: absolute d2_support accuracy, and possibly the size of the partial-query effect, are affected.
+* **The exploratory analysis.** It reruns d2_support TEST retrieval and answer generation with per-company filtered retrieval:
+  * the controller decisions and the lazy cell list are unchanged, because decisions never read the retrieved content;
+  * the answers are graded with the same judge configuration, under the spend cap;
+  * it is reported separately and labelled exploratory and post hoc. It does not enter any pre-registered test or verdict.
