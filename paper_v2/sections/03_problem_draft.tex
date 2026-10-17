@@ -67,10 +67,8 @@ by time to first audio (TTFA).}
 \label{subsec:belief_state}
 
 The belief $b_k\in[0,1]$ is the controller's estimate of the probability that
-the current turn needs retrieval. A turn \emph{needs} retrieval when the model
-cannot answer it on its own: we label an item as needing retrieval when its
-closed-book answer is wrong in at least three of five sampled drafts. The two
-studies in this paper use different belief signals.
+the current turn needs retrieval. The two studies in this paper use
+different belief signals.
 
 \textit{Study 1 (v1).} The signal $s$ is the mean per-token entropy (in nats)
 of a closed-book draft,
@@ -85,13 +83,14 @@ $\beta=0.05$ is a floor. The logistic map ($w=11.288$, $c=-3.633$) was fitted
 on the 180 samples of Experiment~1 (36 items, five seeds) and was evaluated on
 the same samples, so this calibration is in-sample. Maximum per-token entropy
 ranked the items better than the mean
-(Section~\ref{subsec:e1_results}). We used the mean because the
-maximum takes values at only a few levels, which makes a logistic fit
-unstable. Because the v1 belief was computed once per item from the complete
+(Section~\ref{subsec:e1_results}). We kept the mean because its
+distribution is smoother, which suits a logistic calibration. Because the v1 belief was computed once per item from the complete
 question, it did not change with the dispatch time, even for policies that
 dispatched before the question was finished.
 
-\textit{Study 2 (v2).} In a real streaming system the belief can only use what
+\textit{Study 2 (v2).} Here an item counts as needing retrieval when
+the model's closed-book answer is wrong in at least three of five sampled
+drafts. In a real streaming system the belief can only use what
 has been heard so far. We therefore recompute it on every partial $x_k$. The
 signal is a self-assessment: we ask Mistral-7B whether the question can be
 answered from general knowledge alone, without the organisation's own
@@ -187,10 +186,11 @@ where $W_k=\hat R_k+d$ is the predicted remaining speech plus the end-of-turn
 detection delay $d$ ($W_K=0$). The term $\pi$ is the part of retrieval's cost
 that no timing can hide, mainly the longer prompt the generator must read;
 measured end to end with streaming TTS on the development split,
-$\pi=371$~ms. $L$ is the end-to-end TTFA increment of the active latency
-profile, also measured on the development split; the three profiles (query
-rewriting plus FAISS, plus re-ranking, or a remote API) have medians of
-1{,}044, 1{,}043 and 1{,}241~ms.
+$\pi=371$~ms. We use three latency profiles: query rewriting followed by
+FAISS search, by FAISS search with re-ranking, or by a remote retrieval API.
+Their median retrieval latencies are 1{,}044, 1{,}043 and 1{,}241~ms. The
+latency cost the controllers use is not the call duration but the end-to-end
+TTFA increment, measured on the development split.
 
 \textit{Waste rate.} In v1, $w_t$ was a placeholder (0, 0.02 or 0.08 per
 policy) that we never measured: all 751 retrievals logged in v1 ran on text,
