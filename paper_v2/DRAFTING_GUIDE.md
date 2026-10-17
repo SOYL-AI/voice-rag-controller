@@ -131,7 +131,7 @@ The propositions:
 | ID | Old source | Action | What changes |
 |---|---|---|---|
 | P-VII.1 | none | NEW | The pre-registered tests: P1, P2, P3 (boundary test), **plus H-REV** (decomposed beats joint) and the headline estimate. Frozen before test data was touched (tag `prereg-v2-frozen`); one logged deviation with no effect on results |
-| P-VII.2 | none | NEW | **Judge gate:** κ `\TBD`. **E1 test:** D1 AUC 0.665 [0.648, 0.682] (below 0.70, above the 0.60 kill line); rises with more of the question heard (0.537 → 0.665); ECE 0.077. D2 `\TBD` |
+| P-VII.2 | none | NEW | **Judge vs human:** 80.0%, κ 0.55, so d2/pooled accuracy results are exploratory. **E1 test:** D1 AUC 0.665 [0.648, 0.682] (below 0.70, above the 0.60 kill line); rises with more of the question heard (0.537 → 0.665); ECE 0.077. D2 `\TBD` |
 | P-VII.3 | none | **DELETE** | "Channels-off replication" was removed from the pre-registration (not implemented). Drop this paragraph |
 | **P-VII.H (add)** | none | NEW | **Headline + H-REV.** D1 test: joint − decomposed Δ[COMMIT] = **−0.0367 [−0.0481, −0.0252]**. H-REV holds (p < 1e-4). The direction holds at all 12 profile/price settings (−0.035 to −0.046). Pooled `\TBD` |
 | P-VII.4 | none | NEW | **P1** (joint > decomposed, commit): fails (p = 1.0) |
