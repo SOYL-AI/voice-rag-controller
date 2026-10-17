@@ -549,3 +549,14 @@ The frozen lazy plan includes `oracle_v2` only once test labels exist, and the d
 5. E1 analyze, evaluate, and `analysis/v2_test_final.py` (pooled stratified cluster bootstrap; tested; it reproduces the d1-only CIs exactly).
 
 Every judge stage stops if the gpt-6.1-sol headroom after it would fall below ₹1,500. Recorded by Ryan Gomez.
+
+### 2026-10-17 — PI decisions on the pre-staged d2_support sequence
+
+- **Separate cache keys accepted.** `label.py` at k = 1 and Phase A's `grade_primary_k1` key verdicts differently (option (i), no code change).
+  - The (item, answer) texts graded under both keys are reported as a judge-consistency cross-check, with the agreement of the two primary verdicts. There are 111 on d2_support test.
+  - Implemented in `analysis/v2_test_final.py` as `judge_checks`.
+- **gpt-4o on all draws.** The secondary judge (gpt-4o) grades ALL 2,271 distinct E1 closed-book label draws on d2_support test, a superset of the pre-registered 30%, because the frozen `label.py` cannot sub-sample the secondary judge on a judge-graded dataset.
+  - The pre-registered result is the stratified 30% subsample (dataset × item_type × primary verdict, seed 20261016, the same `secondary_subsample` rule Phase A uses). The superset is reported alongside.
+- **Status.** The sequence is otherwise approved as staged and waits for the GATE GO.
+
+Recorded by Ryan Gomez.
