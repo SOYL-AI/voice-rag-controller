@@ -158,7 +158,8 @@
 \usepackage{textcomp}
 \usepackage{xcolor}
 \usepackage{fancyhdr}
-\usepackage{hyperref}
+\usepackage[hidelinks]{hyperref}  % hidelinks: no green/red boxes around citations and references
+\usepackage{placeins}              % \FloatBarrier: keeps tables/figures from drifting past the references
 \usepackage{booktabs}
 \usepackage{multirow}
 \usepackage{url}
@@ -177,6 +178,15 @@
 \newcommand{\lamC}{\lambda_c}
 \newcommand{\pol}[1]{\texttt{#1}}
 \newcommand{\dset}[1]{\texttt{#1}}
+
+% Starts a new row of authors (3 authors per row).
+\makeatletter
+\newcommand{\linebreakand}{%
+  \end{@IEEEauthorhalign}
+  \hfill\mbox{}\par
+  \mbox{}\hfill\begin{@IEEEauthorhalign}
+}
+\makeatother
 
 \def\BibTeX{{\rm B\kern-.05em{\sc i\kern-.025em b}\kern-.08em
     T\kern-.1667em\lower.7ex\hbox{E}\kern-.125emX}}
@@ -209,17 +219,19 @@ Bengaluru, India\\
 \texttt{renya.peter@gmail.com}}
 \and
 \IEEEauthorblockN{Ryan Gomez}
-\IEEEauthorblockA{\textit{Electronics and Communication Engineering}\\
+\IEEEauthorblockA{\textit{Electronics and}\\
+\textit{Communication Engineering}\\
 \textit{Ramaiah Institute of Technology}\\
 Bengaluru, India\\
 \texttt{ryangomez9965@gmail.com}}
 \and
 \IEEEauthorblockN{Shubhankit Singh}
-\IEEEauthorblockA{\textit{Department to be filled}\\
+\IEEEauthorblockA{\textit{Computer Science and}\\
+\textit{Engineering (AI/ML)}\\
 \textit{Ramaiah Institute of Technology}\\
 Bengaluru, India\\
 \texttt{shubhankitsingh20@gmail.com}}
-\and
+\linebreakand
 \IEEEauthorblockN{Lakshya Jaiswal}
 \IEEEauthorblockA{\textit{Computer Science and Engineering}\\
 \textit{Ramaiah Institute of Technology}\\
@@ -228,12 +240,14 @@ Bengaluru, India\\
 \and
 \IEEEauthorblockN{Adithi Nellukuduri Borannavara}
 \IEEEauthorblockA{\textit{Information Science and Engineering}\\
-\textit{BMS Institute of Technology and Management}\\
+\textit{BMS Institute of Technology}\\
+\textit{and Management}\\
 Bengaluru, India\\
 \texttt{adithinb047@gmail.com}}
 \and
 \IEEEauthorblockN{Yashmita Sudhir}
-\IEEEauthorblockA{\textit{Electronics and Communication Engineering}\\
+\IEEEauthorblockA{\textit{Electronics and}\\
+\textit{Communication Engineering}\\
 \textit{Ramaiah Institute of Technology}\\
 Bengaluru, India\\
 \texttt{yashmita.sudhir@gmail.com}}
@@ -345,8 +359,10 @@ of the turn whether to use the result.}
 \textit{v1.} The signal is the mean per-token entropy (nats) of a closed-book
 draft of the full question $q$, averaged over five drafts,
 \begin{equation}
-s=\tfrac{1}{N}\textstyle\sum_{i=1}^{N}H\!\left(p_\theta(\cdot\mid y_{<i},q)\right),\qquad
-b=\max\!\big(0.05,\ \sigma(w\,s+c)\big),
+\begin{aligned}
+s&=\frac{1}{N}\sum_{i=1}^{N}H\!\left(p_\theta(\cdot\mid y_{<i},q)\right),\\
+b&=\max\!\big(0.05,\,\sigma(ws+c)\big),
+\end{aligned}
 \label{eq:belief}
 \end{equation}
 with $w=11.288$, $c=-3.633$ fitted in-sample on the 180 samples of
@@ -385,11 +401,10 @@ of its compute.
 
 Retrieving with belief $b$, dispatched at $t$, has utility
 \begin{equation}
-U_t(b)=b\,g^{+}(1-\rho_t)-(1-b)\,g^{-}-\lambda_l\,e_t-\lambda_c(1+w_t),
-\quad U(\text{skip})=0,
+U_t(b)=b\,g^{+}(1-\rho_t)-(1-b)\,g^{-}-\lambda_l e_t-\lambda_c(1+w_t),
 \label{eq:obj}
 \end{equation}
-where $g^{+}$ is the accuracy gained by retrieving on turns that need it,
+and skipping has $U(\text{skip})=0$. Here $g^{+}$ is the accuracy gained by retrieving on turns that need it,
 $g^{-}$ the accuracy lost on turns that do not, $\rho_t$ the share of $g^{+}$
 lost to a partial query, $\rho(t)=1-\text{hit@3}(t)/\text{hit@3}(\text{end})$,
 $e_t$ the exposed latency (s), $w_t$ the expected wasted retrievals, and
@@ -531,11 +546,11 @@ quality, latency and compute in expectation equal to those in
 Eq.~(\ref{eq:obj}). Let $c_B=\lambda_lL+\lambda_c(1+w_{\mathrm{se}})$ and
 $\mathcal B=(\theta_O,\theta_B]$ with $\theta_O=(c_O+g^{-})/s$ and
 $\theta_B=(c_B+g^{-})/s$. Then
-\[
-\mathbb E[U_{\mathrm{Ours}}-U_{\mathrm{B9}}]
-\in\big[0,\ (c_B-c_O)\Pr(b\in\mathcal B)\big]
-\subseteq\big[0,\ \lambda_lo^{*}\Pr(b\in\mathcal B)\big].
-\]
+\begin{align*}
+0\le\mathbb E[U_{\mathrm{Ours}}-U_{\mathrm{B9}}]
+&\le(c_B-c_O)\Pr(b\in\mathcal B)\\
+&\le\lambda_lo^{*}\Pr(b\in\mathcal B).
+\end{align*}
 For B9+ at the same price the difference is $0$ pointwise.
 \end{proposition}
 % P-IV.3  The divergence band B and why the bound is about the controller's
@@ -568,15 +583,19 @@ the event that the joint controller does not prefetch at $k_0$.
 
 \begin{proposition}[Speculative prefetch]\label{prop:spec}
 The joint controller's gain over always-prefetch SPEC (B10) satisfies
-$0\le V^{*}_S-V_{\mathrm{SPEC}}\le c\Pr(D_J)+g^{+}\Delta\rho\,
-\mathbb E[b_K\mathbf 1_{D_J}]$; SPEC is optimal when
-$\lambda_c=\Delta\rho=0$.
+\[
+0\le V^{*}_S-V_{\mathrm{SPEC}}\le c\Pr(D_J)+g^{+}\Delta\rho\,
+\mathbb E[b_K\mathbf 1_{D_J}];
+\]
+SPEC is optimal when $\lambda_c=\Delta\rho=0$.
 \end{proposition}
 
 \begin{proposition}[Belief-gated prefetch]\label{prop:spectheta}
 With two epochs and $\Delta\rho=0$,
-$0\le V^{*}_S-V_{\mathrm{SPEC}\text{-}\theta}
-\le\lambda_l\,\mathbb E\big[|\hat X_{k_0}-\bar X_{k_0}|(u^{*}+u^{\theta})\big]$,
+\[
+0\le V^{*}_S-V_{\mathrm{SPEC}\text{-}\theta}
+\le\lambda_l\,\mathbb E\big[|\hat X_{k_0}-\bar X_{k_0}|\,(u^{*}+u^{\theta})\big],
+\]
 where $\hat X$ is the realized and $\bar X$ the development-mean exposure and
 $u$ indicates ``prefetch at $k_0$ and use''. Since SPEC-$\theta$ (B11) is
 decomposed, the joint advantage under speculation is a C1-sized term.
@@ -657,14 +676,6 @@ $\Delta$ vs \pol{sentence\_end}, median (ms) & -- & $-148$ & $-400$\\
 }
 \end{table}
 
-\begin{figure}[t]
-\centering
-\IfFileExists{figures/fig_e2_latency_breakdown.pdf}{\includegraphics[width=\columnwidth]{fig_e2_latency_breakdown.pdf}}{\fbox{Upload figures/fig\_e2\_latency\_breakdown.pdf}}
-\caption{Median timeline of a v1 E2 turn relative to the user's end of speech,
-per dispatch policy (250 runs each). Segment boundaries are medians of each
-stage's timestamp, so segments are not additive.}
-\label{fig:e2breakdown}
-\end{figure}
 % P-VI.3  E3 verdict (tie: strict dominance in 0 of 5 seeds).
 % P-VI.4  Real E3 frontiers (disclose that the submitted numbers came from
 %         sample data and have been replaced by the real sweep).
@@ -678,34 +689,6 @@ baselines, with 95\% scenario-cluster bootstrap bands.}
 \label{fig:frontiers}
 \end{figure}
 
-\begin{table}[t]
-\caption{v1 E3 Operating Points (Real Sweep, 50 Scenarios $\times$ 5 Seeds;
-95\% Scenario-Cluster Bootstrap Intervals)}
-\label{tab:v1e3}
-\centering
-\footnotesize
-\setlength{\tabcolsep}{2.5pt}
-\resizebox{\columnwidth}{!}{%
-\begin{tabular}{@{}l c c c c@{}}
-\toprule
-Controller & $\lamL$ & Accuracy & p95 TTFA (s) & Retr./turn\\
-\midrule
-B0 never & -- & 0.408 [0.284, 0.536] & 2.67 [2.36, 3.08] & 0.00\\
-B4 (= B0) & -- & 0.408 [0.284, 0.536] & 2.67 [2.36, 3.08] & 0.00\\
-B6 DRAGIN-style & -- & 0.636 [0.512, 0.768] & 5.78 [5.18, 6.06] & 0.76\\
-B8 indep.-best & -- & 0.708 [0.584, 0.824] & 5.15 [4.57, 5.92] & 0.68\\
-\midrule
-Ours = B9 & 0.022 & 0.616 [0.488, 0.744] & 5.15 [4.60, 5.92] & 0.82\\
-Ours & 0.349 & 0.676 [0.552, 0.796] & 5.15 [4.57, 5.92] & 0.72\\
-B9 & 0.349 & 0.696 [0.572, 0.816] & 5.15 [4.57, 5.92] & 0.70\\
-Ours & 1.240 & 0.708 [0.588, 0.820] & 5.15 [4.55, 5.92] & 0.60\\
-B9 & 1.240 & 0.620 [0.480, 0.744] & 4.53 [3.53, 5.05] & 0.32\\
-Ours & 1.713 & 0.620 [0.480, 0.744] & 4.53 [3.53, 5.05] & 0.32\\
-B9 & 1.713 & 0.408 [0.284, 0.536] & 2.62 [2.34, 3.06] & 0.00\\
-\bottomrule
-\end{tabular}%
-}
-\end{table}
 % P-VI.5  Why it tied: equivalence evidence (price map 10,000/10,000 off-grid
 %         decisions; B9+ = Ours on 11,300/11,300).
 % P-VI.6  Corrected objective predicts the v1 outcome (sign agreement 10 of 11
@@ -719,7 +702,7 @@ B9 & 1.713 & 0.408 [0.284, 0.536] & 2.62 [2.34, 3.06] & 0.00\\
 %          pooled results are exploratory (judge agreement moderate).
 % P-VII.2  Judge agreement and belief validity (E1 test): AUC d1 0.665
 %          [0.648, 0.682]; d2 0.701 [0.638, 0.761] (exploratory); prefix
-%          informativeness below 0.65 at half the question (Fig. 4).
+%          informativeness below 0.65 at half the question.
 % P-VII.H  Headline estimate + H-REV (Table IV).
 
 \begin{table}[t]
@@ -770,16 +753,6 @@ cell is a test. \dset{d2\_support} results are exploratory.}
 \label{fig:boundary}
 \end{figure}
 
-\begin{figure}[t]
-\centering
-\IfFileExists{figures/fig_v2_prefix_auc.pdf}{\includegraphics[width=\columnwidth]{fig_v2_prefix_auc.pdf}}{\fbox{Upload figures/fig\_v2\_prefix\_auc.pdf}}
-\caption{Belief quality on partial transcripts (test split): AUC of the
-self-assessment probe against the fraction of the question heard, on text
-prefixes and on ASR partials. Dashed line: AUC 0.65, the pre-registered
-threshold for prefix informativeness at half the question heard.
-\dset{d2\_support} results are exploratory.}
-\label{fig:prefix}
-\end{figure}
 % P-VII.4  P1 and H-REV: Delta_C negative in all 12 d1 ASR cells (-0.035 to
 %          -0.046); dev predictions agree with test (Spearman 0.870).
 % P-VII.5  P2: +0.0047, p = 0.0097, fails Holm.
@@ -806,6 +779,7 @@ threshold for prefix informativeness at half the question heard.
 %         live ASR (Delta_C = -0.037); outlook: better beliefs on partials and
 %         recorded human speech.
 
+\FloatBarrier
 \bibliographystyle{IEEEtran}
 \bibliography{references}
 
