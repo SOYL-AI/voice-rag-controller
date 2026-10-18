@@ -8,7 +8,9 @@
 % result. Equivalence under A1--A3; C1 is second order; joint control matters
 % mainly when a dispatched retrieval is COMMITTED; under SPECULATIVE prefetch
 % a belief-gated decomposed prefetcher (B11, SPEC-theta) is the strong rival
-% (Prop. 4''). v2 runs a pre-registered boundary test (P1, P2, P3).
+% in theory (Prop. 4''). v2 runs a pre-registered boundary test (P1, P2, P3,
+% plus H-REV) whose prediction FAILED (Sec. VII): everything in this section
+% is theory and prediction, not a v2 finding.
 % ============================================================================
 \section{When Does Joint Control Pay?}\label{sec:theory}
 
@@ -63,9 +65,12 @@ the maximal-overlap timing.
 % CLAIMS + EVIDENCE [TH Secs. 5--7]:
 %   (a) C1, turn-dependent overlap (drop A2): gain is a conditional Jensen gap
 %       and SECOND ORDER, about f(theta*) lambda_l^2 Var(e*) / (2(g^+ + g^-))
-%       (Prop. 3). In simulation the best cell needs about 20,821 test items
-%       for 80% power against B9+ [POW; PRE2 Sec. 6] -- C1 cannot carry a
-%       confirmatory test at the planned sizes.
+%       (Prop. 3). Being second order, C1 alone could not carry a
+%       confirmatory test at the v2 sizes, and the frozen code has no
+%       channel ablation, so no C1-only cell was run [PRE2 Sec. 3.4]. (The
+%       pre-dev planning simulation [POW] put it at about 20,000 items; that
+%       simulation is superseded, PRE2 Sec. 6.2 -- cite it, if at all, only
+%       as pre-dev planning, never as the plan of record.)
 %   (b) C2, information versus overlap (drop A3): waiting buys a sharper
 %       belief (Howard's value of information [howard1966information]) and
 %       loses overlap; under COMMIT the optimal stopping region is not a
@@ -90,19 +95,24 @@ the maximal-overlap timing.
 %       be predicted false. In simulation, joint minus B11 lies in
 %       [-0.0005, +0.0009] across 24 cells, while joint minus B10 is 0.012
 %       to 0.023 above the median cut [TH Sec. 6.2; not results].
+%       In v2 B11 was therefore a candidate rival under speculation, but the
+%       dev-best rival named at the freeze was B9+ (d1_open) and B10/SPEC
+%       (d2_support, where SPEC ties SPEC-theta exactly on dev and the frozen
+%       candidate order picks SPEC) [PRE2 Sec. 3 "Rivals"].
 %   (f) What can still keep joint ahead under speculation: delaying a paid
 %       prefetch across several partials, and C3 query improvement; the
 %       two-epoch simulation does not quantify either [TH Sec. 6.2].
 %   (d) C3, partial-query risk alone (drop A1): optimal timing becomes
 %       belief-dependent but stays b-measurable, so it does not separate the
 %       classes (Prop. 5).
-% NUMBERS: 20,821 [POW cells_C1 / PRE2 Sec. 6]; [-0.0005, +0.0009] and
-%   0.012-0.023 [TH Sec. 6.2, simulation, not results].
+% NUMBERS: [-0.0005, +0.0009] and 0.012-0.023 [TH Sec. 6.2, simulation,
+%   not results].
 \todo{P-IV.4: the four channels and their sizes; joint control is predicted
 to matter when retrieval is committed; under speculation a belief-gated
 decomposed prefetcher (\SPECth) is predicted to match it, which is why it is
-a required rival (Propositions~\ref{prop:spec} and~\ref{prop:spectheta},
-Table~\ref{tab:predictions}).}
+a candidate rival (Propositions~\ref{prop:spec} and~\ref{prop:spectheta},
+Table~\ref{tab:predictions}); state these as predictions, which v2 did not
+confirm (Sec.~\ref{sec:v2}).}
 
 \input{sections/theory_formal}
 

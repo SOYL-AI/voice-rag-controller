@@ -35,13 +35,14 @@
 %      customer-support speech data with live ASR partials, same items under
 %      both architectures: P1 joint > B9+ under commit; P2 the advantage is
 %      smaller under speculation (interaction); P3 under speculation the
-%      joint advantage over the best of {B9+, SPEC, SPEC-theta} is within
-%      +-half the dev commit effect (TOST); claim iff all hold
-%      (intersection-union test) [PRE2 Sec. 3].
-%      CONTRADICTS FROZEN PREREG: the P3 margin is NOT half the dev commit
-%      effect; it is m3 = 0.016, fixed before the freeze as the smallest
-%      effect size of interest (PRE2 Sec. 3.2). Also add H-REV
-%      (Delta_C < 0, pre-registered before the freeze, PRE2 Sec. 3.3).
+%      joint controller is equivalent to the dev-best decomposed rival
+%      (named at the freeze: B9+ on d1_open, SPEC/B10 on d2_support) within
+%      +-m3, m3 = 0.016, a smallest effect size of interest fixed before
+%      the freeze (TOST); boundary claim iff P1, P2 and P3 all hold
+%      (intersection-union test) [PRE2 Secs. 3, 3.2]. Plus H-REV:
+%      Delta_C < 0 (the decomposed B9+ beats joint control under commit),
+%      pre-registered before the freeze because dev reversed the predicted
+%      sign [PRE2 Sec. 3.3]. Holm over P1, P2, P3 and H-REV.
 %  (7) v2 outcome sentence. FILLED from docs/research_v2/v2_test_results_final.json
 %      (per_dataset.d1_open.primary; pooled):
 %      d1_open (pre-registered per-dataset analysis, unaffected by D3; 3,734
@@ -54,15 +55,24 @@
 %      Pooled d1+d2 (4,232 items; EXPLORATORY because the judge that grades
 %      d2_support agreed only moderately with the human labels): same
 %      verdicts; Delta_C = -0.0351 [-0.0458, -0.0245]; P2 p = 0.160; H-REV
-%      p < 1e-4.
+%      p < 1e-4. d2_support alone (exploratory, 498 items): no test is
+%      significant (Delta_C -0.0227 [-0.0502, +0.0047]; H-REV p = 0.056).
 %      One-line message: a decomposed controller that prices expected
 %      exposure beats joint control by 0.037 in per-turn utility (accuracy
 %      units, net of the latency and compute prices) under commit on
-%      d1_open; the theory's predicted commit
-%      advantage did not appear with this belief signal (test AUC 0.665).
+%      d1_open; the theory's predicted commit advantage did not appear.
+%      Optional clause, stated as an interpretation (not tested): on clean
+%      text prefixes the gap vanishes (d1_open text150 Delta_C -0.0024
+%      [-0.0072, +0.0022]), which points to recognition errors in early ASR
+%      partials and a weak belief signal (d1_open test AUC 0.665) as what
+%      kept joint control from paying.
 % NUMBERS ALLOWED IN THE ABSTRACT: 10,000/10,000 and 11,300/11,300 [V1T];
 %   v2: -0.0367 [-0.0481, -0.0252] (d1_open Delta_C), p < 1e-4 (H-REV),
-%   3,734 / 4,232 test items [docs/research_v2/v2_test_results_final.json].
-%   Keep any pooled number labelled exploratory.
+%   3,734 / 4,232 test items, 0.665, -0.0024
+%   [docs/research_v2/v2_test_results_final.json; paper_numbers_v2.json].
+%   Keep any pooled or d2_support number labelled exploratory; never call
+%   the pooled result confirmatory.
 \todo{Abstract, one paragraph covering sentences (1)--(7) above; formal
-register; no v2 numbers until the pre-registered runs exist.}
+register; the v2 outcome is that the pre-registered boundary claim is not
+supported and the decomposed rival beats joint control under commit
+(H-REV), with pooled and \dset{d2\_support} results labelled exploratory.}

@@ -42,12 +42,14 @@ anything else.
 | path | content |
 |---|---|
 | `main.tex` | class, packages, title options, author block, section order |
-| `macros.tex` | `\todo{}` (author prose), `\TBD{artifact}` (v2 number not yet produced), `\PEND{}` (open author decision), and notation macros |
+| `macros.tex` | `\todo{}` (author prose), `\TBD{artifact}` (v2 number not yet produced; none remain, every v2 number is final), `\PEND{}` (open author decision), and notation macros |
 | `sections/00_abstract.tex` to `09_conclusion.tex` | paragraph outlines (`P-<section>.<n>` blocks) |
 | `sections/theory_formal.tex` | the theory slot, copied from `docs/research_v2/theory_latex.tex` at `1d8900c` (corrected boundary test, Props. 4′ and 4″) |
 | `tables/` | controllers, predictions, v1 E3, v1 E2, v2 primary |
-| `figures/fig1_architecture.tex` | Fig. 1 in TikZ, with a full drawing spec in its header |
-| `figures/*.pdf` | v1 figures, regenerated from the real data by `analysis/paper_figures_v1.py` |
+| `figures/fig_framework.pdf` | Fig. 1 (vector; `tools/make_fig_framework.py`), included in Sec. III |
+| `figures/fig1_architecture.tex` | earlier TikZ draft of Fig. 1; not included in `main.tex` |
+| `figures/fig_e*.pdf` | v1 figures, regenerated from the real data by `analysis/paper_figures_v1.py` |
+| `figures/fig_v2_*.pdf` | v2 figures (prefix AUC; boundary test), from `analysis/paper_figures_v2.py`; d2_support results in them are exploratory |
 | `RESPONSE_TO_REVIEWERS.md` | point-by-point response (goes to the reviewers, not into the paper) |
 | `COMPLIANCE_CHECKLIST.md` | conference rules with their status |
 | `tools/check_tex.py` | static checker for use without a TeX installation |
@@ -153,29 +155,32 @@ RetrievalQA (Zhang et al., Findings of ACL 2024).
 
 ## Open items for the authors (also flagged in the files)
 
-- Write every `\todo` paragraph (42 markers). Do not paste the outline
+- Write every `\todo` paragraph (41 markers). Do not paste the outline
   comments in as prose.
 - Title: fixed as submitted ("Joint vs. Decomposed Control of Retrieval and Timing in Streaming Voice RAG"); not to be changed.
 - Complete the author list, order and e-mails. The corresponding-author
   marker is a placeholder on Ryan Gomez; confirm it, and keep exactly one.
 - Fill the pre-registration link (public repo commit URLs or OSF) for
   `b9ba0c9`, `cd5d145` and `6addd89`.
-- At the `PREREG_V2.md` freeze, carry the frozen values into the paper:
-  - the name of D*[SPECULATIVE] (expected B11, SPEC-θ);
-  - the P3 margin m₃ = ½·δ̂_C,dev;
-  - the primary (profile, price);
-  - the dev estimates of multi-epoch prefetch delay and C3 query
-    improvement, which the two-epoch power simulation omits.
-  The design itself, the boundary test P1/P2/P3 (intersection–union at
-  one-sided α = 0.025), is merged at `1d8900c`. B10 and B11 are implemented
-  (`controller/baselines/b10_speculative_v2.py`,
-  `b11_speculative_gated_v2.py`).
+- The frozen values (`PREREG_V2.md`, frozen 2026-10-16) are carried into
+  the outline: D*[COMMIT] = B9+; D*[SPECULATIVE] = B9+ (d1_open) and B10,
+  SPEC (d2_support), not B11; the P3 margin m₃ = 0.016, a pre-specified
+  smallest effect size of interest (the draft rule ½·δ̂_C,dev was 0 on dev
+  and was replaced); H-REV (Δ[COMMIT] < 0), pre-registered before the
+  freeze; the primary cell rewrite_faiss at the 0.65 dev belief-quantile
+  price. Multi-epoch prefetch delay and C3 query improvement were never
+  estimated (the frozen code has no channel ablation): do not claim them.
+- Final v2 outcome, which every outline comment now follows: on d1_open
+  (pre-registered per-dataset analysis) P1 fails, P2 fails Holm, P3 fails,
+  H-REV holds, and the boundary claim is false; d2_support and every
+  pooled result are exploratory (moderate judge agreement with the human
+  labels).
 - Decide where the proofs go (6-page budget). The full proofs in
   `theory_formal.tex` will not fit.
-- Choose a dead-air threshold for the v2 dead-air rate.
-- Waste-rate sensitivity for v1 needs an extension of
-  `analysis/v1_theory_check.py`, which has not been written yet.
-- Write `analysis/paper_figures_v2.py` for the two v2 figure placeholders
-  (prefix AUC; boundary test with Δ_C, Δ_S, ±m₃ and the interaction).
-- Fill every `\TBD` from the named artifact after the frozen test-split
-  runs. Never estimate one.
+- No v2 dead-air rate exists (no threshold was fixed; not computed): keep
+  the "dead air equals TTFA in single-turn runs" wording.
+- Done: waste-rate sensitivity for v1 and v2 d1_open
+  (`docs/research_v2/waste_sensitivity*.{md,json}`); the two v2 figures
+  (`analysis/paper_figures_v2.py`); every `\TBD` filled from the final
+  artifacts (`docs/research_v2/v2_test_results_final.{md,json}`,
+  `docs/research_v2/paper_numbers_v2.json`).

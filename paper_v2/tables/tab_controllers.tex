@@ -19,7 +19,7 @@ B6 & $s^{\max}\ge1.0$ (DRAGIN-style); sentence end & no & no & v1, v2\\
 B8 & $s^{\max}\ge1.2$; fixed early dispatch & no & no & v1, v2\\
 B9 & Eq.~(\ref{eq:obj}) with full latency $L$; timing chosen separately & yes & no & v1, v2\\
 \Bplus & Eq.~(\ref{eq:obj}) with the expected exposure of its own timing & yes & no & v1 (analysis), v2\\
-\Bten{} (\textsc{Spec}) & always prefetch at first query-ready partial; use iff Eq.~(\ref{eq:obj}) $>0$ at end of turn & yes & no & v2\\
+\Bten{} (\textsc{Spec}) & always prefetch at its trigger (dev-tuned; e.g.\ first query-ready partial); use iff Eq.~(\ref{eq:obj}) $>0$ at end of turn & yes & no & v2\\
 \Beleven{} (\SPECth) & prefetch at that partial iff its belief-only option value (dev-mean exposures) exceeds that of not prefetching; use rule of \Bten & yes & no & v2\\
 \Ours & $\arg\max$ of Eq.~(\ref{eq:obj}) over skip and $(\text{retrieve},t)$ & yes & yes & v1\\
 \OursV & optimal stopping over partials (Algorithm~\ref{alg:oursv2}) & yes & yes & v2\\

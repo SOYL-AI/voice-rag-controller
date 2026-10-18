@@ -73,26 +73,28 @@ and the plan to explain it and test its boundaries.}
 %       decomposed prefetcher (SPEC-theta) captures up to a C1-sized term
 %       (Props. 4', 4''). [TH Secs. 2--6]
 %   C2  A pre-registered boundary test of these predictions on the same items
-%       under both architectures: P1 joint > B9+ under commit; P2 the joint
-%       advantage is larger under commit than under speculation; P3 under
-%       speculation the joint advantage over the best decomposed rival
-%       (including SPEC-theta) lies within +-half the dev commit effect
-%       (TOST); claim iff all three (intersection-union test).
-%       [PRE2 Secs. 3, 6.1]
-%       CONTRADICTS FINAL RESULTS / FROZEN PREREG: m3 = 0.016 (smallest
-%       effect size of interest), not half the dev commit effect; H-REV
-%       (Delta_C < 0) was added before the freeze; outcome on d1_open: P1
-%       fails, P2 fails Holm, P3 fails, H-REV holds (p < 1e-4); the boundary
-%       claim is not supported [docs/research_v2/v2_test_results_final.md].
-%       C2 must be phrased as a test whose prediction FAILED.
+%       under both architectures, whose prediction FAILED (phrase C2 as
+%       such): P1 joint > B9+ under commit; P2 the joint advantage is larger
+%       under commit than under speculation; P3 under speculation the joint
+%       controller is equivalent to the dev-best decomposed rival (B9+ on
+%       d1_open, SPEC/B10 on d2_support; candidates B9+, SPEC, SPEC-theta)
+%       within +-m3, m3 = 0.016, a smallest effect size of interest fixed
+%       before the freeze (TOST); boundary claim iff all three
+%       (intersection-union test); plus H-REV, Delta_C < 0, pre-registered
+%       before the freeze [PRE2 Secs. 3.2, 3.3]. Outcome on d1_open (the
+%       pre-registered per-dataset analysis, unaffected by D3): P1 fails,
+%       P2 fails Holm, P3 fails (Delta_S -0.0415, below -m3), H-REV holds
+%       (Delta_C -0.0367 [-0.0481, -0.0252], p < 1e-4, survives Holm); the
+%       boundary claim is false. d2_support and pooled: exploratory, same
+%       direction [docs/research_v2/v2_test_results_final.md].
 %   C3  A corrected objective that charges retrieval's measured harm on
 %       questions that do not need it (g^- = 0.592 vs g^+ = 0.720 on v1)
 %       [V1T retrieval_effect]; together with C1 it explains the sign of the
 %       v1 mid-grid gaps.
 %   C4  An empirical finding about the belief on partial transcripts in a
-%       persona/company-support setting \PEND{state once the v2 E1 dev result
-%       exists: entropy-signal failure and P(IK)-style probe sharpening with
-%       transcript prefix; evidence (TEST split, frozen analyze.py output
+%       persona/company-support setting (v2 E1 test result; d2_support is
+%       exploratory): entropy-signal failure and P(IK)-style probe
+%       sharpening with transcript prefix; evidence (TEST split, frozen analyze.py output
 %       llm/experiment1_v2/results/<ds>/analysis_test/analysis_test.json;
 %       collected in docs/research_v2/paper_numbers_v2.json e1_test_signals,
 %       e1_test_extra): d2_support (EXPLORATORY, judge-graded need label):
@@ -106,8 +108,9 @@ and the plan to explain it and test its boundaries.}
 %       0.537/0.543/0.582/0.665 (AUC(1.0) - AUC(0.3) = +0.128
 %       [+0.100, +0.155], p < 1e-4; docs/research_v2/v2_test_results_d1.md),
 %       ASR curve 0.540/0.561/0.583/0.597. So state the persona finding as
-%       specific to the support setting, not general.}. The
-%       probe itself is not claimed as new.
+%       specific to the support setting (and exploratory), not general; the
+%       probe is better for support-style questions, not better in
+%       general. The probe itself is not claimed as new.
 %   C5  A matched-pair, multi-organisation spoken customer-support benchmark
 %       in which retrieval need is not recoverable from surface form
 %       (leak-test AUC 0.576 [0.541, 0.617]), released with the open-domain

@@ -13,71 +13,98 @@
 %   (R1 minor); it was a property of the frozen-query test set-up.
 \todo{P-VIII.1: the v1 tie as the equivalence regime.}
 
-% ---- P-VIII.2 where joint control could help -----------------------------------
-% PURPOSE: practitioner guidance (R2 "state where joint control could help").
-% CLAIMS: (a) commit pipelines with slow retrieval (remote APIs) and an
-%   informative partial-transcript belief are where joint control is
-%   predicted to pay (Prop. 4); (b) if a retrieval can be prefetched and
-%   discarded, a decomposed prefetcher that gates on the belief (SPEC-theta)
-%   is predicted to match the joint controller up to a C1-sized term
-%   (Prop. 4''); always-prefetch is not enough when compute has a price; (c) turn-dependent overlap alone is second order
-%   (Prop. 3); (d) the cost model must be calibrated end to end: v1
-%   understated retrieval's TTFA cost by more than 2x [V1T measured_latency].
-%   Whether v2 confirms (a)/(b) [docs/research_v2/v2_test_results_final.md]:
-%   it does NOT confirm (a). On d1_open (pre-registered) P1 fails and H-REV
-%   holds: under commit the decomposed B9+ beats the joint controller,
-%   Delta_C = -0.0367 [-0.0481, -0.0252], at all three profiles including
-%   the slow remote API (Delta_C -0.0415 to -0.0456 at rewrite_remote).
-%   (b) is not supported either: P3 fails on the lower side (Delta_S
-%   -0.0415 [-0.0528, -0.0302]); P2 (+0.0047) fails Holm. Pooled
-%   (exploratory) gives the same verdicts. The belief was weak (d1_open
-%   test AUC 0.665; C2 "not available": AUC(0.5) = 0.543), which is the
-%   condition Prop. 4 needs, so the result is about joint control WITH
-%   THIS BELIEF (PRE2 Sec. 10). With text prefixes instead of ASR partials
-%   the gap vanishes (text150 d1_open Delta_C -0.0024 [-0.0072, +0.0022]).
-%   CONTRADICTS: claim (a) as written ("commit pipelines with slow
-%   retrieval ... are where joint control is predicted to pay") must be
-%   presented as a prediction that failed in v2, not as guidance.
-\todo{P-VIII.2: when to build a joint controller and when a belief-gated
-speculative decomposed rule suffices.}
+% ---- P-VIII.2 where joint control could help -- and why v2 did not show it ------
+% PURPOSE: answer R2 ("state where joint control could help") honestly: say
+%   where the theory places the advantage, that v2 did NOT confirm it, and
+%   what the data suggest about why (interpretation, not tested).
+% CLAIMS:
+%   (a) THEORY'S PREDICTION, NOT CONFIRMED: commit pipelines with slow
+%       retrieval (remote APIs) and an informative partial-transcript
+%       belief are where the theory predicts joint control to pay
+%       (Prop. 4). v2 did not confirm this: on d1_open (pre-registered) P1
+%       fails and H-REV holds -- under commit the decomposed B9+ beats the
+%       joint controller, Delta_C = -0.0367 [-0.0481, -0.0252] at the
+%       primary cell -- and Delta_C is negative in all 12 d1 ASR cells
+%       (-0.035 to -0.046), including the slow profile (rewrite_remote,
+%       -0.0415 to -0.0456). Do NOT present (a) as practitioner guidance.
+%   (b) THEORY'S PREDICTION, NOT SUPPORTED: if a retrieval can be
+%       prefetched and discarded, a decomposed prefetcher that gates on the
+%       belief is predicted to match the joint controller up to a C1-sized
+%       term (Prop. 4''). v2 did not show equivalence: P3 fails on the
+%       lower side (d1_open Delta_S -0.0415 [-0.0528, -0.0302], below
+%       -m3); P2 (+0.0047) fails Holm. Pooled and d2_support (exploratory)
+%       give the same direction.
+%   (c) WHY (INTERPRETATION, NOT TESTED; mechanism not established -- no
+%       per-item analysis of dispatch times by controller was run):
+%       - Weak belief: d1_open test AUC 0.665 [0.648, 0.682], below the
+%         0.70 success line; C2 is not available on either dataset
+%         (AUC(0.5) 0.543 / 0.607 text; 0.561 / 0.612 ASR). Prop. 4's
+%         advantage needs a belief that sharpens informatively on early
+%         partials; this one did not, so the result is about joint control
+%         WITH THIS BELIEF (PRE2 Sec. 10).
+%       - ASR partials: on clean text prefixes the gap almost vanishes
+%         (text150 Delta_C d1_open -0.0024 [-0.0072, +0.0022]; d2_support,
+%         exploratory, -0.0041 [-0.0197, +0.0119]) but is -0.0367 with ASR
+%         partials. Early partials are often revised: on d1_open test 51%
+%         of early query-ready partials (15,508 of 30,414) are not a prefix
+%         of the final transcript, 22% (6,678 of 30,414) excluding the last
+%         word; d2_support dev 38% / 14%
+%         [docs/research_v2/waste_measured_v2.json]. Reading: the joint
+%         controller conditions its dispatch on noisy partials, so
+%         recognition errors can feed into its retrieval decisions; this is
+%         consistent with the theory's condition that joint control pays
+%         only when early information is reliable. Dev only: Ours-v2
+%         retrieved on 99% of d1 ASR turns and dispatched earlier than B9+
+%         (accuracy 0.438 vs 0.500) [PRE2 Sec. 3.6].
+%   (d) Turn-dependent overlap alone is second order (Prop. 3).
+%   (e) The cost model must be calibrated end to end: v1 understated
+%       retrieval's TTFA cost by more than 2x [V1T measured_latency].
+\todo{P-VIII.2: where the theory predicts joint control to pay (commit
+architecture, informative early belief), that v2 did not confirm it, and the
+two likely reasons -- a weak belief and revisions in early ASR partials --
+stated as interpretation, not as a tested mechanism.}
 
 % ---- P-VIII.3 limitations ---------------------------------------------------------
 % PURPOSE: limitations, each stated once and plainly [PRE2 Sec. 10].
 % LIST:
 %   (1) One generator, Mistral-7B-Instruct-v0.3; no claim about other models.
-%   (2) Synthetic speech (TTS) with one streaming-ASR configuration; no human
-%       recordings; v1 had no audio at all (simulated 150 wpm).
+%   (2) Synthetic speech: one Piper TTS voice (en_US hfc_male), clean audio,
+%       150 wpm, with one streaming-ASR configuration; no accents, noise or
+%       human recordings were tested; v1 had no audio at all (simulated
+%       150 wpm).
 %   (3) v1 data: 50 single-domain scenarios, 36-item E1 gate separable by
 %       surface form; v1 calibration fitted in-sample.
 %   (4) v1 baselines B4/B6/B8 used untuned default thresholds; B4 never fired.
 %   (5) v1 latency model understated the cost of retrieval by more than 2x;
-%       waste_rate was an unmeasured placeholder.
-%   (6) Judge: one human labelling of 300 answers; moderate agreement
-%       (kappa 0.55), stricter than the human; so d2_support and pooled
-%       accuracy results are exploratory. Primary judge is a reasoning model
-%       at temperature 1, k = 1 on test.
-%   (7) d2_support gold answers and need labels are authored by the dataset
-%       pipeline, not by humans
-%       [branch v2/d2-support-a README].
-%   (8) Statistical power: C1-only cells are underpowered by design (MDE
-%       stated); the boundary conjunction needs about 3,400 to 6,500 pooled
-%       test items depending on the profile, and the two-epoch power
-%       simulation omits multi-epoch prefetch delay and C3 query improvement
-%       [PRE2 Sec. 6.1]. Realised N and power: test N = 4,232 (3,734
-%       d1_open + 498 d2_support in 192 pair clusters), as planned; all
-%       items enter the primary contrasts. Realised bootstrap SE of
-%       Delta_C 0.0059 (d1_open) / 0.0055 (pooled), MDE (80%) 0.0165 /
-%       0.0153; interaction SE 0.0021 / 0.0022, MDE 0.0057 / 0.0062
-%       (dev-based plan: SE 0.0055, MDE 0.0155; interaction 0.0024 /
-%       0.0068) [docs/research_v2/paper_numbers_v2.json realised_precision;
-%       PRE2 Sec. 6.1]. d2_support alone is small: Delta_C MDE 0.040.
-%       CONTRADICTS: "the boundary conjunction needs about 3,400 to 6,500
-%       pooled test items" is the superseded pre-dev simulation (PRE2
-%       Sec. 6.2); the dev-based power of record for the conjunction was 0
-%       at every cell (dev Delta_C < 0). C1-only cells were not run.
-%       Also add to (6): d1_open is alias-graded and unaffected; the
-%       primary judge is k = 1 on test. Add a limitation: the d2_support
-%       retriever searches one index over all 24 companies (own-company
-%       top-1 only 37% on dev; PRE2 note N2).
-%   (9) Experiment 4 (memory scheduling) was cut; no memory claims.
-\todo{P-VIII.3: limitations (1)--(9).}
+%       the waste rate w is an unmeasured placeholder in both studies (v2:
+%       w(f) = 0.1(1 - f), decision only); the v2 d1_open conclusion is
+%       unchanged for w in {0, 0.04, 0.08, 0.16} (exploratory sensitivity).
+%   (6) Judge: one human annotator labelled 300 d2_support dev answers; the
+%       primary judge agrees on 240/300 (80.0%, kappa 0.55), GPT-4o on
+%       244/300 (81.3%, kappa 0.58), and the judge is stricter than the
+%       human; so d2_support and every pooled result are exploratory.
+%       d1_open is alias-graded and unaffected. The primary judge is a
+%       reasoning model at temperature 1, k = 1 on test.
+%   (7) d2_support gold answers and authored need labels come from the
+%       dataset pipeline and have not been human-verified
+%       [datasets/v2/d2_support/README.md]; the pre-registered need label is
+%       the empirical one. The d2_support retriever searches one index over
+%       all 24 companies (own-company top-1 document only 37% of the time
+%       on dev; PRE2 note N2), which affects absolute d2 accuracy.
+%   (8) Statistical precision: the dev-based power of record for the
+%       boundary conjunction was 0 (dev Delta_C < 0 at every profile and
+%       price; PRE2 Sec. 6.1). Realised test N = 4,232 (3,734 d1_open + 498
+%       d2_support in 192 pair clusters), as planned; all items enter the
+%       primary contrasts. Realised bootstrap SE of Delta_C 0.0059
+%       (d1_open) / 0.0055 (pooled), MDE (80%) 0.0165 / 0.0153; interaction
+%       SE 0.0021 / 0.0022, MDE 0.0057 / 0.0062 (dev-based plan: SE 0.0055,
+%       MDE 0.0155; interaction 0.0024 / 0.0068)
+%       [docs/research_v2/paper_numbers_v2.json realised_precision; PRE2
+%       Sec. 6.1]. d2_support alone is small: Delta_C MDE 0.040. No
+%       channel ablation (C1-only, C1+C2) was run: the frozen code cannot
+%       isolate C1, C2 or C3 (PRE2 Sec. 3.4, Sec. 10).
+%   (9) Weak operational belief (d1_open test AUC 0.665; C2 not available):
+%       a negative Delta_C is a statement about joint control with this
+%       belief (PRE2 Sec. 10).
+%   (10) Experiment 4 (memory scheduling) was cut; no memory claims.
+\todo{P-VIII.3: limitations (1)--(10).}

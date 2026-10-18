@@ -36,10 +36,11 @@ of the turn whether to use the result.}
 % ---- P-III.2 ----------------------------------------------------------------
 % PURPOSE: define the belief and say exactly what it is computed from.
 % CLAIMS + EVIDENCE:
-%   (a) v1: s is the mean per-token entropy of a closed-book draft generated
-%       from the FULL question, averaged over 5 draws (seeds 11,23,37,53,71,
-%       temperature 0.2, top-p 0.9, 80 tokens), computed once per scenario
-%       before the sweep [simulator/e3_scenario_signals.json "precompute"].
+%   (a) v1 (Eq. belief-v1): s is the mean per-token entropy of a closed-book
+%       draft generated from the FULL question x, averaged over 5 draws
+%       (seeds 11,23,37,53,71, temperature 0.2, top-p 0.9, 80 tokens),
+%       computed once per scenario before the sweep
+%       [simulator/e3_scenario_signals.json "precompute"].
 %       Hence the v1 belief does not depend on dispatch time (A3), even for
 %       policies that dispatch before the question is complete (R1.4).
 %   (b) The closed-book pass has a latency cost that v1 did not charge:
@@ -53,30 +54,45 @@ of the turn whether to use the result.}
 %       / 544 ms (d2_support) after its partial (one-token probe latency,
 %       same run: self_assessment_latency_dev.jsonl; this is sa_lag_ms in
 %       docs/research_v2/v2_predictions.json inputs).
-%       CONTRADICTS: (a)/(c)/Eq. belief describe the v2 belief as token
-%       entropy of a closed-book draft on x_k; in v2 the belief is the
-%       calibrated self-assessment probe P("No") (PRE2 H-E1v2):
-%       b_k = sigmoid(a + b logit(SA_k) + c f_k + d logit(SA_k) f_k), fitted
-%       on dev [controller/baselines/e3v2_calibration_<ds>_mistral7b_v03_self_assessed_need_logit.json].
-%   (c) v2: the belief is recomputed on each ASR partial x_k (contract
-%       docs/research_v2/CONTRACTS.md Sec. 5--6, uncertainty_by_prefix).
-%   (d) Calibration: logistic fit of P(need) on E1's 180 samples
+%   (c) v2 (Eq. belief-v2): the belief is NOT draft entropy. It is the
+%       calibrated self-assessment probe: SA_k = P("No") to the frozen
+%       prompt sa-v1-frozen ("answerable from general knowledge alone,
+%       without {org}'s own policies...? Yes/No"), read from Mistral-7B's
+%       token probabilities and recomputed on each ASR partial x_k
+%       [PRE2 H-E1v2; CONTRACTS Sec. 5--6]; calibrated as
+%       b_k = sigmoid(a + b logit(SA_k) + c f_k + d logit(SA_k) f_k), f_k the
+%       spoken word fraction, fitted on dev per dataset
+%       [controller/baselines/e3v2_calibration_<ds>_mistral7b_v03_self_assessed_need_logit.json].
+%   (d) Calibration: v1 is a logistic fit of P(need) on E1's 180 samples
 %       (36 items x 5 seeds), IN-SAMPLE (R1.5); slope 11.288, intercept
 %       -3.633; floor beta = 0.05 [configs/e3_price_grid.json calibration;
-%       controller/baselines/e1_calibration_mean_entropy.json]. v2 fits it on
-%       the dev split only and evaluates on test [PRE2 H-E1v2].
+%       controller/baselines/e1_calibration_mean_entropy.json]. v2 fits
+%       Eq. belief-v2 on the dev split only, per dataset, and evaluates on
+%       test [PRE2 H-E1v2].
 % NUMBERS: slope 11.288, intercept -3.633, floor 0.05, n = 180.
-\todo{P-III.2: what the belief is computed from in v1 and in v2, the
-in-sample v1 calibration, and the closed-book latency cost.}
+\todo{P-III.2: what the belief is computed from in v1 (draft entropy on the
+full question, Eq.~(\ref{eq:belief})) and in v2 (the calibrated
+self-assessment probe on each partial, Eq.~(\ref{eq:belief-v2})), the
+in-sample v1 calibration versus the dev-only v2 calibration, and the
+closed-book latency cost.}
 
 \begin{equation}
-s_k=\frac{1}{N}\sum_{i=1}^{N}H\!\left(p_\theta(\cdot\mid y_{<i},x_k)\right),\qquad
-b_k=\max\!\big(\beta,\ \sigma(w\,s_k+c)\big),
+s=\frac{1}{N}\sum_{i=1}^{N}H\!\left(p_\theta(\cdot\mid y_{<i},x)\right),\qquad
+b=\max\!\big(\beta,\ \sigma(w\,s+c)\big)\qquad\text{(v1)},
 \label{eq:belief}
 \end{equation}
-where $x_k$ is the transcript prefix available at step $k$, $y$ is the
-closed-book draft, $H$ is the entropy in nats, $\sigma$ the logistic
-function and $\beta=0.05$ a floor.
+where $x$ is the full question, $y$ is the closed-book draft, $H$ is the
+entropy in nats, $\sigma$ the logistic function and $\beta=0.05$ a floor.
+In v2 the belief at step $k$ is
+\begin{equation}
+b_k=\sigma\!\big(a+b'\,\ell_k+c'\,f_k+d\,\ell_k f_k\big),\qquad
+\ell_k=\operatorname{logit}(\mathrm{SA}_k)\qquad\text{(v2)},
+\label{eq:belief-v2}
+\end{equation}
+where $\mathrm{SA}_k$ is the generator's probability of answering ``No''
+to a fixed self-assessment prompt (can the question be answered from
+general knowledge alone?) given the ASR partial $x_k$, $f_k$ is the spoken
+word fraction, and $a,b',c',d$ are fitted on the dev split of each dataset.
 
 \subsection{Objective}\label{sec:objective}
 % ---- P-III.3 ----------------------------------------------------------------
@@ -175,15 +191,22 @@ and the sensitivity analysis.}
 %   (c) B9+ is the decomposed controller R1 describes: it prices the expected
 %       exposure of the timing its own timing sub-optimiser picks; under
 %       A1--A3 it equals Ours (Prop. 2) [V1T b9plus: 11,300/11,300].
-%   (d) B10 (SPEC) always prefetches at the first query-ready partial and
-%       decides at end of turn, with the final belief, whether to use the
-%       result [controller/baselines/b10_speculative_v2.py]. B11 (SPEC-theta)
+%   (d) B10 (SPEC) always prefetches at its trigger and decides at end of
+%       turn, with the final belief, whether to use the result
+%       [controller/baselines/b10_speculative_v2.py]. In v2 the shared
+%       SPEC / SPEC-theta trigger was tuned on dev over {immediate = first
+%       query-ready partial, forecast, R-hat-below} [PRE2 Sec. 4.5]; the
+%       theory (Prop. 4') abstracts it as the first query-ready partial.
+%       B11 (SPEC-theta)
 %       prefetches at the same partial only if the belief-only option value
 %       of the prefetch, computed with dev-mean scalar exposures, exceeds the
 %       belief-only value of not prefetching; its use rule is B10's
 %       [controller/baselines/b11_speculative_gated_v2.py]. Both are
 %       decomposed in the sense B9+ is: timing fixes WHEN, and the belief
-%       with fixed prices decides WHETHER (Prop. 4'').
+%       with fixed prices decides WHETHER (Prop. 4''). B11 was a candidate
+%       for D*[SPECULATIVE] but was not selected: the dev-best rival named
+%       at the freeze is B9+ on d1_open and B10 (SPEC) on d2_support
+%       [PRE2 Sec. 3 "Rivals"].
 %   (e) B4 and B6 are single-turn proxies in the style of FLARE and DRAGIN:
 %       a threshold on 1 - mean token confidence (B4, 0.5) or on max token
 %       entropy (B6, 1.0) of the closed-book draft, dispatch at sentence end

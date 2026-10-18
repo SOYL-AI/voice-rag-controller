@@ -22,9 +22,10 @@
 % not a valid bound (THEORY Prop. 4'(3) counterexample) and, without B11 in
 % D*[SPECULATIVE], the speculative contrast measures a decomposable effect.
 \begin{table}[t]
-\caption{Pre-Registered Boundary Test (v2). $\DC$ and $\DS$ are the joint
-controller's mean paired utility advantage over the strongest decomposed
-rival under the commit and speculative architectures.}
+\caption{Pre-Registered Tests (v2). $\DC$ and $\DS$ are the joint
+controller's mean paired utility difference from the strongest decomposed
+rival under the commit and speculative architectures (positive: joint
+better).}
 \label{tab:predictions}
 \centering
 \footnotesize
@@ -35,7 +36,7 @@ Test & Hypothesis & Source\\
 \midrule
 P1 & $\DC>0$: joint pays when retrieval is committed; rival \Bplus & Prop.~\ref{prop:c2}\\
 P2 & $\DC-\DS>0$: the advantage shrinks under speculation (paired interaction) & Props.~\ref{prop:c2}, \ref{prop:spectheta}\\
-P3 & $|\DS|<m_3=0.016$ (TOST; smallest effect size of interest): no joint advantage beyond belief-gated prefetch; rival the dev-best of \{\Bplus, \Bten, \Beleven\} & Props.~\ref{prop:spec}, \ref{prop:spectheta}\\
+P3 & $|\DS|<m_3=0.016$ (TOST; smallest effect size of interest): no joint advantage beyond belief-gated prefetch; rival the dev-best of \{\Bplus, \Bten, \Beleven\}: \Bplus{} (\dset{d1\_open}), \Bten{} (\dset{d2\_support}) & Props.~\ref{prop:spec}, \ref{prop:spectheta}\\
 H-REV & $\DC<0$: the decomposed rival \Bplus{} beats joint control under commit; added before the freeze & Pre-registration \S3.3 (dev direction)\\
 \midrule
 \multicolumn{3}{@{}p{0.95\columnwidth}@{}}{\scriptsize Boundary claim supported iff P1, P2 and both one-sided halves of P3 reject at one-sided $\alpha=0.025$ (intersection--union test; no multiplicity adjustment for the conjunction). Individual claims: Holm over P1, P2, P3 and H-REV at one-sided $\alpha=0.025$.}\\

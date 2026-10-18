@@ -93,8 +93,10 @@ items.
 %       (R1.8: the "negligible risk" claim is withdrawn as a general claim)
 %       [E2 RUN_MANIFEST; _objective.py partial_query_risk].
 %   (f) Dead air (R1.9): in these single-turn runs dead air equals TTFA by
-%       definition [harness/metrics.py dead-air comment]; a dead-air RATE
-%       with a threshold is reported for v2: \PEND{threshold, e.g. > 2 s}.
+%       definition [harness/metrics.py dead-air comment], so TTFA is
+%       reported. No dead-air rate is reported for v2 (no threshold was
+%       fixed and the frozen test evaluator does not output it); do not
+%       promise one.
 % NUMBERS: 7.09, 7.05, +38 ms, 6.92, 3.69, 4.11, 4.07, -479 [-690, -275],
 %   -180 [-413, +51], -400, 16 ms, 0.66, 1.66, 4.11, 63, 13, 4.20-4.55,
 %   0.30-0.73, 1.05-1.11.

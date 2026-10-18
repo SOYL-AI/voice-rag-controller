@@ -55,16 +55,16 @@ and the difference.}
 %   (c) Retrieval can hurt on questions the model already answers, e.g.
 %       popular entities [mallen2023trust]; this motivates g^- > 0.
 %   (d) DIFFERENCE (hedged): what is new is the setting, not the probe --
-%       \PEND{state the persona finding once the v2 E1 result exists: e.g.
-%       that token-entropy signals fail in the persona/company-support
-%       setting and that a P(IK)-style probe sharpens as the ASR partial
-%       grows; evidence (TEST split; llm/experiment1_v2/results/<ds>/
-%       analysis_test/analysis_test.json; docs/research_v2/paper_numbers_v2.json):
-%       on d2_support (EXPLORATORY) mean-entropy AUC 0.508 [0.439, 0.576]
-%       vs probe 0.701 [0.638, 0.761], probe on ASR partials 0.558 -> 0.708
-%       from 0.3 to 1.0 of the question heard; on d1_open (open domain) the
-%       entropy signal is the better one (0.707 vs 0.665), so the failure
-%       is specific to the persona/support setting}.
+%       the persona finding of the v2 E1 test: token-entropy signals fail
+%       in the persona/company-support setting and a P(IK)-style probe
+%       sharpens as the ASR partial grows; evidence (TEST split;
+%       llm/experiment1_v2/results/<ds>/analysis_test/analysis_test.json;
+%       docs/research_v2/paper_numbers_v2.json): on d2_support (EXPLORATORY)
+%       mean-entropy AUC 0.508 [0.439, 0.576] vs probe 0.701 [0.638, 0.761],
+%       probe on ASR partials 0.558 -> 0.708 from 0.3 to 1.0 of the question
+%       heard; on d1_open (open domain, pre-registered) the entropy signal is
+%       the better one (0.707 vs 0.665), so the failure is specific to the
+%       persona/support setting and exploratory.
 \todo{P-II.2: adaptive retrieval and self-knowledge \cite{jiang2023flare,su2024dragin,jeong2024adaptiverag,moskvoretskii2025adaptive,kadavath2022language,mallen2023trust};
 the probe follows this work, and what is new is its behaviour in the
 persona setting and on partial transcripts.}

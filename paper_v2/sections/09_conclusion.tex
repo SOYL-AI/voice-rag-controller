@@ -7,19 +7,26 @@
 % PURPOSE: three sentences of findings and one of outlook.
 % CLAIMS: (a) equivalence under A1--A3 explains the v1 tie, verified on the
 %   real sweep (10,000/10,000 off-grid decisions; 11,300/11,300 for B9+)
-%   [V1T]; (b) the boundary: C1 second order, C2 first order under commit,
-%   belief-gated speculative prefetch closes the gap [TH]; (c) the v2
-%   boundary test (P1, P2, P3)
+%   [V1T]; (b) the theory's boundary, stated as prediction: C1 is second
+%   order, C2 is first order under commit, and under speculation a
+%   belief-gated decomposed prefetcher is predicted to come within a
+%   C1-sized term of the joint controller [TH] -- v2 did not show this
+%   (P3 failed: d1_open Delta_S -0.0415 [-0.0528, -0.0302], below -m3 =
+%   -0.016; the joint controller was worse than the decomposed rival under
+%   speculation too); (c) the v2 pre-registered tests (P1, P2, P3, H-REV),
 %   outcome [docs/research_v2/v2_test_results_final.md]: on d1_open
-%   (pre-registered per-dataset analysis) the boundary claim is not
-%   supported -- P1 fails, P2 fails Holm, P3 fails -- and H-REV holds:
-%   the decomposed B9+ beats the joint controller under commit,
-%   Delta_C = -0.0367 [-0.0481, -0.0252], p < 1e-4; pooled with
-%   d2_support (exploratory) the verdicts are the same (Delta_C -0.0351
-%   [-0.0458, -0.0245]). CONTRADICTS (b): "belief-gated speculative
-%   prefetch closes the gap" is theory only; v2 did not show it; (d) outlook: real recorded
-%   speech, other generators, and learned end-of-turn prediction.
-% NUMBERS: 10,000/10,000; 11,300/11,300 [V1T].
+%   (pre-registered per-dataset analysis, unaffected by D3) the boundary
+%   claim is not supported -- P1 fails, P2 fails Holm, P3 fails -- and H-REV
+%   holds: the decomposed B9+ beats the joint controller under commit,
+%   Delta_C = -0.0367 [-0.0481, -0.0252], p < 1e-4; pooled with d2_support
+%   (exploratory, judge agreement with the human labels only moderate) the
+%   verdicts are the same (Delta_C -0.0351 [-0.0458, -0.0245]); on clean
+%   text prefixes the gap vanishes (-0.0024 [-0.0072, +0.0022]), which
+%   points, as interpretation, to errors in early ASR partials and a weak
+%   belief (AUC 0.665) as what kept joint control from paying; (d) outlook:
+%   a more informative early belief, real recorded speech, other
+%   generators, and learned end-of-turn prediction.
+% NUMBERS: 10,000/10,000; 11,300/11,300 [V1T]; v2 numbers as in (b)-(c).
 \todo{P-IX.1: conclusion.}
 
 % ---- Acknowledgment (optional; IEEE spelling "Acknowledgment") ----------------

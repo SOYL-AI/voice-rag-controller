@@ -12,7 +12,7 @@ This maps the **submitted paper** (old) to the **revised outline** (new, `paper_
 - **Numbers:** use only the numbers listed here or in the `\todo` blocks, each with its source file. Never round or change a number without checking that file.
 - **Placeholders:** every `\TBD{...}` in `sections/` and `tables/` is now filled in the comment blocks, each number with its source file (final results: `docs/research_v2/v2_test_results_final.md`, commit 341d306; extra offline numbers: `docs/research_v2/paper_numbers_v2.json`). Where a number could not be computed the comment says `NOT AVAILABLE` with the reason: drop that claim.
 - **Status of v2 numbers:** d1_open = pre-registered per-dataset analysis (unaffected by D3). d2_support and **every pooled result** = exploratory, because the judge agreed only moderately with the human labels. Describe the human check only as: one human annotator labelled 300 d2 dev answers; judge gpt-6.1-sol 240/300 (80.0%, κ 0.55), GPT-4o 244/300 (81.3%, κ 0.58).
-- **Message:** joint control of retrieval and timing rarely pays off with today's belief signals, and a decomposed "retrieve late in the utterance" rule wins, because early partial questions retrieve worse documents. Do **not** frame it as "our controller wins".
+- **Message:** the theory says joint control of retrieval and timing can pay only when a retrieval is committed and early information is reliable. The pre-registered v2 test did not find that advantage: on d1_open the decomposed B9+ beat the joint controller under commit (Δ[COMMIT] = −0.0367 [−0.0481, −0.0252]; H-REV holds), and the boundary claim is false. On clean text the gap vanishes (−0.0024), which points, **as an interpretation, not a tested mechanism**, to errors in early ASR partials and a weak belief (AUC 0.665). Do **not** frame it as "our controller wins", and do not state the mechanism as established.
 
 **Actions.**
 - **REUSE:** keep the old text, light edits.
@@ -33,7 +33,7 @@ Reviewer tags: R1-n is Reviewer 1 major comment n; R1-m is a Reviewer 1 minor co
 **What changes:**
 - **State:** the question; the theory (equivalence and its boundary); two new benchmarks with real streaming ASR; a pre-registered test.
 - **Headline:** decomposed beats joint. On D1 test, Δ = −0.037, 95% CI [−0.048, −0.025]; pooled (exploratory) Δ = −0.035 [−0.046, −0.025].
-- **Persona finding:** entropy triggers fail on support questions, and self-assessment works better.
+- **Persona finding (exploratory, d2_support only):** entropy triggers fail on support questions (AUC 0.508), and the self-assessment probe works better there (0.701). On d1_open entropy is better (0.707 vs 0.665), so do not claim the probe is better in general.
 
 ---
 
@@ -43,7 +43,7 @@ Reviewer tags: R1-n is Reviewer 1 major comment n; R1-m is a Reviewer 1 minor co
 |---|---|---|---|---|
 | P-I.1 | I, paras 1–3 (RAG reliability; not every query needs retrieval; timing during speech) | EDIT | Keep the motivation. Cite Stream RAG [arora2026streamrag] as prior work on retrieving during speech | R2 originality |
 | P-I.2 | I, para 4 + abstract's B9 description | EDIT | The joint-vs-decomposed question. The v1 result was a tie (0/5 seeds), which we now **explain** rather than call "underpowered" | R1-1 |
-| P-I.3 | I, contribution bullets | REWRITE | The uncertainty trigger is **adopted** (FLARE/DRAGIN), not novel. Early retrieval during speech is background. Novelty (hedge "to our knowledge"): (1) the formal joint-vs-decomposed analysis; (2) a pre-registered boundary test; (3) the persona/entropy finding; (4) a spoken support benchmark | R1-m (contribution 1), R2 originality |
+| P-I.3 | I, contribution bullets | REWRITE | The uncertainty trigger is **adopted** (FLARE/DRAGIN), not novel. Early retrieval during speech is background. Novelty (hedge "to our knowledge"): (1) the formal joint-vs-decomposed analysis; (2) a pre-registered boundary test (P1–P3, m₃ = 0.016, plus H-REV) whose prediction **failed**; (3) the persona/entropy finding (exploratory); (4) a spoken support benchmark | R1-m (contribution 1), R2 originality |
 | P-I.4 | none | NEW | Roadmap sentence | none |
 
 ---
@@ -64,10 +64,10 @@ Reviewer tags: R1-n is Reviewer 1 major comment n; R1-m is a Reviewer 1 minor co
 | ID | Old source | Action | What changes | Reviewer |
 |---|---|---|---|---|
 | P-III.1 | III-A (problem formulation, Eqs. 1–3) | EDIT | Keep the action space and utility. Add the per-turn decision made at each partial transcript | none |
-| P-III.2 | III-B (belief state) | REWRITE | v1: the belief is entropy on the **full** question, calibrated in-sample. v2: a **self-assessment** probe on each partial transcript, calibrated on dev only, with its latency measured (0.55 s) | R1-4, R1-5, R2 calibration |
+| P-III.2 | III-B (belief state) | REWRITE | v1: the belief is mean token entropy of a closed-book draft of the **full** question, calibrated in-sample (Eq. belief, v1 only). v2: a calibrated **self-assessment** probe, P("No") to a frozen prompt from Mistral-7B's token probabilities, recomputed on each partial transcript and calibrated on dev per dataset (Eq. belief-v2), with its latency measured (0.55 s). It is **not** draft entropy | R1-4, R1-5, R2 calibration |
 | P-III.3 | III-D (quality term) | REWRITE | Quality is no longer equal to the belief. It is b·g⁺ − (1−b)·g⁻: retrieval helps when needed and hurts when not. v1: g⁺ = 0.720 [0.504, 0.888], g⁻ = 0.592 [0.408, 0.768]. **Delete "architectural strength"** | R1-6, R1-m |
 | P-III.4 | III-D, "Methodological note on cost parameters" | EDIT | waste_rate is **still a placeholder in v2** (w(f) = 0.1(1 − f), decision only; not measured); v1 sensitivity over w ∈ {0, 0.04, 0.08, 0.16} (B9+ = Ours on 1,300/1,300 at every w); v2 d1 sensitivity: Δ[COMMIT] at the primary cell stays between −0.0387 and −0.0360 for w from 0 to 0.16 (frozen 0.1: −0.0367), and is negative with the 95% CI below zero in all 12 speech cells at every w. Retrieval's real TTFA cost in v1 was 1.57 s (sentence end) / 1.20–1.30 s (early), against the assumed 0.67 / 0.48 s | R1-10, R2 cost model |
-| P-III.5 | III-E (Ours, B9, "Mechanism of divergence") | REUSE + extend | Keep the old text; it is good. Add B9+ (the strong decomposed rival), B10/B11 (speculative prefetch), Oracle and the fixed B4. Point to the pseudocode | R1-1, R2 baseline definitions |
+| P-III.5 | III-E (Ours, B9, "Mechanism of divergence") | REUSE + extend | Keep the old text; it is good. Add B9+ (the strong decomposed rival), B10/B11 (speculative prefetch; the frozen speculative rival is B9+ on d1_open and B10 on d2_support, not B11), Oracle and the fixed B4. Point to the pseudocode | R1-1, R2 baseline definitions |
 | P-III.6 | III-C ("multi-timescale" action space) | REWRITE, shorter | Drop "multi-timescale". Define each dispatch rule precisely, including the "fixed early proxy" | R1-m, R1-7 |
 
 ---
@@ -94,8 +94,8 @@ The propositions:
 | P-V.2 | none | NEW | What the seeds vary (generation and timing, not items). The item is the unit of analysis, with a paired bootstrap over items | R1-3, R2 power |
 | P-V.3 | IV-E (metrics) + IV-F (statistics) | EDIT | "Retrievals per **turn**", not per dialogue. Fix the run-on "Latency/Compute" sub-headings. Judge: GPT-6.1-Sol with rubric r3, checked against one human labelling of 300 answers (80.0%, κ 0.55; GPT-4o 81.3%, κ 0.58), one sentence only, no gate details; GPT-4o as secondary. Dead Air: report it or state that it equals TTFA for single-turn runs | R1-9, R1-10, R1-m |
 | P-V.4 | none | NEW | **D1:** 5,300 open-domain items (PopQA 5,000, popularity-stratified, + HotpotQA 300); dev 1,566 / test 3,734. **D2:** 720 support items, 12 industries, 24 fictional companies, matched pairs; dev 222 / test 498. **Leak test:** wording AUC 0.576, semantic 0.74 (v1 was 1.00 / 0.94). The empirical "needs retrieval" label means the model is wrong closed-book | R1-2, R2 scale |
-| P-V.5 | none | NEW | **Real streaming ASR** on synthetic speech: 6 voices incl. 2 Indian-English passed the accent screen, but the pre-registered **test runs used one voice** (Piper en-US hfc_male, 150 wpm, clean) plus a text-prefix condition; partial WER 23.7% (D1) / 10.5% (D2); final WER 14.2% / 5.5%; VAD end of turn about 830 ms after the last word. Retrieval runs on the live partial transcript, not a frozen query | R1-8, R2 realistic speech |
-| P-V.6 | none | NEW | Commit vs speculative architectures. Latency profiles: rewrite + search p50 ≈ 1.04 s; internet retrieval 268 ms; streaming TTS. Early dispatch can hide ≈ 1.07 s | R1-7 |
+| P-V.5 | none | NEW | **Real streaming ASR** on synthetic speech. The pre-registered **test runs used ONE voice**: Piper en_US hfc_male (medium), clean audio, 150 wpm, plus a text150 condition (text prefixes at 150 wpm, no audio). No accent or noise condition was tested; six voices passed the accent screen but were **not used on test** (one clause at most). Partial WER 23.7% (D1) / 10.5% (D2); final WER 14.2% / 5.5%; VAD end of turn about 830 ms after the last word. Retrieval runs on the live partial transcript, not a frozen query | R1-8, R2 realistic speech |
+| P-V.6 | none | NEW | Commit vs speculative architectures. Latency profiles: rewrite + search p50 ≈ 1.04 s; internet retrieval 268 ms; streaming TTS. Early dispatch can hide ≈ 1.07 s. **Power:** the dev-based power of record for the boundary conjunction was 0 (dev Δ[COMMIT] < 0); do not cite the superseded pre-dev "3,417–6,492 items" figures. Realised test N 4,232 (3,734 + 498); SE of Δ[COMMIT] 0.0059 (d1) / 0.0055 (pooled), MDE (80%) 0.0165 / 0.0153; d2 alone MDE 0.040 | R1-7, R2 power |
 
 ---
 
@@ -137,7 +137,7 @@ The propositions:
 | **P-VII.H (add)** | none | NEW | **Headline + H-REV.** D1 test: joint − decomposed Δ[COMMIT] = **−0.0367 [−0.0481, −0.0252]**. H-REV holds (p < 1e-4). The direction holds at all 12 profile/price settings (−0.035 to −0.046). Pooled (exploratory): −0.0351 [−0.0458, −0.0245], H-REV p < 1e-4. D2 alone (exploratory): −0.0227 [−0.0502, +0.0047] |
 | P-VII.4 | none | NEW | **P1** (joint > decomposed, commit): fails (p = 1.0) |
 | P-VII.5 | none | NEW | **P2** (interaction): +0.0047 [+0.0007, +0.0088]; p = 0.0097; fails after the Holm correction. Pooled (exploratory): +0.0022 [−0.0020, +0.0065], p = 0.160 |
-| P-VII.6 | none | NEW | **P3** (equivalence under speculative, margin 0.016): fails on the lower side. Δ[SPEC] = −0.0415 [−0.0528, −0.0302]. Pooled (exploratory): −0.0373 [−0.0480, −0.0267], fails. Boundary claim not supported (d1, d2, pooled) |
+| P-VII.6 | none | NEW | **P3** (equivalence under speculative, margin m₃ = 0.016, a pre-specified smallest effect size of interest; rival B9+ on D1 and B10 (SPEC) on D2, as frozen): fails on the lower side. Δ[SPEC] = −0.0415 [−0.0528, −0.0302]. Pooled (exploratory): −0.0373 [−0.0480, −0.0267], fails. Boundary claim not supported (d1, d2, pooled) |
 | P-VII.7 | none | NEW | Secondary condition (typed text, no ASR): Δ = −0.0024 [−0.0072, +0.0022], a tie. Secondary family (6 two-sided tests, Holm 0.05; exploratory as a family): D1 Δ[COMMIT] and Δ[SPEC] p < 1e-4 (reject), D1 interaction p = 0.019 (not rejected), D2 all n.s. Predicted vs observed: D1 Spearman 0.870, slope 0.827 [0.582, 1.077], "agree". NOT AVAILABLE (drop): secondary-judge re-report of P1–P3, dead-air rate, frontier dominance, v2 E2 timing on test, max-entropy controller run |
 
 **Source** for all D1 numbers: `docs/research_v2/v2_test_results_d1.md`.
@@ -149,9 +149,9 @@ The propositions:
 | ID | Old source | Action | What changes |
 |---|---|---|---|
 | P-VIII.1 | VI (Discussion) | REWRITE | The v1 tie was the equivalence regime, not "underpowered" |
-| P-VIII.2 | none | NEW | Practical guidance: build a joint controller only when retrieval must be committed **and** early beliefs are informative. Otherwise use decomposed late dispatch. Mechanism: early partial queries retrieve worse documents (dev: Ours dispatched earlier and lost accuracy, 0.44 vs 0.50) |
-| P-VIII.3 | VII (Limitations paragraph) | REWRITE as a list | (1) one model (Mistral-7B); (2) synthetic speech and fictional companies; (3) weak beliefs (AUC ≈ 0.67): the result holds *for today's signals*; (4) small effects (≈ 4 points); (5) judge non-determinism (temperature fixed at 1); (6) energy not modelled in the main analysis |
-| P-IX.1 | VII (Conclusion paragraph) | REWRITE | Restate the answer and the guidance in 4–5 sentences |
+| P-VIII.2 | none | NEW | The theory predicts joint control to pay in commit pipelines with slow retrieval and an informative early belief. **v2 did not confirm this**: Δ[COMMIT] was negative in all 12 D1 speech cells, including the slow remote profile. Likely reasons, stated as **interpretation, not tested**: a weak belief (D1 AUC 0.665; C2 not available) and ASR partials (text150 gap ≈ 0; 51% of early partials later revised, 22% excluding the last word; source `docs/research_v2/waste_measured_v2.json`). Dev only: Ours dispatched earlier and lost accuracy (0.44 vs 0.50) |
+| P-VIII.3 | VII (Limitations paragraph) | REWRITE as a list | (1) one model (Mistral-7B); (2) synthetic speech (one voice, clean, 150 wpm) and fictional companies; (3) weak belief (AUC ≈ 0.67): the result holds *for this belief*; (4) small effects (≈ 4 points); (5) judge: one human labelling of 300 answers, moderate agreement, so d2_support and pooled results are exploratory; non-determinism (temperature fixed at 1); (6) the waste rate is a placeholder (sensitivity analysis: conclusion unchanged); (7) energy not modelled in the main analysis. Full list in `08_discussion.tex` |
+| P-IX.1 | VII (Conclusion paragraph) | REWRITE | Restate the answer in 4–5 sentences: equivalence explains the v1 tie; the theory's predicted boundary was not confirmed (P1 and P3 fail, H-REV holds); belief-gated speculative prefetch did **not** close the gap in v2 |
 
 ---
 
