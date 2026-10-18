@@ -257,25 +257,29 @@ Bengaluru, India\\
 \thispagestyle{firstpage}
 
 \begin{abstract}
-A streaming voice assistant must decide whether to retrieve external knowledge
-and when to dispatch the query while the user is still speaking. We ask
-whether making these two decisions jointly beats a decomposed controller that
-faces the same latency and compute prices. Under timing-invariant quality,
-constant latency overlap and a dispatch-invariant belief (A1--A3), we prove
-that the joint controller at any latency price matches the decomposed
-controller at a mapped price; in a text-based experiment that satisfies
-A1--A3, the map reproduces $10{,}000/10{,}000$ decisions. Beyond A1--A3, joint
-control can gain to first order only when a dispatched retrieval is
+A streaming voice dialogue system must decide whether to retrieve external
+knowledge and when to dispatch the query while the user is still speaking. We
+ask whether optimizing these two decisions jointly outperforms a decomposed
+controller that faces the same latency and compute prices. Under
+timing-invariant quality, constant latency overlap and a dispatch-invariant
+belief (A1--A3), we prove that the joint controller at any latency price makes
+the same decisions as the decomposed controller at a mapped price, so their
+frontiers coincide. In a text-based experiment that satisfies A1--A3 by construction, the price map reproduces
+$10{,}000/10{,}000$ off-grid decisions, and a decomposed rule that prices the
+expected exposed latency reproduces the joint rule on $11{,}300/11{,}300$
+turns. Turn-dependent overlap yields only second-order gains; the first-order
+channel separates the two controllers only when a dispatched retrieval is
 committed, and under speculative prefetch a belief-gated decomposed
-prefetcher stays within a small term of the joint optimum. A pre-registered
-test on open-domain and customer-support speech with live automatic speech
-recognition (ASR) partials did not support the predicted boundary: on 3,734
-open-domain test questions the joint controller was worse than the strongest
-decomposed rival under commitment (utility difference $-0.037$, 95\% CI
-$[-0.048,-0.025]$), and the pre-registered reverse hypothesis held.
-Customer-support and pooled results agree but are exploratory. The gap
-vanishes on clean text, implicating recognition errors in early partial
-transcripts and a weak belief signal.
+prefetcher stays within a small bounded term of the joint optimum. We then ran
+a pre-registered boundary test on open-domain and customer-support speech
+with live automatic speech recognition (ASR) partials. On 3,734 open-domain
+test questions the joint controller was worse than the strongest decomposed
+rival under commitment (utility difference $-0.037$, 95\% CI
+$[-0.048,-0.025]$): the boundary hypotheses were not supported and the
+pre-registered reverse hypothesis held. Customer-support and pooled results
+point the same way but are exploratory. The gap disappears on clean text,
+implicating recognition errors in early partial transcripts and a weak belief
+signal.
 \end{abstract}
 \begin{IEEEkeywords}
 Retrieval-Augmented Generation, Spoken Dialogue Systems, Decision-Theoretic Control, Speculative Prefetch, Streaming Retrieval.
