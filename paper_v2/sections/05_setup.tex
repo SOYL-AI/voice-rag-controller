@@ -75,9 +75,10 @@ pre-registration timeline with commit hashes.}
 % PURPOSE: the larger, harder benchmarks (R1.2, R2).
 % CLAIMS + EVIDENCE:
 %   (a) d1_open: PopQA, popularity-stratified [mallen2023trust], plus
-%       HotpotQA multi-hop [yang2018hotpotqa]; size \TBD{datasets/v2/d1_open/
-%       README.md (build script datasets/v2/build_d1_open.py on branch
-%       v2/d1-open; planned >= 5,000 items per PRE2 Sec. 6)}.
+%       HotpotQA multi-hop [yang2018hotpotqa]; size 5,300 items (5,000
+%       PopQA in 5 popularity bins + 300 HotpotQA bridge/comparison);
+%       dev 1,566 / test 3,734 [PRE2 Sec. 1 table; datasets/v2/*/splits.json].
+%       Pooled test N = 4,232 (3,734 + 498).
 %   (b) d2_support: 720 items, 12 domains, 24 fictional organisations,
 %       276 matched pair groups, 444 authored retrieval-needed; a
 %       surface-form classifier separates needed from not-needed at pooled
@@ -106,10 +107,25 @@ split \cite{mallen2023trust,yang2018hotpotqa}.}
 %       noisy), runs streaming ASR (faster-whisper; footnote URL to the project, the
 %       Whisper paper was dropped under the cap) with
 %       Silero VAD, and logs the real partials, including errors
-%       [CONTRACTS Sec. 4; branch v2/speech audio/stt.py]. Voices:
-%       \TBD{docs/research_v2/speech_accent_screen.json on branch v2/speech}.
-%   (c) Remaining speech is predicted from the partial stream; its error
-%       \TBD{log-error SD of the remaining-speech predictor on dev}.
+%       [CONTRACTS Sec. 4; branch v2/speech audio/stt.py]. Voices
+%       [docs/research_v2/speech_accent_screen.json]: 6 Piper voices passed
+%       the accent screen (status "active"; accent-ID model
+%       Jzuluaga/accent-id-commonaccent_ecapa, 20 sentences each): en-US
+%       lessac (F) and hfc_male (M), en-GB cori (F) and
+%       northern_english_male (M), en-IN l2arctic RRBI (M) and arctic ksp
+%       (M); top-1 share of the expected accent 0.50-1.00.
+%       CONTRADICTS (b): the pre-registered TEST runs used ONE voice only,
+%       Piper en_US hfc_male, 150 wpm, clean (primary condition), plus the
+%       text150 text-prefix timeline (PRE2 Sec. 1, Sec. 10). Do not claim
+%       en-IN/en-GB or noisy speech in the v2 results.
+%   (c) Remaining speech is predicted from the partial stream (quantile
+%       regression, q10/q50/q90); its out-of-fold dev error on the primary
+%       ASR condition (5 folds, dev-analysis fold rule): log-error SD
+%       0.74 (d1_open) / 0.48 (d2_support), log-error = ln(q50 / true
+%       remaining) over partials with >= 200 ms of speech left; MAE of q50
+%       967 / 693 ms (median 567 / 567 ms); q10-q90 coverage 0.80 / 0.79
+%       [analysis/paper_numbers_v2.py -> docs/research_v2/paper_numbers_v2.json
+%       remaining_speech_dev; traces: Phase A conditions_dev.jsonl].
 %   (d) Speech remains synthetic (TTS); no human recordings [PRE2 Sec. 10].
 \todo{P-V.5: synthetic speech in v2, live ASR partials and VAD end of turn,
 and what this does and does not settle.}
@@ -145,6 +161,17 @@ and what this does and does not settle.}
 %       remote_api; plan about 10% more, because a direct bootstrap check
 %       gave 0.765 where the normal approximation gave 0.80
 %       [PRE2 Sec. 6.1; POW boundary_test].
+%       CONTRADICTS FROZEN PREREG: 3,417/4,631/6,492 and 0.765 are from the
+%       SUPERSEDED pre-dev simulation (PRE2 Sec. 6.2). The power of record is
+%       the dev-based analysis (PRE2 Sec. 6.1; docs/research_v2/v2_power_dev.json):
+%       at test N = 4,232 the conjunction has power 0 because dev Delta_C < 0
+%       everywhere; P2 power 0.31 (MDE 0.0068); MDE for Delta_C 0.0155;
+%       H-REV power about 1. Realised N = 4,232 (all 3,734 + 498 test items
+%       enter the primary contrasts, paired n = 3,734 / 498); realised bootstrap SE of
+%       pooled Delta_C 0.0055 (d1_open 0.0059), interaction 0.0022
+%       (d1_open 0.0021) [docs/research_v2/paper_numbers_v2.json
+%       realised_precision]. D*[SPECULATIVE] named at freeze: B9+ (d1_open),
+%       B10/SPEC (d2_support) [PRE2 Sec. 3].
 % NUMBERS: 300, 80.0%, 0.55, 81.3%, 0.58, 10,000, 3,417, 4,631, 6,492, 0.765.
 \todo{P-V.6: commit and speculative architectures, latency profiles, the
 judge and the human check, and the statistical plan with the power analysis.}

@@ -1,34 +1,71 @@
-% Table -- v2 boundary test results. Structure complete; every cell is \TBD
-% until the frozen pre-registered analysis has run on the test split
-% (records: simulator/e3v2_results/; contrasts: boundary_contrasts as named
-% in PREREG_V2 Sec. 3). Paired cluster bootstrap, B = 10,000, the same
-% resamples for every contrast.
-% Dev-predicted values (simulation, 0.65 belief-quantile price, pooled d1+d2;
-% docs/research_v2/v2_power.json block boundary_test; PREREG_V2 Sec. 6.1),
-% for reference only, NOT results:
-%   Delta_C 0.0088 / 0.0108 / 0.0097 (faiss / faiss_rerank / remote_api);
-%   Delta_S (D* incl. SPEC-theta) -0.0001 / -0.0002 / -0.0003;
-%   m3 = 0.0044 / 0.0054 / 0.0048.
+% Table -- v2 boundary test results (test split; frozen analysis).
+% Source of every cell: docs/research_v2/v2_test_results_final.json (commit
+% 341d306; python -m analysis.v2_test_final), blocks per_dataset.d1_open.primary
+% and pooled; same numbers in docs/research_v2/v2_test_results_final.md.
+% Paired cluster bootstrap, B = 10,000 (items for d1_open, pair_id clusters for
+% d2_support; pooled = stratified by dataset, weights 3,734 : 498); the same
+% resamples for every contrast. One-sided p-values; p = 0 in the JSON means no
+% resample crossed the null, reported as p < 1e-4.
+% Holm family {P1, P2, P3 (larger TOST side), H-REV}, one-sided alpha 0.025
+% (thresholds: smallest p vs 0.00625, then 0.00833, 0.0125, 0.025).
+%   d1_open: H-REV p<1e-4 <= 0.00625 rejects; P2 p = 0.0097 > 0.00833 -> stop;
+%            P1, P3 not rejected.
+%   pooled:  H-REV rejects; P2 p = 0.1603 > 0.00833 -> stop.
+% STATUS: d1_open = pre-registered per-dataset analysis (unaffected by D3).
+%   Pooled = the pre-registered PRIMARY test, reported as EXPLORATORY because
+%   the judge that grades d2_support agreed only moderately with the human
+%   labels (one annotator, 300 d2 dev answers: gpt-6.1-sol 240/300, 80.0%,
+%   kappa 0.55; GPT-4o 244/300, 81.3%, kappa 0.58).
+% D*[COMMIT] = B9+ (both datasets). D*[SPEC] = B9+ for d1_open, SPEC (B10) for
+% d2_support (dev-best; SPEC ties SPEC-theta, frozen candidate order).
+% m3 = 0.016, fixed before the freeze as the smallest effect size of interest
+% (PREREG_V2 Sec. 3.2).
+% d2_support alone (EXPLORATORY; same JSON, per_dataset.d2_support.primary;
+% n = 498 items, 192 pair clusters): Delta_C -0.0227 [-0.0502, +0.0047];
+% Delta_S -0.0061 [-0.0380, +0.0255]; interaction -0.0166 [-0.0381, +0.0044];
+% P1 p 0.9443, P2 p 0.9396, P3 upper 0.0860 / lower 0.2594, H-REV p 0.0557;
+% nothing rejects; boundary claim not supported.
+% Dev-predicted values (docs/research_v2/v2_predictions.json, primary cell;
+% PREREG_V2 Sec. 3.6), NOT results: pooled Delta_C -0.0409 (SE 0.0085),
+% interaction +0.0036 (SE 0.0037), Delta_S -0.0445 (SE 0.0085); predicted
+% verdicts P1 fails, P2 uncertain (power 0.31), P3 fails (lower side),
+% H-REV likely holds.
+% Diagnostics next to P3 (descriptive, not tests; docs/research_v2/paper_numbers_v2.json
+% primary_cell_diagnostics_test, from contrasts_test.json): d1_open SPEC
+% discard rate q-hat 0.0433, lambda_c(1+w-bar) q-hat = 0.0022.
+% m_prophet and m_C1: NOT AVAILABLE -- the frozen evaluator does not compute
+% them on dev or test (only q-hat and lambda_c(1+w-bar)q-hat); authors: drop.
 \begin{table}[t]
-\caption{v2 Boundary Test (Test Split, Pooled over \dset{d1\_open} and
-\dset{d2\_support}; Paired Cluster Bootstrap, $B=10{,}000$)}
+\caption{v2 Boundary Test on the Test Split (Paired Cluster Bootstrap,
+$B=10{,}000$; One-Sided $p$; Holm over P1--P3 and H-REV)}
 \label{tab:v2primary}
 \centering
-\footnotesize
-\setlength{\tabcolsep}{3pt}
-\begin{tabular}{@{}p{0.6cm} p{2.1cm} p{1.25cm} p{1.75cm} p{1.0cm}@{}}
+\scriptsize
+\setlength{\tabcolsep}{2.5pt}
+\begin{tabular}{@{}l c l l l@{}}
 \toprule
-Test & Contrast & Predicted & Observed [95\% CI] & Verdict\\
+Test & Pred. & Observed [95\% CI] & $p$ & Verdict\\
 \midrule
-P1 & $\DC$: \OursV{}[C] $-$ \Bplus & $>0$ & \TBD{e3v2 commit} & \TBD{}\\
-P2 & $\DC-\DS$ & $>0$ & \TBD{e3v2 both} & \TBD{}\\
-P3 & $\DS$: \OursV{}[S] $-$ D\textsuperscript{*}[S] & $|\cdot|<m_3$ & \TBD{e3v2 spec.} & \TBD{}\\
+\multicolumn{5}{@{}l}{\emph{\dset{d1\_open}, $n=3{,}734$: pre-registered per-dataset analysis}}\\
+P1 ($\DC$) & $>0$ & $-0.0367$ [$-0.0481$, $-0.0252$] & $1.000$ & fails\\
+P2 ($\DC-\DS$) & $>0$ & $+0.0047$ [$+0.0007$, $+0.0088$] & $0.0097$ & fails Holm\\
+P3 ($\DS$) & $|\cdot|<m_3$ & $-0.0415$ [$-0.0528$, $-0.0302$] & $1.000$\textsuperscript{a} & fails\\
+H-REV ($\DC$) & $<0$ & $-0.0367$ [$-0.0481$, $-0.0252$] & $<10^{-4}$ & holds\\
+\multicolumn{4}{@{}l}{Boundary claim (P1 $\wedge$ P2 $\wedge$ P3)} & not supp.\\
 \midrule
-\multicolumn{3}{@{}l}{Boundary claim (P1 $\wedge$ P2 $\wedge$ P3)} & & \TBD{}\\
+\multicolumn{5}{@{}l}{\emph{Pooled, $n=4{,}232$: pre-registered primary; exploratory\textsuperscript{b}}}\\
+P1 ($\DC$) & $>0$ & $-0.0351$ [$-0.0458$, $-0.0245$] & $1.000$ & fails\\
+P2 ($\DC-\DS$) & $>0$ & $+0.0022$ [$-0.0020$, $+0.0065$] & $0.160$ & fails\\
+P3 ($\DS$) & $|\cdot|<m_3$ & $-0.0373$ [$-0.0480$, $-0.0267$] & $1.000$\textsuperscript{a} & fails\\
+H-REV ($\DC$) & $<0$ & $-0.0351$ [$-0.0458$, $-0.0245$] & $<10^{-4}$ & holds\\
+\multicolumn{4}{@{}l}{Boundary claim (P1 $\wedge$ P2 $\wedge$ P3)} & not supp.\\
 \bottomrule
+\multicolumn{5}{@{}p{0.97\columnwidth}@{}}{\scriptsize $m_3=0.016$. Rivals:
+\Bplus{} under commit; under speculation \Bplus{} (\dset{d1\_open}) and
+\Bten{} (\dset{d2\_support}).
+\textsuperscript{a}Larger of the two TOST sides (upper $<10^{-4}$; lower
+$1.000$ for \dset{d1\_open}, $0.9998$ pooled).
+\textsuperscript{b}The judge that grades \dset{d2\_support} agreed only
+moderately with the human labels.}\\
 \end{tabular}
 \end{table}
-% Also report, next to P3 (diagnostics, not tests; PREREG_V2 Sec. 3):
-%   D*[S] chosen on dev \TBD{name at freeze}; m3 \TBD{fixed at freeze};
-%   two-epoch theory bounds m_prophet (vs B10) and m_C1 (vs B11) on dev
-%   \TBD{dev diagnostics}; Holm-adjusted single-claim p-values \TBD{}.

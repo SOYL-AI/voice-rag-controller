@@ -23,7 +23,21 @@
 %   (Prop. 4''); always-prefetch is not enough when compute has a price; (c) turn-dependent overlap alone is second order
 %   (Prop. 3); (d) the cost model must be calibrated end to end: v1
 %   understated retrieval's TTFA cost by more than 2x [V1T measured_latency].
-%   Whether v2 confirms (a)/(b): \TBD{Sec.~\ref{sec:v2} verdicts}.
+%   Whether v2 confirms (a)/(b) [docs/research_v2/v2_test_results_final.md]:
+%   it does NOT confirm (a). On d1_open (pre-registered) P1 fails and H-REV
+%   holds: under commit the decomposed B9+ beats the joint controller,
+%   Delta_C = -0.0367 [-0.0481, -0.0252], at all three profiles including
+%   the slow remote API (Delta_C -0.0415 to -0.0456 at rewrite_remote).
+%   (b) is not supported either: P3 fails on the lower side (Delta_S
+%   -0.0415 [-0.0528, -0.0302]); P2 (+0.0047) fails Holm. Pooled
+%   (exploratory) gives the same verdicts. The belief was weak (d1_open
+%   test AUC 0.665; C2 "not available": AUC(0.5) = 0.543), which is the
+%   condition Prop. 4 needs, so the result is about joint control WITH
+%   THIS BELIEF (PRE2 Sec. 10). With text prefixes instead of ASR partials
+%   the gap vanishes (text150 d1_open Delta_C -0.0024 [-0.0072, +0.0022]).
+%   CONTRADICTS: claim (a) as written ("commit pipelines with slow
+%   retrieval ... are where joint control is predicted to pay") must be
+%   presented as a prediction that failed in v2, not as guidance.
 \todo{P-VIII.2: when to build a joint controller and when a belief-gated
 speculative decomposed rule suffices.}
 
@@ -49,6 +63,21 @@ speculative decomposed rule suffices.}
 %       stated); the boundary conjunction needs about 3,400 to 6,500 pooled
 %       test items depending on the profile, and the two-epoch power
 %       simulation omits multi-epoch prefetch delay and C3 query improvement
-%       [PRE2 Sec. 6.1] \TBD{realised N and power}.
+%       [PRE2 Sec. 6.1]. Realised N and power: test N = 4,232 (3,734
+%       d1_open + 498 d2_support in 192 pair clusters), as planned; all
+%       items enter the primary contrasts. Realised bootstrap SE of
+%       Delta_C 0.0059 (d1_open) / 0.0055 (pooled), MDE (80%) 0.0165 /
+%       0.0153; interaction SE 0.0021 / 0.0022, MDE 0.0057 / 0.0062
+%       (dev-based plan: SE 0.0055, MDE 0.0155; interaction 0.0024 /
+%       0.0068) [docs/research_v2/paper_numbers_v2.json realised_precision;
+%       PRE2 Sec. 6.1]. d2_support alone is small: Delta_C MDE 0.040.
+%       CONTRADICTS: "the boundary conjunction needs about 3,400 to 6,500
+%       pooled test items" is the superseded pre-dev simulation (PRE2
+%       Sec. 6.2); the dev-based power of record for the conjunction was 0
+%       at every cell (dev Delta_C < 0). C1-only cells were not run.
+%       Also add to (6): d1_open is alias-graded and unaffected; the
+%       primary judge is k = 1 on test. Add a limitation: the d2_support
+%       retriever searches one index over all 24 companies (own-company
+%       top-1 only 37% on dev; PRE2 note N2).
 %   (9) Experiment 4 (memory scheduling) was cut; no memory claims.
 \todo{P-VIII.3: limitations (1)--(9).}

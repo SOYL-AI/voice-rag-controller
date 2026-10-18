@@ -2,8 +2,22 @@
 % Sources: docs/research_v2/PREREG_V2.md Sec. 3 (H-E3v2, boundary test) and
 % Sec. 6.1; docs/research_v2/THEORY.md Secs. 6.2 and 7 (as merged at 1d8900c).
 % D*[COMMIT] = B9+. D*[SPECULATIVE] = best on dev of {B9+, B10 (SPEC),
-% B11 (SPEC-theta)}; named at freeze. Delta[arch] = mean paired utility
+% B11 (SPEC-theta)}, named at freeze: B9+ for d1_open, B10 (SPEC) for
+% d2_support (SPEC ties SPEC-theta on dev; frozen candidate order decides)
+% [PREREG_V2 Sec. 3 "Rivals"]. Delta[arch] = mean paired utility
 % difference Ours-v2[arch] - D*[arch] on the same test items.
+% P3 margin: m3 = 0.016, frozen as the smallest effect size of interest (the
+% dev minimum detectable effect for Delta at the planned test N). The draft
+% rule m3 = 1/2 delta_C,dev was degenerate (it is 0 because dev Delta_C < 0)
+% [PREREG_V2 Sec. 3.2]. m3 does not depend on any dev estimate of Delta_S.
+% H-REV: Delta_C < 0 at the primary cell, added before the freeze by the PI
+% to state the dev direction confirmatorily (dev pooled Delta_C -0.041,
+% SE 0.0085) [PREREG_V2 Sec. 3.3]; it does not replace P1.
+% Individual claims: Holm over {P1, P2, P3 (larger TOST side), H-REV} at
+% one-sided alpha 0.025 [PREREG_V2 Sec. 3.3, 4.2].
+% The channels-off replication of Prop. 1 on v2 was removed before the
+% freeze (not implemented in the frozen code; PREREG_V2 Sec. 3.4); Prop. 1
+% is verified on the v1 data. Results: Table tab:v2primary.
 % The earlier prediction "Ours-v2 - B10 <= lambda_c(1+w)" is WITHDRAWN: it is
 % not a valid bound (THEORY Prop. 4'(3) counterexample) and, without B11 in
 % D*[SPECULATIVE], the speculative contrast measures a decomposable effect.
@@ -15,15 +29,16 @@ rival under the commit and speculative architectures.}
 \centering
 \footnotesize
 \setlength{\tabcolsep}{3pt}
-\begin{tabular}{@{}p{0.75cm} p{3.65cm} p{3.2cm}@{}}
+\begin{tabular}{@{}p{0.85cm} p{3.85cm} p{2.9cm}@{}}
 \toprule
 Test & Hypothesis & Source\\
 \midrule
 P1 & $\DC>0$: joint pays when retrieval is committed; rival \Bplus & Prop.~\ref{prop:c2}\\
 P2 & $\DC-\DS>0$: the advantage shrinks under speculation (paired interaction) & Props.~\ref{prop:c2}, \ref{prop:spectheta}\\
-P3 & $|\DS|<m_3=\tfrac12\hat\delta_{C,\mathrm{dev}}$ (TOST): no joint advantage beyond belief-gated prefetch; rival best of \{\Bplus, \Bten, \Beleven\} & Props.~\ref{prop:spec}, \ref{prop:spectheta}\\
+P3 & $|\DS|<m_3=0.016$ (TOST; smallest effect size of interest): no joint advantage beyond belief-gated prefetch; rival the dev-best of \{\Bplus, \Bten, \Beleven\} & Props.~\ref{prop:spec}, \ref{prop:spectheta}\\
+H-REV & $\DC<0$: the decomposed rival \Bplus{} beats joint control under commit; added before the freeze & Pre-registration \S3.3 (dev direction)\\
 \midrule
-\multicolumn{3}{@{}p{0.95\columnwidth}@{}}{\scriptsize Boundary claim supported iff P1, P2 and both one-sided halves of P3 reject at one-sided $\alpha=0.025$ (intersection--union test; no multiplicity adjustment for the conjunction). Channels-off control: \OursV{} and \Bplus{} make identical decisions (Prop.~\ref{prop:eq}).}\\
+\multicolumn{3}{@{}p{0.95\columnwidth}@{}}{\scriptsize Boundary claim supported iff P1, P2 and both one-sided halves of P3 reject at one-sided $\alpha=0.025$ (intersection--union test; no multiplicity adjustment for the conjunction). Individual claims: Holm over P1, P2, P3 and H-REV at one-sided $\alpha=0.025$.}\\
 \bottomrule
 \end{tabular}
 \end{table}

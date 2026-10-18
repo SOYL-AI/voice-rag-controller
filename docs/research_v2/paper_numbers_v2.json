@@ -1,0 +1,513 @@
+{
+  "_comment": "Offline paper numbers for v2 (no model/judge calls). d2_support values that use judge-graded labels are exploratory (PREREG_V2 D3).",
+  "generated_by": "python -m analysis.paper_numbers_v2",
+  "generated_at_utc": "2026-10-18T02:56:01.840130+00:00",
+  "phase_a_dir": "simulator/e3v2_phase_a of the frozen confirmatory run (read only)",
+  "e1_latency_dev": {
+    "d1_open": {
+      "closed_book_draft": {
+        "n_calls": 80,
+        "n_items": 20,
+        "ttft_ms_median": 594.6881500130985,
+        "gen_ms_median": 2610.415050003212,
+        "source": "llm\\experiment1_v2\\results\\d1_open\\mistral7b_v03\\latency_dev.jsonl"
+      },
+      "self_assessment_probe": {
+        "n_calls": 80,
+        "n_items": 20,
+        "ttft_ms_median": 548.0733500153292,
+        "gen_ms_median": 549.3090999952983,
+        "source": "llm\\experiment1_v2\\results\\d1_open\\mistral7b_v03\\self_assessment_latency_dev.jsonl"
+      }
+    },
+    "d2_support": {
+      "closed_book_draft": {
+        "n_calls": 80,
+        "n_items": 20,
+        "ttft_ms_median": 596.0174499778077,
+        "gen_ms_median": 3199.6304000203963,
+        "source": "llm\\experiment1_v2\\results\\d2_support\\mistral7b_v03\\latency_dev.jsonl"
+      },
+      "self_assessment_probe": {
+        "n_calls": 80,
+        "n_items": 20,
+        "ttft_ms_median": 544.2979999643285,
+        "gen_ms_median": 545.3047000046354,
+        "source": "llm\\experiment1_v2\\results\\d2_support\\mistral7b_v03\\self_assessment_latency_dev.jsonl"
+      }
+    }
+  },
+  "e1_test_signals": {
+    "d1_open": {
+      "auc_full_question": {
+        "self_assessed_need": {
+          "auc": 0.6651225869111093,
+          "ci95": [
+            0.6475361121502213,
+            0.6821955258212342
+          ],
+          "n_items": 3734,
+          "n_pos": 2097
+        },
+        "mean_entropy_nats": {
+          "auc": 0.7074070092860354,
+          "ci95": [
+            0.6907653673405155,
+            0.723885617334969
+          ],
+          "n_items": 3734,
+          "n_pos": 2097
+        },
+        "max_entropy_nats": {
+          "auc": 0.662002529138843,
+          "ci95": [
+            0.6445162201789089,
+            0.6796793415431677
+          ],
+          "n_items": 3734,
+          "n_pos": 2097
+        }
+      },
+      "text_prefix_curve": {
+        "self_assessed_need": {
+          "0.3": {
+            "auc": 0.5374214669180075,
+            "ci95": [
+              0.5189323781038276,
+              0.5566141581920443
+            ]
+          },
+          "0.5": {
+            "auc": 0.5430894529200601,
+            "ci95": [
+              0.5251607185223337,
+              0.5613617600264658
+            ]
+          },
+          "0.7": {
+            "auc": 0.5821435573232144,
+            "ci95": [
+              0.5633211529986866,
+              0.6008493877653787
+            ]
+          },
+          "1.0": {
+            "auc": 0.6651225869111093,
+            "ci95": [
+              0.6475361121502213,
+              0.6821955258212342
+            ]
+          }
+        },
+        "mean_entropy_nats": {
+          "0.3": {
+            "auc": 0.45999302607879483,
+            "ci95": [
+              0.44205993350645,
+              0.47882670965083457
+            ]
+          },
+          "0.5": {
+            "auc": 0.4421206779676817,
+            "ci95": [
+              0.4237135144921779,
+              0.46122693360451483
+            ]
+          },
+          "0.7": {
+            "auc": 0.5508713177535817,
+            "ci95": [
+              0.5319703374427861,
+              0.5689227002556537
+            ]
+          },
+          "1.0": {
+            "auc": 0.7074070092860354,
+            "ci95": [
+              0.6907653673405155,
+              0.723885617334969
+            ]
+          }
+        }
+      },
+      "bootstrap_B_analyze_py": 2000,
+      "status": "pre-registered per-dataset analysis (unaffected by D3)",
+      "source": "llm\\experiment1_v2\\results\\d1_open\\analysis_test\\analysis_test.json"
+    },
+    "d2_support": {
+      "auc_full_question": {
+        "self_assessed_need": {
+          "auc": 0.7006138174219668,
+          "ci95": [
+            0.6378869593106941,
+            0.7609581237728168
+          ],
+          "n_items": 498,
+          "n_pos": 403
+        },
+        "mean_entropy_nats": {
+          "auc": 0.5084236646206086,
+          "ci95": [
+            0.43900112279269166,
+            0.5758292633279455
+          ],
+          "n_items": 498,
+          "n_pos": 403
+        },
+        "max_entropy_nats": {
+          "auc": 0.49202037351443123,
+          "ci95": [
+            0.4187565584695551,
+            0.5608883869013584
+          ],
+          "n_items": 498,
+          "n_pos": 403
+        }
+      },
+      "text_prefix_curve": {
+        "self_assessed_need": {
+          "0.3": {
+            "auc": 0.5788167689695703,
+            "ci95": [
+              0.5133966184796039,
+              0.6488508783502738
+            ]
+          },
+          "0.5": {
+            "auc": 0.6065560924644117,
+            "ci95": [
+              0.5405684910340472,
+              0.6734145489953306
+            ]
+          },
+          "0.7": {
+            "auc": 0.6671803578424971,
+            "ci95": [
+              0.6004736969377852,
+              0.7323003523540906
+            ]
+          },
+          "1.0": {
+            "auc": 0.7006138174219668,
+            "ci95": [
+              0.6378869593106941,
+              0.7609581237728168
+            ]
+          }
+        },
+        "mean_entropy_nats": {
+          "0.3": {
+            "auc": 0.48872926733707717,
+            "ci95": [
+              0.42463193617596473,
+              0.5536895387178703
+            ]
+          },
+          "0.5": {
+            "auc": 0.46146010186757214,
+            "ci95": [
+              0.39844070251494784,
+              0.5257371122792324
+            ]
+          },
+          "0.7": {
+            "auc": 0.4969047929998694,
+            "ci95": [
+              0.42888258919167555,
+              0.5643599763339037
+            ]
+          },
+          "1.0": {
+            "auc": 0.5084236646206086,
+            "ci95": [
+              0.43900112279269166,
+              0.5758292633279455
+            ]
+          }
+        }
+      },
+      "bootstrap_B_analyze_py": 2000,
+      "status": "exploratory (D3: judge agreed only moderately with the human labels)",
+      "source": "llm\\experiment1_v2\\results\\d2_support\\analysis_test\\analysis_test.json"
+    }
+  },
+  "e1_test_extra": {
+    "d1_open": {
+      "dev_calibration_on_test": {
+        "full_text_question": {
+          "n_items": 3734,
+          "base_rate": 0.5615961435457953,
+          "mean_belief": 0.5285140693832256,
+          "ece_10_bins_dev_calibration": 0.07664435366522784,
+          "boundary_mass": {
+            "b_star": -0.341985091260109,
+            "half_width": 0.15,
+            "fraction": 0.0
+          }
+        },
+        "primary_asr_final": {
+          "n_items": 3734,
+          "base_rate": 0.5615961435457953,
+          "mean_belief": 0.5597119545003316,
+          "ece_10_bins_dev_calibration": 0.06642110040374669,
+          "boundary_mass": {
+            "b_star": -0.341985091260109,
+            "half_width": 0.15,
+            "fraction": 0.0
+          }
+        }
+      },
+      "asr_prefix_curve_self_assessed_need": {
+        "0.3": {
+          "n_items": 3407,
+          "auc": 0.5398203302312631,
+          "ci95": [
+            0.5205158976118265,
+            0.5601584613641695
+          ]
+        },
+        "0.5": {
+          "n_items": 3733,
+          "auc": 0.5614089670174915,
+          "ci95": [
+            0.5422055675011969,
+            0.5799529038294091
+          ]
+        },
+        "0.7": {
+          "n_items": 3733,
+          "auc": 0.5832879161284606,
+          "ci95": [
+            0.5652508402861222,
+            0.6020017480259089
+          ]
+        },
+        "1.0": {
+          "n_items": 3734,
+          "auc": 0.5967394150936746,
+          "ci95": [
+            0.5789771580594338,
+            0.6153140224270081
+          ]
+        }
+      },
+      "bootstrap": {
+        "B": 2000,
+        "unit": "item"
+      },
+      "calibration_artifact": "controller\\baselines\\e3v2_calibration_d1_open_mistral7b_v03_self_assessed_need_logit.json",
+      "status": "pre-registered per-dataset analysis (unaffected by D3)"
+    },
+    "d2_support": {
+      "dev_calibration_on_test": {
+        "full_text_question": {
+          "n_items": 498,
+          "base_rate": 0.8092369477911646,
+          "mean_belief": 0.7764334985857374,
+          "ece_10_bins_dev_calibration": 0.04710829629329226,
+          "boundary_mass": {
+            "b_star": 0.07112736879540721,
+            "half_width": 0.15,
+            "fraction": 0.0
+          }
+        },
+        "primary_asr_final": {
+          "n_items": 498,
+          "base_rate": 0.8092369477911646,
+          "mean_belief": 0.778408815070716,
+          "ece_10_bins_dev_calibration": 0.043652844629041565,
+          "boundary_mass": {
+            "b_star": 0.07112736879540721,
+            "half_width": 0.15,
+            "fraction": 0.0
+          }
+        }
+      },
+      "asr_prefix_curve_self_assessed_need": {
+        "0.3": {
+          "n_items": 496,
+          "auc": 0.5580522378264864,
+          "ci95": [
+            0.48952419855391976,
+            0.6250025604580135
+          ]
+        },
+        "0.5": {
+          "n_items": 498,
+          "auc": 0.6120412694266684,
+          "ci95": [
+            0.546966395865812,
+            0.6767187716394693
+          ]
+        },
+        "0.7": {
+          "n_items": 498,
+          "auc": 0.6722998563406034,
+          "ci95": [
+            0.6086145152557949,
+            0.7339737394233025
+          ]
+        },
+        "1.0": {
+          "n_items": 498,
+          "auc": 0.7076923076923077,
+          "ci95": [
+            0.6454327412031035,
+            0.7668719381052669
+          ]
+        }
+      },
+      "bootstrap": {
+        "B": 2000,
+        "unit": "pair_id cluster"
+      },
+      "calibration_artifact": "controller\\baselines\\e3v2_calibration_d2_support_mistral7b_v03_self_assessed_need_logit.json",
+      "status": "exploratory (D3: judge agreed only moderately with the human labels)"
+    }
+  },
+  "remaining_speech_dev": {
+    "d1_open": {
+      "n_traces": 1566,
+      "n_samples": 12412,
+      "mae_q50_ms": 967.2044577544124,
+      "median_ae_q50_ms": 566.700644480483,
+      "coverage_q10_q90": 0.7974540766999678,
+      "log_error_sd": 0.7353062530804879,
+      "log_error_definition": "ln(q50 / true remaining), samples with true remaining >= 200 ms (n = 11648)",
+      "cv": "5-fold out-of-fold, fold rule simulator.e3v2_dev_analysis.fold_of, qr model",
+      "source": "conditions_dev.jsonl (primary ASR condition) under --phase-a"
+    },
+    "d2_support": {
+      "n_traces": 222,
+      "n_samples": 3187,
+      "mae_q50_ms": 692.5076197268475,
+      "median_ae_q50_ms": 566.5615518975592,
+      "coverage_q10_q90": 0.7869469720740508,
+      "log_error_sd": 0.47765380397937396,
+      "log_error_definition": "ln(q50 / true remaining), samples with true remaining >= 200 ms (n = 3061)",
+      "cv": "5-fold out-of-fold, fold rule simulator.e3v2_dev_analysis.fold_of, qr model",
+      "source": "conditions_dev.jsonl (primary ASR condition) under --phase-a"
+    }
+  },
+  "primary_cell_diagnostics_test": {
+    "d1_open": {
+      "q_hat": 0.04330136588201104,
+      "w_bar": 0.015680690743545354,
+      "lambda_c_1_plus_wbar_q_hat": 0.0021990180604589986,
+      "price": "0.173057|0.05",
+      "status": "pre-registered per-dataset analysis (unaffected by D3)"
+    },
+    "d2_support": {
+      "q_hat": 0.004555808656036446,
+      "w_bar": 0.0028921490654899395,
+      "lambda_c_1_plus_wbar_q_hat": 0.00022844923668917765,
+      "price": "0.215782|0.05",
+      "status": "exploratory (D3: judge agreed only moderately with the human labels)"
+    }
+  },
+  "realised_precision": {
+    "d1_open": {
+      "delta_commit": {
+        "boot_se": 0.005882911724489759,
+        "mde80": 0.01648147852679398
+      },
+      "delta_speculative": {
+        "boot_se": 0.005734002385832763,
+        "mde80": 0.01606429632477356
+      },
+      "interaction": {
+        "boot_se": 0.0020521298099721165,
+        "mde80": 0.0057492165412668566
+      }
+    },
+    "d2_support": {
+      "delta_commit": {
+        "boot_se": 0.014191117943205905,
+        "mde80": 0.039757626258183375
+      },
+      "delta_speculative": {
+        "boot_se": 0.015993812463723014,
+        "mde80": 0.04480802857963735
+      },
+      "interaction": {
+        "boot_se": 0.010702981812358155,
+        "mde80": 0.029985315635234554
+      }
+    },
+    "pooled": {
+      "delta_commit": {
+        "boot_se": 0.005453985753718454,
+        "mde80": 0.015279805867416335
+      },
+      "delta_speculative": {
+        "boot_se": 0.00540073090162136,
+        "mde80": 0.015130607860988327
+      },
+      "interaction": {
+        "boot_se": 0.0022096079416278986,
+        "mde80": 0.0061904049470897435
+      }
+    },
+    "n_test": {
+      "d1_open": 3734,
+      "d2_support": 498,
+      "d2_support_clusters": 192
+    },
+    "dev_prediction_prereg_6_1": {
+      "se_commit_at_test_N": 0.0055,
+      "mde_commit": 0.0155,
+      "se_interaction_at_test_N": 0.0024,
+      "mde_interaction": 0.0068
+    }
+  },
+  "dev_predictions_primary_cell": {
+    "d1_open": {
+      "delta_commit": -0.045384543505147014,
+      "se_commit": 0.009305744844806714,
+      "delta_speculative": -0.04782077825178421,
+      "se_speculative": 0.009258767012285103,
+      "interaction": 0.0024362347466372037,
+      "se_interaction": 0.0034447344394883494,
+      "d_star": {
+        "commit": "b9plus_v2",
+        "speculative": "b9plus_v2"
+      }
+    },
+    "d2_support": {
+      "delta_commit": -0.00926800760224793,
+      "se_commit": 0.018910114807194425,
+      "delta_speculative": -0.02135219231159128,
+      "se_speculative": 0.021370070292661063,
+      "interaction": 0.012084184709343342,
+      "se_interaction": 0.017279287169740528,
+      "d_star": {
+        "commit": "b9plus_v2",
+        "speculative": "b10_speculative_v2"
+      }
+    },
+    "pooled": {
+      "delta_commit": -0.040900275624585716,
+      "se_commit": 0.008481778852413044,
+      "delta_speculative": -0.04453441019880723,
+      "se_speculative": 0.00853223908470695,
+      "interaction": 0.003634134574221523,
+      "se_interaction": 0.003702065647638483
+    },
+    "g_dev": {
+      "d1_open": {
+        "g_plus": 0.44082098061573544,
+        "g_minus": -0.1123367198838897,
+        "n_needed": 877,
+        "n_not_needed": 689,
+        "source": "Phase A cells, condition piper-en_US-hfc_male-medium__150wpm__clean: final-transcript dispatch vs skip, per item mean over seeds"
+      },
+      "d2_support": {
+        "g_plus": 0.4445714285714286,
+        "g_minus": 0.03404255319148937,
+        "n_needed": 175,
+        "n_not_needed": 47,
+        "source": "Phase A cells, condition piper-en_US-hfc_male-medium__150wpm__clean: final-transcript dispatch vs skip, per item mean over seeds"
+      }
+    }
+  }
+}

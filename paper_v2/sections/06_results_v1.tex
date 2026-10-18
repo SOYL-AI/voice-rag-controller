@@ -39,9 +39,14 @@
 %   (e) E3 overlaps E1 in 2 of 49 questions [PN], so the E3 numbers are
 %       close to out-of-sample for the calibration.
 %   (f) Comparing controllers driven by both signals is a v2 analysis:
-%       \TBD{E3-v2 secondary run with max_entropy_nats as the belief signal,
-%       simulator/e3v2_results/ (not pre-registered yet; add to PREREG_V2
-%       Sec. 3 as a secondary or label it exploratory)}.
+%       % NOT AVAILABLE: no E3-v2 run with max_entropy_nats (or any entropy
+%       % signal) as the belief exists -- it was never pre-registered and the
+%       % frozen v2 controllers use only the self-assessment probe; it would
+%       % need new Phase A/B runs; authors: drop this claim (and the R2.3
+%       % promise of "a controller comparison driven by each signal").
+%       What exists instead (E1-v2 test AUCs, full question; analysis_test.json):
+%       d1_open mean-entropy 0.707, max-entropy 0.662, probe 0.665;
+%       d2_support (exploratory) 0.508 / 0.492 / 0.701.
 % NUMBERS: 0.978, 0.963, 0.991, 0.925, 0.917, 0.938, 0.922, 0.882, 0.083,
 %   0.113, 7, 0.973, 2 of 49.
 \todo{P-VI.1: E1 gate result, the mean-versus-max entropy choice with AUCs on

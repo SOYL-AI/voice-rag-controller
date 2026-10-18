@@ -79,6 +79,12 @@ and the plan to explain it and test its boundaries.}
 %       (including SPEC-theta) lies within +-half the dev commit effect
 %       (TOST); claim iff all three (intersection-union test).
 %       [PRE2 Secs. 3, 6.1]
+%       CONTRADICTS FINAL RESULTS / FROZEN PREREG: m3 = 0.016 (smallest
+%       effect size of interest), not half the dev commit effect; H-REV
+%       (Delta_C < 0) was added before the freeze; outcome on d1_open: P1
+%       fails, P2 fails Holm, P3 fails, H-REV holds (p < 1e-4); the boundary
+%       claim is not supported [docs/research_v2/v2_test_results_final.md].
+%       C2 must be phrased as a test whose prediction FAILED.
 %   C3  A corrected objective that charges retrieval's measured harm on
 %       questions that do not need it (g^- = 0.592 vs g^+ = 0.720 on v1)
 %       [V1T retrieval_effect]; together with C1 it explains the sign of the
@@ -86,7 +92,21 @@ and the plan to explain it and test its boundaries.}
 %   C4  An empirical finding about the belief on partial transcripts in a
 %       persona/company-support setting \PEND{state once the v2 E1 dev result
 %       exists: entropy-signal failure and P(IK)-style probe sharpening with
-%       transcript prefix; evidence \TBD{llm/experiment1_v2/results/}}. The
+%       transcript prefix; evidence (TEST split, frozen analyze.py output
+%       llm/experiment1_v2/results/<ds>/analysis_test/analysis_test.json;
+%       collected in docs/research_v2/paper_numbers_v2.json e1_test_signals,
+%       e1_test_extra): d2_support (EXPLORATORY, judge-graded need label):
+%       mean-entropy AUC 0.508 [0.439, 0.576] and max-entropy 0.492
+%       [0.419, 0.561], i.e. chance, vs self-assessment probe 0.701
+%       [0.638, 0.761]; probe AUC rises with the fraction heard, text
+%       0.579/0.607/0.667/0.701 and ASR partials 0.558/0.612/0.672/0.708 at
+%       0.3/0.5/0.7/1.0. d1_open (pre-registered, alias-graded): the entropy
+%       signal does NOT fail there -- mean-entropy AUC 0.707 [0.691, 0.724]
+%       is higher than the probe's 0.665 [0.648, 0.682]; probe text curve
+%       0.537/0.543/0.582/0.665 (AUC(1.0) - AUC(0.3) = +0.128
+%       [+0.100, +0.155], p < 1e-4; docs/research_v2/v2_test_results_d1.md),
+%       ASR curve 0.540/0.561/0.583/0.597. So state the persona finding as
+%       specific to the support setting, not general.}. The
 %       probe itself is not claimed as new.
 %   C5  A matched-pair, multi-organisation spoken customer-support benchmark
 %       in which retrieval need is not recoverable from surface form

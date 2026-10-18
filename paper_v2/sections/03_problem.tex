@@ -13,9 +13,23 @@
 % PURPOSE: the decision a controller takes per turn.
 % CLAIMS: a turn is a stream of ASR partials; at each partial the controller
 %   may dispatch retrieval, wait, or (at end of turn) skip.
-% No figure in this section (PI decision 2026-10-18).
+% One figure: fig_framework.pdf (paper_v2/tools/make_fig_framework.py),
+% re-added on PI request 2026-10-18 (R1.f1, R2.10); block copied from
+% sections/03_problem_draft.tex.
 % Compact draft text: sections/03_problem_draft.tex.
-\todo{P-III.1: the per-turn decision.}
+\todo{P-III.1: the per-turn decision (Fig.~\ref{fig:system_flow}).}
+
+\begin{figure*}[t]
+\centering
+\includegraphics[width=\textwidth]{fig_framework.pdf}
+\caption{Streaming pipeline and the decision structures compared. From each
+ASR partial $x_k$ the system estimates the belief $b_k$ and the remaining
+speech $\hat R_k$. (a) The joint controller decides at every partial whether
+to dispatch now or wait. (b) Decomposed controllers fix the trigger without
+the belief. (c) Speculative controllers prefetch early and decide at the end
+of the turn whether to use the result.}
+\label{fig:system_flow}
+\end{figure*}
 
 
 \subsection{Belief}\label{sec:belief}
@@ -29,8 +43,21 @@
 %       Hence the v1 belief does not depend on dispatch time (A3), even for
 %       policies that dispatch before the question is complete (R1.4).
 %   (b) The closed-book pass has a latency cost that v1 did not charge:
-%       \TBD{closed-book draft latency, from llm/experiment1_v2/results/*.jsonl
-%       fields ttft_ms and gen_ms (median over dev items)}. v2 charges it.
+%       closed-book draft (80-token cap, Mistral-7B, isolated dev timing
+%       run, 80 calls on 20 items per dataset): median TTFT 595 ms (d1_open)
+%       / 596 ms (d2_support), median full generation 2,610 ms / 3,200 ms
+%       [llm/experiment1_v2/results/<ds>/mistral7b_v03/latency_dev.jsonl;
+%       docs/research_v2/paper_numbers_v2.json e1_latency_dev]. v2 charges
+%       the belief's cost: its belief is the self-assessment probe, not the
+%       draft, and every belief becomes available a median 548 ms (d1_open)
+%       / 544 ms (d2_support) after its partial (one-token probe latency,
+%       same run: self_assessment_latency_dev.jsonl; this is sa_lag_ms in
+%       docs/research_v2/v2_predictions.json inputs).
+%       CONTRADICTS: (a)/(c)/Eq. belief describe the v2 belief as token
+%       entropy of a closed-book draft on x_k; in v2 the belief is the
+%       calibrated self-assessment probe P("No") (PRE2 H-E1v2):
+%       b_k = sigmoid(a + b logit(SA_k) + c f_k + d logit(SA_k) f_k), fitted
+%       on dev [controller/baselines/e3v2_calibration_<ds>_mistral7b_v03_self_assessed_need_logit.json].
 %   (c) v2: the belief is recomputed on each ASR partial x_k (contract
 %       docs/research_v2/CONTRACTS.md Sec. 5--6, uncertainty_by_prefix).
 %   (d) Calibration: logistic fit of P(need) on E1's 180 samples
@@ -67,8 +94,13 @@ function and $\beta=0.05$ a floor.
 %   (b) The zero-price retrieve boundary moves from b* = 0.05 (v1) to
 %       b* = g^-/(g^+ + g^-) = 0.451 [V1T retrieval_effect.b_star_at_zero_cost].
 %   (c) g^+, g^- are dataset-specific and are re-estimated on the v2 dev
-%       split: \TBD{g^+, g^- per dataset, from E1-v2 dev outputs,
-%       llm/experiment1_v2/results/}.
+%       split (primary ASR condition; final-transcript dispatch vs skip,
+%       per-item mean over 5 seeds; docs/research_v2/v2_predictions.json
+%       inputs.<ds>.g): d1_open g^+ = 0.441, g^- = -0.112 (877 needed /
+%       689 not needed; a NEGATIVE harm, i.e. retrieval slightly helped
+%       non-needed d1 items on dev, so b* < 0); d2_support g^+ = 0.445,
+%       g^- = 0.034 (175 / 47; d2 dev uses judge-graded labels,
+%       exploratory). text150 condition: d1 0.718 / 0.023, d2 0.463 / 0.166.
 % NUMBERS: 0.112, 0.832, 0.704, 0.112, 0.720 [0.504, 0.888],
 %   0.592 [0.408, 0.768], 0.451 -- all [V1T].
 \todo{P-III.3: the corrected objective, why $Q=b$ was a conflation, and the
@@ -109,12 +141,24 @@ Time to first audio is
 %   (c) The exact price map depends on w through lambda_c (w* - w_se)/L
 %       (Prop. 1); the approximate map lambda (L - o*)/L fails at 46 of 200
 %       prices because of this term [V1T prop1_dense].
-%   (d) Sensitivity: \TBD{decision agreement and frontier under
-%       w in {0, 0.04, 0.08, 0.16} for v1, from an extension of
-%       analysis/v1_theory_check.py (not yet written)} and v2: w measured as
-%       NOT measured in v2 either: placeholder w(f) = 0.1(1 - f), decision only
-%       [docs/research_v2/waste_sensitivity.md] \TBD{(old note) from the v2
-%       pipeline logs}.
+%   (d) Sensitivity, v1 (w applied to both early timings, w(sentence_end)
+%       = 0; docs/research_v2/waste_sensitivity_v1.json via
+%       analysis/v1_waste_sensitivity.py; summary docs/research_v2/waste_sensitivity.md
+%       Sec. 3): over w in {0, 0.04, 0.08, 0.16}, B9+ = Ours on 1,300/1,300
+%       decisions at every w; Ours's retrieve decision changes on at most
+%       20 of 1,300 scenario-prices (w = 0); mean accuracy gap Ours - B9
+%       stays +0.001 to +0.008; dominance 0/5 seeds vs B9 and vs B9+ at
+%       every w; Ours = B9 at the same price on 1,239-1,263 of 1,300.
+%       v2: w is NOT measured in v2 either: the frozen controllers use the
+%       placeholder w(f) = 0.1(1 - f) (w = 0 at end of turn), which enters
+%       only the decision, not the scored utility
+%       [docs/research_v2/waste_sensitivity.md]. v2 d1_open sensitivity
+%       (coef in {0, 0.04, 0.08, 0.16}; analysis/v2_waste_sensitivity_d1.py
+%       -> docs/research_v2/waste_sensitivity_v2_d1.json):
+%       [waste v2 d1: pending].
+%       Optional measured proxies (d1_open test, primary ASR; same md):
+%       SPEC discarded 2.3-10.9% of its dispatches; 22.0% of early
+%       query-ready ASR partials were later revised (last word excluded).
 \todo{P-III.4: the waste-rate placeholder, its role in the exact price map,
 and the sensitivity analysis.}
 
