@@ -387,7 +387,7 @@ b&=\max\!\big(0.05,\,\sigma(ws+c)\big),
 with $w=11.288$, $c=-3.633$ fitted in-sample on the 36-item belief set
 (180 samples, five seeds). Maximum entropy ranked these items slightly
 better (AUC 0.978 vs.\ 0.925), but the mean is smoother and suits a logistic
-fit. Because it is computed once from the full question, this
+fit; we did not run a separate controller on the maximum-entropy signal. Because it is computed once from the full question, this
 belief does not depend on dispatch time.
 
 \textit{Streaming experiment.} The belief is recomputed on every partial $x_k$. Mistral-7B is
@@ -474,7 +474,9 @@ an equal budget (the text experiment used fixed defaults).
 \textbf{Ours} (text experiment) scores skip and every (retrieve, $t$) pair
 and takes the best. \textbf{B9} splits the choice into a timing module and a retrieval
 module that share no state, so it prices retrieval at the full latency $L$
-and can skip turns that early dispatch would make worthwhile. \textbf{B9+}
+and can skip turns that early dispatch would make worthwhile. Unlike B8,
+which retrieves on a fixed entropy threshold with a fixed early dispatch, B9
+prices both decisions (Algorithm~\ref{alg:oursv2}). \textbf{B9+}
 keeps the split but prices the expected exposure of its own timing choice.
 When the belief does not depend on dispatch time and the overlap is the same
 for every turn (assumptions A1--A3, Section~\ref{sec:theory}), B9+ and Ours
@@ -505,6 +507,9 @@ whether and when chosen in one decision.}
 ID & Rule & Priced & Joint\\
 \midrule
 B0 & never retrieve & -- & --\\
+B4 & $1-\bar p\ge0.5$ (FLARE-style~\cite{jiang2023flare}); sentence end & no & no\\
+B6 & $s^{\max}\ge1.0$ (DRAGIN-style~\cite{su2024dragin}); sentence end & no & no\\
+B8 & $s^{\max}\ge1.2$; fixed early dispatch & no & no\\
 B9 & Eq.~(\ref{eq:obj}) at full latency; timing separate & yes & no\\
 B9+ & Eq.~(\ref{eq:obj}) at expected exposure of own timing & yes & no\\
 B10 & always prefetch; use iff $U(b_K)>0$ (streaming) & yes & no\\
@@ -516,9 +521,10 @@ Ours-S & optimal stopping over partials (streaming) & yes & yes\\
 \end{table}
 
 \begin{algorithm}[t]
-\caption{Ours-S for one turn (\textsc{commit})}
+\caption{Ours-S (\textsc{commit}) and the decomposed B9, one turn}
 \label{alg:oursv2}
 \begin{algorithmic}[1]
+\Statex \textbf{Ours-S (joint, streaming)}
 \For{each partial $k$ as it arrives}
   \State $u\gets U_k(b_k)$ \Comment{Eqs.~(\ref{eq:obj}), (\ref{eq:exposure})}
   \If{$k=K$} \Return \textsc{Retrieve} \textbf{if} $u>0$ \textbf{else} \textsc{Skip}
@@ -526,6 +532,10 @@ Ours-S & optimal stopping over partials (streaming) & yes & yes\\
   \If{$u>0$ \textbf{and} $u\ge\textsc{Wait}(b_k,\hat R_k)$} \Return \textsc{Retrieve}
   \EndIf
 \EndFor
+\Statex \textbf{B9 (decomposed, text experiment)}
+\State $\tau\gets\arg\max_t[\lambda_l o_t-\lambda_c w_t]$ \Comment{timing; no belief}
+\State $r\gets\mathbf 1\{b g^{+}-(1-b)g^{-}-\lambda_l L-\lambda_c(1+w_{\mathrm{se}})>0\}$ \Comment{full $L$}
+\State \Return $(r,\tau)$
 \end{algorithmic}
 \end{algorithm}
 
@@ -613,7 +623,8 @@ that way. The boundary claim requires P1, P2 and P3 together.
 \textbf{Model and retrieval.} All controllers use the same generator,
 Mistral-7B-Instruct-v0.3 served with vLLM, and the same retriever, a FAISS
 index over bge-small embeddings. Every item is run with five seeds (11, 23, 37,
-53 and 71).
+53 and 71), which change only the generator's sampling; seeds are therefore not
+independent replicates, and the unit of analysis is the item.
 
 \textbf{Text experiment.} To check the equivalence result we use 50
 single-domain (hotel) scenarios, each run with the five seeds, and a separate
@@ -691,7 +702,11 @@ decisions. With the corrected objective and the measured latency cost, the
 predicted and observed utility gaps agree in sign at 10 of 11 band prices
 (Pearson $r=0.952$). The cost model used to run this experiment, which
 understated retrieval's TTFA cost by more than a factor of two, gets the sign
-right at only 1 of 11.
+right at only 1 of 11. Early dispatch lowers the median TTFA (3.69~s for
+\textsc{fixed\_early\_proxy} against 4.11~s at sentence end) but not the 95th
+percentile (7.09~s against 7.05~s), because first audio waits for the full
+answer to be generated. Of the unpriced baselines, B8 reaches accuracy 0.708
+and B6 0.636; B4 never retrieved and is identical to B0 (0.408).
 
 \subsection{Pre-Registered Streaming Test}\label{sec:res-stream}
 
@@ -800,12 +815,12 @@ rather than recordings of real users. The \dset{d2\_support} results rest on a
 judge whose agreement with the human labels was moderate, so they are
 exploratory. Its retriever searches one shared index across all
 organisations, which weakens retrieval on that set. Finally, the text
-experiment is moderate and single-domain.
+experiment is small and single-domain.
 
 % =============================================================================
 \section{Conclusion}\label{sec:conclusion}
 
-We asked if a voice assistant should decide when and how to retrieve
+We asked if a voice assistant should decide whether and when to retrieve
 in one decision or in separate modules. Under timing-invariant quality,
 constant overlap and a dispatch-invariant belief, the two are equivalent up to
 a change of price, which explains why a controlled text experiment found no
