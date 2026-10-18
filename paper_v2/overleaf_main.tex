@@ -257,29 +257,25 @@ Bengaluru, India\\
 \thispagestyle{firstpage}
 
 \begin{abstract}
-A streaming voice dialogue system must decide whether to retrieve external
-knowledge and when to dispatch the query while the user is still speaking. We
-ask whether optimizing these two decisions jointly outperforms a decomposed
-controller that faces the same latency and compute prices. Under
-timing-invariant quality, constant latency overlap and a dispatch-invariant
-belief (A1--A3), we prove that the joint controller at any latency price makes
-the same decisions as the decomposed controller at a mapped price, so their
-frontiers coincide. In a text-based experiment that satisfies A1--A3 by construction, the price map reproduces
-$10{,}000/10{,}000$ off-grid decisions, and a decomposed rule that prices the
-expected exposed latency reproduces the joint rule on $11{,}300/11{,}300$
-turns. Turn-dependent overlap yields only second-order gains; the first-order
-channel separates the two controllers only when a dispatched retrieval is
+A streaming voice assistant must decide whether to retrieve external knowledge
+and when to dispatch the query while the user is still speaking. We ask
+whether making these two decisions jointly beats a decomposed controller that
+faces the same latency and compute prices. Under timing-invariant quality,
+constant latency overlap and a dispatch-invariant belief (A1--A3), we prove
+that the joint controller at any latency price matches the decomposed
+controller at a mapped price; in a text-based experiment that satisfies
+A1--A3, the map reproduces $10{,}000/10{,}000$ decisions. Beyond A1--A3, joint
+control can gain to first order only when a dispatched retrieval is
 committed, and under speculative prefetch a belief-gated decomposed
-prefetcher stays within a small bounded term of the joint optimum. We then ran
-a pre-registered boundary test on open-domain and customer-support speech
-with live automatic speech recognition (ASR) partials. On 3,734 open-domain
-test questions the joint controller was worse than the strongest decomposed
-rival under commitment (utility difference $-0.037$, 95\% CI
-$[-0.048,-0.025]$): the boundary hypotheses were not supported and the
-pre-registered reverse hypothesis held. Customer-support and pooled results
-point the same way but are exploratory. The gap disappears on clean text,
-implicating recognition errors in early partial transcripts and a weak belief
-signal.
+prefetcher stays within a small term of the joint optimum. A pre-registered
+test on open-domain and customer-support speech with live automatic speech
+recognition (ASR) partials did not support the predicted boundary: on 3,734
+open-domain test questions the joint controller was worse than the strongest
+decomposed rival under commitment (utility difference $-0.037$, 95\% CI
+$[-0.048,-0.025]$), and the pre-registered reverse hypothesis held.
+Customer-support and pooled results agree but are exploratory. The gap
+vanishes on clean text, implicating recognition errors in early partial
+transcripts and a weak belief signal.
 \end{abstract}
 \begin{IEEEkeywords}
 Retrieval-Augmented Generation, Spoken Dialogue Systems, Decision-Theoretic Control, Speculative Prefetch, Streaming Retrieval.
@@ -304,17 +300,38 @@ Our approach builds on uncertainty-triggered retrieval \cite{jiang2023flare,su20
 
 \section{Related Work}\label{sec:related}
 
-\subsection{Streaming and Speculative Retrieval in Spoken Dialogue}
-Stream RAG issues retrieval and tool calls while the user is still speaking, and compares speculative calls at fixed intervals with calls triggered by the model \cite{arora2026streamrag}. These correspond to the speculative and commit architectures we study. Jung et al.\ use speculative execution to hide tool latency in an on-device cascaded voice agent \cite{jung2026hiding}. Galbraith characterizes when tool intent stabilizes on a streaming transcript, and hence when early dispatch is safe, but studies timing alone, assumes every query requires retrieval, and offers no decision model \cite{galbraith2026streaming}. MoshiRAG learns whether to retrieve in a full-duplex speech model, but retrieval begins at response onset rather than during the user's speech \cite{chien2026moshirag}. Together, these works show that early and speculative retrieval is feasible and useful. To our knowledge, none asks whether deciding whether and when to retrieve jointly outperforms deciding them separately under shared prices, or characterizes that boundary formally.
+\textbf{Streaming and speculative retrieval.} Stream RAG issues retrieval and
+tool calls while the user is still speaking, comparing speculative calls at
+fixed intervals with model-triggered calls \cite{arora2026streamrag}; these
+correspond to our speculative and commit architectures. Speculative execution
+also hides tool latency in on-device voice agents \cite{jung2026hiding}.
+Galbraith characterizes when tool intent stabilizes on a streaming transcript,
+but studies timing alone and assumes every query needs retrieval
+\cite{galbraith2026streaming}. MoshiRAG learns whether to retrieve in a
+full-duplex speech model, but retrieves only at response onset
+\cite{chien2026moshirag}. To our knowledge, none asks whether deciding whether
+and when to retrieve jointly beats deciding them separately under shared
+prices.
 
-\subsection{Adaptive Retrieval and Self-Knowledge}
-FLARE retrieves when generated tokens have low confidence \cite{jiang2023flare}, and DRAGIN detects information needs in real time during generation \cite{su2024dragin}. Adaptive-RAG routes queries by predicted complexity \cite{jeong2024adaptiverag}. Moskvoretskii et al.\ find that simple uncertainty triggers are competitive with more complex adaptive methods \cite{moskvoretskii2025adaptive}, and Kadavath et al.\ show that models can be trained to predict whether they know an answer, P(IK) \cite{kadavath2022language}. Our self-knowledge probe belongs to this family. Retrieval can also hurt on questions the model already answers correctly, such as those about popular entities \cite{mallen2023trust}, which motivates the retrieval-harm term $g^{-}$ in our objective. What is new is the setting rather than the probe: on our customer-support set, token-entropy signals are near chance (AUC $0.51$), while the probe reaches $0.70$ and sharpens from $0.56$ to $0.71$ as more of the question is heard; on open-domain questions entropy remains stronger. These support-set results are exploratory.
+\textbf{Adaptive retrieval and self-knowledge.} FLARE and DRAGIN trigger
+retrieval from generation uncertainty \cite{jiang2023flare,su2024dragin},
+Adaptive-RAG routes queries by predicted complexity \cite{jeong2024adaptiverag},
+and simple uncertainty triggers remain competitive
+\cite{moskvoretskii2025adaptive}. Models can predict whether they know an
+answer \cite{kadavath2022language}; our self-knowledge probe belongs to this
+family. Retrieval can also hurt on questions the model already answers
+correctly \cite{mallen2023trust}, which motivates the harm term $g^{-}$.
 
-\subsection{Benchmarks}
-$\tau$-Voice benchmarks full-duplex voice agents on real-world domains \cite{ray2026tauvoice}. For open-domain QA, we draw on PopQA \cite{mallen2023trust} and HotpotQA \cite{yang2018hotpotqa}. To our knowledge, no spoken benchmark pairs retrieval-needed and retrieval-not-needed questions in matched groups across organizations, so that retrieval need cannot be read from surface form. On our benchmark, a leak test reaches only AUC 0.576 (95\% CI [0.541, 0.617]).
-
-\subsection{Turn-Taking and Decision Theory}
-Voice Activity Projection (VAP) predicts turn shifts from dialogue audio over a short horizon \cite{ekstedt2022vap}; we need the remaining time of a whole single-speaker question, so we instead predict the remaining speech (as quantiles) from the partial transcript and the elapsed time. Value of information \cite{howard1966information} formalizes when acquiring information is worth its cost. Bohus and Horvitz apply decision theory to turn-taking, weighing the cost of acting early against the cost of waiting under uncertainty \cite{bohus2011decisions}. Our contribution is not the use of expected utility itself. To our knowledge, it is the first exact characterization of when a joint retrieve-and-dispatch controller coincides with a decomposed controller that shares its prices, and of where the two diverge (commit versus speculative prefetch).
+\textbf{Benchmarks and decision theory.} $\tau$-Voice benchmarks full-duplex
+voice agents on real-world domains \cite{ray2026tauvoice}; we draw open-domain
+questions from PopQA \cite{mallen2023trust} and HotpotQA
+\cite{yang2018hotpotqa}. Voice Activity Projection predicts turn shifts over a
+short horizon \cite{ekstedt2022vap}; we instead predict the remaining speech
+of a whole question from the partial transcript. Value of information
+\cite{howard1966information} and decision-theoretic turn-taking
+\cite{bohus2011decisions} underlie our objective; what is new is the exact
+characterization of when joint and decomposed control coincide and where they
+diverge.
 
 % =============================================================================
 \section{Problem Formulation and Controllers}
@@ -366,8 +383,8 @@ b&=\max\!\big(0.05,\,\sigma(ws+c)\big),
 \end{aligned}
 \label{eq:belief}
 \end{equation}
-with $w=11.288$, $c=-3.633$ fitted in-sample on the 180 samples of
-Experiment~1. Maximum entropy ranked items better
+with $w=11.288$, $c=-3.633$ fitted in-sample on the 36-item belief set
+(180 samples, five seeds). Maximum entropy ranked items better
 (Section~\ref{sec:res-equiv}), but the mean is smoother and suits a
 logistic fit. Because it is computed once from the full question, this
 belief does not depend on dispatch time.
@@ -561,77 +578,24 @@ For B9+ at the same price the difference is $0$ pointwise.
 %         model, not outcomes (without model correctness the gap can be < 0).
 
 \textbf{Channels that break the equivalence.} Dropping (A2) (turn-dependent
-overlap, C1) gives a gain of order $\lambda_l^{2}\operatorname{Var}e^{*}$,
+overlap, C1) yields a gain of order $\lambda_l^{2}\operatorname{Var}e^{*}$,
 i.e.\ second order. Dropping (A1) alone (partial-query risk, C3) makes the
 optimal timing depend on $b$ but keeps the joint optimum a function of $b$, so
-it does not separate the two classes. Dropping (A3) (C2) is first order. Let
-the belief $b_k$ be a martingale over epochs $k=1,\dots,K$, let a retrieval
-dispatched at $k$ be committed with value
-$D_k=s_kb_k-g^{-}-\lambda_lX_k-\lambda_c(1+w_k)$, and let
-$W_k=\mathbb E[D_{k+1}^{+}\mid\mathcal F_k]-D_k^{+}$ be the one-step value of
-waiting.
-
-\begin{proposition}[Information vs.\ overlap]\label{prop:c2}
-If $W_k>0$, waiting strictly beats both dispatching and skipping at $k$. If
-some event in the belief-free timing filtration contains, with positive
-probability, both turns where waiting is strictly optimal and turns where
-dispatching now is strictly optimal, then every decomposed policy (dispatch at
-a belief-free stopping time, decide with $b$ at that time) is strictly
-suboptimal.
-\end{proposition}
-
-Under the speculative architecture a prefetch at the first query-ready epoch
-$k_0$ costs $c=\lambda_c(1+w_{k_0})$, which is sunk, and is used at $K$ only
-if worthwhile. Let $\Delta\rho=\rho_{k_0}-\min_{k>k_0}\rho_k$ and let $D_J$ be
-the event that the joint controller does not prefetch at $k_0$.
-
-\begin{proposition}[Speculative prefetch]\label{prop:spec}
-The joint controller's gain over always-prefetch SPEC (B10) satisfies
-\[
-0\le V^{*}_S-V_{\mathrm{SPEC}}\le c\Pr(D_J)+g^{+}\Delta\rho\,
-\mathbb E[b_K\mathbf 1_{D_J}];
-\]
-SPEC is optimal when $\lambda_c=\Delta\rho=0$.
-\end{proposition}
-
-\begin{proposition}[Belief-gated prefetch]\label{prop:spectheta}
-With two epochs and $\Delta\rho=0$,
-\[
-0\le V^{*}_S-V_{\mathrm{SPEC}\text{-}\theta}
-\le\lambda_l\,\mathbb E\big[|\hat X_{k_0}-\bar X_{k_0}|\,(u^{*}+u^{\theta})\big],
-\]
-where $\hat X$ is the realized and $\bar X$ the development-mean exposure and
-$u$ indicates ``prefetch at $k_0$ and use''. Since SPEC-$\theta$ (B11) is
-decomposed, the joint advantage under speculation is a C1-sized term.
-\end{proposition}
-% P-IV.4  The channels in words: joint control is predicted to pay mainly when
-%         retrieval is committed (Prop. 3); under speculation a belief-gated
-%         decomposed prefetcher is predicted to match it (Props. 4, 5), which
-%         is why B11 is a required rival. Table II turns this into the
-%         pre-registered tests. (These are predictions; Sec. VII tests them.)
-
-\begin{table}[t]
-\caption{Pre-Registered Tests (Streaming Experiment). $\DC$ and $\DS$ are the joint
-controller's mean paired utility difference from the strongest decomposed
-rival under the commit and speculative architectures (positive: joint
-better).}
-\label{tab:predictions}
-\centering
-\footnotesize
-\setlength{\tabcolsep}{3pt}
-\begin{tabular}{@{}p{0.85cm} p{4.6cm} p{2.15cm}@{}}
-\toprule
-Test & Hypothesis & Source\\
-\midrule
-P1 & $\DC>0$: joint pays when retrieval is committed; rival \Bplus & Prop.~\ref{prop:c2}\\
-P2 & $\DC-\DS>0$: the advantage shrinks under speculation (paired interaction) & Props.~\ref{prop:c2}, \ref{prop:spectheta}\\
-P3 & $|\DS|<m_3=0.016$ (TOST; smallest effect size of interest); rival the dev-best of \{\Bplus, \Bten, \Beleven\}: \Bplus{} (\dset{d1\_open}), \Bten{} (\dset{d2\_support}) & Props.~\ref{prop:spec}, \ref{prop:spectheta}\\
-H-REV & $\DC<0$: \Bplus{} beats joint control under commit; added before the freeze & dev direction\\
-\midrule
-\multicolumn{3}{@{}p{0.95\columnwidth}@{}}{\scriptsize Boundary claim supported iff P1, P2 and both one-sided halves of P3 reject at one-sided $\alpha=0.025$ (intersection--union test). Individual claims: Holm over P1, P2, P3 and H-REV at one-sided $\alpha=0.025$.}\\
-\bottomrule
-\end{tabular}
-\end{table}
+it does not separate the two classes. Dropping (A3) (information vs.\
+overlap, C2) is first order: for a committed retrieval with value $D_k$ at
+partial $k$, the value of waiting
+$W_k=\mathbb E[D_{k+1}^{+}\mid\mathcal F_k]-D_k^{+}$ can be positive on some
+turns and negative on others that a belief-free timing rule cannot tell apart,
+and then every decomposed policy is strictly suboptimal. Under speculative
+prefetch, the joint gain over always-prefetch (B10) is at most the compute
+spent on prefetches the joint controller would skip plus a partial-query
+term, and a belief-gated prefetcher (B11) comes within a C1-sized term of the
+joint optimum. These predictions define the pre-registered tests: P1, joint
+beats \Bplus{} under commit ($\DC>0$); P2, the advantage shrinks under
+speculation ($\DC-\DS>0$); P3, under speculation the joint controller is
+within $m_3=0.016$ of the best decomposed rival (equivalence test); and
+H-REV, $\DC<0$, added before the freeze because the development data pointed
+that way. The boundary claim requires P1, P2 and P3 together.
 
 % =============================================================================
 \section{Experimental Setup}\label{sec:setup}
@@ -675,41 +639,15 @@ H-REV & $\DC<0$: \Bplus{} beats joint control under commit; added before the fre
 % P-VI.1  Belief signal on the 36-item set: max-entropy AUC 0.978; the mean is
 %         used (Sec. III-B). The set is separable by surface form, so it checks
 %         the signal, not generalisation.
-% P-VI.2  Timing (Table III): early dispatch lowers median TTFA
-%         (fixed_early_proxy -400 ms) but not p95.
+% P-VI.2  Timing (one or two sentences, no table): median TTFA 4.11 s
+%         (sentence_end), 4.07 s (immediate), 3.69 s (fixed_early_proxy);
+%         p95 7.05 / 6.92 / 7.09 s, so early dispatch lowers the median
+%         (-400 ms) but not the tail. 750 runs.
 
-\begin{table}[t]
-\caption{Text Experiment: Time to First Audio by Dispatch Policy (750 Runs;
-95\% Scenario-Cluster Bootstrap Intervals)}
-\label{tab:e2}
-\centering
-\footnotesize
-\setlength{\tabcolsep}{2.5pt}
-\resizebox{\columnwidth}{!}{%
-\begin{tabular}{@{}l c c c@{}}
-\toprule
- & \pol{sentence\_end} & \pol{immediate} & \pol{fixed\_early\_proxy}\\
-\midrule
-p50 TTFA (s) & 4.11 & 4.07 & 3.69\\
-p95 TTFA (s) & 7.05 [6.58, 7.97] & 6.92 [6.51, 7.22] & 7.09 [6.67, 7.58]\\
-$\Delta$ vs \pol{sentence\_end}, mean (ms) & -- & $-180$ [$-413$, $+51$] & $-479$ [$-690$, $-275$]\\
-$\Delta$ vs \pol{sentence\_end}, median (ms) & -- & $-148$ & $-400$\\
-\bottomrule
-\end{tabular}%
-}
-\end{table}
 
 % P-VI.3  Joint vs decomposed: strict dominance in 0 of 5 seeds; the frontiers
-%         coincide (Fig. 2).
+%         coincide over 26 latency prices.
 
-\begin{figure}[t]
-\centering
-\IfFileExists{figures/fig_e3_acc_vs_p95.pdf}{\includegraphics[width=\columnwidth]{fig_e3_acc_vs_p95.pdf}}{\fbox{Upload figures/fig\_e3\_acc\_vs\_p95.pdf}}
-\caption{Text experiment: accuracy against p95 TTFA for the joint controller (Ours) and
-the decomposed controller (B9) over 26 latency prices, and for the unpriced
-baselines, with 95\% scenario-cluster bootstrap bands.}
-\label{fig:frontiers}
-\end{figure}
 
 % P-VI.5  Why it tied: equivalence evidence (price map 10,000/10,000 off-grid
 %         decisions; B9+ = Ours on 11,300/11,300).
@@ -718,14 +656,14 @@ baselines, with 95\% scenario-cluster bootstrap bands.}
 
 % =============================================================================
 \subsection{Pre-Registered Streaming Test}\label{sec:res-stream}
-% P-VII.1  The pre-registered tests (P1, P2, P3, H-REV; Table II), frozen
+% P-VII.1  The pre-registered tests (P1, P2, P3, H-REV; Sec. IV), frozen
 %          before any test data; deviations logged in the pre-registration.
 %          d1_open is the pre-registered per-dataset analysis; d2_support and
 %          pooled results are exploratory (judge agreement moderate).
 % P-VII.2  Judge agreement and belief validity (E1 test): AUC d1 0.665
 %          [0.648, 0.682]; d2 0.701 [0.638, 0.761] (exploratory); prefix
 %          informativeness below 0.65 at half the question.
-% P-VII.H  Headline estimate + H-REV (Table IV).
+% P-VII.H  Headline estimate + H-REV (Table II).
 
 \begin{table}[t]
 \caption{Pre-Registered Boundary Test on the Streaming Test Split (Paired Cluster Bootstrap,
