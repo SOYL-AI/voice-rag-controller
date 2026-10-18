@@ -263,24 +263,19 @@ knowledge and when to dispatch the query while the user is still speaking. We
 ask whether optimizing these two decisions jointly outperforms a decomposed
 controller that faces the same latency and compute prices. Under
 timing-invariant quality, constant latency overlap and a dispatch-invariant
-belief (A1--A3), we prove that the joint controller at any latency price makes
-the same decisions as the decomposed controller at a mapped price, so their
-frontiers coincide. In a text-based experiment that satisfies A1--A3 by construction, the price map reproduces
-$10{,}000/10{,}000$ off-grid decisions, and a decomposed rule that prices the
-expected exposed latency reproduces the joint rule on $11{,}300/11{,}300$
-turns. Turn-dependent overlap yields only second-order gains; the first-order
-channel separates the two controllers only when a dispatched retrieval is
-committed, and under speculative prefetch a belief-gated decomposed
-prefetcher stays within a small bounded term of the joint optimum. We then ran
-a pre-registered boundary test on open-domain and customer-support speech
-with live automatic speech recognition (ASR) partials. On 3,734 open-domain
-test questions the joint controller was worse than the strongest decomposed
-rival under commitment (utility difference $-0.037$, 95\% CI
-$[-0.048,-0.025]$): the boundary hypotheses were not supported and the
-pre-registered reverse hypothesis held. Customer-support and pooled results
-point the same way but are exploratory. The gap disappears on clean text,
-implicating recognition errors in early partial transcripts and a weak belief
-signal.
+belief (A1--A3), we prove that the joint controller makes the same retrieval
+decisions as a decomposed controller at a mapped price, and that a decomposed
+controller pricing the expected exposed latency is identical to it. Without
+these assumptions, coupling can help mainly when the belief sharpens during
+the turn and a dispatched retrieval is committed. We then ran a
+pre-registered test on open-domain and customer-support speech with live
+automatic speech recognition (ASR) partials. On 3,734 open-domain test
+questions the joint controller was worse than the strongest decomposed rival
+under commitment (utility difference $-0.037$, 95\% CI $[-0.048,-0.025]$):
+the boundary hypotheses were not supported and the pre-registered reverse
+hypothesis held. Customer-support and pooled results point the same way but
+are exploratory. The gap disappears on clean text, which points to
+recognition errors in early partial transcripts and a weak belief signal.
 \end{abstract}
 \begin{IEEEkeywords}
 Retrieval-Augmented Generation, Spoken Dialogue Systems, Decision-Theoretic Control, Speculative Prefetch, Streaming Retrieval.
@@ -290,49 +285,45 @@ Retrieval-Augmented Generation, Spoken Dialogue Systems, Decision-Theoretic Cont
 % =============================================================================
 \section{Introduction}\label{sec:intro}
 
-A voice assistant that grounds answers in external documents must decide whether to retrieve on a turn and when to dispatch retrieval relative to ongoing speech. Streaming systems already retrieve mid-speech, either speculatively at fixed intervals or when triggered by the model, and reduce latency without losing accuracy \cite{arora2026streamrag}. Speculative execution likewise hides tool latency in voice agents \cite{jung2026hiding}. Retrieval is not always beneficial, however. Adaptive methods decide whether to search \cite{jiang2023flare,su2024dragin,jeong2024adaptiverag}, and retrieved documents can degrade answers the language model would otherwise get right \cite{mallen2023trust}. Work on timing typically dispatches once user intent stabilizes and assumes retrieval is required \cite{galbraith2026streaming}. As a result, the two decisions are studied as separate problems.
+A voice assistant that grounds answers in external documents must decide whether to retrieve on a turn and when to dispatch retrieval relative to ongoing speech. Streaming systems already retrieve mid-speech, either speculatively at fixed intervals or when triggered by the model, and reduce latency without losing accuracy \cite{arora2026streamrag,jung2026hiding}. Retrieval is not always beneficial, however. Adaptive methods decide whether to search \cite{jiang2023flare,su2024dragin,jeong2024adaptiverag}, and retrieved documents can degrade answers the language model would otherwise get right \cite{mallen2023trust}. Work on timing typically dispatches once user intent stabilizes and assumes retrieval is required \cite{galbraith2026streaming}. As a result, the two decisions are studied as separate problems.
 
-This raises an architectural question: must the two decisions be made jointly by a coupled controller, or does a decomposed controller facing the same latency and compute prices perform equally well? In a controlled text-based experiment, a coupled controller achieved strict dominance over a price-aware decomposed baseline in 0 of 5 seeds (Section~\ref{sec:res-equiv}). We show this is not a matter of statistical power. When the timing and belief assumptions A1--A3 hold, joint control and price-mapped decomposed control have identical decision frontiers. We formalize this equivalence and identify the conditions under which the two architectures diverge.
+This raises an architectural question: must the two decisions be made jointly by a coupled controller, or does a decomposed controller facing the same latency and compute prices perform equally well? In a controlled text-based experiment, a coupled controller strictly dominated a price-aware decomposed baseline in 0 of 5 seeds (Section~\ref{sec:res-equiv}). We show this is not a matter of statistical power: when the timing and belief assumptions A1--A3 hold, the joint controller's retrieval decisions are those of a decomposed controller at a different price. We formalize this equivalence and identify the conditions under which the two architectures can diverge.
 
-Our approach builds on uncertainty-triggered retrieval \cite{jiang2023flare,su2024dragin}, speculative dispatch on partial transcripts \cite{arora2026streamrag,jung2026hiding}, and internal knowledge probing \cite{kadavath2022language,moskvoretskii2025adaptive}. We make five contributions:
+Our approach builds on uncertainty-triggered retrieval \cite{jiang2023flare,su2024dragin}, speculative dispatch on partial transcripts \cite{arora2026streamrag,jung2026hiding}, and internal knowledge probing \cite{kadavath2022language,moskvoretskii2025adaptive}. We make three contributions:
 \begin{itemize}
-    \item \textbf{$C_1$ (Theory):} To our knowledge, the first formal equivalence analysis of joint and decomposed control under A1--A3. We derive an exact price map (Prop.~\ref{prop:eq}) and a fixed-price gap (Prop.~\ref{prop:gap}), and show that joint control yields first-order gains mainly under mandatory execution commitment.
-    \item \textbf{$C_2$ (Boundary evaluation):} A pre-registered intersection-union test (P1--P3) of controller divergence under the commit and speculative architectures, together with a pre-registered reverse hypothesis (H-REV). The joint controller loses under commitment, so the boundary claim is not supported (Section~\ref{sec:res-stream}).
-    \item \textbf{$C_3$ (Calibrated objective):} A price-aware objective that accounts for measured retrieval harm on turns that do not need retrieval ($g^- = 0.592$ vs.\ $g^+ = 0.720$).
-    \item \textbf{$C_4$ (Belief dynamics):} An analysis of belief signals on partial transcripts. On customer-support turns the entropy signal is near chance (AUC $0.51$), while a self-knowledge probe reaches $0.70$ and sharpens as more of the question is heard; on open-domain questions entropy remains the stronger signal ($0.71$ vs.\ $0.67$). The support-set results are exploratory.
-    \item \textbf{$C_5$ (Spoken benchmark):} A matched-pair spoken support benchmark spanning multiple organizations, in which retrieval need cannot be recovered from surface form (leak-test AUC $0.576$, 95\% CI $[0.541, 0.617]$). We release it with our open-domain set, the code and the frozen pre-registration.\footnote{\url{https://github.com/SOYL-AI/voice-rag-controller} (tag \texttt{v2-final}).}
+    \item \textbf{Theory:} to our knowledge, the first formal equivalence analysis of joint and decomposed retrieval control: an exact price map and gap bound under A1--A3 (Props.~\ref{prop:eq}--\ref{prop:gap}), and the violations of A1--A3 that can separate the two.
+    \item \textbf{Streaming test:} a pre-registered comparison on live ASR partials under committed and speculative retrieval.
+    \item \textbf{Diagnostics and data:} a price-aware objective with measured retrieval harm, an analysis of beliefs on partial transcripts, and a matched-pair spoken customer-support benchmark. Data, code and protocol are public.\footnote{\url{https://github.com/SOYL-AI/voice-rag-controller} (tag \texttt{v2-final}).}
 \end{itemize}
 
 \section{Related Work}\label{sec:related}
 
 \textbf{Streaming and speculative retrieval.} Stream RAG issues retrieval and
-tool calls while the user is still speaking, comparing speculative calls at
-fixed intervals with model-triggered calls \cite{arora2026streamrag}; these
+tool calls while the user is still speaking, either speculatively at fixed
+intervals or when triggered by the model \cite{arora2026streamrag}; these
 correspond to our speculative and commit architectures. Speculative execution
 also hides tool latency in on-device voice agents \cite{jung2026hiding}.
-Galbraith characterizes when tool intent stabilizes on a streaming transcript,
-but studies timing alone and assumes every query needs retrieval
+Galbraith studies when tool intent stabilizes on a streaming transcript, but
+considers timing alone and assumes every query needs retrieval
 \cite{galbraith2026streaming}. MoshiRAG learns whether to retrieve in a
 full-duplex speech model, but retrieves only at response onset
-\cite{chien2026moshirag}. To our knowledge, none asks whether deciding whether
-and when to retrieve jointly beats deciding them separately under shared
-prices.
+\cite{chien2026moshirag}. To our knowledge, none asks whether the two
+decisions should be made jointly under shared prices.
 
 \textbf{Adaptive retrieval and self-knowledge.} FLARE and DRAGIN trigger
 retrieval from generation uncertainty \cite{jiang2023flare,su2024dragin},
 Adaptive-RAG routes queries by predicted complexity \cite{jeong2024adaptiverag},
 and simple uncertainty triggers remain competitive
 \cite{moskvoretskii2025adaptive}. Models can predict whether they know an
-answer \cite{kadavath2022language}; our self-knowledge probe belongs to this
-family. Retrieval can also hurt on questions the model already answers
-correctly \cite{mallen2023trust}, which motivates the harm term $g^{-}$.
+answer \cite{kadavath2022language}; our probe belongs to this family.
+Retrieval can also hurt on questions the model already answers correctly
+\cite{mallen2023trust}, which motivates the harm term $g^{-}$.
 
 \textbf{Datasets and decision theory.} We draw open-domain questions from
 PopQA \cite{mallen2023trust} and HotpotQA \cite{yang2018hotpotqa}. Value of
 information \cite{howard1966information} and decision-theoretic turn-taking
-\cite{bohus2011decisions} underlie our objective; what is new is the exact
-characterization of when joint and decomposed control coincide and where they
-diverge.
+\cite{bohus2011decisions} underlie our objective; what is new is an exact
+account of when joint and decomposed control coincide.
 
 % =============================================================================
 \section{Problem Formulation and Controllers}
@@ -364,10 +355,9 @@ pipeline and the three decision structures we compare.
 \IfFileExists{figures/fig_framework.pdf}{\includegraphics[width=\textwidth]{fig_framework.pdf}}{\fbox{Upload figures/fig\_framework.pdf}}
 \caption{Streaming pipeline and the decision structures compared. From each
 ASR partial $x_k$ the system estimates the belief $b_k$ and the remaining
-speech $\hat R_k$. (a) The joint controller decides at every partial whether
-to dispatch now or wait. (b) Decomposed controllers fix the trigger without
-the belief. (c) Speculative controllers prefetch early and decide at the end
-of the turn whether to use the result.}
+speech $\hat R_k$; the controller dispatches a retrieval or answers
+closed-book. The decision rules are given by Eq.~(\ref{eq:obj}) and
+Algorithm~\ref{alg:oursv2}.}
 \label{fig:system_flow}
 \end{figure*}
 
@@ -387,33 +377,34 @@ b&=\max\!\big(0.05,\,\sigma(ws+c)\big),
 with $w=11.288$, $c=-3.633$ fitted in-sample on the 36-item belief set
 (180 samples, five seeds). Maximum entropy ranked these items slightly
 better (AUC 0.978 vs.\ 0.925), but the mean is smoother and suits a logistic
-fit; we did not run a separate controller on the maximum-entropy signal. Because it is computed once from the full question, this
-belief does not depend on dispatch time.
+fit; we did not run a separate controller on the maximum-entropy signal.
+Because it is computed once from the full question, this belief does not
+depend on dispatch time.
 
-\textit{Streaming experiment.} The belief is recomputed on every partial $x_k$. Mistral-7B is
-asked whether the question can be answered from general knowledge alone,
-without the organisation's own information; the signal is the probability it
-gives to ``No'' (one generated token). It is calibrated per dataset on the
-development split only, as a logistic function of the signal's logit, the
-fraction of the question heard, and their interaction. An item needs
-retrieval when its closed-book answer is wrong in at least three of five
-drafts.
+\textit{Streaming experiment.} The belief is recomputed on every partial
+$x_k$. Mistral-7B is asked whether the question can be answered from general
+knowledge alone, without the organisation's own information; the signal is
+the probability it gives to ``No'' (one generated token). It is calibrated per
+dataset on the development split only, as a logistic function of the
+signal's logit, the fraction of the question heard, and their interaction.
+An item needs retrieval when its closed-book answer is wrong in at least
+three of five drafts.
 
 \subsection{Actions and Dispatch Timing}
 \label{subsec:action_space}
 
 In the text experiment the action is skip or retrieve with one of three
-timing policies, applied to text read at 150 words per minute ($T$ = question duration;
-$t_{\text{ready}}$ = first time the prefix has four words including a content
-word; $t_1$ = first partial). \textsc{sentence\_end} dispatches at $T$;
-\textsc{immediate} at the first partial after $t_{\text{ready}}$;
-\textsc{fixed\_early\_proxy} at $\max(0.35T, t_{\text{ready}})$, with $0.35T$
-capped at $0.8\,t_1$. Neither early rule forecasts the end of the turn. In the streaming
-experiment the controller may dispatch at any partial, so timing becomes an
-optimal-stopping problem. We test two architectures on the same items and
-prices: under \textsc{commit} a dispatched retrieval is always used; under
-\textsc{speculative} it may be discarded at the end of the turn, at the cost
-of its compute.
+timing rules on text read at 150 words per minute: \textsc{sentence\_end}
+dispatches when the question ends; \textsc{immediate} at the first partial
+after the prefix becomes query-ready at $t_{\text{ready}}$ (four words, one of
+them a content word); and \textsc{fixed\_early\_proxy} at
+$\max(\min(0.35T,0.8t_1),t_{\text{ready}})$, where $T$ is the question's
+duration and $t_1$ the time of the first partial. Neither early rule forecasts the end of the turn. In the
+streaming experiment the controller may dispatch at any partial, so timing
+becomes an optimal-stopping problem. We test two architectures on the same
+items and prices: under \textsc{commit} a dispatched retrieval is always used;
+under \textsc{speculative} it may be discarded at the end of the turn, at the
+cost of its compute.
 
 \subsection{Latency- and Compute-Priced Objective}
 \label{subsec:priced_objective}
@@ -423,21 +414,21 @@ Retrieving with belief $b$, dispatched at $t$, has utility
 U_t(b)=b\,g^{+}(1-\rho_t)-(1-b)\,g^{-}-\lambda_l e_t-\lambda_c(1+w_t),
 \label{eq:obj}
 \end{equation}
-and skipping has $U(\text{skip})=0$. Here $g^{+}$ is the accuracy gained by retrieving on turns that need it,
-$g^{-}$ the accuracy lost on turns that do not, $\rho_t$ the share of $g^{+}$
-lost to a partial query, $\rho(t)=1-\text{hit@3}(t)/\text{hit@3}(\text{end})$,
-$e_t$ the exposed latency (s), $w_t$ the expected wasted retrievals, and
-$\lambda_l$, $\lambda_c$ the prices of latency and compute in accuracy units.
+and skipping has $U(\text{skip})=0$. Here $g^{+}$ is the accuracy gained by
+retrieving on turns that need it, $g^{-}$ the accuracy lost on turns that do
+not, $\rho_t$ the share of $g^{+}$ lost to a partial query,
+$\rho(t)=1-\text{hit@3}(t)/\text{hit@3}(\text{end})$, $e_t$ the exposed
+latency (s), $w_t$ the expected wasted retrievals, and $\lambda_l$,
+$\lambda_c$ the prices of latency and compute in accuracy units.
 
 A common simplification sets $g^{+}=1$, $g^{-}=\rho_t=0$, i.e.\ it uses $b$
 itself as the gain and assumes retrieval never hurts. In the text experiment
-retrieval
-added $g^{+}=0.720$ [0.504, 0.888] on needed turns but cost $g^{-}=0.592$
-[0.408, 0.768] on the others, so at zero prices one should retrieve only when
-$b>g^{-}/(g^{+}+g^{-})=0.451$, not when $b>0.05$. In the streaming experiment, $g^{\pm}$ are
-estimated on the development split: $\hat g^{+}=0.441$, $\hat g^{-}=-0.112$
-on \dset{d1\_open} (retrieval did not hurt) and $0.445$, $0.034$ on
-\dset{d2\_support}.
+retrieval added $g^{+}=0.720$ [0.504, 0.888] on needed turns but cost
+$g^{-}=0.592$ [0.408, 0.768] on the others, so at zero prices one should
+retrieve only when $b>g^{-}/(g^{+}+g^{-})=0.451$, not when $b>0.05$. In the
+streaming experiment, $g^{\pm}$ are estimated on the development split:
+$\hat g^{+}=0.441$, $\hat g^{-}=-0.112$ on \dset{d1\_open} (retrieval did not
+hurt) and $0.445$, $0.034$ on \dset{d2\_support}.
 
 With fixed timing policies the exposure is $e_t=L-o_t$, with a fixed overlap
 $o_t$ per policy. In the streaming experiment it depends on the turn,
@@ -445,22 +436,23 @@ $o_t$ per policy. In the streaming experiment it depends on the turn,
 e_k=\mathbb{E}_L\!\left[\max(0,\ L-W_k)\right]+\pi,
 \label{eq:exposure}
 \end{equation}
-where $L$ is the retrieval latency, $W_k=\hat R_k+d$ the predicted remaining
-speech plus end-of-turn detection delay ($W_K=0$), and $\pi=371$~ms the cost
-no timing can hide (mainly the longer prompt). $L$ is taken as the end-to-end
-TTFA increment measured on the development split for three profiles (query
-rewrite plus FAISS, plus re-ranking, or a remote API; medians 1{,}044,
-1{,}043 and 1{,}241~ms). The waste term $w_t$ is not measured in either
-experiment: the text experiment uses fixed placeholders (0.02 and 0.08 for
-the two early policies, 0 at sentence end), and the streaming experiment uses
-$w(f)=0.1(1-f)$ for a dispatch made with a
-fraction $f$ of the question heard ($w=0$ at the end of the turn). It enters
-only the decision; the scored utility charges $\lambda_c$ per dispatched
-retrieval. Section~\ref{sec:res-secondary} reports a sensitivity check over
-$w\in\{0,0.04,0.08,0.16\}$. We fix $\lambda_c=0.05$. The text experiment sweeps
-$\lambda_l$; the streaming test uses one pre-registered price per dataset,
-$\lambda_l=0.173$ (\dset{d1\_open}) and $0.216$ (\dset{d2\_support}) per
-second.
+where $L$ is the latency of the retrieval call itself (query rewriting plus
+search), $W_k=\hat R_k+d$ the predicted remaining speech plus the end-of-turn
+detection delay $d$ ($d=0$ here; the turn ends at the VAD endpoint), and
+$\pi$ the rest of retrieval's cost to TTFA, which no timing can hide: the
+longer prompt's prefill and the generation and synthesis up to the first
+spoken clause ($\pi=371$~ms on the development split). Dispatching at the end
+of the turn therefore costs $\mathbb E[L]+\pi$. The waste term $w_t$ is not
+measured in either experiment: the text experiment uses fixed placeholders
+(0.02 and 0.08 for the two early policies, 0 at sentence end), and the
+streaming experiment uses $w(f)=0.1(1-f)$ for a dispatch made with a fraction
+$f$ of the question heard ($w=0$ at the end of the turn). It enters only the
+decision; the scored utility charges $\lambda_c$ per dispatched retrieval.
+Section~\ref{sec:res-secondary} reports a sensitivity check over
+$w\in\{0,0.04,0.08,0.16\}$. We fix $\lambda_c=0.05$. The text experiment
+sweeps $\lambda_l$; the streaming test uses one pre-registered price per
+dataset, $\lambda_l=0.173$ (\dset{d1\_open}) and $0.216$ (\dset{d2\_support})
+per second.
 
 \subsection{Controllers}
 \label{subsec:decision_rule}
@@ -472,28 +464,38 @@ baseline thresholds and timing rules are tuned on the development split with
 an equal budget (the text experiment used fixed defaults).
 
 \textbf{Ours} (text experiment) scores skip and every (retrieve, $t$) pair
-and takes the best. \textbf{B9} splits the choice into a timing module and a retrieval
-module that share no state, so it prices retrieval at the full latency $L$
-and can skip turns that early dispatch would make worthwhile. Unlike B8,
-which retrieves on a fixed entropy threshold with a fixed early dispatch, B9
-prices both decisions (Algorithm~\ref{alg:oursv2}). \textbf{B9+}
-keeps the split but prices the expected exposure of its own timing choice.
-When the belief does not depend on dispatch time and the overlap is the same
-for every turn (assumptions A1--A3, Section~\ref{sec:theory}), B9+ and Ours
-are equivalent; in the text experiment they agreed on all 11{,}300
-decisions. A gain from
-joint control can therefore only come from turns where these assumptions
-fail.
+and takes the best. \textbf{B9} splits the choice into a timing module and a
+retrieval module that share no state, so it prices retrieval at the full
+latency $L$ and can skip turns that early dispatch would make worthwhile.
+Unlike B8, which retrieves on a fixed entropy threshold with a fixed early
+dispatch, B9 prices both decisions (Algorithm~\ref{alg:oursv2}). \textbf{B9+}
+keeps the split but prices the expected exposure of its own timing choice. In
+the streaming experiment its timing rule is chosen on the development split
+from four families (early, late, a threshold on $\hat R$, and dispatch once
+$\hat R$ falls below a threshold). The selected rule dispatches at the first
+query-ready partial whose predicted remaining speech is at most 698~ms
+(\dset{d1\_open}) or 649~ms (\dset{d2\_support}) at the primary price.
 
-\textbf{Ours-S} (streaming; Algorithm~\ref{alg:oursv2}) compares, at each partial, the
-value of dispatching now with the expected value of waiting. The next
-partial carries new information with probability $P(R>s)$, where $s$ is the
-median gap between partials; belief transitions are fitted on the
-development split, and the lookahead depth was fixed before the test. Under
-\textsc{speculative} the same rule values having the passages ready.
-\textbf{B10} (SPEC) always prefetches at its trigger and uses the passages
-only if $U(b_K)>0$; \textbf{B11} (SPEC-$\theta$) prefetches only when a
-belief-only estimate says the prefetch is worth it.
+\textbf{Ours-S} (streaming) compares, at each partial, the value of
+dispatching now, $U_k(b_k)$, with the value of waiting one more partial.
+Beliefs are discretised into ten bins, and transition matrices
+$P(b'\mid b,\phi)$ for three phases of the utterance ($\phi$ = fraction heard,
+split at 0.34 and 0.67) are fitted on development sequences. The next partial
+arrives after the development-median gap $s$ and brings new information with
+probability $p=P(R>s)$ under the predicted remaining-speech quantiles;
+otherwise the next step is the end of the turn. With lookahead depth one,
+\begin{equation}
+\textsc{Wait}=p\,\mathbb E\big[\max\big(U_{k+1}(b'),V_{\mathrm{end}}(b')\big)\big]+(1-p)\,V_{\mathrm{end}}(b_k),
+\label{eq:wait}
+\end{equation}
+where $V_{\mathrm{end}}(b)=\mathbb E[\max(U_K(b''),0)\mid b]$ and $U_K$ is
+Eq.~(\ref{eq:obj}) with $W=0$ and $\rho=w=0$. At the end of the turn Ours-S
+retrieves iff $U_K>0$. It has no tuned parameter beyond the shared models,
+and the depth was fixed before the test. Under \textsc{speculative} the same
+rule values having the passages ready. \textbf{B10} (SPEC) always prefetches
+at its trigger and uses the passages only if $U(b_K)>0$; \textbf{B11}
+(SPEC-$\theta$) prefetches only when a belief-only estimate says the prefetch
+is worth it. Both use a development-tuned trigger.
 
 \begin{table}[t]
 \caption{Controllers. ``Priced'': reads $(\lambda_l,\lambda_c)$. ``Joint'':
@@ -529,7 +531,7 @@ Ours-S & optimal stopping over partials (streaming) & yes & yes\\
   \State $u\gets U_k(b_k)$ \Comment{Eqs.~(\ref{eq:obj}), (\ref{eq:exposure})}
   \If{$k=K$} \Return \textsc{Retrieve} \textbf{if} $u>0$ \textbf{else} \textsc{Skip}
   \EndIf
-  \If{$u>0$ \textbf{and} $u\ge\textsc{Wait}(b_k,\hat R_k)$} \Return \textsc{Retrieve}
+  \If{$u>0$ \textbf{and} $u\ge\textsc{Wait}$} \Return \textsc{Retrieve} \Comment{Eq.~(\ref{eq:wait})}
   \EndIf
 \EndFor
 \Statex \textbf{B9 (decomposed, text experiment)}
@@ -541,15 +543,11 @@ Ours-S & optimal stopping over partials (streaming) & yes & yes\\
 
 % =============================================================================
 \section{Theory}\label{sec:theory}
-Joint and decomposed control can differ only through what one controller
-sees and the other does not. Three conditions, stated formally below, remove
-every such difference: answer quality does not depend on dispatch time, the
-latency hidden by each timing is the same on every turn, and the belief is
-computed once per turn. The text experiment meets all three by design: it
-retrieves with a frozen query, uses one overlap per timing policy (0, 0.050 and
-0.188~s), and computes the belief once from the full question. Proofs of the
-results in this section are in the repository (footnote in Section~I).
-
+Joint and decomposed control can differ only through what one controller sees
+and the other does not; the three assumptions below remove every such
+difference. The text experiment meets them by design: it retrieves with a
+frozen query, uses one overlap per timing policy (0, 0.050 and 0.188~s), and
+computes the belief once from the full question. Proofs are in the repository.
 
 Write $\kappa_t=\lambda_l e_t+\lambda_c(1+w_t)$, so that
 $U_t(b)=b\,g^{+}(1-\rho_t)-(1-b)\,g^{-}-\kappa_t$. The equivalence regime assumes
@@ -571,12 +569,14 @@ increasing bijection of $[0,\infty)$. When the maximal-overlap timing is optimal
 Conditional on retrieving, the timings coincide unless $\lambda_l$ and
 $\lambda_l'$ lie in different linear pieces of $\lambda\mapsto\min_t\kappa_t$.
 \end{proposition}
-Proposition~\ref{prop:eq} says that, under A1--A3, coupling adds nothing that a
-decomposed controller cannot reproduce by a change of price: every joint
-operating point is a decomposed operating point at a lower latency price, so
-the two frontiers coincide. It also settles whether the decomposed baseline
-was handicapped. B9+, which keeps the decomposition but prices the expected
-exposure of its own timing, is the joint controller under A1--A3.
+Proposition~\ref{prop:eq} says that, under A1--A3, the joint controller's
+retrieval decisions are exactly those of B9 at a lower latency price. The
+timings also match, except at prices where $\lambda_l$ and $\lambda_l'$ fall
+in different linear pieces; outside those intervals the two controllers have
+the same operating points. The stronger statement is the last line of
+Proposition~\ref{prop:gap}: B9+, which keeps the decomposition but prices the
+expected exposure of its own timing, decides exactly as the joint controller
+at the same price.
 
 \begin{proposition}[Gap at a fixed price]\label{prop:gap}
 Assume (A1)--(A3) and model correctness: $\mathbb E[N\mid b]=b$, and realized
@@ -597,40 +597,43 @@ times the probability of landing in the band. The bound holds under the
 controller's own model. If the model is wrong, for example if retrieval costs
 more latency than assumed, the realized gap can be negative.
 
-
-\textbf{Channels that break the equivalence.} Dropping (A2) (turn-dependent
-overlap, C1) yields a gain of order $\lambda_l^{2}\operatorname{Var}e^{*}$,
-i.e.\ second order. Dropping (A1) alone (partial-query risk, C3) makes the
-optimal timing depend on $b$ but keeps the joint optimum a function of $b$, so
-it does not separate the two classes. Dropping (A3) (information vs.\
-overlap, C2) is first order: for a committed retrieval with value $D_k$ at
-partial $k$, the value of waiting
-$W_k=\mathbb E[D_{k+1}^{+}\mid\mathcal F_k]-D_k^{+}$ can be positive on some
-turns and negative on others that a belief-free timing rule cannot tell apart,
-and then every decomposed policy is strictly suboptimal. Under speculative
-prefetch, the joint gain over always-prefetch (B10) is at most the compute
-spent on prefetches the joint controller would skip plus a partial-query
-term, and a belief-gated prefetcher (B11) comes within a C1-sized term of the
-joint optimum. These predictions define the pre-registered tests: P1, joint
-beats \Bplus{} under commit ($\DC>0$); P2, the advantage shrinks under
-speculation ($\DC-\DS>0$); P3, under speculation the joint controller is
-within $m_3=0.016$ of the best decomposed rival (equivalence test); and
-H-REV, $\DC<0$, added before the freeze because the development data pointed
-that way. The boundary claim requires P1, P2 and P3 together.
+\textbf{Channels that break the equivalence.} Each assumption can be dropped
+on its own. Without (A2) (turn-dependent overlap), the gain over B9+ comes
+only from variation in exposure among turns with the same belief; if the
+belief has a continuous density and that variation is small, the gain scales
+as $\lambda_l^{2}\operatorname{Var}e^{*}$ and is correspondingly small. Without (A1)
+alone (partial-query risk), the optimal timing depends on $b$, but the joint
+optimum is still a function of $b$, so the two classes do not separate.
+Without (A3), the belief sharpens as speech arrives. For a committed
+retrieval with value $D_k$ at partial $k$, waiting is worth
+$W_k=\mathbb E[D_{k+1}^{+}\mid\mathcal F_k]-D_k^{+}$. If turns that a
+belief-free timing rule cannot tell apart include both turns with $W_k>0$ and
+turns where dispatching now is strictly better, every decomposed policy is
+strictly suboptimal, and this gain does not rely on the exposure varying.
+Under speculative prefetch, the joint gain over always-prefetch (B10) is at
+most the compute spent on prefetches the joint controller would skip plus a
+partial-query term, and with two decision points a belief-gated prefetcher
+(B11) comes within a term of the same size as the (A2) gain. These
+predictions define the pre-registered tests: P1, joint beats \Bplus{} under
+commit ($\DC>0$); P2, the advantage shrinks under speculation
+($\DC-\DS>0$); P3, under speculation the joint controller is within
+$m_3=0.016$ of the best decomposed rival (equivalence test); and H-REV,
+$\DC<0$, added before the freeze because the development data pointed that
+way. The boundary claim requires P1, P2 and P3 together.
 
 % =============================================================================
 \section{Experimental Setup}\label{sec:setup}
 \textbf{Model and retrieval.} All controllers use the same generator,
 Mistral-7B-Instruct-v0.3 served with vLLM, and the same retriever, a FAISS
 index over bge-small embeddings. Every item is run with five seeds (11, 23, 37,
-53 and 71), which change only the generator's sampling; seeds are therefore not
-independent replicates, and the unit of analysis is the item.
+53 and 71), which change only the generator's sampling; seeds are therefore
+not independent replicates, and the unit of analysis is the item.
 
 \textbf{Text experiment.} To check the equivalence result we use 50
 single-domain (hotel) scenarios, each run with the five seeds, and a set of
-36 items (two shared with the scenarios) to validate the belief signal. Questions are revealed as text
-at 150 words per minute, and the setup meets A1--A3 by construction
-(Section~\ref{sec:theory}).
+36 items (two shared with the scenarios) to validate the belief signal.
+Questions are revealed as text at 150 words per minute, and the setup meets
+A1--A3 by construction (Section~\ref{sec:theory}).
 
 \textbf{Streaming datasets.} \dset{d1\_open} combines popularity-stratified
 PopQA \cite{mallen2023trust} with multi-hop HotpotQA \cite{yang2018hotpotqa}:
@@ -639,51 +642,58 @@ customer-support set of 720 items covering 12 domains and 24 fictional
 organisations (222 development, 498 test). Its questions are built in matched
 groups, some needing the organisation's own documents and some answerable from
 general knowledge, so that need cannot be read from the wording; a
-surface-form classifier reaches only AUC 0.576 [0.541, 0.617]. An item needs
-retrieval when the model's closed-book answer is wrong in at least three of
-five drafts.
+surface-form classifier reaches only AUC 0.576 [0.541, 0.617].
 
 \textbf{Speech.} Each item is synthesised with one Piper TTS voice (US English,
 clean audio, 150 words per minute) and decoded by a streaming faster-whisper
-recogniser, with Silero VAD marking the end of the turn. A controller sees
-only the partials available at each moment. As a control, the same items are
-also run as text revealed at 150 words per minute (text150).
+recogniser, with Silero VAD marking the end of the turn. As a control, the same
+items are also run as text revealed at 150 words per minute (text150).
 
-\textbf{Latency and cost.} We use three latency profiles: query rewriting
-followed by FAISS search, by FAISS search with re-ranking, or by a remote
-retrieval API, with median retrieval latencies of 1,044, 1,043 and 1,241~ms.
-The latency cost is the end-to-end increase in TTFA measured on the
-development split, including the non-hideable part $\pi=371$~ms.
+\textbf{Latency and the dispatch clock.} $L$ follows one of three profiles:
+query rewriting followed by FAISS search, by FAISS search with re-ranking, or
+by a remote retrieval API (medians 1,044, 1,043 and 1,241~ms). In the
+streaming test, TTFA is drawn from a latency model fitted to logged runs of
+the pipeline's components, with the same draw for every controller on a given
+item and seed: the part of the retrieval call that ends after the
+end-of-turn decision is exposed, and $\pi$ is added on top. A partial becomes
+usable only when the recogniser has produced it, including its compute time,
+and its belief about 0.55~s later (the probe's measured median latency). Query
+rewriting is part of $L$; the controller's own computation is not charged.
 
 \textbf{Metrics and grading.} The outcome of an item is its realized utility,
 $U=Q-\lambda_l\,\Delta\mathrm{TTFA}-\lambda_c\,n_{\mathrm r}$, averaged over
-the seeds. Here $Q$ is answer correctness, $\Delta\mathrm{TTFA}$ the measured
-increase in TTFA (s) over the same item answered without retrieval, and
-$n_{\mathrm r}$ the number of retrievals. On \dset{d1\_open}, correctness is
-decided by matching normalised answer aliases. On \dset{d2\_support} it is
-decided by an LLM judge (GPT-6.1-sol with a per-item rubric of core facts),
-with GPT-4o as a secondary judge on a 30\% subsample. One human annotator
-labelled 300 \dset{d2\_support} development answers; the judge agreed on
-80.0\% of them (Cohen's $\kappa=0.55$; GPT-4o 81.3\%, $\kappa=0.58$), and most
-disagreements were correct answers that the judge marked wrong. On 400
-\dset{d1\_open} test answers the judge agreed with alias matching at
-$\kappa=0.82$.
+the seeds. Here $Q$ is answer correctness, $\Delta\mathrm{TTFA}$ the increase
+in TTFA (s) over the same item answered without retrieval, and $n_{\mathrm r}$
+the number of retrievals. On \dset{d1\_open}, correctness is decided by
+matching normalised answer aliases. On \dset{d2\_support} it is decided by an
+LLM judge (GPT-6.1-sol with a per-item rubric of core facts), with GPT-4o as a
+secondary judge on a 30\% subsample. One human annotator labelled 300
+\dset{d2\_support} development answers; the judge agreed on 80.0\% of them
+(Cohen's $\kappa=0.55$; GPT-4o 81.3\%, $\kappa=0.58$), and most disagreements
+were correct answers that the judge marked wrong. On 400 \dset{d1\_open} test
+answers the judge agreed with alias matching at $\kappa=0.82$.
 
-\textbf{Protocol and statistics.} The data are split about 30/70 into
-development and test sets. Everything that could affect the outcome (belief
-calibration and transitions, the latency model, $g^{\pm}$, baseline tuning,
-the rivals, the margin $m_3$ and the primary cell) was fixed on the
-development split and frozen in a pre-registration before any test data were
-used. The primary cell is the query-rewrite plus FAISS profile at the price
-given by the 0.65 quantile of the development end-of-turn belief. Differences
-are estimated with a paired cluster bootstrap ($B=10{,}000$; items for
-\dset{d1\_open}, matched groups for \dset{d2\_support}). The boundary claim is
-an intersection--union test of P1, P2 and P3 at one-sided $\alpha=0.025$, and
-individual claims are Holm-adjusted. With 3,734 test items the standard error
-of $\DC$ on \dset{d1\_open} is 0.0059, so an effect of 0.017 is detectable
-with 80\% power. Because the judge agreed only moderately with the human
-labels, all \dset{d2\_support} and pooled results are reported as exploratory;
-\dset{d1\_open} needs no judge.
+\textbf{Protocol and statistics.} The text experiment's success criterion and
+analysis code were committed before its sweep (6 and 17 August 2026; commits
+\texttt{b9ba0c9}, \texttt{cd5d145}). For the streaming experiment the data are
+split about 30/70 into development and test sets. Calibration, belief
+transitions, the latency model, $g^{\pm}$, baseline tuning, the rivals, $m_3$,
+the primary cell and the analysis code were fixed on the development split and
+frozen on 16 October 2026 (tag \texttt{prereg-v2-frozen}, commit
+\texttt{d5d81b9}), before any test data were used; H-REV was added before the
+freeze. After the \dset{d1\_open} results were known, and before any
+\dset{d2\_support} test answer was graded, the pooled primary analysis was
+designated exploratory because the judge's agreement with the human labels
+was only moderate. Deviations are logged with the protocol. The primary cell
+is the query-rewrite plus FAISS profile at the price given by the 0.65
+quantile of the development end-of-turn belief. Differences are estimated with
+a paired cluster bootstrap ($B=10{,}000$; items for \dset{d1\_open}, matched
+groups for \dset{d2\_support}). The boundary claim is an intersection--union
+test of P1, P2 and P3 at one-sided $\alpha=0.025$, and individual claims are
+Holm-adjusted. With 3,734 test items the standard error of $\DC$ on
+\dset{d1\_open} is 0.0059, so an effect of 0.017 is detectable with 80\%
+power. \dset{d1\_open} needs no judge; all \dset{d2\_support} and pooled
+results are exploratory.
 
 
 % =============================================================================
@@ -691,37 +701,35 @@ labels, all \dset{d2\_support} and pooled results are reported as exploratory;
 
 \subsection{Equivalence Regime (Text Experiment)}\label{sec:res-equiv}
 
-Ours strictly dominated B9 in 0 of 5 seeds,
-and their frontiers coincide over the 26 latency prices, as
-Proposition~\ref{prop:eq} predicts. The exact price map reproduces
-10,000/10,000 decisions at 200 off-grid prices; the approximate map, which
-ignores the waste term, fails at 46 of them. B9+ reproduces Ours on all 11,300
-decisions checked. The two controllers differ only inside the divergence band,
-which is non-empty at 11 of 26 prices and holds 41 of 1,300 scenario--price
-decisions. With the corrected objective and the measured latency cost, the
-predicted and observed utility gaps agree in sign at 10 of 11 band prices
-(Pearson $r=0.952$). The cost model used to run this experiment, which
-understated retrieval's TTFA cost by more than a factor of two, gets the sign
-right at only 1 of 11. Early dispatch lowers the median TTFA (3.69~s for
-\textsc{fixed\_early\_proxy} against 4.11~s at sentence end) but not the 95th
-percentile (7.09~s against 7.05~s), because first audio waits for the full
-answer to be generated. Of the unpriced baselines, B8 reaches accuracy 0.708
-and B6 0.636; B4 never retrieved and is identical to B0 (0.408).
+Ours strictly dominated B9 in 0 of 5 seeds. The equivalence holds at the
+decision level: B9+ reproduces Ours on all 11,300 decisions checked, and the
+decisions of Ours at $\lambda_l$ match those of B9 at the mapped price
+$\lambda_l'$ at 10,000/10,000 off-grid points. Ours and B9 differ only inside
+the divergence band, which is non-empty at 11 of 26 prices and contains 41 of
+1,300 scenario--price decisions. Early dispatch lowers the median TTFA
+(3.69~s for \textsc{fixed\_early\_proxy} against 4.11~s at sentence end) but
+not the 95th percentile (7.09~s against 7.05~s), because first audio waits for
+the full answer to be generated. Of the unpriced baselines, B8 reaches
+accuracy 0.708 and B6 0.636; B4 never retrieved and is identical to B0
+(0.408).
 
 \subsection{Pre-Registered Streaming Test}\label{sec:res-stream}
 
-\textbf{Belief on partial transcripts.} On the test split the probe separates
-items with AUC 0.665 [0.648, 0.682] on \dset{d1\_open}, below the
-pre-registered 0.70 target but above the 0.60 stopping rule, and 0.701 [0.638,
-0.761] on \dset{d2\_support} (exploratory). Calibration error is small (ECE
-0.077 and 0.047), but the belief carries little information early in the turn.
-On \dset{d1\_open} ASR partials the AUC rises only from 0.540 at 30\% of the
-question to 0.597 on the final transcript, and at half the question it is
-below the pre-registered 0.65 threshold on both datasets.
+\textbf{Belief on partial transcripts.} On the full question, given as text,
+the probe separates test items that need retrieval from those that do not
+with AUC 0.665 [0.648, 0.682] on \dset{d1\_open}, below the pre-registered 0.70
+target but above the 0.60 stopping rule, and 0.701 [0.638, 0.761] on
+\dset{d2\_support} (exploratory). Calibration error is small (ECE 0.077 and
+0.047). On speech the belief is weaker. Using the latest ASR partial available
+at each fraction of the question, the \dset{d1\_open} AUC is 0.540 at 30\% and
+0.597 on the final ASR transcript; since both 0.665 and 0.597 use the complete
+question, the difference reflects recognition errors. At half the question
+the AUC is below the pre-registered 0.65 threshold on both datasets.
 
 \begin{table}[t]
-\caption{Pre-Registered Boundary Test on the Streaming Test Split (Paired Cluster Bootstrap,
-$B=10{,}000$; One-Sided $p$; Holm over P1--P3 and H-REV)}
+\caption{Pre-Registered Boundary Test on the Streaming Test Split,
+\dset{d1\_open} ($n=3{,}734$; Paired Cluster Bootstrap, $B=10{,}000$;
+One-Sided $p$; Holm over P1--P3 and H-REV)}
 \label{tab:v2primary}
 \centering
 \scriptsize
@@ -730,47 +738,37 @@ $B=10{,}000$; One-Sided $p$; Holm over P1--P3 and H-REV)}
 \toprule
 Test & Pred. & Observed [95\% CI] & $p$ & Verdict\\
 \midrule
-\multicolumn{5}{@{}l}{\emph{\dset{d1\_open}, $n=3{,}734$: pre-registered per-dataset analysis}}\\
 P1 ($\DC$) & $>0$ & $-0.0367$ [$-0.0481$, $-0.0252$] & $1.000$ & fails\\
 P2 ($\DC-\DS$) & $>0$ & $+0.0047$ [$+0.0007$, $+0.0088$] & $0.0097$ & fails Holm\\
 P3 ($\DS$) & $|\cdot|<m_3$ & $-0.0415$ [$-0.0528$, $-0.0302$] & $1.000$\textsuperscript{a} & fails\\
 H-REV ($\DC$) & $<0$ & $-0.0367$ [$-0.0481$, $-0.0252$] & $<10^{-4}$ & holds\\
 \multicolumn{4}{@{}l}{Boundary claim (P1 $\wedge$ P2 $\wedge$ P3)} & not supp.\\
-\midrule
-\multicolumn{5}{@{}l}{\emph{Pooled, $n=4{,}232$: pre-registered primary; exploratory\textsuperscript{b}}}\\
-P1 ($\DC$) & $>0$ & $-0.0351$ [$-0.0458$, $-0.0245$] & $1.000$ & fails\\
-P2 ($\DC-\DS$) & $>0$ & $+0.0022$ [$-0.0020$, $+0.0065$] & $0.160$ & fails\\
-P3 ($\DS$) & $|\cdot|<m_3$ & $-0.0373$ [$-0.0480$, $-0.0267$] & $1.000$\textsuperscript{a} & fails\\
-H-REV ($\DC$) & $<0$ & $-0.0351$ [$-0.0458$, $-0.0245$] & $<10^{-4}$ & holds\\
-\multicolumn{4}{@{}l}{Boundary claim (P1 $\wedge$ P2 $\wedge$ P3)} & not supp.\\
 \bottomrule
 \multicolumn{5}{@{}p{0.97\columnwidth}@{}}{\scriptsize $m_3=0.016$. Rivals:
-\Bplus{} under commit; under speculation \Bplus{} (\dset{d1\_open}) and
-\Bten{} (\dset{d2\_support}).
-\textsuperscript{a}Larger of the two TOST sides (upper $<10^{-4}$; lower
-$1.000$ for \dset{d1\_open}, $0.9998$ pooled).
-\textsuperscript{b}The judge that grades \dset{d2\_support} agreed only
-moderately with the human labels. \dset{d2\_support} alone ($n=498$):
-$\DC=-0.0227$ [$-0.0502$, $+0.0047$], no test significant.}\\
+\Bplus{} under both architectures. \textsuperscript{a}Larger of the two TOST
+sides (upper $<10^{-4}$, lower $1.000$). Pooled and \dset{d2\_support}
+results (exploratory) are given in the text.}\\
 \end{tabular}
 \end{table}
 
 \textbf{Main test.} Table~\ref{tab:v2primary} gives the result. On
 \dset{d1\_open} the joint controller is worse than the strongest decomposed
 rival under commitment: $\DC=-0.0367$ [$-0.0481$, $-0.0252$]. P1 is not
-supported, and H-REV, registered before the freeze, holds ($p<10^{-4}$ after
-Holm adjustment). Under speculation the gap is similar,
-$\DS=-0.0415$ [$-0.0528$, $-0.0302$], so P3 fails on the lower side: the joint
-controller is not equivalent to the decomposed rival, it is worse. The
-interaction is small and positive (+0.0047, $p=0.0097$) but does not survive
-the Holm correction, so P2 also fails, and the boundary claim is not
-supported. The result does not depend on the primary cell: $\DC$ is negative
-in all 12 \dset{d1\_open} ASR cells (three latency profiles at four prices),
-from $-0.035$ to $-0.046$, and the development-split predictions track the
-test values (Spearman 0.870 over 24 cells). The pooled analysis gives the same
-verdicts ($\DC=-0.0351$ [$-0.0458$, $-0.0245$]). On \dset{d2\_support} alone
-the estimate is negative but not significant ($\DC=-0.0227$ [$-0.0502$,
-$+0.0047$]), as expected from its size.
+supported, and H-REV holds ($p<10^{-4}$ after Holm adjustment). Under
+speculation the gap is similar, $\DS=-0.0415$ [$-0.0528$, $-0.0302$], so P3
+fails on the lower side: the joint controller is not equivalent to the
+decomposed rival, it is worse. The interaction is small and positive
+(+0.0047, $p=0.0097$) but does not survive the Holm correction, so P2 also
+fails, and the boundary claim is not supported. The result does not depend on
+the primary cell: $\DC$ is negative in all 12 \dset{d1\_open} ASR cells (three
+latency profiles at four prices), from $-0.035$ to $-0.046$, and the
+development-split predictions track the test values (Spearman 0.870 over 24
+cells). The pooled analysis ($n=4{,}232$; exploratory) gives the same
+verdicts ($\DC=-0.0351$ [$-0.0458$, $-0.0245$]; interaction $+0.0022$,
+$p=0.160$). On
+\dset{d2\_support} alone, where the speculative rival is B10, the estimate is
+negative but not significant ($\DC=-0.0227$ [$-0.0502$, $+0.0047$]), as
+expected from its size.
 
 \subsection{Secondary Analyses}\label{sec:res-secondary}
 
@@ -789,51 +787,46 @@ cells. The two judges agree on 88.6\% of 10,330 \dset{d2\_support} answers.
 % =============================================================================
 \section{Discussion}\label{sec:discussion}
 
-\textbf{Why the text experiment tied.} The tie is the equivalence regime of
-Section~\ref{sec:theory}. With a frozen query, one overlap per policy and one
-belief per turn, every joint decision is a decomposed decision at another
-price. A null result in that setting says little about streaming systems,
-where none of A1--A3 holds. It also shows that comparing a joint controller
-with a weak decomposed baseline such as B9 overstates the value of coupling:
-the right baseline, B9+, is already optimal there.
+The tie in the text experiment is the equivalence regime: under A1--A3, B9+
+is the joint controller, so the tie says little about streaming systems, and
+comparing a joint controller only with a weaker decomposed baseline such as
+B9 would overstate the value of coupling.
 
-\textbf{Why joint control lost.} The theory says joint control can pay to
-first order when the belief sharpens during the turn and a committed retrieval
-is costly to get wrong. Our streaming test met the second condition but not
-the first. The belief was weak on partial transcripts, and the partials
-themselves were noisy. A controller that times its dispatch on such signals
-acts on recognition errors, while a decomposed rule fires at a fixed,
-development-tuned trigger and uses only the belief at that point. The
-near-zero gap on clean text fits this reading, but we did not test the
-mechanism directly, so it remains an interpretation. In practice a decomposed
-controller that prices expected exposure (B9+) is the safer default. Joint
-control is worth building only when the belief on partial transcripts is
-informative and stable, and that should be measured before committing to it.
+\textbf{Why joint control lost.} The theory predicts a large advantage only
+when the belief sharpens during the turn and a committed retrieval is costly
+to get wrong. Our test met the second condition but not the first: the belief
+was weak on partial transcripts, and the partials themselves were noisy.
+Ours-S times its dispatch on these signals, whereas the tuned B9+ waits until
+less than about 0.7~s of speech is predicted to remain and then uses only the
+belief at that point. The near-zero gap on clean text fits this reading, but
+we did not test the mechanism directly. For the controllers and conditions
+tested here, the decomposed B9+ is the better choice; whether a joint
+controller with a stronger, more stable belief would do better remains open.
 
 \textbf{Limitations.} We use one generator, Mistral-7B, and synthetic speech
-rather than recordings of real users. The \dset{d2\_support} results rest on a
-judge whose agreement with the human labels was moderate, so they are
-exploratory. Its retriever searches one shared index across all
-organisations, which weakens retrieval on that set. Finally, the text
-experiment is small and single-domain.
+rather than recordings of real users; TTFA in the streaming test comes from a
+latency model fitted to logged runs rather than from live end-to-end timing.
+The \dset{d2\_support} results rest on a judge whose agreement with the human
+labels was moderate, so they are exploratory. Its retriever searches one
+shared index across all organisations, which weakens retrieval on that set.
+Finally, the text experiment is small and single-domain.
 
 % =============================================================================
 \section{Conclusion}\label{sec:conclusion}
 
-We asked if a voice assistant should decide whether and when to retrieve
-in one decision or in separate modules. Under timing-invariant quality,
-constant overlap and a dispatch-invariant belief, the two are equivalent up to
-a change of price, which explains why a controlled text experiment found no
-difference. Beyond these conditions joint control can pay in principle, mainly
-when retrieval is committed. In a pre-registered test with live speech
-recognition it did not: on 3,734 open-domain questions the joint controller
-was worse than the best decomposed rival ($-0.037$), and the gap vanished on
-clean text. Beliefs that are informative early in the turn along with recorded human speech
-are the conditions under which the question is worth
+We asked if a voice assistant should decide whether and when to retrieve in
+one decision or in separate modules. Under timing-invariant quality, constant
+overlap and a dispatch-invariant belief, the two make the same retrieval
+decisions up to a change of price, which explains why a controlled text
+experiment found no difference. In a pre-registered test with live speech
+recognition, the joint controller we tested was worse than the best
+decomposed rival on open-domain questions, and the gap vanished on clean
+text. Beliefs that are informative early in the turn, along with recorded
+human speech, are the conditions under which the question is worth
 revisiting.
 
 \section*{Acknowledgment}
-The authors would like to  thank SOYL AI Private Limited for supporting this work.
+The authors would like to thank SOYL AI Private Limited for supporting this work.
 
 \FloatBarrier
 \bibliographystyle{IEEEtran}
