@@ -1,0 +1,2198 @@
+{
+  "_comment": "EXPLORATORY sensitivity (not pre-registered). Frozen evaluator re-run with only controller.e3v2.waste.coef changed (policy-constant waste scaled accordingly); outcomes from the existing Phase A test store, nothing generated. Items whose decision lands on an ungenerated cell are dropped from that cell and counted.",
+  "generated_by": "python -m analysis.v2_waste_sensitivity_d1",
+  "generated_at_utc": "2026-10-18T04:16:48.091936+00:00",
+  "git_commit": "7960543233e6562b4c48cacbfa0fed65ac02f8b6",
+  "dataset": "d1_open",
+  "split": "test",
+  "frozen_coef": 0.1,
+  "gate": "coef 0.1 reproduced contrasts_test.json per-item Delta[COMMIT] exactly",
+  "inputs": {
+    "contrasts_sha256": "00dd2e805421e11796130a6450d3da3276417c3d457bccc3130109e66471057c",
+    "store_sha256": "1dc3472528abc5f5b845a71daa7878d35e3cd84b54aa921c3d0e344376a7bd06"
+  },
+  "bootstrap": {
+    "B": 10000,
+    "seed": 20261017,
+    "n_items_universe": 3734
+  },
+  "missing_cells": {
+    "0.1|piper-en_US-hfc_male-medium__150wpm__clean": 0,
+    "0.1|text150": 0,
+    "0|piper-en_US-hfc_male-medium__150wpm__clean": 365,
+    "0|text150": 40,
+    "0.04|piper-en_US-hfc_male-medium__150wpm__clean": 210,
+    "0.04|text150": 20,
+    "0.08|piper-en_US-hfc_male-medium__150wpm__clean": 40,
+    "0.08|text150": 0,
+    "0.16|piper-en_US-hfc_male-medium__150wpm__clean": 50,
+    "0.16|text150": 0
+  },
+  "primary_cell": {
+    "condition": "piper-en_US-hfc_male-medium__150wpm__clean",
+    "profile": "rewrite_faiss",
+    "quantile": 0.65
+  },
+  "cells": [
+    {
+      "condition": "piper-en_US-hfc_male-medium__150wpm__clean",
+      "profile": "rewrite_faiss",
+      "belief_quantile": 0.5,
+      "price": "0.165707|0.05",
+      "waste_coef": 0.1,
+      "delta_commit": -0.03648060562795994,
+      "ci95": [
+        -0.04768357208867276,
+        -0.025152594567065763
+      ],
+      "n_items": 3734,
+      "items_dropped_missing_cells": 0,
+      "decisions_changed_vs_frozen": {
+        "ours_v2": 0,
+        "b9plus_v2": 0
+      }
+    },
+    {
+      "condition": "piper-en_US-hfc_male-medium__150wpm__clean",
+      "profile": "rewrite_faiss",
+      "belief_quantile": 0.5,
+      "price": "0.165707|0.05",
+      "waste_coef": 0.0,
+      "delta_commit": -0.03843996185888338,
+      "ci95": [
+        -0.04968698823175509,
+        -0.027053190572074566
+      ],
+      "n_items": 3734,
+      "items_dropped_missing_cells": 0,
+      "decisions_changed_vs_frozen": {
+        "ours_v2": 70,
+        "b9plus_v2": 6
+      }
+    },
+    {
+      "condition": "piper-en_US-hfc_male-medium__150wpm__clean",
+      "profile": "rewrite_faiss",
+      "belief_quantile": 0.5,
+      "price": "0.165707|0.05",
+      "waste_coef": 0.04,
+      "delta_commit": -0.03726180197904351,
+      "ci95": [
+        -0.048571858021607434,
+        -0.02587544092746275
+      ],
+      "n_items": 3734,
+      "items_dropped_missing_cells": 0,
+      "decisions_changed_vs_frozen": {
+        "ours_v2": 41,
+        "b9plus_v2": 5
+      }
+    },
+    {
+      "condition": "piper-en_US-hfc_male-medium__150wpm__clean",
+      "profile": "rewrite_faiss",
+      "belief_quantile": 0.5,
+      "price": "0.165707|0.05",
+      "waste_coef": 0.08,
+      "delta_commit": -0.03692556530428665,
+      "ci95": [
+        -0.04824269608561849,
+        -0.025598392066007794
+      ],
+      "n_items": 3734,
+      "items_dropped_missing_cells": 0,
+      "decisions_changed_vs_frozen": {
+        "ours_v2": 13,
+        "b9plus_v2": 3
+      }
+    },
+    {
+      "condition": "piper-en_US-hfc_male-medium__150wpm__clean",
+      "profile": "rewrite_faiss",
+      "belief_quantile": 0.5,
+      "price": "0.165707|0.05",
+      "waste_coef": 0.16,
+      "delta_commit": -0.03623474442004723,
+      "ci95": [
+        -0.04740441464516708,
+        -0.02489475902609335
+      ],
+      "n_items": 3734,
+      "items_dropped_missing_cells": 0,
+      "decisions_changed_vs_frozen": {
+        "ours_v2": 34,
+        "b9plus_v2": 5
+      }
+    },
+    {
+      "condition": "piper-en_US-hfc_male-medium__150wpm__clean",
+      "profile": "rewrite_faiss",
+      "belief_quantile": 0.65,
+      "price": "0.173057|0.05",
+      "waste_coef": 0.1,
+      "delta_commit": -0.036727786646624426,
+      "ci95": [
+        -0.048144411782409975,
+        -0.025218382406490932
+      ],
+      "n_items": 3734,
+      "items_dropped_missing_cells": 0,
+      "decisions_changed_vs_frozen": {
+        "ours_v2": 0,
+        "b9plus_v2": 0
+      }
+    },
+    {
+      "condition": "piper-en_US-hfc_male-medium__150wpm__clean",
+      "profile": "rewrite_faiss",
+      "belief_quantile": 0.65,
+      "price": "0.173057|0.05",
+      "waste_coef": 0.0,
+      "delta_commit": -0.03869849996856671,
+      "ci95": [
+        -0.050216057311388514,
+        -0.02707828999693164
+      ],
+      "n_items": 3734,
+      "items_dropped_missing_cells": 0,
+      "decisions_changed_vs_frozen": {
+        "ours_v2": 66,
+        "b9plus_v2": 15
+      }
+    },
+    {
+      "condition": "piper-en_US-hfc_male-medium__150wpm__clean",
+      "profile": "rewrite_faiss",
+      "belief_quantile": 0.65,
+      "price": "0.173057|0.05",
+      "waste_coef": 0.04,
+      "delta_commit": -0.037559540416173785,
+      "ci95": [
+        -0.049041315574445785,
+        -0.02604965576652084
+      ],
+      "n_items": 3734,
+      "items_dropped_missing_cells": 0,
+      "decisions_changed_vs_frozen": {
+        "ours_v2": 32,
+        "b9plus_v2": 8
+      }
+    },
+    {
+      "condition": "piper-en_US-hfc_male-medium__150wpm__clean",
+      "profile": "rewrite_faiss",
+      "belief_quantile": 0.65,
+      "price": "0.173057|0.05",
+      "waste_coef": 0.08,
+      "delta_commit": -0.037432768025632314,
+      "ci95": [
+        -0.048886659651209155,
+        -0.025879892113570592
+      ],
+      "n_items": 3734,
+      "items_dropped_missing_cells": 0,
+      "decisions_changed_vs_frozen": {
+        "ours_v2": 9,
+        "b9plus_v2": 2
+      }
+    },
+    {
+      "condition": "piper-en_US-hfc_male-medium__150wpm__clean",
+      "profile": "rewrite_faiss",
+      "belief_quantile": 0.65,
+      "price": "0.173057|0.05",
+      "waste_coef": 0.16,
+      "delta_commit": -0.03603151312194712,
+      "ci95": [
+        -0.04751761225396193,
+        -0.024458576935262398
+      ],
+      "n_items": 3734,
+      "items_dropped_missing_cells": 0,
+      "decisions_changed_vs_frozen": {
+        "ours_v2": 29,
+        "b9plus_v2": 14
+      }
+    },
+    {
+      "condition": "piper-en_US-hfc_male-medium__150wpm__clean",
+      "profile": "rewrite_faiss",
+      "belief_quantile": 0.8,
+      "price": "0.18069|0.05",
+      "waste_coef": 0.1,
+      "delta_commit": -0.040936993669033465,
+      "ci95": [
+        -0.0529701306520443,
+        -0.029222213028573283
+      ],
+      "n_items": 3734,
+      "items_dropped_missing_cells": 0,
+      "decisions_changed_vs_frozen": {
+        "ours_v2": 0,
+        "b9plus_v2": 0
+      }
+    },
+    {
+      "condition": "piper-en_US-hfc_male-medium__150wpm__clean",
+      "profile": "rewrite_faiss",
+      "belief_quantile": 0.8,
+      "price": "0.18069|0.05",
+      "waste_coef": 0.0,
+      "delta_commit": -0.04169226607390289,
+      "ci95": [
+        -0.053682986934296725,
+        -0.029943625122095502
+      ],
+      "n_items": 3734,
+      "items_dropped_missing_cells": 0,
+      "decisions_changed_vs_frozen": {
+        "ours_v2": 49,
+        "b9plus_v2": 41
+      }
+    },
+    {
+      "condition": "piper-en_US-hfc_male-medium__150wpm__clean",
+      "profile": "rewrite_faiss",
+      "belief_quantile": 0.8,
+      "price": "0.18069|0.05",
+      "waste_coef": 0.04,
+      "delta_commit": -0.04096510366307724,
+      "ci95": [
+        -0.05286335581885059,
+        -0.029286232969107498
+      ],
+      "n_items": 3734,
+      "items_dropped_missing_cells": 0,
+      "decisions_changed_vs_frozen": {
+        "ours_v2": 27,
+        "b9plus_v2": 23
+      }
+    },
+    {
+      "condition": "piper-en_US-hfc_male-medium__150wpm__clean",
+      "profile": "rewrite_faiss",
+      "belief_quantile": 0.8,
+      "price": "0.18069|0.05",
+      "waste_coef": 0.08,
+      "delta_commit": -0.04073988243577916,
+      "ci95": [
+        -0.05271573113316511,
+        -0.029047301909511773
+      ],
+      "n_items": 3734,
+      "items_dropped_missing_cells": 0,
+      "decisions_changed_vs_frozen": {
+        "ours_v2": 12,
+        "b9plus_v2": 4
+      }
+    },
+    {
+      "condition": "piper-en_US-hfc_male-medium__150wpm__clean",
+      "profile": "rewrite_faiss",
+      "belief_quantile": 0.8,
+      "price": "0.18069|0.05",
+      "waste_coef": 0.16,
+      "delta_commit": -0.041894058781456994,
+      "ci95": [
+        -0.05387040469054797,
+        -0.030228559846653347
+      ],
+      "n_items": 3734,
+      "items_dropped_missing_cells": 0,
+      "decisions_changed_vs_frozen": {
+        "ours_v2": 27,
+        "b9plus_v2": 20
+      }
+    },
+    {
+      "condition": "piper-en_US-hfc_male-medium__150wpm__clean",
+      "profile": "rewrite_faiss",
+      "belief_quantile": 0.9,
+      "price": "0.188924|0.05",
+      "waste_coef": 0.1,
+      "delta_commit": -0.04323561869423555,
+      "ci95": [
+        -0.05590248517233194,
+        -0.030881380111051716
+      ],
+      "n_items": 3734,
+      "items_dropped_missing_cells": 0,
+      "decisions_changed_vs_frozen": {
+        "ours_v2": 0,
+        "b9plus_v2": 0
+      }
+    },
+    {
+      "condition": "piper-en_US-hfc_male-medium__150wpm__clean",
+      "profile": "rewrite_faiss",
+      "belief_quantile": 0.9,
+      "price": "0.188924|0.05",
+      "waste_coef": 0.0,
+      "delta_commit": -0.04309918998694066,
+      "ci95": [
+        -0.055637373251716686,
+        -0.030759624220608163
+      ],
+      "n_items": 3734,
+      "items_dropped_missing_cells": 0,
+      "decisions_changed_vs_frozen": {
+        "ours_v2": 46,
+        "b9plus_v2": 60
+      }
+    },
+    {
+      "condition": "piper-en_US-hfc_male-medium__150wpm__clean",
+      "profile": "rewrite_faiss",
+      "belief_quantile": 0.9,
+      "price": "0.188924|0.05",
+      "waste_coef": 0.04,
+      "delta_commit": -0.04339242291669409,
+      "ci95": [
+        -0.05602407540958505,
+        -0.030986450454530582
+      ],
+      "n_items": 3734,
+      "items_dropped_missing_cells": 0,
+      "decisions_changed_vs_frozen": {
+        "ours_v2": 32,
+        "b9plus_v2": 30
+      }
+    },
+    {
+      "condition": "piper-en_US-hfc_male-medium__150wpm__clean",
+      "profile": "rewrite_faiss",
+      "belief_quantile": 0.9,
+      "price": "0.188924|0.05",
+      "waste_coef": 0.08,
+      "delta_commit": -0.04359116135702331,
+      "ci95": [
+        -0.05629546748129423,
+        -0.03117072303987435
+      ],
+      "n_items": 3734,
+      "items_dropped_missing_cells": 0,
+      "decisions_changed_vs_frozen": {
+        "ours_v2": 8,
+        "b9plus_v2": 13
+      }
+    },
+    {
+      "condition": "piper-en_US-hfc_male-medium__150wpm__clean",
+      "profile": "rewrite_faiss",
+      "belief_quantile": 0.9,
+      "price": "0.188924|0.05",
+      "waste_coef": 0.16,
+      "delta_commit": -0.042115331198658866,
+      "ci95": [
+        -0.05478269519838381,
+        -0.02971625445588779
+      ],
+      "n_items": 3734,
+      "items_dropped_missing_cells": 0,
+      "decisions_changed_vs_frozen": {
+        "ours_v2": 27,
+        "b9plus_v2": 27
+      }
+    },
+    {
+      "condition": "piper-en_US-hfc_male-medium__150wpm__clean",
+      "profile": "rewrite_faiss_rerank",
+      "belief_quantile": 0.5,
+      "price": "0.167562|0.05",
+      "waste_coef": 0.1,
+      "delta_commit": -0.03537628862628932,
+      "ci95": [
+        -0.04659231686746756,
+        -0.024011943319790514
+      ],
+      "n_items": 3734,
+      "items_dropped_missing_cells": 0,
+      "decisions_changed_vs_frozen": {
+        "ours_v2": 0,
+        "b9plus_v2": 0
+      }
+    },
+    {
+      "condition": "piper-en_US-hfc_male-medium__150wpm__clean",
+      "profile": "rewrite_faiss_rerank",
+      "belief_quantile": 0.5,
+      "price": "0.167562|0.05",
+      "waste_coef": 0.0,
+      "delta_commit": -0.0373714529624207,
+      "ci95": [
+        -0.048767324780976395,
+        -0.026018109731239664
+      ],
+      "n_items": 3734,
+      "items_dropped_missing_cells": 0,
+      "decisions_changed_vs_frozen": {
+        "ours_v2": 66,
+        "b9plus_v2": 4
+      }
+    },
+    {
+      "condition": "piper-en_US-hfc_male-medium__150wpm__clean",
+      "profile": "rewrite_faiss_rerank",
+      "belief_quantile": 0.5,
+      "price": "0.167562|0.05",
+      "waste_coef": 0.04,
+      "delta_commit": -0.03643119796391857,
+      "ci95": [
+        -0.04779109916086579,
+        -0.025153559123475937
+      ],
+      "n_items": 3734,
+      "items_dropped_missing_cells": 0,
+      "decisions_changed_vs_frozen": {
+        "ours_v2": 41,
+        "b9plus_v2": 4
+      }
+    },
+    {
+      "condition": "piper-en_US-hfc_male-medium__150wpm__clean",
+      "profile": "rewrite_faiss_rerank",
+      "belief_quantile": 0.5,
+      "price": "0.167562|0.05",
+      "waste_coef": 0.08,
+      "delta_commit": -0.035523960343589255,
+      "ci95": [
+        -0.046810999816221416,
+        -0.024176652219460207
+      ],
+      "n_items": 3734,
+      "items_dropped_missing_cells": 0,
+      "decisions_changed_vs_frozen": {
+        "ours_v2": 14,
+        "b9plus_v2": 0
+      }
+    },
+    {
+      "condition": "piper-en_US-hfc_male-medium__150wpm__clean",
+      "profile": "rewrite_faiss_rerank",
+      "belief_quantile": 0.5,
+      "price": "0.167562|0.05",
+      "waste_coef": 0.16,
+      "delta_commit": -0.03475781164129579,
+      "ci95": [
+        -0.04591179526161495,
+        -0.023453531789931793
+      ],
+      "n_items": 3733,
+      "items_dropped_missing_cells": 1,
+      "decisions_changed_vs_frozen": {
+        "ours_v2": 30,
+        "b9plus_v2": 5
+      }
+    },
+    {
+      "condition": "piper-en_US-hfc_male-medium__150wpm__clean",
+      "profile": "rewrite_faiss_rerank",
+      "belief_quantile": 0.65,
+      "price": "0.174995|0.05",
+      "waste_coef": 0.1,
+      "delta_commit": -0.0362654691709264,
+      "ci95": [
+        -0.04769462780037644,
+        -0.024757195905120637
+      ],
+      "n_items": 3734,
+      "items_dropped_missing_cells": 0,
+      "decisions_changed_vs_frozen": {
+        "ours_v2": 0,
+        "b9plus_v2": 0
+      }
+    },
+    {
+      "condition": "piper-en_US-hfc_male-medium__150wpm__clean",
+      "profile": "rewrite_faiss_rerank",
+      "belief_quantile": 0.65,
+      "price": "0.174995|0.05",
+      "waste_coef": 0.0,
+      "delta_commit": -0.0374153881194991,
+      "ci95": [
+        -0.048956743883822804,
+        -0.02589104421715127
+      ],
+      "n_items": 3734,
+      "items_dropped_missing_cells": 0,
+      "decisions_changed_vs_frozen": {
+        "ours_v2": 51,
+        "b9plus_v2": 18
+      }
+    },
+    {
+      "condition": "piper-en_US-hfc_male-medium__150wpm__clean",
+      "profile": "rewrite_faiss_rerank",
+      "belief_quantile": 0.65,
+      "price": "0.174995|0.05",
+      "waste_coef": 0.04,
+      "delta_commit": -0.03744977211314414,
+      "ci95": [
+        -0.048982099625156185,
+        -0.025919104231206202
+      ],
+      "n_items": 3734,
+      "items_dropped_missing_cells": 0,
+      "decisions_changed_vs_frozen": {
+        "ours_v2": 30,
+        "b9plus_v2": 14
+      }
+    },
+    {
+      "condition": "piper-en_US-hfc_male-medium__150wpm__clean",
+      "profile": "rewrite_faiss_rerank",
+      "belief_quantile": 0.65,
+      "price": "0.174995|0.05",
+      "waste_coef": 0.08,
+      "delta_commit": -0.0358051535572684,
+      "ci95": [
+        -0.04731163431892776,
+        -0.024316141879813874
+      ],
+      "n_items": 3734,
+      "items_dropped_missing_cells": 0,
+      "decisions_changed_vs_frozen": {
+        "ours_v2": 4,
+        "b9plus_v2": 3
+      }
+    },
+    {
+      "condition": "piper-en_US-hfc_male-medium__150wpm__clean",
+      "profile": "rewrite_faiss_rerank",
+      "belief_quantile": 0.65,
+      "price": "0.174995|0.05",
+      "waste_coef": 0.16,
+      "delta_commit": -0.03653582292564871,
+      "ci95": [
+        -0.04807412447005746,
+        -0.025033259407298215
+      ],
+      "n_items": 3734,
+      "items_dropped_missing_cells": 0,
+      "decisions_changed_vs_frozen": {
+        "ours_v2": 30,
+        "b9plus_v2": 8
+      }
+    },
+    {
+      "condition": "piper-en_US-hfc_male-medium__150wpm__clean",
+      "profile": "rewrite_faiss_rerank",
+      "belief_quantile": 0.8,
+      "price": "0.182713|0.05",
+      "waste_coef": 0.1,
+      "delta_commit": -0.04089439693808855,
+      "ci95": [
+        -0.05285625994353694,
+        -0.02925758750996321
+      ],
+      "n_items": 3734,
+      "items_dropped_missing_cells": 0,
+      "decisions_changed_vs_frozen": {
+        "ours_v2": 0,
+        "b9plus_v2": 0
+      }
+    },
+    {
+      "condition": "piper-en_US-hfc_male-medium__150wpm__clean",
+      "profile": "rewrite_faiss_rerank",
+      "belief_quantile": 0.8,
+      "price": "0.182713|0.05",
+      "waste_coef": 0.0,
+      "delta_commit": -0.03968120559170483,
+      "ci95": [
+        -0.051520748778391204,
+        -0.02807745231624178
+      ],
+      "n_items": 3734,
+      "items_dropped_missing_cells": 0,
+      "decisions_changed_vs_frozen": {
+        "ours_v2": 43,
+        "b9plus_v2": 35
+      }
+    },
+    {
+      "condition": "piper-en_US-hfc_male-medium__150wpm__clean",
+      "profile": "rewrite_faiss_rerank",
+      "belief_quantile": 0.8,
+      "price": "0.182713|0.05",
+      "waste_coef": 0.04,
+      "delta_commit": -0.04009609396958416,
+      "ci95": [
+        -0.051954977725974065,
+        -0.028507961923678625
+      ],
+      "n_items": 3734,
+      "items_dropped_missing_cells": 0,
+      "decisions_changed_vs_frozen": {
+        "ours_v2": 32,
+        "b9plus_v2": 20
+      }
+    },
+    {
+      "condition": "piper-en_US-hfc_male-medium__150wpm__clean",
+      "profile": "rewrite_faiss_rerank",
+      "belief_quantile": 0.8,
+      "price": "0.182713|0.05",
+      "waste_coef": 0.08,
+      "delta_commit": -0.04135917328201513,
+      "ci95": [
+        -0.05328931589479595,
+        -0.02974786378095187
+      ],
+      "n_items": 3734,
+      "items_dropped_missing_cells": 0,
+      "decisions_changed_vs_frozen": {
+        "ours_v2": 7,
+        "b9plus_v2": 9
+      }
+    },
+    {
+      "condition": "piper-en_US-hfc_male-medium__150wpm__clean",
+      "profile": "rewrite_faiss_rerank",
+      "belief_quantile": 0.8,
+      "price": "0.182713|0.05",
+      "waste_coef": 0.16,
+      "delta_commit": -0.041199769894939106,
+      "ci95": [
+        -0.053221103406748106,
+        -0.029494937610649388
+      ],
+      "n_items": 3734,
+      "items_dropped_missing_cells": 0,
+      "decisions_changed_vs_frozen": {
+        "ours_v2": 29,
+        "b9plus_v2": 25
+      }
+    },
+    {
+      "condition": "piper-en_US-hfc_male-medium__150wpm__clean",
+      "profile": "rewrite_faiss_rerank",
+      "belief_quantile": 0.9,
+      "price": "0.191039|0.05",
+      "waste_coef": 0.1,
+      "delta_commit": -0.04158459927863292,
+      "ci95": [
+        -0.05426088269269641,
+        -0.02919124700417801
+      ],
+      "n_items": 3734,
+      "items_dropped_missing_cells": 0,
+      "decisions_changed_vs_frozen": {
+        "ours_v2": 0,
+        "b9plus_v2": 0
+      }
+    },
+    {
+      "condition": "piper-en_US-hfc_male-medium__150wpm__clean",
+      "profile": "rewrite_faiss_rerank",
+      "belief_quantile": 0.9,
+      "price": "0.191039|0.05",
+      "waste_coef": 0.0,
+      "delta_commit": -0.04396029678311737,
+      "ci95": [
+        -0.05665299505151187,
+        -0.03168469938013585
+      ],
+      "n_items": 3734,
+      "items_dropped_missing_cells": 0,
+      "decisions_changed_vs_frozen": {
+        "ours_v2": 54,
+        "b9plus_v2": 60
+      }
+    },
+    {
+      "condition": "piper-en_US-hfc_male-medium__150wpm__clean",
+      "profile": "rewrite_faiss_rerank",
+      "belief_quantile": 0.9,
+      "price": "0.191039|0.05",
+      "waste_coef": 0.04,
+      "delta_commit": -0.04305077400824513,
+      "ci95": [
+        -0.05553718162403466,
+        -0.030714154730053535
+      ],
+      "n_items": 3734,
+      "items_dropped_missing_cells": 0,
+      "decisions_changed_vs_frozen": {
+        "ours_v2": 28,
+        "b9plus_v2": 39
+      }
+    },
+    {
+      "condition": "piper-en_US-hfc_male-medium__150wpm__clean",
+      "profile": "rewrite_faiss_rerank",
+      "belief_quantile": 0.9,
+      "price": "0.191039|0.05",
+      "waste_coef": 0.08,
+      "delta_commit": -0.042065373402008784,
+      "ci95": [
+        -0.0546518781040239,
+        -0.0297314410763729
+      ],
+      "n_items": 3734,
+      "items_dropped_missing_cells": 0,
+      "decisions_changed_vs_frozen": {
+        "ours_v2": 5,
+        "b9plus_v2": 18
+      }
+    },
+    {
+      "condition": "piper-en_US-hfc_male-medium__150wpm__clean",
+      "profile": "rewrite_faiss_rerank",
+      "belief_quantile": 0.9,
+      "price": "0.191039|0.05",
+      "waste_coef": 0.16,
+      "delta_commit": -0.04206565954500797,
+      "ci95": [
+        -0.054581324010733456,
+        -0.029713714717422474
+      ],
+      "n_items": 3728,
+      "items_dropped_missing_cells": 6,
+      "decisions_changed_vs_frozen": {
+        "ours_v2": 27,
+        "b9plus_v2": 29
+      }
+    },
+    {
+      "condition": "piper-en_US-hfc_male-medium__150wpm__clean",
+      "profile": "rewrite_remote",
+      "belief_quantile": 0.5,
+      "price": "0.147414|0.05",
+      "waste_coef": 0.1,
+      "delta_commit": -0.041532668663121323,
+      "ci95": [
+        -0.05310156959120478,
+        -0.03006247429859554
+      ],
+      "n_items": 3734,
+      "items_dropped_missing_cells": 0,
+      "decisions_changed_vs_frozen": {
+        "ours_v2": 0,
+        "b9plus_v2": 0
+      }
+    },
+    {
+      "condition": "piper-en_US-hfc_male-medium__150wpm__clean",
+      "profile": "rewrite_remote",
+      "belief_quantile": 0.5,
+      "price": "0.147414|0.05",
+      "waste_coef": 0.0,
+      "delta_commit": -0.04172181082354603,
+      "ci95": [
+        -0.053415910017878904,
+        -0.030130225434163542
+      ],
+      "n_items": 3694,
+      "items_dropped_missing_cells": 40,
+      "decisions_changed_vs_frozen": {
+        "ours_v2": 85,
+        "b9plus_v2": 12
+      }
+    },
+    {
+      "condition": "piper-en_US-hfc_male-medium__150wpm__clean",
+      "profile": "rewrite_remote",
+      "belief_quantile": 0.5,
+      "price": "0.147414|0.05",
+      "waste_coef": 0.04,
+      "delta_commit": -0.04210727019146441,
+      "ci95": [
+        -0.05363552138044277,
+        -0.030433750190352226
+      ],
+      "n_items": 3715,
+      "items_dropped_missing_cells": 19,
+      "decisions_changed_vs_frozen": {
+        "ours_v2": 43,
+        "b9plus_v2": 9
+      }
+    },
+    {
+      "condition": "piper-en_US-hfc_male-medium__150wpm__clean",
+      "profile": "rewrite_remote",
+      "belief_quantile": 0.5,
+      "price": "0.147414|0.05",
+      "waste_coef": 0.08,
+      "delta_commit": -0.04211061508627051,
+      "ci95": [
+        -0.053676226001347874,
+        -0.03051981526188138
+      ],
+      "n_items": 3730,
+      "items_dropped_missing_cells": 4,
+      "decisions_changed_vs_frozen": {
+        "ours_v2": 16,
+        "b9plus_v2": 4
+      }
+    },
+    {
+      "condition": "piper-en_US-hfc_male-medium__150wpm__clean",
+      "profile": "rewrite_remote",
+      "belief_quantile": 0.5,
+      "price": "0.147414|0.05",
+      "waste_coef": 0.16,
+      "delta_commit": -0.04022124836632314,
+      "ci95": [
+        -0.05181991316499783,
+        -0.028664538532133632
+      ],
+      "n_items": 3734,
+      "items_dropped_missing_cells": 0,
+      "decisions_changed_vs_frozen": {
+        "ours_v2": 42,
+        "b9plus_v2": 15
+      }
+    },
+    {
+      "condition": "piper-en_US-hfc_male-medium__150wpm__clean",
+      "profile": "rewrite_remote",
+      "belief_quantile": 0.65,
+      "price": "0.153953|0.05",
+      "waste_coef": 0.1,
+      "delta_commit": -0.04319254729196195,
+      "ci95": [
+        -0.05642680073745867,
+        -0.03000484840515426
+      ],
+      "n_items": 3734,
+      "items_dropped_missing_cells": 0,
+      "decisions_changed_vs_frozen": {
+        "ours_v2": 0,
+        "b9plus_v2": 0
+      }
+    },
+    {
+      "condition": "piper-en_US-hfc_male-medium__150wpm__clean",
+      "profile": "rewrite_remote",
+      "belief_quantile": 0.65,
+      "price": "0.153953|0.05",
+      "waste_coef": 0.0,
+      "delta_commit": -0.0443679026809731,
+      "ci95": [
+        -0.057396617158634956,
+        -0.031186509431223117
+      ],
+      "n_items": 3715,
+      "items_dropped_missing_cells": 19,
+      "decisions_changed_vs_frozen": {
+        "ours_v2": 79,
+        "b9plus_v2": 33
+      }
+    },
+    {
+      "condition": "piper-en_US-hfc_male-medium__150wpm__clean",
+      "profile": "rewrite_remote",
+      "belief_quantile": 0.65,
+      "price": "0.153953|0.05",
+      "waste_coef": 0.04,
+      "delta_commit": -0.043751180357820274,
+      "ci95": [
+        -0.05704668613167722,
+        -0.030481424172889914
+      ],
+      "n_items": 3729,
+      "items_dropped_missing_cells": 5,
+      "decisions_changed_vs_frozen": {
+        "ours_v2": 53,
+        "b9plus_v2": 23
+      }
+    },
+    {
+      "condition": "piper-en_US-hfc_male-medium__150wpm__clean",
+      "profile": "rewrite_remote",
+      "belief_quantile": 0.65,
+      "price": "0.153953|0.05",
+      "waste_coef": 0.08,
+      "delta_commit": -0.04299216325066351,
+      "ci95": [
+        -0.056272392259075106,
+        -0.0297932555731784
+      ],
+      "n_items": 3734,
+      "items_dropped_missing_cells": 0,
+      "decisions_changed_vs_frozen": {
+        "ours_v2": 13,
+        "b9plus_v2": 4
+      }
+    },
+    {
+      "condition": "piper-en_US-hfc_male-medium__150wpm__clean",
+      "profile": "rewrite_remote",
+      "belief_quantile": 0.65,
+      "price": "0.153953|0.05",
+      "waste_coef": 0.16,
+      "delta_commit": -0.04149289923316767,
+      "ci95": [
+        -0.05475369517017653,
+        -0.028239698483149462
+      ],
+      "n_items": 3734,
+      "items_dropped_missing_cells": 0,
+      "decisions_changed_vs_frozen": {
+        "ours_v2": 29,
+        "b9plus_v2": 22
+      }
+    },
+    {
+      "condition": "piper-en_US-hfc_male-medium__150wpm__clean",
+      "profile": "rewrite_remote",
+      "belief_quantile": 0.8,
+      "price": "0.160743|0.05",
+      "waste_coef": 0.1,
+      "delta_commit": -0.043275130361628895,
+      "ci95": [
+        -0.05585130987888167,
+        -0.031092380506232545
+      ],
+      "n_items": 3734,
+      "items_dropped_missing_cells": 0,
+      "decisions_changed_vs_frozen": {
+        "ours_v2": 0,
+        "b9plus_v2": 0
+      }
+    },
+    {
+      "condition": "piper-en_US-hfc_male-medium__150wpm__clean",
+      "profile": "rewrite_remote",
+      "belief_quantile": 0.8,
+      "price": "0.160743|0.05",
+      "waste_coef": 0.0,
+      "delta_commit": -0.04668208340299716,
+      "ci95": [
+        -0.059103778493150794,
+        -0.03445745893048659
+      ],
+      "n_items": 3730,
+      "items_dropped_missing_cells": 4,
+      "decisions_changed_vs_frozen": {
+        "ours_v2": 69,
+        "b9plus_v2": 48
+      }
+    },
+    {
+      "condition": "piper-en_US-hfc_male-medium__150wpm__clean",
+      "profile": "rewrite_remote",
+      "belief_quantile": 0.8,
+      "price": "0.160743|0.05",
+      "waste_coef": 0.04,
+      "delta_commit": -0.04576726201283035,
+      "ci95": [
+        -0.058150470282031866,
+        -0.03349735848879624
+      ],
+      "n_items": 3732,
+      "items_dropped_missing_cells": 2,
+      "decisions_changed_vs_frozen": {
+        "ours_v2": 37,
+        "b9plus_v2": 32
+      }
+    },
+    {
+      "condition": "piper-en_US-hfc_male-medium__150wpm__clean",
+      "profile": "rewrite_remote",
+      "belief_quantile": 0.8,
+      "price": "0.160743|0.05",
+      "waste_coef": 0.08,
+      "delta_commit": -0.044024981299352346,
+      "ci95": [
+        -0.05652436189472461,
+        -0.03182918123499971
+      ],
+      "n_items": 3734,
+      "items_dropped_missing_cells": 0,
+      "decisions_changed_vs_frozen": {
+        "ours_v2": 8,
+        "b9plus_v2": 11
+      }
+    },
+    {
+      "condition": "piper-en_US-hfc_male-medium__150wpm__clean",
+      "profile": "rewrite_remote",
+      "belief_quantile": 0.8,
+      "price": "0.160743|0.05",
+      "waste_coef": 0.16,
+      "delta_commit": -0.04334386553319252,
+      "ci95": [
+        -0.055869120094166766,
+        -0.03115689128437693
+      ],
+      "n_items": 3734,
+      "items_dropped_missing_cells": 0,
+      "decisions_changed_vs_frozen": {
+        "ours_v2": 27,
+        "b9plus_v2": 34
+      }
+    },
+    {
+      "condition": "piper-en_US-hfc_male-medium__150wpm__clean",
+      "profile": "rewrite_remote",
+      "belief_quantile": 0.9,
+      "price": "0.168068|0.05",
+      "waste_coef": 0.1,
+      "delta_commit": -0.04560965598605695,
+      "ci95": [
+        -0.058517032527263306,
+        -0.03316484507280017
+      ],
+      "n_items": 3734,
+      "items_dropped_missing_cells": 0,
+      "decisions_changed_vs_frozen": {
+        "ours_v2": 0,
+        "b9plus_v2": 0
+      }
+    },
+    {
+      "condition": "piper-en_US-hfc_male-medium__150wpm__clean",
+      "profile": "rewrite_remote",
+      "belief_quantile": 0.9,
+      "price": "0.168068|0.05",
+      "waste_coef": 0.0,
+      "delta_commit": -0.04621964347755978,
+      "ci95": [
+        -0.059085760565958836,
+        -0.03367903389223789
+      ],
+      "n_items": 3731,
+      "items_dropped_missing_cells": 3,
+      "decisions_changed_vs_frozen": {
+        "ours_v2": 46,
+        "b9plus_v2": 81
+      }
+    },
+    {
+      "condition": "piper-en_US-hfc_male-medium__150wpm__clean",
+      "profile": "rewrite_remote",
+      "belief_quantile": 0.9,
+      "price": "0.168068|0.05",
+      "waste_coef": 0.04,
+      "delta_commit": -0.045801291510501496,
+      "ci95": [
+        -0.05873800256878479,
+        -0.033248303206959345
+      ],
+      "n_items": 3734,
+      "items_dropped_missing_cells": 0,
+      "decisions_changed_vs_frozen": {
+        "ours_v2": 27,
+        "b9plus_v2": 54
+      }
+    },
+    {
+      "condition": "piper-en_US-hfc_male-medium__150wpm__clean",
+      "profile": "rewrite_remote",
+      "belief_quantile": 0.9,
+      "price": "0.168068|0.05",
+      "waste_coef": 0.08,
+      "delta_commit": -0.04513769641917354,
+      "ci95": [
+        -0.05801837931934718,
+        -0.032602300149733594
+      ],
+      "n_items": 3734,
+      "items_dropped_missing_cells": 0,
+      "decisions_changed_vs_frozen": {
+        "ours_v2": 11,
+        "b9plus_v2": 15
+      }
+    },
+    {
+      "condition": "piper-en_US-hfc_male-medium__150wpm__clean",
+      "profile": "rewrite_remote",
+      "belief_quantile": 0.9,
+      "price": "0.168068|0.05",
+      "waste_coef": 0.16,
+      "delta_commit": -0.04445789147014572,
+      "ci95": [
+        -0.05751372433016102,
+        -0.03189458158296258
+      ],
+      "n_items": 3734,
+      "items_dropped_missing_cells": 0,
+      "decisions_changed_vs_frozen": {
+        "ours_v2": 36,
+        "b9plus_v2": 34
+      }
+    },
+    {
+      "condition": "text150",
+      "profile": "rewrite_faiss",
+      "belief_quantile": 0.5,
+      "price": "0.155454|0.05",
+      "waste_coef": 0.1,
+      "delta_commit": -0.008519217867209846,
+      "ci95": [
+        -0.011900047274064051,
+        -0.005152526466851298
+      ],
+      "n_items": 3734,
+      "items_dropped_missing_cells": 0,
+      "decisions_changed_vs_frozen": {
+        "ours_v2": 0,
+        "b9plus_v2": 0
+      }
+    },
+    {
+      "condition": "text150",
+      "profile": "rewrite_faiss",
+      "belief_quantile": 0.5,
+      "price": "0.155454|0.05",
+      "waste_coef": 0.0,
+      "delta_commit": -0.008519217867209846,
+      "ci95": [
+        -0.011900047274064051,
+        -0.005152526466851298
+      ],
+      "n_items": 3734,
+      "items_dropped_missing_cells": 0,
+      "decisions_changed_vs_frozen": {
+        "ours_v2": 0,
+        "b9plus_v2": 0
+      }
+    },
+    {
+      "condition": "text150",
+      "profile": "rewrite_faiss",
+      "belief_quantile": 0.5,
+      "price": "0.155454|0.05",
+      "waste_coef": 0.04,
+      "delta_commit": -0.008519217867209846,
+      "ci95": [
+        -0.011900047274064051,
+        -0.005152526466851298
+      ],
+      "n_items": 3734,
+      "items_dropped_missing_cells": 0,
+      "decisions_changed_vs_frozen": {
+        "ours_v2": 0,
+        "b9plus_v2": 0
+      }
+    },
+    {
+      "condition": "text150",
+      "profile": "rewrite_faiss",
+      "belief_quantile": 0.5,
+      "price": "0.155454|0.05",
+      "waste_coef": 0.08,
+      "delta_commit": -0.008519217867209846,
+      "ci95": [
+        -0.011900047274064051,
+        -0.005152526466851298
+      ],
+      "n_items": 3734,
+      "items_dropped_missing_cells": 0,
+      "decisions_changed_vs_frozen": {
+        "ours_v2": 0,
+        "b9plus_v2": 0
+      }
+    },
+    {
+      "condition": "text150",
+      "profile": "rewrite_faiss",
+      "belief_quantile": 0.5,
+      "price": "0.155454|0.05",
+      "waste_coef": 0.16,
+      "delta_commit": -0.008546855594827745,
+      "ci95": [
+        -0.011924338573087672,
+        -0.005181508527878992
+      ],
+      "n_items": 3734,
+      "items_dropped_missing_cells": 0,
+      "decisions_changed_vs_frozen": {
+        "ours_v2": 5,
+        "b9plus_v2": 0
+      }
+    },
+    {
+      "condition": "text150",
+      "profile": "rewrite_faiss",
+      "belief_quantile": 0.65,
+      "price": "0.161524|0.05",
+      "waste_coef": 0.1,
+      "delta_commit": -0.0024308962538334834,
+      "ci95": [
+        -0.007202491162159958,
+        0.0022426615255597086
+      ],
+      "n_items": 3734,
+      "items_dropped_missing_cells": 0,
+      "decisions_changed_vs_frozen": {
+        "ours_v2": 0,
+        "b9plus_v2": 0
+      }
+    },
+    {
+      "condition": "text150",
+      "profile": "rewrite_faiss",
+      "belief_quantile": 0.65,
+      "price": "0.161524|0.05",
+      "waste_coef": 0.0,
+      "delta_commit": -0.0024308962538334834,
+      "ci95": [
+        -0.007202491162159958,
+        0.0022426615255597086
+      ],
+      "n_items": 3734,
+      "items_dropped_missing_cells": 0,
+      "decisions_changed_vs_frozen": {
+        "ours_v2": 0,
+        "b9plus_v2": 0
+      }
+    },
+    {
+      "condition": "text150",
+      "profile": "rewrite_faiss",
+      "belief_quantile": 0.65,
+      "price": "0.161524|0.05",
+      "waste_coef": 0.04,
+      "delta_commit": -0.0024308962538334834,
+      "ci95": [
+        -0.007202491162159958,
+        0.0022426615255597086
+      ],
+      "n_items": 3734,
+      "items_dropped_missing_cells": 0,
+      "decisions_changed_vs_frozen": {
+        "ours_v2": 0,
+        "b9plus_v2": 0
+      }
+    },
+    {
+      "condition": "text150",
+      "profile": "rewrite_faiss",
+      "belief_quantile": 0.65,
+      "price": "0.161524|0.05",
+      "waste_coef": 0.08,
+      "delta_commit": -0.0024308962538334834,
+      "ci95": [
+        -0.007202491162159958,
+        0.0022426615255597086
+      ],
+      "n_items": 3734,
+      "items_dropped_missing_cells": 0,
+      "decisions_changed_vs_frozen": {
+        "ours_v2": 0,
+        "b9plus_v2": 0
+      }
+    },
+    {
+      "condition": "text150",
+      "profile": "rewrite_faiss",
+      "belief_quantile": 0.65,
+      "price": "0.161524|0.05",
+      "waste_coef": 0.16,
+      "delta_commit": -0.0024707681489524232,
+      "ci95": [
+        -0.007210724887673466,
+        0.0022095175304708468
+      ],
+      "n_items": 3734,
+      "items_dropped_missing_cells": 0,
+      "decisions_changed_vs_frozen": {
+        "ours_v2": 5,
+        "b9plus_v2": 0
+      }
+    },
+    {
+      "condition": "text150",
+      "profile": "rewrite_faiss",
+      "belief_quantile": 0.8,
+      "price": "0.169858|0.05",
+      "waste_coef": 0.1,
+      "delta_commit": -0.0009783382900528826,
+      "ci95": [
+        -0.0032859479660869817,
+        0.0013768190404763283
+      ],
+      "n_items": 3734,
+      "items_dropped_missing_cells": 0,
+      "decisions_changed_vs_frozen": {
+        "ours_v2": 0,
+        "b9plus_v2": 0
+      }
+    },
+    {
+      "condition": "text150",
+      "profile": "rewrite_faiss",
+      "belief_quantile": 0.8,
+      "price": "0.169858|0.05",
+      "waste_coef": 0.0,
+      "delta_commit": -0.0008270118509588266,
+      "ci95": [
+        -0.0031730786206678055,
+        0.0015598483279287848
+      ],
+      "n_items": 3734,
+      "items_dropped_missing_cells": 0,
+      "decisions_changed_vs_frozen": {
+        "ours_v2": 3,
+        "b9plus_v2": 0
+      }
+    },
+    {
+      "condition": "text150",
+      "profile": "rewrite_faiss",
+      "belief_quantile": 0.8,
+      "price": "0.169858|0.05",
+      "waste_coef": 0.04,
+      "delta_commit": -0.0009783382900528826,
+      "ci95": [
+        -0.0032859479660869817,
+        0.0013768190404763283
+      ],
+      "n_items": 3734,
+      "items_dropped_missing_cells": 0,
+      "decisions_changed_vs_frozen": {
+        "ours_v2": 0,
+        "b9plus_v2": 0
+      }
+    },
+    {
+      "condition": "text150",
+      "profile": "rewrite_faiss",
+      "belief_quantile": 0.8,
+      "price": "0.169858|0.05",
+      "waste_coef": 0.08,
+      "delta_commit": -0.0009783382900528826,
+      "ci95": [
+        -0.0032859479660869817,
+        0.0013768190404763283
+      ],
+      "n_items": 3734,
+      "items_dropped_missing_cells": 0,
+      "decisions_changed_vs_frozen": {
+        "ours_v2": 0,
+        "b9plus_v2": 0
+      }
+    },
+    {
+      "condition": "text150",
+      "profile": "rewrite_faiss",
+      "belief_quantile": 0.8,
+      "price": "0.169858|0.05",
+      "waste_coef": 0.16,
+      "delta_commit": -0.0009783382900528826,
+      "ci95": [
+        -0.0032859479660869817,
+        0.0013768190404763283
+      ],
+      "n_items": 3734,
+      "items_dropped_missing_cells": 0,
+      "decisions_changed_vs_frozen": {
+        "ours_v2": 0,
+        "b9plus_v2": 0
+      }
+    },
+    {
+      "condition": "text150",
+      "profile": "rewrite_faiss",
+      "belief_quantile": 0.9,
+      "price": "0.176676|0.05",
+      "waste_coef": 0.1,
+      "delta_commit": -0.0027557939974597436,
+      "ci95": [
+        -0.005494768331996725,
+        -2.5186840599633614e-05
+      ],
+      "n_items": 3734,
+      "items_dropped_missing_cells": 0,
+      "decisions_changed_vs_frozen": {
+        "ours_v2": 0,
+        "b9plus_v2": 0
+      }
+    },
+    {
+      "condition": "text150",
+      "profile": "rewrite_faiss",
+      "belief_quantile": 0.9,
+      "price": "0.176676|0.05",
+      "waste_coef": 0.0,
+      "delta_commit": -0.002793527573685338,
+      "ci95": [
+        -0.005521173565721456,
+        -6.036138501326734e-05
+      ],
+      "n_items": 3734,
+      "items_dropped_missing_cells": 0,
+      "decisions_changed_vs_frozen": {
+        "ours_v2": 1,
+        "b9plus_v2": 0
+      }
+    },
+    {
+      "condition": "text150",
+      "profile": "rewrite_faiss",
+      "belief_quantile": 0.9,
+      "price": "0.176676|0.05",
+      "waste_coef": 0.04,
+      "delta_commit": -0.002793527573685338,
+      "ci95": [
+        -0.005521173565721456,
+        -6.036138501326734e-05
+      ],
+      "n_items": 3734,
+      "items_dropped_missing_cells": 0,
+      "decisions_changed_vs_frozen": {
+        "ours_v2": 1,
+        "b9plus_v2": 0
+      }
+    },
+    {
+      "condition": "text150",
+      "profile": "rewrite_faiss",
+      "belief_quantile": 0.9,
+      "price": "0.176676|0.05",
+      "waste_coef": 0.08,
+      "delta_commit": -0.002793527573685338,
+      "ci95": [
+        -0.005521173565721456,
+        -6.036138501326734e-05
+      ],
+      "n_items": 3734,
+      "items_dropped_missing_cells": 0,
+      "decisions_changed_vs_frozen": {
+        "ours_v2": 1,
+        "b9plus_v2": 0
+      }
+    },
+    {
+      "condition": "text150",
+      "profile": "rewrite_faiss",
+      "belief_quantile": 0.9,
+      "price": "0.176676|0.05",
+      "waste_coef": 0.16,
+      "delta_commit": -0.0027557939974597436,
+      "ci95": [
+        -0.005494768331996725,
+        -2.5186840599633614e-05
+      ],
+      "n_items": 3734,
+      "items_dropped_missing_cells": 0,
+      "decisions_changed_vs_frozen": {
+        "ours_v2": 0,
+        "b9plus_v2": 0
+      }
+    },
+    {
+      "condition": "text150",
+      "profile": "rewrite_faiss_rerank",
+      "belief_quantile": 0.5,
+      "price": "0.157194|0.05",
+      "waste_coef": 0.1,
+      "delta_commit": -0.008820134429070071,
+      "ci95": [
+        -0.012182505998705302,
+        -0.00549718158533014
+      ],
+      "n_items": 3734,
+      "items_dropped_missing_cells": 0,
+      "decisions_changed_vs_frozen": {
+        "ours_v2": 0,
+        "b9plus_v2": 0
+      }
+    },
+    {
+      "condition": "text150",
+      "profile": "rewrite_faiss_rerank",
+      "belief_quantile": 0.5,
+      "price": "0.157194|0.05",
+      "waste_coef": 0.0,
+      "delta_commit": -0.008798408075919887,
+      "ci95": [
+        -0.012144361719998917,
+        -0.005460936501592459
+      ],
+      "n_items": 3734,
+      "items_dropped_missing_cells": 0,
+      "decisions_changed_vs_frozen": {
+        "ours_v2": 5,
+        "b9plus_v2": 0
+      }
+    },
+    {
+      "condition": "text150",
+      "profile": "rewrite_faiss_rerank",
+      "belief_quantile": 0.5,
+      "price": "0.157194|0.05",
+      "waste_coef": 0.04,
+      "delta_commit": -0.008798408075919887,
+      "ci95": [
+        -0.012144361719998917,
+        -0.005460936501592459
+      ],
+      "n_items": 3734,
+      "items_dropped_missing_cells": 0,
+      "decisions_changed_vs_frozen": {
+        "ours_v2": 5,
+        "b9plus_v2": 0
+      }
+    },
+    {
+      "condition": "text150",
+      "profile": "rewrite_faiss_rerank",
+      "belief_quantile": 0.5,
+      "price": "0.157194|0.05",
+      "waste_coef": 0.08,
+      "delta_commit": -0.00879809087568415,
+      "ci95": [
+        -0.01215317805368639,
+        -0.00548362995354018
+      ],
+      "n_items": 3734,
+      "items_dropped_missing_cells": 0,
+      "decisions_changed_vs_frozen": {
+        "ours_v2": 2,
+        "b9plus_v2": 0
+      }
+    },
+    {
+      "condition": "text150",
+      "profile": "rewrite_faiss_rerank",
+      "belief_quantile": 0.5,
+      "price": "0.157194|0.05",
+      "waste_coef": 0.16,
+      "delta_commit": -0.008820134429070071,
+      "ci95": [
+        -0.012182505998705302,
+        -0.00549718158533014
+      ],
+      "n_items": 3734,
+      "items_dropped_missing_cells": 0,
+      "decisions_changed_vs_frozen": {
+        "ours_v2": 0,
+        "b9plus_v2": 0
+      }
+    },
+    {
+      "condition": "text150",
+      "profile": "rewrite_faiss_rerank",
+      "belief_quantile": 0.65,
+      "price": "0.163333|0.05",
+      "waste_coef": 0.1,
+      "delta_commit": -0.002791333376093433,
+      "ci95": [
+        -0.0075066367523991375,
+        0.0018595311568140654
+      ],
+      "n_items": 3734,
+      "items_dropped_missing_cells": 0,
+      "decisions_changed_vs_frozen": {
+        "ours_v2": 0,
+        "b9plus_v2": 0
+      }
+    },
+    {
+      "condition": "text150",
+      "profile": "rewrite_faiss_rerank",
+      "belief_quantile": 0.65,
+      "price": "0.163333|0.05",
+      "waste_coef": 0.0,
+      "delta_commit": -0.002781253997101886,
+      "ci95": [
+        -0.0075125446829361195,
+        0.00187337809815143
+      ],
+      "n_items": 3734,
+      "items_dropped_missing_cells": 0,
+      "decisions_changed_vs_frozen": {
+        "ours_v2": 5,
+        "b9plus_v2": 0
+      }
+    },
+    {
+      "condition": "text150",
+      "profile": "rewrite_faiss_rerank",
+      "belief_quantile": 0.65,
+      "price": "0.163333|0.05",
+      "waste_coef": 0.04,
+      "delta_commit": -0.002781253997101886,
+      "ci95": [
+        -0.0075125446829361195,
+        0.00187337809815143
+      ],
+      "n_items": 3734,
+      "items_dropped_missing_cells": 0,
+      "decisions_changed_vs_frozen": {
+        "ours_v2": 5,
+        "b9plus_v2": 0
+      }
+    },
+    {
+      "condition": "text150",
+      "profile": "rewrite_faiss_rerank",
+      "belief_quantile": 0.65,
+      "price": "0.163333|0.05",
+      "waste_coef": 0.08,
+      "delta_commit": -0.002781253997101886,
+      "ci95": [
+        -0.0075125446829361195,
+        0.00187337809815143
+      ],
+      "n_items": 3734,
+      "items_dropped_missing_cells": 0,
+      "decisions_changed_vs_frozen": {
+        "ours_v2": 5,
+        "b9plus_v2": 0
+      }
+    },
+    {
+      "condition": "text150",
+      "profile": "rewrite_faiss_rerank",
+      "belief_quantile": 0.65,
+      "price": "0.163333|0.05",
+      "waste_coef": 0.16,
+      "delta_commit": -0.00292999223937704,
+      "ci95": [
+        -0.007674716838220104,
+        0.0017216529071843074
+      ],
+      "n_items": 3734,
+      "items_dropped_missing_cells": 0,
+      "decisions_changed_vs_frozen": {
+        "ours_v2": 3,
+        "b9plus_v2": 0
+      }
+    },
+    {
+      "condition": "text150",
+      "profile": "rewrite_faiss_rerank",
+      "belief_quantile": 0.8,
+      "price": "0.171759|0.05",
+      "waste_coef": 0.1,
+      "delta_commit": -0.0009843429211608505,
+      "ci95": [
+        -0.003323369291205169,
+        0.0013643545876208427
+      ],
+      "n_items": 3734,
+      "items_dropped_missing_cells": 0,
+      "decisions_changed_vs_frozen": {
+        "ours_v2": 0,
+        "b9plus_v2": 0
+      }
+    },
+    {
+      "condition": "text150",
+      "profile": "rewrite_faiss_rerank",
+      "belief_quantile": 0.8,
+      "price": "0.171759|0.05",
+      "waste_coef": 0.0,
+      "delta_commit": -0.0009843429211608505,
+      "ci95": [
+        -0.003323369291205169,
+        0.0013643545876208427
+      ],
+      "n_items": 3734,
+      "items_dropped_missing_cells": 0,
+      "decisions_changed_vs_frozen": {
+        "ours_v2": 0,
+        "b9plus_v2": 0
+      }
+    },
+    {
+      "condition": "text150",
+      "profile": "rewrite_faiss_rerank",
+      "belief_quantile": 0.8,
+      "price": "0.171759|0.05",
+      "waste_coef": 0.04,
+      "delta_commit": -0.0009843429211608505,
+      "ci95": [
+        -0.003323369291205169,
+        0.0013643545876208427
+      ],
+      "n_items": 3734,
+      "items_dropped_missing_cells": 0,
+      "decisions_changed_vs_frozen": {
+        "ours_v2": 0,
+        "b9plus_v2": 0
+      }
+    },
+    {
+      "condition": "text150",
+      "profile": "rewrite_faiss_rerank",
+      "belief_quantile": 0.8,
+      "price": "0.171759|0.05",
+      "waste_coef": 0.08,
+      "delta_commit": -0.0009843429211608505,
+      "ci95": [
+        -0.003323369291205169,
+        0.0013643545876208427
+      ],
+      "n_items": 3734,
+      "items_dropped_missing_cells": 0,
+      "decisions_changed_vs_frozen": {
+        "ours_v2": 0,
+        "b9plus_v2": 0
+      }
+    },
+    {
+      "condition": "text150",
+      "profile": "rewrite_faiss_rerank",
+      "belief_quantile": 0.8,
+      "price": "0.171759|0.05",
+      "waste_coef": 0.16,
+      "delta_commit": -0.0009843429211608505,
+      "ci95": [
+        -0.003323369291205169,
+        0.0013643545876208427
+      ],
+      "n_items": 3734,
+      "items_dropped_missing_cells": 0,
+      "decisions_changed_vs_frozen": {
+        "ours_v2": 0,
+        "b9plus_v2": 0
+      }
+    },
+    {
+      "condition": "text150",
+      "profile": "rewrite_faiss_rerank",
+      "belief_quantile": 0.9,
+      "price": "0.178654|0.05",
+      "waste_coef": 0.1,
+      "delta_commit": 0.0013029048632707727,
+      "ci95": [
+        -0.007035528863334086,
+        0.010059350243415298
+      ],
+      "n_items": 3734,
+      "items_dropped_missing_cells": 0,
+      "decisions_changed_vs_frozen": {
+        "ours_v2": 0,
+        "b9plus_v2": 0
+      }
+    },
+    {
+      "condition": "text150",
+      "profile": "rewrite_faiss_rerank",
+      "belief_quantile": 0.9,
+      "price": "0.178654|0.05",
+      "waste_coef": 0.0,
+      "delta_commit": 0.0012702762129106256,
+      "ci95": [
+        -0.007064349435170248,
+        0.010031116690377614
+      ],
+      "n_items": 3734,
+      "items_dropped_missing_cells": 0,
+      "decisions_changed_vs_frozen": {
+        "ours_v2": 1,
+        "b9plus_v2": 0
+      }
+    },
+    {
+      "condition": "text150",
+      "profile": "rewrite_faiss_rerank",
+      "belief_quantile": 0.9,
+      "price": "0.178654|0.05",
+      "waste_coef": 0.04,
+      "delta_commit": 0.0013029048632707727,
+      "ci95": [
+        -0.007035528863334086,
+        0.010059350243415298
+      ],
+      "n_items": 3734,
+      "items_dropped_missing_cells": 0,
+      "decisions_changed_vs_frozen": {
+        "ours_v2": 0,
+        "b9plus_v2": 0
+      }
+    },
+    {
+      "condition": "text150",
+      "profile": "rewrite_faiss_rerank",
+      "belief_quantile": 0.9,
+      "price": "0.178654|0.05",
+      "waste_coef": 0.08,
+      "delta_commit": 0.0013029048632707727,
+      "ci95": [
+        -0.007035528863334086,
+        0.010059350243415298
+      ],
+      "n_items": 3734,
+      "items_dropped_missing_cells": 0,
+      "decisions_changed_vs_frozen": {
+        "ours_v2": 0,
+        "b9plus_v2": 0
+      }
+    },
+    {
+      "condition": "text150",
+      "profile": "rewrite_faiss_rerank",
+      "belief_quantile": 0.9,
+      "price": "0.178654|0.05",
+      "waste_coef": 0.16,
+      "delta_commit": 0.0014396137113479113,
+      "ci95": [
+        -0.006881171951408896,
+        0.010167334815070409
+      ],
+      "n_items": 3734,
+      "items_dropped_missing_cells": 0,
+      "decisions_changed_vs_frozen": {
+        "ours_v2": 2,
+        "b9plus_v2": 0
+      }
+    },
+    {
+      "condition": "text150",
+      "profile": "rewrite_remote",
+      "belief_quantile": 0.5,
+      "price": "0.138293|0.05",
+      "waste_coef": 0.1,
+      "delta_commit": -0.007619185660332098,
+      "ci95": [
+        -0.011005525678959668,
+        -0.0042048106705204575
+      ],
+      "n_items": 3734,
+      "items_dropped_missing_cells": 0,
+      "decisions_changed_vs_frozen": {
+        "ours_v2": 0,
+        "b9plus_v2": 0
+      }
+    },
+    {
+      "condition": "text150",
+      "profile": "rewrite_remote",
+      "belief_quantile": 0.5,
+      "price": "0.138293|0.05",
+      "waste_coef": 0.0,
+      "delta_commit": -0.007526705560886218,
+      "ci95": [
+        -0.010887716290676204,
+        -0.004136074391835963
+      ],
+      "n_items": 3734,
+      "items_dropped_missing_cells": 0,
+      "decisions_changed_vs_frozen": {
+        "ours_v2": 2,
+        "b9plus_v2": 0
+      }
+    },
+    {
+      "condition": "text150",
+      "profile": "rewrite_remote",
+      "belief_quantile": 0.5,
+      "price": "0.138293|0.05",
+      "waste_coef": 0.04,
+      "delta_commit": -0.007619185660332098,
+      "ci95": [
+        -0.011005525678959668,
+        -0.0042048106705204575
+      ],
+      "n_items": 3734,
+      "items_dropped_missing_cells": 0,
+      "decisions_changed_vs_frozen": {
+        "ours_v2": 0,
+        "b9plus_v2": 0
+      }
+    },
+    {
+      "condition": "text150",
+      "profile": "rewrite_remote",
+      "belief_quantile": 0.5,
+      "price": "0.138293|0.05",
+      "waste_coef": 0.08,
+      "delta_commit": -0.007619185660332098,
+      "ci95": [
+        -0.011005525678959668,
+        -0.0042048106705204575
+      ],
+      "n_items": 3734,
+      "items_dropped_missing_cells": 0,
+      "decisions_changed_vs_frozen": {
+        "ours_v2": 0,
+        "b9plus_v2": 0
+      }
+    },
+    {
+      "condition": "text150",
+      "profile": "rewrite_remote",
+      "belief_quantile": 0.5,
+      "price": "0.138293|0.05",
+      "waste_coef": 0.16,
+      "delta_commit": -0.007851019724821832,
+      "ci95": [
+        -0.011272978557650444,
+        -0.004416113120686826
+      ],
+      "n_items": 3734,
+      "items_dropped_missing_cells": 0,
+      "decisions_changed_vs_frozen": {
+        "ours_v2": 0,
+        "b9plus_v2": 1
+      }
+    },
+    {
+      "condition": "text150",
+      "profile": "rewrite_remote",
+      "belief_quantile": 0.65,
+      "price": "0.143693|0.05",
+      "waste_coef": 0.1,
+      "delta_commit": -0.0023333947028744187,
+      "ci95": [
+        -0.00711122922964882,
+        0.002400900006120417
+      ],
+      "n_items": 3734,
+      "items_dropped_missing_cells": 0,
+      "decisions_changed_vs_frozen": {
+        "ours_v2": 0,
+        "b9plus_v2": 0
+      }
+    },
+    {
+      "condition": "text150",
+      "profile": "rewrite_remote",
+      "belief_quantile": 0.65,
+      "price": "0.143693|0.05",
+      "waste_coef": 0.0,
+      "delta_commit": -0.0022936156697122164,
+      "ci95": [
+        -0.00708619659783869,
+        0.0024406527846199356
+      ],
+      "n_items": 3734,
+      "items_dropped_missing_cells": 0,
+      "decisions_changed_vs_frozen": {
+        "ours_v2": 0,
+        "b9plus_v2": 1
+      }
+    },
+    {
+      "condition": "text150",
+      "profile": "rewrite_remote",
+      "belief_quantile": 0.65,
+      "price": "0.143693|0.05",
+      "waste_coef": 0.04,
+      "delta_commit": -0.0022936156697122164,
+      "ci95": [
+        -0.00708619659783869,
+        0.0024406527846199356
+      ],
+      "n_items": 3734,
+      "items_dropped_missing_cells": 0,
+      "decisions_changed_vs_frozen": {
+        "ours_v2": 0,
+        "b9plus_v2": 1
+      }
+    },
+    {
+      "condition": "text150",
+      "profile": "rewrite_remote",
+      "belief_quantile": 0.65,
+      "price": "0.143693|0.05",
+      "waste_coef": 0.08,
+      "delta_commit": -0.0023333947028744187,
+      "ci95": [
+        -0.00711122922964882,
+        0.002400900006120417
+      ],
+      "n_items": 3734,
+      "items_dropped_missing_cells": 0,
+      "decisions_changed_vs_frozen": {
+        "ours_v2": 0,
+        "b9plus_v2": 0
+      }
+    },
+    {
+      "condition": "text150",
+      "profile": "rewrite_remote",
+      "belief_quantile": 0.65,
+      "price": "0.143693|0.05",
+      "waste_coef": 0.16,
+      "delta_commit": -0.0023333947028744187,
+      "ci95": [
+        -0.00711122922964882,
+        0.002400900006120417
+      ],
+      "n_items": 3734,
+      "items_dropped_missing_cells": 0,
+      "decisions_changed_vs_frozen": {
+        "ours_v2": 0,
+        "b9plus_v2": 0
+      }
+    },
+    {
+      "condition": "text150",
+      "profile": "rewrite_remote",
+      "belief_quantile": 0.8,
+      "price": "0.151107|0.05",
+      "waste_coef": 0.1,
+      "delta_commit": -0.0002390400478898505,
+      "ci95": [
+        -0.0026780922700058974,
+        0.002268010860734428
+      ],
+      "n_items": 3734,
+      "items_dropped_missing_cells": 0,
+      "decisions_changed_vs_frozen": {
+        "ours_v2": 0,
+        "b9plus_v2": 0
+      }
+    },
+    {
+      "condition": "text150",
+      "profile": "rewrite_remote",
+      "belief_quantile": 0.8,
+      "price": "0.151107|0.05",
+      "waste_coef": 0.0,
+      "delta_commit": -0.00014720957237569134,
+      "ci95": [
+        -0.0026077521965774024,
+        0.002369033902089379
+      ],
+      "n_items": 3726,
+      "items_dropped_missing_cells": 8,
+      "decisions_changed_vs_frozen": {
+        "ours_v2": 10,
+        "b9plus_v2": 0
+      }
+    },
+    {
+      "condition": "text150",
+      "profile": "rewrite_remote",
+      "belief_quantile": 0.8,
+      "price": "0.151107|0.05",
+      "waste_coef": 0.04,
+      "delta_commit": -0.00014705170688252705,
+      "ci95": [
+        -0.0026029282859855677,
+        0.002367719952717833
+      ],
+      "n_items": 3730,
+      "items_dropped_missing_cells": 4,
+      "decisions_changed_vs_frozen": {
+        "ours_v2": 6,
+        "b9plus_v2": 0
+      }
+    },
+    {
+      "condition": "text150",
+      "profile": "rewrite_remote",
+      "belief_quantile": 0.8,
+      "price": "0.151107|0.05",
+      "waste_coef": 0.08,
+      "delta_commit": -0.0002390400478898505,
+      "ci95": [
+        -0.0026780922700058974,
+        0.002268010860734428
+      ],
+      "n_items": 3734,
+      "items_dropped_missing_cells": 0,
+      "decisions_changed_vs_frozen": {
+        "ours_v2": 0,
+        "b9plus_v2": 0
+      }
+    },
+    {
+      "condition": "text150",
+      "profile": "rewrite_remote",
+      "belief_quantile": 0.8,
+      "price": "0.151107|0.05",
+      "waste_coef": 0.16,
+      "delta_commit": -0.0002900287935478132,
+      "ci95": [
+        -0.0027253560458765113,
+        0.0022212974744883016
+      ],
+      "n_items": 3734,
+      "items_dropped_missing_cells": 0,
+      "decisions_changed_vs_frozen": {
+        "ours_v2": 1,
+        "b9plus_v2": 0
+      }
+    },
+    {
+      "condition": "text150",
+      "profile": "rewrite_remote",
+      "belief_quantile": 0.9,
+      "price": "0.157172|0.05",
+      "waste_coef": 0.1,
+      "delta_commit": -0.003257105162049755,
+      "ci95": [
+        -0.006515343366593101,
+        -2.6402627727396327e-05
+      ],
+      "n_items": 3734,
+      "items_dropped_missing_cells": 0,
+      "decisions_changed_vs_frozen": {
+        "ours_v2": 0,
+        "b9plus_v2": 0
+      }
+    },
+    {
+      "condition": "text150",
+      "profile": "rewrite_remote",
+      "belief_quantile": 0.9,
+      "price": "0.157172|0.05",
+      "waste_coef": 0.0,
+      "delta_commit": -0.0031639807672486303,
+      "ci95": [
+        -0.006390264857341528,
+        6.048793938412952e-05
+      ],
+      "n_items": 3731,
+      "items_dropped_missing_cells": 3,
+      "decisions_changed_vs_frozen": {
+        "ours_v2": 7,
+        "b9plus_v2": 0
+      }
+    },
+    {
+      "condition": "text150",
+      "profile": "rewrite_remote",
+      "belief_quantile": 0.9,
+      "price": "0.157172|0.05",
+      "waste_coef": 0.04,
+      "delta_commit": -0.003257105162049755,
+      "ci95": [
+        -0.006515343366593101,
+        -2.6402627727396327e-05
+      ],
+      "n_items": 3734,
+      "items_dropped_missing_cells": 0,
+      "decisions_changed_vs_frozen": {
+        "ours_v2": 0,
+        "b9plus_v2": 0
+      }
+    },
+    {
+      "condition": "text150",
+      "profile": "rewrite_remote",
+      "belief_quantile": 0.9,
+      "price": "0.157172|0.05",
+      "waste_coef": 0.08,
+      "delta_commit": -0.003257105162049755,
+      "ci95": [
+        -0.006515343366593101,
+        -2.6402627727396327e-05
+      ],
+      "n_items": 3734,
+      "items_dropped_missing_cells": 0,
+      "decisions_changed_vs_frozen": {
+        "ours_v2": 0,
+        "b9plus_v2": 0
+      }
+    },
+    {
+      "condition": "text150",
+      "profile": "rewrite_remote",
+      "belief_quantile": 0.9,
+      "price": "0.157172|0.05",
+      "waste_coef": 0.16,
+      "delta_commit": -0.003257105162049755,
+      "ci95": [
+        -0.006515343366593101,
+        -2.6402627727396327e-05
+      ],
+      "n_items": 3734,
+      "items_dropped_missing_cells": 0,
+      "decisions_changed_vs_frozen": {
+        "ours_v2": 0,
+        "b9plus_v2": 0
+      }
+    }
+  ]
+}
