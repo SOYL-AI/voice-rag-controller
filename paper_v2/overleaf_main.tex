@@ -274,8 +274,9 @@ questions the joint controller was worse than the strongest decomposed rival
 under commitment (utility difference $-0.037$, 95\% CI $[-0.048,-0.025]$):
 the boundary hypotheses were not supported and the pre-registered reverse
 hypothesis held. Customer-support and pooled results point the same way but
-are exploratory. The gap disappears on clean text, which points to
-recognition errors in early partial transcripts and a weak belief signal.
+are exploratory. The gap disappears on clean text, and an exploratory
+analysis traces it to early dispatch on noisy partial transcripts: with an
+accurate belief, the joint controller comes out ahead on the same cell.
 \end{abstract}
 \begin{IEEEkeywords}
 Retrieval-Augmented Generation, Spoken Dialogue Systems, Decision-Theoretic Control, Speculative Prefetch, Streaming Retrieval.
@@ -779,6 +780,21 @@ Early ASR partials are often wrong: 51\% of the early query-ready partials in
 the \dset{d1\_open} test split are later revised by the recogniser, and 22\%
 even when the last word is ignored.
 
+\textbf{Where the gap comes from.} The following analyses are exploratory and
+post hoc. Splitting $\DC$ at the primary cell, Ours-S loses accuracy
+($-0.050$ [$-0.062$, $-0.039$]) and wins back only part of it in latency
+($+0.018$ [$+0.016$, $+0.020$]; compute $-0.005$). The loss sits on the 64\%
+of items where both controllers retrieve but Ours-S dispatches on an earlier
+partial: by then it has heard 77\% of the question against 89\% for B9+, and
+a gold passage reaches the top three 16 points less often. Its own model
+expected a smaller accuracy cost from these early queries than it paid
+($-0.058$ against $-0.105$). When the probe is replaced by the true need
+label, known from the first partial or revealed at a random point in the
+turn, Ours-S beats B9+ at the same cell ($\DC=+0.013$ [$+0.008$, $+0.018$] and
+$+0.013$ [$+0.007$, $+0.018$]), mainly through better timing. This ablation
+does not carry over to text150, where the objective's $g^{-}$, estimated on
+ASR, makes hidden retrievals for unneeded items look almost free.
+
 \textbf{Waste rate and judges.} Re-running the frozen evaluation with the
 waste coefficient set anywhere from 0 to 0.16 leaves $\DC$ between $-0.0387$
 and $-0.0360$ at the primary cell, with the interval below zero in all 12 ASR
@@ -794,14 +810,17 @@ B9 would overstate the value of coupling.
 
 \textbf{Why joint control lost.} The theory predicts a large advantage only
 when the belief sharpens during the turn and a committed retrieval is costly
-to get wrong. Our test met the second condition but not the first: the belief
-was weak on partial transcripts, and the partials themselves were noisy.
-Ours-S times its dispatch on these signals, whereas the tuned B9+ waits until
-less than about 0.7~s of speech is predicted to remain and then uses only the
-belief at that point. The near-zero gap on clean text fits this reading, but
-we did not test the mechanism directly. For the controllers and conditions
-tested here, the decomposed B9+ is the better choice; whether a joint
-controller with a stronger, more stable belief would do better remains open.
+to get wrong. On speech, the inputs to that decision were poor: the belief was
+weak on partial transcripts, and the cost of querying with an incomplete,
+often misrecognised question was larger than the controller's model assumed.
+Ours-S therefore dispatched early (median 474~ms before the end of speech)
+on queries that retrieved worse passages, while B9+ waited until less than
+about 0.7~s of speech was predicted to remain. With an accurate belief the
+same joint controller came out ahead. These analyses are post hoc and
+associational, but they point to the decision's inputs, not to joint control
+as such, as the reason for the loss. For the controllers and conditions
+tested here, B9+ is the better choice; a joint controller is worth revisiting
+once its belief and its model of partial-query cost are reliable on speech.
 
 \textbf{Limitations.} We use one generator, Mistral-7B, and synthetic speech
 rather than recordings of real users; TTFA in the streaming test comes from a
@@ -820,10 +839,10 @@ overlap and a dispatch-invariant belief, the two make the same retrieval
 decisions up to a change of price, which explains why a controlled text
 experiment found no difference. In a pre-registered test with live speech
 recognition, the joint controller we tested was worse than the best
-decomposed rival on open-domain questions, and the gap vanished on clean
-text. Beliefs that are informative early in the turn, along with recorded
-human speech, are the conditions under which the question is worth
-revisiting.
+decomposed rival on open-domain questions; it dispatched too early on noisy
+partials, and with an accurate belief it came out ahead. Beliefs that are
+informative early in the turn, along with recorded human speech, are the
+conditions under which the question is worth revisiting.
 
 \section*{Acknowledgment}
 The authors would like to thank SOYL AI Private Limited for supporting this work.
