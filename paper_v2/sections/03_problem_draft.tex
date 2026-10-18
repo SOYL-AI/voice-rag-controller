@@ -1,7 +1,8 @@
 % ============================================================================
 % Section III: Problem Formulation and Controllers (compact draft, ~1.5 pages)
 % Preamble needs: amsmath, amssymb, booktabs, xcolor, algorithm, algpseudocode.
-% No figure in this section (PI decision 2026-10-18).
+% One figure: fig_framework.pdf (paper_v2/tools/make_fig_framework.py),
+% re-added on PI request 2026-10-18 (R1.f1, R2.10).
 % Red [TBD] = number not computed yet; do not invent it.
 % ============================================================================
 \section{Problem Formulation and Controllers}
@@ -25,7 +26,20 @@ $\mathrm{TTFA}=t_{\text{first audio}}-t_{\text{user end}}$.
 All controllers maximise the same priced objective
 (Section~\ref{subsec:priced_objective}); they differ only in whether the two
 decisions are made jointly or by separate modules
-(Section~\ref{subsec:decision_rule}).
+(Section~\ref{subsec:decision_rule}). Fig.~\ref{fig:system_flow} shows the
+pipeline and the three decision structures we compare.
+
+\begin{figure*}[t]
+\centering
+\includegraphics[width=\textwidth]{fig_framework.pdf}
+\caption{Streaming pipeline and the decision structures compared. From each
+ASR partial $x_k$ the system estimates the belief $b_k$ and the remaining
+speech $\hat R_k$. (a) The joint controller decides at every partial whether
+to dispatch now or wait. (b) Decomposed controllers fix the trigger without
+the belief. (c) Speculative controllers prefetch early and decide at the end
+of the turn whether to use the result.}
+\label{fig:system_flow}
+\end{figure*}
 
 \subsection{Belief State}
 \label{subsec:belief_state}
