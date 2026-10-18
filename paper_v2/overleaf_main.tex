@@ -389,9 +389,9 @@ b&=\max\!\big(0.05,\,\sigma(ws+c)\big),
 \label{eq:belief}
 \end{equation}
 with $w=11.288$, $c=-3.633$ fitted in-sample on the 36-item belief set
-(180 samples, five seeds). Maximum entropy ranked items better
-(Section~\ref{sec:res-equiv}), but the mean is smoother and suits a
-logistic fit. Because it is computed once from the full question, this
+(180 samples, five seeds). Maximum entropy ranked these items slightly
+better (AUC 0.978 vs.\ 0.925), but the mean is smoother and suits a logistic
+fit. Because it is computed once from the full question, this
 belief does not depend on dispatch time.
 
 \textit{Streaming experiment.} The belief is recomputed on every partial $x_k$. Mistral-7B is
@@ -509,9 +509,6 @@ whether and when chosen in one decision.}
 ID & Rule & Priced & Joint\\
 \midrule
 B0 & never retrieve & -- & --\\
-B4 & $1-\bar p\ge0.5$ (FLARE-style~\cite{jiang2023flare}); sentence end & no & no\\
-B6 & $s^{\max}\ge1.0$ (DRAGIN-style~\cite{su2024dragin}); sentence end & no & no\\
-B8 & $s^{\max}\ge1.2$; fixed early dispatch & no & no\\
 B9 & Eq.~(\ref{eq:obj}) at full latency; timing separate & yes & no\\
 B9+ & Eq.~(\ref{eq:obj}) at expected exposure of own timing & yes & no\\
 B10 & always prefetch; use iff $U(b_K)>0$ (streaming) & yes & no\\
@@ -687,19 +684,7 @@ labels, all \dset{d2\_support} and pooled results are reported as exploratory;
 
 \subsection{Equivalence Regime (Text Experiment)}\label{sec:res-equiv}
 
-\textbf{Belief signal.} On the 36-item set, maximum per-token entropy
-separates items that need retrieval from those that do not with AUC 0.978, and
-the mean with 0.925. On the 50 scenarios the order reverses (mean 0.922,
-maximum 0.882). The 36 items can be separated by surface form, so this checks
-the signal, not its generality.
-
-\textbf{Timing.} Early dispatch lowers the median TTFA (3.69~s for
-\textsc{fixed\_early\_proxy} against 4.11~s at sentence end, over 750 runs)
-but not the tail (p95 7.09~s against 7.05~s). Answer quality could not differ
-across timings here: the query was frozen, and hit@3 was 100\% for every
-policy.
-
-\textbf{Joint versus decomposed.} Ours strictly dominated B9 in 0 of 5 seeds,
+Ours strictly dominated B9 in 0 of 5 seeds,
 and their frontiers coincide over the 26 latency prices, as
 Proposition~\ref{prop:eq} predicts. The exact price map reproduces
 10,000/10,000 decisions at 200 off-grid prices; the approximate map, which
@@ -759,18 +744,6 @@ $\DC=-0.0227$ [$-0.0502$, $+0.0047$], no test significant.}\\
 \end{tabular}
 \end{table}
 
-\begin{figure}[t]
-\centering
-\IfFileExists{figures/fig_v2_boundary.pdf}{\includegraphics[width=\columnwidth]{fig_v2_boundary.pdf}}{\fbox{Upload figures/fig\_v2\_boundary.pdf}}
-\caption{Boundary test: the joint controller's utility difference from the
-strongest decomposed rival under the commit ($\DC$) and speculative ($\DS$)
-architectures on the same test items (ASR condition), per latency profile and
-price, with 95\% paired cluster bootstrap intervals; negative values mean the
-joint controller is worse. The band marks $\pm m_3=\pm0.016$; only the primary
-cell is a test. \dset{d2\_support} results are exploratory.}
-\label{fig:boundary}
-\end{figure}
-
 \textbf{Main test.} Table~\ref{tab:v2primary} gives the result. On
 \dset{d1\_open} the joint controller is worse than the strongest decomposed
 rival under commitment: $\DC=-0.0367$ [$-0.0481$, $-0.0252$]. P1 is not
@@ -781,8 +754,8 @@ controller is not equivalent to the decomposed rival, it is worse. The
 interaction is small and positive (+0.0047, $p=0.0097$) but does not survive
 the Holm correction, so P2 also fails, and the boundary claim is not
 supported. The result does not depend on the primary cell: $\DC$ is negative
-in all 12 \dset{d1\_open} ASR cells, from $-0.035$ to $-0.046$
-(Fig.~\ref{fig:boundary}), and the development-split predictions track the
+in all 12 \dset{d1\_open} ASR cells (three latency profiles at four prices),
+from $-0.035$ to $-0.046$, and the development-split predictions track the
 test values (Spearman 0.870 over 24 cells). The pooled analysis gives the same
 verdicts ($\DC=-0.0351$ [$-0.0458$, $-0.0245$]). On \dset{d2\_support} alone
 the estimate is negative but not significant ($\DC=-0.0227$ [$-0.0502$,
@@ -826,19 +799,17 @@ controller that prices expected exposure (B9+) is the safer default. Joint
 control is worth building only when the belief on partial transcripts is
 informative and stable, and that should be measured before committing to it.
 
-\textbf{Limitations.} We use one generator, Mistral-7B, and one synthetic voice
-with clean audio; recorded human speech remains untested. The
-\dset{d2\_support} results rest on a judge whose agreement with the human
-labels was moderate, so they are exploratory. The waste rate is a placeholder
-in both experiments, although the result does not depend on it. The
-\dset{d2\_support} retriever searches a single index over all 24
-organisations, which weakens retrieval on that set. The text experiment is
-small and single-domain, and its belief calibration is in-sample.
+\textbf{Limitations.} We use one generator, Mistral-7B, and synthetic speech
+rather than recordings of real users. The \dset{d2\_support} results rest on a
+judge whose agreement with the human labels was moderate, so they are
+exploratory. Its retriever searches one shared index across all
+organisations, which weakens retrieval on that set. Finally, the text
+experiment is moderate and single-domain.
 
 % =============================================================================
 \section{Conclusion}\label{sec:conclusion}
 
-We asked whether a voice assistant should decide whether and when to retrieve
+We asked if a voice assistant should decide when and how to retrieve
 in one decision or in separate modules. Under timing-invariant quality,
 constant overlap and a dispatch-invariant belief, the two are equivalent up to
 a change of price, which explains why a controlled text experiment found no
@@ -846,12 +817,12 @@ difference. Beyond these conditions joint control can pay in principle, mainly
 when retrieval is committed. In a pre-registered test with live speech
 recognition it did not: on 3,734 open-domain questions the joint controller
 was worse than the best decomposed rival ($-0.037$), and the gap vanished on
-clean text. Beliefs that are informative early in the turn, and tests on
-recorded human speech, are the conditions under which the question is worth
+clean text. Beliefs that are informative early in the turn along with recorded human speech
+are the conditions under which the question is worth
 revisiting.
 
 \section*{Acknowledgment}
-The authors thank SOYL AI Private Limited for supporting this work.
+The authors would like to  thank SOYL AI Private Limited for supporting this work.
 
 \FloatBarrier
 \bibliographystyle{IEEEtran}
