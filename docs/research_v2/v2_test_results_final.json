@@ -1,0 +1,3125 @@
+{
+  "_comment": "v2 test results (PREREG_V2 §3.2-§3.4), d1_open and d2_support, pooled. Every verdict carries a 'status'.",
+  "generated_by": "python -m analysis.v2_test_final --d2-exploratory-reason 'D3: pre-registered judge-validation gate not passed (kappa_human 0.52; judge kappa vs reference 0.55 primary / 0.58 GPT-4o)'",
+  "generated_at_utc": "2026-10-17T22:34:33.301535+00:00",
+  "git_commit": "24c3f5a4c10a679f325f55517869553980b601a3",
+  "split": "test",
+  "frozen": {
+    "prereg_tag": "prereg-v2-frozen",
+    "frozen_code": "ddde67f",
+    "deviations": [
+      "D1",
+      "D2 (retrieval supplement withdrawn)",
+      "D3"
+    ],
+    "notes": [
+      "N1",
+      "N2 (exploratory; not used here)",
+      "N3"
+    ],
+    "d_star_speculative": {
+      "d1_open": "b9plus_v2",
+      "d2_support": "b10_speculative_v2"
+    },
+    "d_star_commit": "b9plus_v2",
+    "m3": 0.016,
+    "primary_cell": {
+      "condition": "piper-en_US-hfc_male-medium__150wpm__clean",
+      "profile": "rewrite_faiss",
+      "quantile": 0.65,
+      "lambda_l": {
+        "d1_open": 0.17305735434823866,
+        "d2_support": 0.2157823714003309
+      },
+      "lambda_c": 0.05
+    }
+  },
+  "inputs": {
+    "d1_open": {
+      "contrasts_sha256": "00dd2e805421e11796130a6450d3da3276417c3d457bccc3130109e66471057c",
+      "required_cells_sha256": "c49c44f7781a4ef5210724fbcc6e18ceb9b2f5d83dd8bfe63f8e4e1f1ed33a54"
+    },
+    "d2_support": {
+      "contrasts_sha256": "c47dc7c53d1964b08637b37a838b14631382a16d5af3d18d411ced7d430fd06e",
+      "required_cells_sha256": "83a8cebee925221130ebcc17b862f6cdbb6902f302186cb63f1dbf7aaf0aa0d7"
+    }
+  },
+  "bootstrap": {
+    "B": 10000,
+    "seeds": {
+      "d1_open": 20261017,
+      "d2_support": 20261018
+    },
+    "unit": {
+      "d1_open": "item",
+      "d2_support": "pair_id cluster"
+    },
+    "stratified_by_dataset": true,
+    "same_resamples_for_every_contrast": true
+  },
+  "weights": {
+    "d1_open": 0.8823251417769377,
+    "d2_support": 0.11767485822306238
+  },
+  "per_dataset": {
+    "d1_open": {
+      "n_items": 3734,
+      "n_clusters": 3734,
+      "primary": {
+        "delta_commit": {
+          "estimate": -0.036727786646624426,
+          "ci95": [
+            -0.048144411782409975,
+            -0.025218382406490932
+          ],
+          "boot_se": 0.005882911724489759,
+          "n_items": 3734,
+          "p_two_sided": 0.0
+        },
+        "delta_speculative": {
+          "estimate": -0.04146537298285999,
+          "ci95": [
+            -0.05284545919714738,
+            -0.030228351263814235
+          ],
+          "boot_se": 0.005734002385832763,
+          "n_items": 3734,
+          "p_two_sided": 0.0
+        },
+        "interaction": {
+          "estimate": 0.004737586336235566,
+          "ci95": [
+            0.0007135064591700103,
+            0.00877051979877651
+          ],
+          "boot_se": 0.0020521298099721165,
+          "n_items": 3734,
+          "p_two_sided": 0.0194
+        },
+        "one_sided_tests": {
+          "P1": {
+            "H0": "delta_C <= 0",
+            "p": 1.0,
+            "reject": false
+          },
+          "P2": {
+            "H0": "delta_C - delta_S <= 0",
+            "p": 0.0097,
+            "reject": true
+          },
+          "P3": {
+            "m3": 0.016,
+            "p_upper": 0.0,
+            "p_lower": 1.0,
+            "reject_upper": true,
+            "reject_lower": false,
+            "p": 1.0,
+            "pass": false
+          },
+          "H-REV": {
+            "H0": "delta_C >= 0",
+            "p": 0.0,
+            "reject": true
+          }
+        },
+        "IUT_boundary_claim": false,
+        "holm_individual_claims": {
+          "H-REV": {
+            "p": 0.0,
+            "threshold": 0.00625,
+            "reject": true
+          },
+          "P2": {
+            "p": 0.0097,
+            "threshold": 0.008333333333333333,
+            "reject": false
+          },
+          "P1": {
+            "p": 1.0,
+            "threshold": 0.0125,
+            "reject": false
+          },
+          "P3": {
+            "p": 1.0,
+            "threshold": 0.025,
+            "reject": false
+          }
+        },
+        "secondary_family_this_dataset": {
+          "delta_commit": {
+            "p": 0.0,
+            "threshold": 0.016666666666666666,
+            "reject": true
+          },
+          "delta_speculative": {
+            "p": 0.0,
+            "threshold": 0.025,
+            "reject": true
+          },
+          "interaction": {
+            "p": 0.0194,
+            "threshold": 0.05,
+            "reject": true
+          }
+        }
+      },
+      "status": "pre-registered per-dataset analysis (unaffected by D3)"
+    },
+    "d2_support": {
+      "n_items": 498,
+      "n_clusters": 192,
+      "primary": {
+        "delta_commit": {
+          "estimate": -0.022719886416677382,
+          "ci95": [
+            -0.05018829241575482,
+            0.004741400961323816
+          ],
+          "boot_se": 0.014191117943205905,
+          "n_items": 498,
+          "p_two_sided": 0.1114
+        },
+        "delta_speculative": {
+          "estimate": -0.006096658718549521,
+          "ci95": [
+            -0.03799591025658958,
+            0.02546117212266964
+          ],
+          "boot_se": 0.015993812463723014,
+          "n_items": 498,
+          "p_two_sided": 0.7166
+        },
+        "interaction": {
+          "estimate": -0.01662322769812786,
+          "ci95": [
+            -0.03809872118627209,
+            0.004427213068870408
+          ],
+          "boot_se": 0.010702981812358155,
+          "n_items": 498,
+          "p_two_sided": 0.1208
+        },
+        "one_sided_tests": {
+          "P1": {
+            "H0": "delta_C <= 0",
+            "p": 0.9443,
+            "reject": false
+          },
+          "P2": {
+            "H0": "delta_C - delta_S <= 0",
+            "p": 0.9396,
+            "reject": false
+          },
+          "P3": {
+            "m3": 0.016,
+            "p_upper": 0.086,
+            "p_lower": 0.2594,
+            "reject_upper": false,
+            "reject_lower": false,
+            "p": 0.2594,
+            "pass": false
+          },
+          "H-REV": {
+            "H0": "delta_C >= 0",
+            "p": 0.0557,
+            "reject": false
+          }
+        },
+        "IUT_boundary_claim": false,
+        "holm_individual_claims": {
+          "H-REV": {
+            "p": 0.0557,
+            "threshold": 0.00625,
+            "reject": false
+          },
+          "P3": {
+            "p": 0.2594,
+            "threshold": 0.008333333333333333,
+            "reject": false
+          },
+          "P2": {
+            "p": 0.9396,
+            "threshold": 0.0125,
+            "reject": false
+          },
+          "P1": {
+            "p": 0.9443,
+            "threshold": 0.025,
+            "reject": false
+          }
+        },
+        "secondary_family_this_dataset": {
+          "delta_commit": {
+            "p": 0.1114,
+            "threshold": 0.016666666666666666,
+            "reject": false
+          },
+          "interaction": {
+            "p": 0.1208,
+            "threshold": 0.025,
+            "reject": false
+          },
+          "delta_speculative": {
+            "p": 0.7166,
+            "threshold": 0.05,
+            "reject": false
+          }
+        }
+      },
+      "status": "exploratory (D3: pre-registered judge-validation gate not passed (kappa_human 0.52; judge kappa vs reference 0.55 primary / 0.58 GPT-4o))"
+    }
+  },
+  "pooled": {
+    "delta_commit": {
+      "estimate": -0.03507940897306261,
+      "ci95": [
+        -0.04576534584174149,
+        -0.024487846301510047
+      ],
+      "boot_se": 0.005453985753718454
+    },
+    "delta_speculative": {
+      "estimate": -0.03730336454627525,
+      "ci95": [
+        -0.048043984283399364,
+        -0.026717964042989477
+      ],
+      "boot_se": 0.00540073090162136
+    },
+    "interaction": {
+      "estimate": 0.002223955573212649,
+      "ci95": [
+        -0.0020492379450513585,
+        0.006530656060662815
+      ],
+      "boot_se": 0.0022096079416278986
+    },
+    "preregistered_tests": {
+      "P1": {
+        "H0": "delta_C <= 0",
+        "p": 1.0,
+        "reject": false
+      },
+      "P2": {
+        "H0": "delta_C - delta_S <= 0",
+        "p": 0.1603,
+        "reject": false
+      },
+      "P3": {
+        "m3": 0.016,
+        "p_upper": 0.0,
+        "p_lower": 0.9998,
+        "reject_upper": true,
+        "reject_lower": false,
+        "p": 0.9998,
+        "pass": false
+      },
+      "H-REV": {
+        "H0": "delta_C >= 0",
+        "p": 0.0,
+        "reject": true
+      }
+    },
+    "IUT_boundary_claim": false,
+    "holm_individual_claims": {
+      "H-REV": {
+        "p": 0.0,
+        "threshold": 0.00625,
+        "reject": true
+      },
+      "P2": {
+        "p": 0.1603,
+        "threshold": 0.008333333333333333,
+        "reject": false
+      },
+      "P3": {
+        "p": 0.9998,
+        "threshold": 0.0125,
+        "reject": false
+      },
+      "P1": {
+        "p": 1.0,
+        "threshold": 0.025,
+        "reject": false
+      }
+    },
+    "status": "exploratory (D3: pre-registered judge-validation gate not passed (kappa_human 0.52; judge kappa vs reference 0.55 primary / 0.58 GPT-4o))"
+  },
+  "cells": [
+    {
+      "dataset": "d1_open",
+      "condition": "piper-en_US-hfc_male-medium__150wpm__clean",
+      "profile": "rewrite_faiss",
+      "belief_quantile": 0.5,
+      "price": "0.165707|0.05",
+      "d_star": {
+        "commit": "b9plus_v2",
+        "speculative": "b9plus_v2"
+      },
+      "delta_commit": {
+        "estimate": -0.03648060562795994,
+        "ci95": [
+          -0.04768357208867276,
+          -0.025152594567065763
+        ],
+        "boot_se": 0.005739439065937905,
+        "n_items": 3734
+      },
+      "delta_speculative": {
+        "estimate": -0.039513201806505846,
+        "ci95": [
+          -0.05065414389116573,
+          -0.028467061310158547
+        ],
+        "boot_se": 0.005637360500148465,
+        "n_items": 3734
+      },
+      "interaction": {
+        "estimate": 0.0030325961785458953,
+        "ci95": [
+          -0.0009615815177398292,
+          0.007005199306805802
+        ],
+        "boot_se": 0.002024061787812452,
+        "n_items": 3734
+      },
+      "status": "descriptive"
+    },
+    {
+      "dataset": "d1_open",
+      "condition": "piper-en_US-hfc_male-medium__150wpm__clean",
+      "profile": "rewrite_faiss",
+      "belief_quantile": 0.65,
+      "price": "0.173057|0.05",
+      "d_star": {
+        "commit": "b9plus_v2",
+        "speculative": "b9plus_v2"
+      },
+      "delta_commit": {
+        "estimate": -0.036727786646624426,
+        "ci95": [
+          -0.048144411782409975,
+          -0.025218382406490932
+        ],
+        "boot_se": 0.005882911724489759,
+        "n_items": 3734
+      },
+      "delta_speculative": {
+        "estimate": -0.04146537298285999,
+        "ci95": [
+          -0.05284545919714738,
+          -0.030228351263814235
+        ],
+        "boot_se": 0.005734002385832763,
+        "n_items": 3734
+      },
+      "interaction": {
+        "estimate": 0.004737586336235566,
+        "ci95": [
+          0.0007135064591700103,
+          0.00877051979877651
+        ],
+        "boot_se": 0.0020521298099721165,
+        "n_items": 3734
+      },
+      "status": "descriptive"
+    },
+    {
+      "dataset": "d1_open",
+      "condition": "piper-en_US-hfc_male-medium__150wpm__clean",
+      "profile": "rewrite_faiss",
+      "belief_quantile": 0.8,
+      "price": "0.18069|0.05",
+      "d_star": {
+        "commit": "b9plus_v2",
+        "speculative": "b9plus_v2"
+      },
+      "delta_commit": {
+        "estimate": -0.040936993669033465,
+        "ci95": [
+          -0.0529701306520443,
+          -0.029222213028573283
+        ],
+        "boot_se": 0.006050362749215964,
+        "n_items": 3734
+      },
+      "delta_speculative": {
+        "estimate": -0.0452873563380087,
+        "ci95": [
+          -0.05712265624209553,
+          -0.03373077574562926
+        ],
+        "boot_se": 0.005874114286980952,
+        "n_items": 3734
+      },
+      "interaction": {
+        "estimate": 0.00435036266897524,
+        "ci95": [
+          0.0003413653184508923,
+          0.008447137264265606
+        ],
+        "boot_se": 0.0020487347033549073,
+        "n_items": 3734
+      },
+      "status": "descriptive"
+    },
+    {
+      "dataset": "d1_open",
+      "condition": "piper-en_US-hfc_male-medium__150wpm__clean",
+      "profile": "rewrite_faiss",
+      "belief_quantile": 0.9,
+      "price": "0.188924|0.05",
+      "d_star": {
+        "commit": "b9plus_v2",
+        "speculative": "b9plus_v2"
+      },
+      "delta_commit": {
+        "estimate": -0.04323561869423555,
+        "ci95": [
+          -0.05590248517233194,
+          -0.030881380111051716
+        ],
+        "boot_se": 0.006351038188020961,
+        "n_items": 3734
+      },
+      "delta_speculative": {
+        "estimate": -0.04557571809065309,
+        "ci95": [
+          -0.05757676083483513,
+          -0.033595032660749875
+        ],
+        "boot_se": 0.006111902825930946,
+        "n_items": 3734
+      },
+      "interaction": {
+        "estimate": 0.0023400993964175464,
+        "ci95": [
+          -0.0018731638023358167,
+          0.006663435296198678
+        ],
+        "boot_se": 0.002164101917572429,
+        "n_items": 3734
+      },
+      "status": "descriptive"
+    },
+    {
+      "dataset": "d1_open",
+      "condition": "piper-en_US-hfc_male-medium__150wpm__clean",
+      "profile": "rewrite_faiss_rerank",
+      "belief_quantile": 0.5,
+      "price": "0.167562|0.05",
+      "d_star": {
+        "commit": "b9plus_v2",
+        "speculative": "b9plus_v2"
+      },
+      "delta_commit": {
+        "estimate": -0.03537628862628932,
+        "ci95": [
+          -0.04659231686746756,
+          -0.024011943319790514
+        ],
+        "boot_se": 0.005732552036753518,
+        "n_items": 3734
+      },
+      "delta_speculative": {
+        "estimate": -0.03851490346628304,
+        "ci95": [
+          -0.049733854211587256,
+          -0.027568947231713523
+        ],
+        "boot_se": 0.005650524153589674,
+        "n_items": 3734
+      },
+      "interaction": {
+        "estimate": 0.0031386148399937244,
+        "ci95": [
+          -0.0008463942310276345,
+          0.007104194496417452
+        ],
+        "boot_se": 0.002011571481246417,
+        "n_items": 3734
+      },
+      "status": "descriptive"
+    },
+    {
+      "dataset": "d1_open",
+      "condition": "piper-en_US-hfc_male-medium__150wpm__clean",
+      "profile": "rewrite_faiss_rerank",
+      "belief_quantile": 0.65,
+      "price": "0.174995|0.05",
+      "d_star": {
+        "commit": "b9plus_v2",
+        "speculative": "b9plus_v2"
+      },
+      "delta_commit": {
+        "estimate": -0.0362654691709264,
+        "ci95": [
+          -0.04769462780037644,
+          -0.024757195905120637
+        ],
+        "boot_se": 0.005864202451388347,
+        "n_items": 3734
+      },
+      "delta_speculative": {
+        "estimate": -0.041353982775079956,
+        "ci95": [
+          -0.052716569598606426,
+          -0.030215117859135637
+        ],
+        "boot_se": 0.005715760807477968,
+        "n_items": 3734
+      },
+      "interaction": {
+        "estimate": 0.005088513604153556,
+        "ci95": [
+          0.001044968332706842,
+          0.009221764468301127
+        ],
+        "boot_se": 0.0020910516172161146,
+        "n_items": 3734
+      },
+      "status": "descriptive"
+    },
+    {
+      "dataset": "d1_open",
+      "condition": "piper-en_US-hfc_male-medium__150wpm__clean",
+      "profile": "rewrite_faiss_rerank",
+      "belief_quantile": 0.8,
+      "price": "0.182713|0.05",
+      "d_star": {
+        "commit": "b9plus_v2",
+        "speculative": "b9plus_v2"
+      },
+      "delta_commit": {
+        "estimate": -0.04089439693808855,
+        "ci95": [
+          -0.05285625994353694,
+          -0.02925758750996321
+        ],
+        "boot_se": 0.0060067987281110565,
+        "n_items": 3734
+      },
+      "delta_speculative": {
+        "estimate": -0.0432846812786737,
+        "ci95": [
+          -0.05501254348547378,
+          -0.03197754649726174
+        ],
+        "boot_se": 0.005814580976205739,
+        "n_items": 3734
+      },
+      "interaction": {
+        "estimate": 0.002390284340585148,
+        "ci95": [
+          -0.0017290592029874402,
+          0.006495618419678808
+        ],
+        "boot_se": 0.0020844361424581233,
+        "n_items": 3734
+      },
+      "status": "descriptive"
+    },
+    {
+      "dataset": "d1_open",
+      "condition": "piper-en_US-hfc_male-medium__150wpm__clean",
+      "profile": "rewrite_faiss_rerank",
+      "belief_quantile": 0.9,
+      "price": "0.191039|0.05",
+      "d_star": {
+        "commit": "b9plus_v2",
+        "speculative": "b9plus_v2"
+      },
+      "delta_commit": {
+        "estimate": -0.04158459927863292,
+        "ci95": [
+          -0.05426088269269641,
+          -0.02919124700417801
+        ],
+        "boot_se": 0.006315506281955274,
+        "n_items": 3734
+      },
+      "delta_speculative": {
+        "estimate": -0.04419006845141254,
+        "ci95": [
+          -0.05634721011653478,
+          -0.03222978601843658
+        ],
+        "boot_se": 0.006102178659675657,
+        "n_items": 3734
+      },
+      "interaction": {
+        "estimate": 0.0026054691727796036,
+        "ci95": [
+          -0.0014819524923967325,
+          0.006773577187434974
+        ],
+        "boot_se": 0.0020998542008456088,
+        "n_items": 3734
+      },
+      "status": "descriptive"
+    },
+    {
+      "dataset": "d1_open",
+      "condition": "piper-en_US-hfc_male-medium__150wpm__clean",
+      "profile": "rewrite_remote",
+      "belief_quantile": 0.5,
+      "price": "0.147414|0.05",
+      "d_star": {
+        "commit": "b9plus_v2",
+        "speculative": "b9plus_v2"
+      },
+      "delta_commit": {
+        "estimate": -0.041532668663121323,
+        "ci95": [
+          -0.05310156959120478,
+          -0.03006247429859554
+        ],
+        "boot_se": 0.005881004573277788,
+        "n_items": 3734
+      },
+      "delta_speculative": {
+        "estimate": -0.041681343790623444,
+        "ci95": [
+          -0.05325547279179276,
+          -0.03007754712053814
+        ],
+        "boot_se": 0.005875117343414907,
+        "n_items": 3734
+      },
+      "interaction": {
+        "estimate": 0.0001486751275021211,
+        "ci95": [
+          -0.004027118393807852,
+          0.004319142297573418
+        ],
+        "boot_se": 0.002143969649563598,
+        "n_items": 3734
+      },
+      "status": "descriptive"
+    },
+    {
+      "dataset": "d1_open",
+      "condition": "piper-en_US-hfc_male-medium__150wpm__clean",
+      "profile": "rewrite_remote",
+      "belief_quantile": 0.65,
+      "price": "0.153953|0.05",
+      "d_star": {
+        "commit": "b9plus_v2",
+        "speculative": "b9plus_v2"
+      },
+      "delta_commit": {
+        "estimate": -0.04319254729196195,
+        "ci95": [
+          -0.05642680073745867,
+          -0.03000484840515426
+        ],
+        "boot_se": 0.006812117211215249,
+        "n_items": 3734
+      },
+      "delta_speculative": {
+        "estimate": -0.04347307125589135,
+        "ci95": [
+          -0.056551038744958156,
+          -0.030385169836776107
+        ],
+        "boot_se": 0.006716539327354431,
+        "n_items": 3734
+      },
+      "interaction": {
+        "estimate": 0.0002805239639294058,
+        "ci95": [
+          -0.003999353439508193,
+          0.004554301161107674
+        ],
+        "boot_se": 0.0021831004655963365,
+        "n_items": 3734
+      },
+      "status": "descriptive"
+    },
+    {
+      "dataset": "d1_open",
+      "condition": "piper-en_US-hfc_male-medium__150wpm__clean",
+      "profile": "rewrite_remote",
+      "belief_quantile": 0.8,
+      "price": "0.160743|0.05",
+      "d_star": {
+        "commit": "b9plus_v2",
+        "speculative": "b9plus_v2"
+      },
+      "delta_commit": {
+        "estimate": -0.043275130361628895,
+        "ci95": [
+          -0.05585130987888167,
+          -0.031092380506232545
+        ],
+        "boot_se": 0.006267968635074853,
+        "n_items": 3734
+      },
+      "delta_speculative": {
+        "estimate": -0.0442707795219346,
+        "ci95": [
+          -0.0564082636459814,
+          -0.03223712832831318
+        ],
+        "boot_se": 0.006103425697724263,
+        "n_items": 3734
+      },
+      "interaction": {
+        "estimate": 0.000995649160305709,
+        "ci95": [
+          -0.0033199194462387874,
+          0.005353945770372516
+        ],
+        "boot_se": 0.002198418873707033,
+        "n_items": 3734
+      },
+      "status": "descriptive"
+    },
+    {
+      "dataset": "d1_open",
+      "condition": "piper-en_US-hfc_male-medium__150wpm__clean",
+      "profile": "rewrite_remote",
+      "belief_quantile": 0.9,
+      "price": "0.168068|0.05",
+      "d_star": {
+        "commit": "b9plus_v2",
+        "speculative": "b9plus_v2"
+      },
+      "delta_commit": {
+        "estimate": -0.04560965598605695,
+        "ci95": [
+          -0.058517032527263306,
+          -0.03316484507280017
+        ],
+        "boot_se": 0.006471752656727347,
+        "n_items": 3734
+      },
+      "delta_speculative": {
+        "estimate": -0.04437102809238382,
+        "ci95": [
+          -0.056795655755344,
+          -0.03225617111572528
+        ],
+        "boot_se": 0.006260420981420411,
+        "n_items": 3734
+      },
+      "interaction": {
+        "estimate": -0.0012386278936731205,
+        "ci95": [
+          -0.005648056438539024,
+          0.0030500997932886
+        ],
+        "boot_se": 0.0022288552743680782,
+        "n_items": 3734
+      },
+      "status": "descriptive"
+    },
+    {
+      "dataset": "d1_open",
+      "condition": "text150",
+      "profile": "rewrite_faiss",
+      "belief_quantile": 0.5,
+      "price": "0.155454|0.05",
+      "d_star": {
+        "commit": "b9plus_v2",
+        "speculative": "b9plus_v2"
+      },
+      "delta_commit": {
+        "estimate": -0.008519217867209846,
+        "ci95": [
+          -0.011900047274064051,
+          -0.005152526466851298
+        ],
+        "boot_se": 0.0017418739319323537,
+        "n_items": 3734
+      },
+      "delta_speculative": {
+        "estimate": -0.008535094887522096,
+        "ci95": [
+          -0.011929389578842327,
+          -0.005168343676711549
+        ],
+        "boot_se": 0.0017412850592009523,
+        "n_items": 3734
+      },
+      "interaction": {
+        "estimate": 1.587702031225048e-05,
+        "ci95": [
+          -0.00010165701540122774,
+          0.00014928807633797918
+        ],
+        "boot_se": 5.993922051845746e-05,
+        "n_items": 3734
+      },
+      "status": "descriptive"
+    },
+    {
+      "dataset": "d1_open",
+      "condition": "text150",
+      "profile": "rewrite_faiss",
+      "belief_quantile": 0.65,
+      "price": "0.161524|0.05",
+      "d_star": {
+        "commit": "b9plus_v2",
+        "speculative": "b9plus_v2"
+      },
+      "delta_commit": {
+        "estimate": -0.0024308962538334834,
+        "ci95": [
+          -0.007202491162159958,
+          0.0022426615255597086
+        ],
+        "boot_se": 0.002382176033588117,
+        "n_items": 3734
+      },
+      "delta_speculative": {
+        "estimate": -0.0024308962538334834,
+        "ci95": [
+          -0.007202491162159958,
+          0.0022426615255597086
+        ],
+        "boot_se": 0.002382176033588117,
+        "n_items": 3734
+      },
+      "interaction": {
+        "estimate": 0.0,
+        "ci95": [
+          0.0,
+          0.0
+        ],
+        "boot_se": 0.0,
+        "n_items": 3734
+      },
+      "status": "descriptive"
+    },
+    {
+      "dataset": "d1_open",
+      "condition": "text150",
+      "profile": "rewrite_faiss",
+      "belief_quantile": 0.8,
+      "price": "0.169858|0.05",
+      "d_star": {
+        "commit": "b9plus_v2",
+        "speculative": "b9plus_v2"
+      },
+      "delta_commit": {
+        "estimate": -0.0009783382900528826,
+        "ci95": [
+          -0.0032859479660869817,
+          0.0013768190404763283
+        ],
+        "boot_se": 0.0011780130779608948,
+        "n_items": 3734
+      },
+      "delta_speculative": {
+        "estimate": -0.0009783382900528826,
+        "ci95": [
+          -0.0032859479660869817,
+          0.0013768190404763283
+        ],
+        "boot_se": 0.0011780130779608948,
+        "n_items": 3734
+      },
+      "interaction": {
+        "estimate": 0.0,
+        "ci95": [
+          0.0,
+          0.0
+        ],
+        "boot_se": 0.0,
+        "n_items": 3734
+      },
+      "status": "descriptive"
+    },
+    {
+      "dataset": "d1_open",
+      "condition": "text150",
+      "profile": "rewrite_faiss",
+      "belief_quantile": 0.9,
+      "price": "0.176676|0.05",
+      "d_star": {
+        "commit": "b9plus_v2",
+        "speculative": "b9plus_v2"
+      },
+      "delta_commit": {
+        "estimate": -0.0027557939974597436,
+        "ci95": [
+          -0.005494768331996725,
+          -2.5186840599633614e-05
+        ],
+        "boot_se": 0.001382457758916064,
+        "n_items": 3734
+      },
+      "delta_speculative": {
+        "estimate": -0.0027557939974597436,
+        "ci95": [
+          -0.005494768331996725,
+          -2.5186840599633614e-05
+        ],
+        "boot_se": 0.001382457758916064,
+        "n_items": 3734
+      },
+      "interaction": {
+        "estimate": 0.0,
+        "ci95": [
+          0.0,
+          0.0
+        ],
+        "boot_se": 0.0,
+        "n_items": 3734
+      },
+      "status": "descriptive"
+    },
+    {
+      "dataset": "d1_open",
+      "condition": "text150",
+      "profile": "rewrite_faiss_rerank",
+      "belief_quantile": 0.5,
+      "price": "0.157194|0.05",
+      "d_star": {
+        "commit": "b9plus_v2",
+        "speculative": "b9plus_v2"
+      },
+      "delta_commit": {
+        "estimate": -0.008820134429070071,
+        "ci95": [
+          -0.012182505998705302,
+          -0.00549718158533014
+        ],
+        "boot_se": 0.0017206692387070452,
+        "n_items": 3734
+      },
+      "delta_speculative": {
+        "estimate": -0.008820134429070071,
+        "ci95": [
+          -0.012182505998705302,
+          -0.00549718158533014
+        ],
+        "boot_se": 0.0017206692387070452,
+        "n_items": 3734
+      },
+      "interaction": {
+        "estimate": 0.0,
+        "ci95": [
+          0.0,
+          0.0
+        ],
+        "boot_se": 0.0,
+        "n_items": 3734
+      },
+      "status": "descriptive"
+    },
+    {
+      "dataset": "d1_open",
+      "condition": "text150",
+      "profile": "rewrite_faiss_rerank",
+      "belief_quantile": 0.65,
+      "price": "0.163333|0.05",
+      "d_star": {
+        "commit": "b9plus_v2",
+        "speculative": "b9plus_v2"
+      },
+      "delta_commit": {
+        "estimate": -0.002791333376093433,
+        "ci95": [
+          -0.0075066367523991375,
+          0.0018595311568140654
+        ],
+        "boot_se": 0.002367646984476175,
+        "n_items": 3734
+      },
+      "delta_speculative": {
+        "estimate": -0.002781253997101886,
+        "ci95": [
+          -0.0075125446829361195,
+          0.00187337809815143
+        ],
+        "boot_se": 0.0023711158014244563,
+        "n_items": 3734
+      },
+      "interaction": {
+        "estimate": -1.0079378991546386e-05,
+        "ci95": [
+          -0.0001822005134877795,
+          0.00015173675570081532
+        ],
+        "boot_se": 8.319627341700276e-05,
+        "n_items": 3734
+      },
+      "status": "descriptive"
+    },
+    {
+      "dataset": "d1_open",
+      "condition": "text150",
+      "profile": "rewrite_faiss_rerank",
+      "belief_quantile": 0.8,
+      "price": "0.171759|0.05",
+      "d_star": {
+        "commit": "b9plus_v2",
+        "speculative": "b9plus_v2"
+      },
+      "delta_commit": {
+        "estimate": -0.0009843429211608505,
+        "ci95": [
+          -0.003323369291205169,
+          0.0013643545876208427
+        ],
+        "boot_se": 0.001182719103452458,
+        "n_items": 3734
+      },
+      "delta_speculative": {
+        "estimate": -0.0009843429211608505,
+        "ci95": [
+          -0.003323369291205169,
+          0.0013643545876208427
+        ],
+        "boot_se": 0.001182719103452458,
+        "n_items": 3734
+      },
+      "interaction": {
+        "estimate": 0.0,
+        "ci95": [
+          0.0,
+          0.0
+        ],
+        "boot_se": 0.0,
+        "n_items": 3734
+      },
+      "status": "descriptive"
+    },
+    {
+      "dataset": "d1_open",
+      "condition": "text150",
+      "profile": "rewrite_faiss_rerank",
+      "belief_quantile": 0.9,
+      "price": "0.178654|0.05",
+      "d_star": {
+        "commit": "b9plus_v2",
+        "speculative": "b9plus_v2"
+      },
+      "delta_commit": {
+        "estimate": 0.0013029048632707727,
+        "ci95": [
+          -0.007035528863334086,
+          0.010059350243415298
+        ],
+        "boot_se": 0.00437271562369152,
+        "n_items": 3734
+      },
+      "delta_speculative": {
+        "estimate": 0.0013029048632707727,
+        "ci95": [
+          -0.007035528863334086,
+          0.010059350243415298
+        ],
+        "boot_se": 0.00437271562369152,
+        "n_items": 3734
+      },
+      "interaction": {
+        "estimate": 0.0,
+        "ci95": [
+          0.0,
+          0.0
+        ],
+        "boot_se": 0.0,
+        "n_items": 3734
+      },
+      "status": "descriptive"
+    },
+    {
+      "dataset": "d1_open",
+      "condition": "text150",
+      "profile": "rewrite_remote",
+      "belief_quantile": 0.5,
+      "price": "0.138293|0.05",
+      "d_star": {
+        "commit": "b9plus_v2",
+        "speculative": "b9plus_v2"
+      },
+      "delta_commit": {
+        "estimate": -0.007619185660332098,
+        "ci95": [
+          -0.011005525678959668,
+          -0.0042048106705204575
+        ],
+        "boot_se": 0.0017498584982951876,
+        "n_items": 3734
+      },
+      "delta_speculative": {
+        "estimate": -0.007619185660332098,
+        "ci95": [
+          -0.011005525678959668,
+          -0.0042048106705204575
+        ],
+        "boot_se": 0.0017498584982951876,
+        "n_items": 3734
+      },
+      "interaction": {
+        "estimate": 0.0,
+        "ci95": [
+          0.0,
+          0.0
+        ],
+        "boot_se": 0.0,
+        "n_items": 3734
+      },
+      "status": "descriptive"
+    },
+    {
+      "dataset": "d1_open",
+      "condition": "text150",
+      "profile": "rewrite_remote",
+      "belief_quantile": 0.65,
+      "price": "0.143693|0.05",
+      "d_star": {
+        "commit": "b9plus_v2",
+        "speculative": "b9plus_v2"
+      },
+      "delta_commit": {
+        "estimate": -0.0023333947028744187,
+        "ci95": [
+          -0.00711122922964882,
+          0.002400900006120417
+        ],
+        "boot_se": 0.002385609977668039,
+        "n_items": 3734
+      },
+      "delta_speculative": {
+        "estimate": -0.0023333947028744187,
+        "ci95": [
+          -0.00711122922964882,
+          0.002400900006120417
+        ],
+        "boot_se": 0.002385609977668039,
+        "n_items": 3734
+      },
+      "interaction": {
+        "estimate": 0.0,
+        "ci95": [
+          0.0,
+          0.0
+        ],
+        "boot_se": 0.0,
+        "n_items": 3734
+      },
+      "status": "descriptive"
+    },
+    {
+      "dataset": "d1_open",
+      "condition": "text150",
+      "profile": "rewrite_remote",
+      "belief_quantile": 0.8,
+      "price": "0.151107|0.05",
+      "d_star": {
+        "commit": "b9plus_v2",
+        "speculative": "b9plus_v2"
+      },
+      "delta_commit": {
+        "estimate": -0.0002390400478898505,
+        "ci95": [
+          -0.0026780922700058974,
+          0.002268010860734428
+        ],
+        "boot_se": 0.0012458031780220526,
+        "n_items": 3734
+      },
+      "delta_speculative": {
+        "estimate": -0.0002390400478898505,
+        "ci95": [
+          -0.0026780922700058974,
+          0.002268010860734428
+        ],
+        "boot_se": 0.0012458031780220526,
+        "n_items": 3734
+      },
+      "interaction": {
+        "estimate": 0.0,
+        "ci95": [
+          0.0,
+          0.0
+        ],
+        "boot_se": 0.0,
+        "n_items": 3734
+      },
+      "status": "descriptive"
+    },
+    {
+      "dataset": "d1_open",
+      "condition": "text150",
+      "profile": "rewrite_remote",
+      "belief_quantile": 0.9,
+      "price": "0.157172|0.05",
+      "d_star": {
+        "commit": "b9plus_v2",
+        "speculative": "b9plus_v2"
+      },
+      "delta_commit": {
+        "estimate": -0.003257105162049755,
+        "ci95": [
+          -0.006515343366593101,
+          -2.6402627727396327e-05
+        ],
+        "boot_se": 0.0016446238793761047,
+        "n_items": 3734
+      },
+      "delta_speculative": {
+        "estimate": -0.003257105162049755,
+        "ci95": [
+          -0.006515343366593101,
+          -2.6402627727396327e-05
+        ],
+        "boot_se": 0.0016446238793761047,
+        "n_items": 3734
+      },
+      "interaction": {
+        "estimate": 0.0,
+        "ci95": [
+          0.0,
+          0.0
+        ],
+        "boot_se": 0.0,
+        "n_items": 3734
+      },
+      "status": "descriptive"
+    },
+    {
+      "dataset": "d2_support",
+      "condition": "piper-en_US-hfc_male-medium__150wpm__clean",
+      "profile": "rewrite_faiss",
+      "belief_quantile": 0.5,
+      "price": "0.205286|0.05",
+      "d_star": {
+        "commit": "b9plus_v2",
+        "speculative": "b10_speculative_v2"
+      },
+      "delta_commit": {
+        "estimate": -0.009538063095036232,
+        "ci95": [
+          -0.040767529715271804,
+          0.021901124082187005
+        ],
+        "boot_se": 0.015869842915928068,
+        "n_items": 498
+      },
+      "delta_speculative": {
+        "estimate": -0.006628843234152022,
+        "ci95": [
+          -0.0380784886896161,
+          0.024107369775201604
+        ],
+        "boot_se": 0.01581696704424131,
+        "n_items": 498
+      },
+      "interaction": {
+        "estimate": -0.0029092198608842088,
+        "ci95": [
+          -0.013475071444567256,
+          0.00803627652801808
+        ],
+        "boot_se": 0.005406837153714764,
+        "n_items": 498
+      },
+      "status": "descriptive; exploratory (D3: pre-registered judge-validation gate not passed (kappa_human 0.52; judge kappa vs reference 0.55 primary / 0.58 GPT-4o))"
+    },
+    {
+      "dataset": "d2_support",
+      "condition": "piper-en_US-hfc_male-medium__150wpm__clean",
+      "profile": "rewrite_faiss",
+      "belief_quantile": 0.65,
+      "price": "0.215782|0.05",
+      "d_star": {
+        "commit": "b9plus_v2",
+        "speculative": "b10_speculative_v2"
+      },
+      "delta_commit": {
+        "estimate": -0.022719886416677382,
+        "ci95": [
+          -0.05018829241575482,
+          0.004741400961323816
+        ],
+        "boot_se": 0.014191117943205905,
+        "n_items": 498
+      },
+      "delta_speculative": {
+        "estimate": -0.006096658718549521,
+        "ci95": [
+          -0.03799591025658958,
+          0.02546117212266964
+        ],
+        "boot_se": 0.015993812463723014,
+        "n_items": 498
+      },
+      "interaction": {
+        "estimate": -0.01662322769812786,
+        "ci95": [
+          -0.03809872118627209,
+          0.004427213068870408
+        ],
+        "boot_se": 0.010702981812358155,
+        "n_items": 498
+      },
+      "status": "descriptive; exploratory (D3: pre-registered judge-validation gate not passed (kappa_human 0.52; judge kappa vs reference 0.55 primary / 0.58 GPT-4o))"
+    },
+    {
+      "dataset": "d2_support",
+      "condition": "piper-en_US-hfc_male-medium__150wpm__clean",
+      "profile": "rewrite_faiss",
+      "belief_quantile": 0.8,
+      "price": "0.224506|0.05",
+      "d_star": {
+        "commit": "b9plus_v2",
+        "speculative": "b10_speculative_v2"
+      },
+      "delta_commit": {
+        "estimate": -0.014130780336523863,
+        "ci95": [
+          -0.04629935082919862,
+          0.017700263042633023
+        ],
+        "boot_se": 0.016368052308069123,
+        "n_items": 498
+      },
+      "delta_speculative": {
+        "estimate": -0.005853645884554274,
+        "ci95": [
+          -0.03784523670171682,
+          0.02595934295391756
+        ],
+        "boot_se": 0.01610759265013829,
+        "n_items": 498
+      },
+      "interaction": {
+        "estimate": -0.008277134451969592,
+        "ci95": [
+          -0.02012459374586838,
+          0.0031849987900824293
+        ],
+        "boot_se": 0.005957604508902518,
+        "n_items": 498
+      },
+      "status": "descriptive; exploratory (D3: pre-registered judge-validation gate not passed (kappa_human 0.52; judge kappa vs reference 0.55 primary / 0.58 GPT-4o))"
+    },
+    {
+      "dataset": "d2_support",
+      "condition": "piper-en_US-hfc_male-medium__150wpm__clean",
+      "profile": "rewrite_faiss",
+      "belief_quantile": 0.9,
+      "price": "0.233687|0.05",
+      "d_star": {
+        "commit": "b9plus_v2",
+        "speculative": "b10_speculative_v2"
+      },
+      "delta_commit": {
+        "estimate": 0.01355369230362294,
+        "ci95": [
+          -0.00976502159044913,
+          0.03700869870382296
+        ],
+        "boot_se": 0.011918407060686026,
+        "n_items": 498
+      },
+      "delta_speculative": {
+        "estimate": 0.01812586281597786,
+        "ci95": [
+          -0.005137623906043558,
+          0.04181674983986461
+        ],
+        "boot_se": 0.012050983847145556,
+        "n_items": 498
+      },
+      "interaction": {
+        "estimate": -0.0045721705123549184,
+        "ci95": [
+          -0.01468123532345591,
+          0.0059282491280820675
+        ],
+        "boot_se": 0.005274861359748498,
+        "n_items": 498
+      },
+      "status": "descriptive; exploratory (D3: pre-registered judge-validation gate not passed (kappa_human 0.52; judge kappa vs reference 0.55 primary / 0.58 GPT-4o))"
+    },
+    {
+      "dataset": "d2_support",
+      "condition": "piper-en_US-hfc_male-medium__150wpm__clean",
+      "profile": "rewrite_faiss_rerank",
+      "belief_quantile": 0.5,
+      "price": "0.207584|0.05",
+      "d_star": {
+        "commit": "b9plus_v2",
+        "speculative": "b10_speculative_v2"
+      },
+      "delta_commit": {
+        "estimate": -0.008875152074638973,
+        "ci95": [
+          -0.04064150153143227,
+          0.0229718908055548
+        ],
+        "boot_se": 0.01610494454916564,
+        "n_items": 498
+      },
+      "delta_speculative": {
+        "estimate": -0.007009934756750426,
+        "ci95": [
+          -0.03872957140986648,
+          0.024052087514704914
+        ],
+        "boot_se": 0.01599010373251937,
+        "n_items": 498
+      },
+      "interaction": {
+        "estimate": -0.0018652173178885464,
+        "ci95": [
+          -0.012456031105522453,
+          0.009037409912122756
+        ],
+        "boot_se": 0.005442636260112129,
+        "n_items": 498
+      },
+      "status": "descriptive; exploratory (D3: pre-registered judge-validation gate not passed (kappa_human 0.52; judge kappa vs reference 0.55 primary / 0.58 GPT-4o))"
+    },
+    {
+      "dataset": "d2_support",
+      "condition": "piper-en_US-hfc_male-medium__150wpm__clean",
+      "profile": "rewrite_faiss_rerank",
+      "belief_quantile": 0.65,
+      "price": "0.218198|0.05",
+      "d_star": {
+        "commit": "b9plus_v2",
+        "speculative": "b10_speculative_v2"
+      },
+      "delta_commit": {
+        "estimate": -0.023720284843623436,
+        "ci95": [
+          -0.05174459692151526,
+          0.004019420553719126
+        ],
+        "boot_se": 0.014352920198976861,
+        "n_items": 498
+      },
+      "delta_speculative": {
+        "estimate": -0.006939607144884488,
+        "ci95": [
+          -0.0390162129040858,
+          0.025079360423436815
+        ],
+        "boot_se": 0.01620831297594644,
+        "n_items": 498
+      },
+      "interaction": {
+        "estimate": -0.016780677698738942,
+        "ci95": [
+          -0.03827426967280386,
+          0.0043594035170613854
+        ],
+        "boot_se": 0.010808911765354937,
+        "n_items": 498
+      },
+      "status": "descriptive; exploratory (D3: pre-registered judge-validation gate not passed (kappa_human 0.52; judge kappa vs reference 0.55 primary / 0.58 GPT-4o))"
+    },
+    {
+      "dataset": "d2_support",
+      "condition": "piper-en_US-hfc_male-medium__150wpm__clean",
+      "profile": "rewrite_faiss_rerank",
+      "belief_quantile": 0.8,
+      "price": "0.227019|0.05",
+      "d_star": {
+        "commit": "b9plus_v2",
+        "speculative": "b10_speculative_v2"
+      },
+      "delta_commit": {
+        "estimate": -0.014478196026009865,
+        "ci95": [
+          -0.04703150340986052,
+          0.017702161005643438
+        ],
+        "boot_se": 0.01652818641535784,
+        "n_items": 498
+      },
+      "delta_speculative": {
+        "estimate": -0.006714792408714514,
+        "ci95": [
+          -0.0390741367799884,
+          0.025420922227038577
+        ],
+        "boot_se": 0.016366138820011124,
+        "n_items": 498
+      },
+      "interaction": {
+        "estimate": -0.007763403617295341,
+        "ci95": [
+          -0.01954643616065578,
+          0.003688562344210203
+        ],
+        "boot_se": 0.005939767998051118,
+        "n_items": 498
+      },
+      "status": "descriptive; exploratory (D3: pre-registered judge-validation gate not passed (kappa_human 0.52; judge kappa vs reference 0.55 primary / 0.58 GPT-4o))"
+    },
+    {
+      "dataset": "d2_support",
+      "condition": "piper-en_US-hfc_male-medium__150wpm__clean",
+      "profile": "rewrite_faiss_rerank",
+      "belief_quantile": 0.9,
+      "price": "0.236303|0.05",
+      "d_star": {
+        "commit": "b9plus_v2",
+        "speculative": "b10_speculative_v2"
+      },
+      "delta_commit": {
+        "estimate": 0.013607990260937626,
+        "ci95": [
+          -0.009564082824703148,
+          0.036873189980124954
+        ],
+        "boot_se": 0.01187627899359457,
+        "n_items": 498
+      },
+      "delta_speculative": {
+        "estimate": 0.018054199424033097,
+        "ci95": [
+          -0.0050712621101676346,
+          0.04172473323108949
+        ],
+        "boot_se": 0.01201181631574322,
+        "n_items": 498
+      },
+      "interaction": {
+        "estimate": -0.004446209163095469,
+        "ci95": [
+          -0.014506931996573618,
+          0.005872116013028092
+        ],
+        "boot_se": 0.005244801080244438,
+        "n_items": 498
+      },
+      "status": "descriptive; exploratory (D3: pre-registered judge-validation gate not passed (kappa_human 0.52; judge kappa vs reference 0.55 primary / 0.58 GPT-4o))"
+    },
+    {
+      "dataset": "d2_support",
+      "condition": "piper-en_US-hfc_male-medium__150wpm__clean",
+      "profile": "rewrite_remote",
+      "belief_quantile": 0.5,
+      "price": "0.182624|0.05",
+      "d_star": {
+        "commit": "b9plus_v2",
+        "speculative": "b10_speculative_v2"
+      },
+      "delta_commit": {
+        "estimate": -0.003260941045244694,
+        "ci95": [
+          -0.03481986157801431,
+          0.028469957843575325
+        ],
+        "boot_se": 0.015994187198487882,
+        "n_items": 498
+      },
+      "delta_speculative": {
+        "estimate": 0.014154618763315785,
+        "ci95": [
+          -0.009152532434388008,
+          0.03789117317978891
+        ],
+        "boot_se": 0.012058799347882176,
+        "n_items": 498
+      },
+      "interaction": {
+        "estimate": -0.017415559808560483,
+        "ci95": [
+          -0.049050979514907916,
+          0.014515037296993763
+        ],
+        "boot_se": 0.016294714964356492,
+        "n_items": 498
+      },
+      "status": "descriptive; exploratory (D3: pre-registered judge-validation gate not passed (kappa_human 0.52; judge kappa vs reference 0.55 primary / 0.58 GPT-4o))"
+    },
+    {
+      "dataset": "d2_support",
+      "condition": "piper-en_US-hfc_male-medium__150wpm__clean",
+      "profile": "rewrite_remote",
+      "belief_quantile": 0.65,
+      "price": "0.191962|0.05",
+      "d_star": {
+        "commit": "b9plus_v2",
+        "speculative": "b10_speculative_v2"
+      },
+      "delta_commit": {
+        "estimate": 0.012391082278294987,
+        "ci95": [
+          -0.011863171948627632,
+          0.03676121467932134
+        ],
+        "boot_se": 0.012353769502880703,
+        "n_items": 498
+      },
+      "delta_speculative": {
+        "estimate": 0.01344234907000532,
+        "ci95": [
+          -0.009989189304102815,
+          0.03732799772322797
+        ],
+        "boot_se": 0.01207220007764462,
+        "n_items": 498
+      },
+      "interaction": {
+        "estimate": -0.0010512667917103333,
+        "ci95": [
+          -0.011136346750390717,
+          0.009589968710225378
+        ],
+        "boot_se": 0.005284005533121464,
+        "n_items": 498
+      },
+      "status": "descriptive; exploratory (D3: pre-registered judge-validation gate not passed (kappa_human 0.52; judge kappa vs reference 0.55 primary / 0.58 GPT-4o))"
+    },
+    {
+      "dataset": "d2_support",
+      "condition": "piper-en_US-hfc_male-medium__150wpm__clean",
+      "profile": "rewrite_remote",
+      "belief_quantile": 0.8,
+      "price": "0.199722|0.05",
+      "d_star": {
+        "commit": "b9plus_v2",
+        "speculative": "b10_speculative_v2"
+      },
+      "delta_commit": {
+        "estimate": 0.013179773750255162,
+        "ci95": [
+          -0.010928309511966898,
+          0.03766251316188057
+        ],
+        "boot_se": 0.012339154652155921,
+        "n_items": 498
+      },
+      "delta_speculative": {
+        "estimate": 0.014205668640240964,
+        "ci95": [
+          -0.009175699740637458,
+          0.037945006477070484
+        ],
+        "boot_se": 0.012063829705232018,
+        "n_items": 498
+      },
+      "interaction": {
+        "estimate": -0.001025894889985799,
+        "ci95": [
+          -0.01106085133281302,
+          0.009557884107516372
+        ],
+        "boot_se": 0.0052333102960999325,
+        "n_items": 498
+      },
+      "status": "descriptive; exploratory (D3: pre-registered judge-validation gate not passed (kappa_human 0.52; judge kappa vs reference 0.55 primary / 0.58 GPT-4o))"
+    },
+    {
+      "dataset": "d2_support",
+      "condition": "piper-en_US-hfc_male-medium__150wpm__clean",
+      "profile": "rewrite_remote",
+      "belief_quantile": 0.9,
+      "price": "0.20789|0.05",
+      "d_star": {
+        "commit": "b9plus_v2",
+        "speculative": "b10_speculative_v2"
+      },
+      "delta_commit": {
+        "estimate": 0.013952302868086037,
+        "ci95": [
+          -0.010133850143831502,
+          0.03847167708173396
+        ],
+        "boot_se": 0.012341201383670715,
+        "n_items": 498
+      },
+      "delta_speculative": {
+        "estimate": 0.013933646840945273,
+        "ci95": [
+          -0.009141908747219495,
+          0.03739395704123783
+        ],
+        "boot_se": 0.011918021279080801,
+        "n_items": 498
+      },
+      "interaction": {
+        "estimate": 1.8656027140768195e-05,
+        "ci95": [
+          -0.010303203763919638,
+          0.010842580577875892
+        ],
+        "boot_se": 0.005366861013077724,
+        "n_items": 498
+      },
+      "status": "descriptive; exploratory (D3: pre-registered judge-validation gate not passed (kappa_human 0.52; judge kappa vs reference 0.55 primary / 0.58 GPT-4o))"
+    },
+    {
+      "dataset": "d2_support",
+      "condition": "text150",
+      "profile": "rewrite_faiss",
+      "belief_quantile": 0.5,
+      "price": "0.203929|0.05",
+      "d_star": {
+        "commit": "b9plus_v2",
+        "speculative": "b10_speculative_v2"
+      },
+      "delta_commit": {
+        "estimate": -0.012863305275121343,
+        "ci95": [
+          -0.02837210960213175,
+          0.002584699432061343
+        ],
+        "boot_se": 0.007819213835088271,
+        "n_items": 498
+      },
+      "delta_speculative": {
+        "estimate": -0.005329794019375913,
+        "ci95": [
+          -0.020643418876616852,
+          0.01026276335192927
+        ],
+        "boot_se": 0.007882265384284503,
+        "n_items": 498
+      },
+      "interaction": {
+        "estimate": -0.00753351125574543,
+        "ci95": [
+          -0.019960230393775175,
+          0.00442084738487037
+        ],
+        "boot_se": 0.006301873053946442,
+        "n_items": 498
+      },
+      "status": "descriptive; exploratory (D3: pre-registered judge-validation gate not passed (kappa_human 0.52; judge kappa vs reference 0.55 primary / 0.58 GPT-4o))"
+    },
+    {
+      "dataset": "d2_support",
+      "condition": "text150",
+      "profile": "rewrite_faiss",
+      "belief_quantile": 0.65,
+      "price": "0.215782|0.05",
+      "d_star": {
+        "commit": "b9plus_v2",
+        "speculative": "b10_speculative_v2"
+      },
+      "delta_commit": {
+        "estimate": -0.004122946012694531,
+        "ci95": [
+          -0.019719376454560608,
+          0.011856875656782976
+        ],
+        "boot_se": 0.008075401828998298,
+        "n_items": 498
+      },
+      "delta_speculative": {
+        "estimate": -0.002451337483163576,
+        "ci95": [
+          -0.017951173986047522,
+          0.01362050082760253
+        ],
+        "boot_se": 0.007990706249717289,
+        "n_items": 498
+      },
+      "interaction": {
+        "estimate": -0.0016716085295309547,
+        "ci95": [
+          -0.004339029649221279,
+          -4.455635988975635e-05
+        ],
+        "boot_se": 0.0011926496617755957,
+        "n_items": 498
+      },
+      "status": "descriptive; exploratory (D3: pre-registered judge-validation gate not passed (kappa_human 0.52; judge kappa vs reference 0.55 primary / 0.58 GPT-4o))"
+    },
+    {
+      "dataset": "d2_support",
+      "condition": "text150",
+      "profile": "rewrite_faiss",
+      "belief_quantile": 0.8,
+      "price": "0.22649|0.05",
+      "d_star": {
+        "commit": "b9plus_v2",
+        "speculative": "b10_speculative_v2"
+      },
+      "delta_commit": {
+        "estimate": -0.00728106172597556,
+        "ci95": [
+          -0.022374333484447652,
+          0.007940986919158968
+        ],
+        "boot_se": 0.00776252015197229,
+        "n_items": 498
+      },
+      "delta_speculative": {
+        "estimate": -0.009929443117104707,
+        "ci95": [
+          -0.024491451819228335,
+          0.004912951081258929
+        ],
+        "boot_se": 0.007469155019170886,
+        "n_items": 498
+      },
+      "interaction": {
+        "estimate": 0.0026483813911291477,
+        "ci95": [
+          -0.008422497669538126,
+          0.014177678349003022
+        ],
+        "boot_se": 0.005756448526832136,
+        "n_items": 498
+      },
+      "status": "descriptive; exploratory (D3: pre-registered judge-validation gate not passed (kappa_human 0.52; judge kappa vs reference 0.55 primary / 0.58 GPT-4o))"
+    },
+    {
+      "dataset": "d2_support",
+      "condition": "text150",
+      "profile": "rewrite_faiss",
+      "belief_quantile": 0.9,
+      "price": "0.233631|0.05",
+      "d_star": {
+        "commit": "b9plus_v2",
+        "speculative": "b10_speculative_v2"
+      },
+      "delta_commit": {
+        "estimate": -0.006681363379519512,
+        "ci95": [
+          -0.021486864706204,
+          0.008354992232876725
+        ],
+        "boot_se": 0.007649453387924831,
+        "n_items": 498
+      },
+      "delta_speculative": {
+        "estimate": -0.0047017525676000815,
+        "ci95": [
+          -0.019380095028680988,
+          0.010285254087227151
+        ],
+        "boot_se": 0.007557859185177152,
+        "n_items": 498
+      },
+      "interaction": {
+        "estimate": -0.0019796108119194303,
+        "ci95": [
+          -0.00478948096329488,
+          -0.00023474476307344815
+        ],
+        "boot_se": 0.0012376635878485163,
+        "n_items": 498
+      },
+      "status": "descriptive; exploratory (D3: pre-registered judge-validation gate not passed (kappa_human 0.52; judge kappa vs reference 0.55 primary / 0.58 GPT-4o))"
+    },
+    {
+      "dataset": "d2_support",
+      "condition": "text150",
+      "profile": "rewrite_faiss_rerank",
+      "belief_quantile": 0.5,
+      "price": "0.206212|0.05",
+      "d_star": {
+        "commit": "b9plus_v2",
+        "speculative": "b10_speculative_v2"
+      },
+      "delta_commit": {
+        "estimate": -0.01379362982483542,
+        "ci95": [
+          -0.029520317922301285,
+          0.0017864745898814069
+        ],
+        "boot_se": 0.0078826741233221,
+        "n_items": 498
+      },
+      "delta_speculative": {
+        "estimate": -0.01167526892474468,
+        "ci95": [
+          -0.0272373130464906,
+          0.0035292699056942017
+        ],
+        "boot_se": 0.00779748276738985,
+        "n_items": 498
+      },
+      "interaction": {
+        "estimate": -0.002118360900090741,
+        "ci95": [
+          -0.004915423478589619,
+          -0.0001741757831649484
+        ],
+        "boot_se": 0.0012529463886326523,
+        "n_items": 498
+      },
+      "status": "descriptive; exploratory (D3: pre-registered judge-validation gate not passed (kappa_human 0.52; judge kappa vs reference 0.55 primary / 0.58 GPT-4o))"
+    },
+    {
+      "dataset": "d2_support",
+      "condition": "text150",
+      "profile": "rewrite_faiss_rerank",
+      "belief_quantile": 0.65,
+      "price": "0.218198|0.05",
+      "d_star": {
+        "commit": "b9plus_v2",
+        "speculative": "b10_speculative_v2"
+      },
+      "delta_commit": {
+        "estimate": -0.010308909335879808,
+        "ci95": [
+          -0.026040474307399853,
+          0.005760950913808238
+        ],
+        "boot_se": 0.00802910076591268,
+        "n_items": 498
+      },
+      "delta_speculative": {
+        "estimate": -0.00787590952357448,
+        "ci95": [
+          -0.02328903814155983,
+          0.007976943026412654
+        ],
+        "boot_se": 0.007935645615120852,
+        "n_items": 498
+      },
+      "interaction": {
+        "estimate": -0.0024329998123053275,
+        "ci95": [
+          -0.0053192368139571905,
+          -0.0004081518245434689
+        ],
+        "boot_se": 0.001297954342255881,
+        "n_items": 498
+      },
+      "status": "descriptive; exploratory (D3: pre-registered judge-validation gate not passed (kappa_human 0.52; judge kappa vs reference 0.55 primary / 0.58 GPT-4o))"
+    },
+    {
+      "dataset": "d2_support",
+      "condition": "text150",
+      "profile": "rewrite_faiss_rerank",
+      "belief_quantile": 0.8,
+      "price": "0.229025|0.05",
+      "d_star": {
+        "commit": "b9plus_v2",
+        "speculative": "b10_speculative_v2"
+      },
+      "delta_commit": {
+        "estimate": -0.012324687824074358,
+        "ci95": [
+          -0.02734029242716563,
+          0.0027357867424921876
+        ],
+        "boot_se": 0.007625759092892035,
+        "n_items": 498
+      },
+      "delta_speculative": {
+        "estimate": -0.009820780504795967,
+        "ci95": [
+          -0.024565501893383707,
+          0.005039093613174845
+        ],
+        "boot_se": 0.007531961490835114,
+        "n_items": 498
+      },
+      "interaction": {
+        "estimate": -0.0025039073192783916,
+        "ci95": [
+          -0.005436838740046706,
+          -0.00042566394782271296
+        ],
+        "boot_se": 0.0013202625779749507,
+        "n_items": 498
+      },
+      "status": "descriptive; exploratory (D3: pre-registered judge-validation gate not passed (kappa_human 0.52; judge kappa vs reference 0.55 primary / 0.58 GPT-4o))"
+    },
+    {
+      "dataset": "d2_support",
+      "condition": "text150",
+      "profile": "rewrite_faiss_rerank",
+      "belief_quantile": 0.9,
+      "price": "0.236247|0.05",
+      "d_star": {
+        "commit": "b9plus_v2",
+        "speculative": "b10_speculative_v2"
+      },
+      "delta_commit": {
+        "estimate": -0.008039416180646328,
+        "ci95": [
+          -0.02283821964094197,
+          0.006992621172367512
+        ],
+        "boot_se": 0.007596969146749541,
+        "n_items": 498
+      },
+      "delta_speculative": {
+        "estimate": -0.009613578931165939,
+        "ci95": [
+          -0.024191377248932486,
+          0.0050848996207708405
+        ],
+        "boot_se": 0.007409424616797951,
+        "n_items": 498
+      },
+      "interaction": {
+        "estimate": 0.0015741627505196103,
+        "ci95": [
+          -0.009720925870529364,
+          0.013318318311189365
+        ],
+        "boot_se": 0.0058936126083766315,
+        "n_items": 498
+      },
+      "status": "descriptive; exploratory (D3: pre-registered judge-validation gate not passed (kappa_human 0.52; judge kappa vs reference 0.55 primary / 0.58 GPT-4o))"
+    },
+    {
+      "dataset": "d2_support",
+      "condition": "text150",
+      "profile": "rewrite_remote",
+      "belief_quantile": 0.5,
+      "price": "0.181416|0.05",
+      "d_star": {
+        "commit": "b9plus_v2",
+        "speculative": "b10_speculative_v2"
+      },
+      "delta_commit": {
+        "estimate": -0.005106734057069384,
+        "ci95": [
+          -0.02035418686624069,
+          0.01059143018968277
+        ],
+        "boot_se": 0.007863960361095424,
+        "n_items": 498
+      },
+      "delta_speculative": {
+        "estimate": -0.005106734057069384,
+        "ci95": [
+          -0.02035418686624069,
+          0.01059143018968277
+        ],
+        "boot_se": 0.007863960361095424,
+        "n_items": 498
+      },
+      "interaction": {
+        "estimate": 0.0,
+        "ci95": [
+          0.0,
+          0.0
+        ],
+        "boot_se": 0.0,
+        "n_items": 498
+      },
+      "status": "descriptive; exploratory (D3: pre-registered judge-validation gate not passed (kappa_human 0.52; judge kappa vs reference 0.55 primary / 0.58 GPT-4o))"
+    },
+    {
+      "dataset": "d2_support",
+      "condition": "text150",
+      "profile": "rewrite_remote",
+      "belief_quantile": 0.65,
+      "price": "0.191961|0.05",
+      "d_star": {
+        "commit": "b9plus_v2",
+        "speculative": "b10_speculative_v2"
+      },
+      "delta_commit": {
+        "estimate": -0.008505144534204371,
+        "ci95": [
+          -0.024157588910372684,
+          0.007459562993667972
+        ],
+        "boot_se": 0.00794214409993636,
+        "n_items": 498
+      },
+      "delta_speculative": {
+        "estimate": -0.0024938405981403755,
+        "ci95": [
+          -0.017597718155013962,
+          0.01347261834762394
+        ],
+        "boot_se": 0.007903767499990071,
+        "n_items": 498
+      },
+      "interaction": {
+        "estimate": -0.006011303936063994,
+        "ci95": [
+          -0.017908474281146593,
+          0.005509151676233663
+        ],
+        "boot_se": 0.006053602044375837,
+        "n_items": 498
+      },
+      "status": "descriptive; exploratory (D3: pre-registered judge-validation gate not passed (kappa_human 0.52; judge kappa vs reference 0.55 primary / 0.58 GPT-4o))"
+    },
+    {
+      "dataset": "d2_support",
+      "condition": "text150",
+      "profile": "rewrite_remote",
+      "belief_quantile": 0.8,
+      "price": "0.201487|0.05",
+      "d_star": {
+        "commit": "b9plus_v2",
+        "speculative": "b10_speculative_v2"
+      },
+      "delta_commit": {
+        "estimate": -0.010795345516700233,
+        "ci95": [
+          -0.025343523870885322,
+          0.004245893871114316
+        ],
+        "boot_se": 0.007510706445130762,
+        "n_items": 498
+      },
+      "delta_speculative": {
+        "estimate": -0.00915952933194648,
+        "ci95": [
+          -0.02360449342865386,
+          0.00573407509010527
+        ],
+        "boot_se": 0.007430809915221044,
+        "n_items": 498
+      },
+      "interaction": {
+        "estimate": -0.0016358161847537538,
+        "ci95": [
+          -0.004258396486556884,
+          0.00018463440391843693
+        ],
+        "boot_se": 0.0011817608669258553,
+        "n_items": 498
+      },
+      "status": "descriptive; exploratory (D3: pre-registered judge-validation gate not passed (kappa_human 0.52; judge kappa vs reference 0.55 primary / 0.58 GPT-4o))"
+    },
+    {
+      "dataset": "d2_support",
+      "condition": "text150",
+      "profile": "rewrite_remote",
+      "belief_quantile": 0.9,
+      "price": "0.20784|0.05",
+      "d_star": {
+        "commit": "b9plus_v2",
+        "speculative": "b10_speculative_v2"
+      },
+      "delta_commit": {
+        "estimate": -0.010798893587954845,
+        "ci95": [
+          -0.025259860962910777,
+          0.004008059666788023
+        ],
+        "boot_se": 0.007386175524684223,
+        "n_items": 498
+      },
+      "delta_speculative": {
+        "estimate": -0.005203617882560674,
+        "ci95": [
+          -0.019745236067355017,
+          0.009704501056136459
+        ],
+        "boot_se": 0.007487992358809971,
+        "n_items": 498
+      },
+      "interaction": {
+        "estimate": -0.005595275705394173,
+        "ci95": [
+          -0.017155951249400142,
+          0.005639185664670677
+        ],
+        "boot_se": 0.005881945866071935,
+        "n_items": 498
+      },
+      "status": "descriptive; exploratory (D3: pre-registered judge-validation gate not passed (kappa_human 0.52; judge kappa vs reference 0.55 primary / 0.58 GPT-4o))"
+    }
+  ],
+  "pooled_cells": [
+    {
+      "condition": "piper-en_US-hfc_male-medium__150wpm__clean",
+      "profile": "rewrite_faiss",
+      "belief_quantile": 0.5,
+      "delta_commit": {
+        "estimate": -0.033310145755229316,
+        "ci95": [
+          -0.043933665478920934,
+          -0.022672586624798693
+        ],
+        "boot_se": 0.005394238978424715
+      },
+      "delta_speculative": {
+        "estimate": -0.03564353957374776,
+        "ci95": [
+          -0.04613594622396367,
+          -0.025173300426093063
+        ],
+        "boot_se": 0.0053087931098703646
+      },
+      "interaction": {
+        "estimate": 0.00233339381851844,
+        "ci95": [
+          -0.0013502245444211437,
+          0.006051972401970573
+        ],
+        "boot_se": 0.0018925734342228296
+      },
+      "status": "descriptive; exploratory (D3: pre-registered judge-validation gate not passed (kappa_human 0.52; judge kappa vs reference 0.55 primary / 0.58 GPT-4o))"
+    },
+    {
+      "condition": "piper-en_US-hfc_male-medium__150wpm__clean",
+      "profile": "rewrite_faiss",
+      "belief_quantile": 0.65,
+      "delta_commit": {
+        "estimate": -0.03507940897306261,
+        "ci95": [
+          -0.04576534584174149,
+          -0.024487846301510047
+        ],
+        "boot_se": 0.005453985753718454
+      },
+      "delta_speculative": {
+        "estimate": -0.03730336454627525,
+        "ci95": [
+          -0.048043984283399364,
+          -0.026717964042989477
+        ],
+        "boot_se": 0.00540073090162136
+      },
+      "interaction": {
+        "estimate": 0.002223955573212649,
+        "ci95": [
+          -0.0020492379450513585,
+          0.006530656060662815
+        ],
+        "boot_se": 0.0022096079416278986
+      },
+      "status": "descriptive; exploratory (D3: pre-registered judge-validation gate not passed (kappa_human 0.52; judge kappa vs reference 0.55 primary / 0.58 GPT-4o))"
+    },
+    {
+      "condition": "piper-en_US-hfc_male-medium__150wpm__clean",
+      "profile": "rewrite_faiss",
+      "belief_quantile": 0.8,
+      "delta_commit": {
+        "estimate": -0.03778257631563323,
+        "ci95": [
+          -0.048944909681910044,
+          -0.026741253819966334
+        ],
+        "boot_se": 0.005664854515393238
+      },
+      "delta_speculative": {
+        "estimate": -0.04064700005118916,
+        "ci95": [
+          -0.05149643741375509,
+          -0.029980944725783536
+        ],
+        "boot_se": 0.005518605272049918
+      },
+      "interaction": {
+        "estimate": 0.0028644237355559283,
+        "ci95": [
+          -0.0008990329626761493,
+          0.006686161856664826
+        ],
+        "boot_se": 0.0019283121954139512
+      },
+      "status": "descriptive; exploratory (D3: pre-registered judge-validation gate not passed (kappa_human 0.52; judge kappa vs reference 0.55 primary / 0.58 GPT-4o))"
+    },
+    {
+      "condition": "piper-en_US-hfc_male-medium__150wpm__clean",
+      "profile": "rewrite_faiss",
+      "belief_quantile": 0.9,
+      "delta_commit": {
+        "estimate": -0.036552944573977154,
+        "ci95": [
+          -0.04803230127146941,
+          -0.025309575758408108
+        ],
+        "boot_se": 0.0057751103925972
+      },
+      "delta_speculative": {
+        "estimate": -0.03807964358888036,
+        "ci95": [
+          -0.049073270604501625,
+          -0.027217226517914726
+        ],
+        "boot_se": 0.005563940359777855
+      },
+      "interaction": {
+        "estimate": 0.0015266990149032066,
+        "ci95": [
+          -0.0024107299885251284,
+          0.005451340868098239
+        ],
+        "boot_se": 0.0020031239727302604
+      },
+      "status": "descriptive; exploratory (D3: pre-registered judge-validation gate not passed (kappa_human 0.52; judge kappa vs reference 0.55 primary / 0.58 GPT-4o))"
+    },
+    {
+      "condition": "piper-en_US-hfc_male-medium__150wpm__clean",
+      "profile": "rewrite_faiss_rerank",
+      "belief_quantile": 0.5,
+      "delta_commit": {
+        "estimate": -0.03225777113982385,
+        "ci95": [
+          -0.04284281353452505,
+          -0.021583058907285672
+        ],
+        "boot_se": 0.005395258090440777
+      },
+      "delta_speculative": {
+        "estimate": -0.03480756074006677,
+        "ci95": [
+          -0.04539211162309433,
+          -0.024321896505666803
+        ],
+        "boot_se": 0.005328920848339746
+      },
+      "interaction": {
+        "estimate": 0.002549789600242928,
+        "ci95": [
+          -0.0011278493536385254,
+          0.006267237357467293
+        ],
+        "boot_se": 0.0018787899371036313
+      },
+      "status": "descriptive; exploratory (D3: pre-registered judge-validation gate not passed (kappa_human 0.52; judge kappa vs reference 0.55 primary / 0.58 GPT-4o))"
+    },
+    {
+      "condition": "piper-en_US-hfc_male-medium__150wpm__clean",
+      "profile": "rewrite_faiss_rerank",
+      "belief_quantile": 0.65,
+      "delta_commit": {
+        "estimate": -0.03478921638382884,
+        "ci95": [
+          -0.04547717865978091,
+          -0.024132795518997392
+        ],
+        "boot_se": 0.005440804959977209
+      },
+      "delta_speculative": {
+        "estimate": -0.03730427600196149,
+        "ci95": [
+          -0.048005320375280776,
+          -0.026698305343084226
+        ],
+        "boot_se": 0.0053933501817624
+      },
+      "interaction": {
+        "estimate": 0.002515059618132653,
+        "ci95": [
+          -0.0018927880497236142,
+          0.006966662216714972
+        ],
+        "boot_se": 0.0022423190315871595
+      },
+      "status": "descriptive; exploratory (D3: pre-registered judge-validation gate not passed (kappa_human 0.52; judge kappa vs reference 0.55 primary / 0.58 GPT-4o))"
+    },
+    {
+      "condition": "piper-en_US-hfc_male-medium__150wpm__clean",
+      "profile": "rewrite_faiss_rerank",
+      "belief_quantile": 0.8,
+      "delta_commit": {
+        "estimate": -0.037785874240967764,
+        "ci95": [
+          -0.04886130996547148,
+          -0.02680399409883931
+        ],
+        "boot_se": 0.0056364833705452155
+      },
+      "delta_speculative": {
+        "estimate": -0.03898132479066811,
+        "ci95": [
+          -0.049826359320525385,
+          -0.02821401779690284
+        ],
+        "boot_se": 0.0054778775320880845
+      },
+      "interaction": {
+        "estimate": 0.0011954505497003458,
+        "ci95": [
+          -0.002633255099037578,
+          0.005078862933784192
+        ],
+        "boot_se": 0.0019565725141970336
+      },
+      "status": "descriptive; exploratory (D3: pre-registered judge-validation gate not passed (kappa_human 0.52; judge kappa vs reference 0.55 primary / 0.58 GPT-4o))"
+    },
+    {
+      "condition": "piper-en_US-hfc_male-medium__150wpm__clean",
+      "profile": "rewrite_faiss_rerank",
+      "belief_quantile": 0.9,
+      "delta_commit": {
+        "estimate": -0.03508981912960028,
+        "ci95": [
+          -0.046474830572072245,
+          -0.02381092771132987
+        ],
+        "boot_se": 0.00574194983838933
+      },
+      "delta_speculative": {
+        "estimate": -0.03686548305397116,
+        "ci95": [
+          -0.04793093372079901,
+          -0.02617721859974854
+        ],
+        "boot_se": 0.005558058723191751
+      },
+      "interaction": {
+        "estimate": 0.001775663924370864,
+        "ci95": [
+          -0.0020614306353776415,
+          0.00561139780458084
+        ],
+        "boot_se": 0.0019505255668799558
+      },
+      "status": "descriptive; exploratory (D3: pre-registered judge-validation gate not passed (kappa_human 0.52; judge kappa vs reference 0.55 primary / 0.58 GPT-4o))"
+    },
+    {
+      "condition": "piper-en_US-hfc_male-medium__150wpm__clean",
+      "profile": "rewrite_remote",
+      "belief_quantile": 0.5,
+      "delta_commit": {
+        "estimate": -0.037029048541736026,
+        "ci95": [
+          -0.047877688413734826,
+          -0.026305089158695123
+        ],
+        "boot_se": 0.005527689726772473
+      },
+      "delta_speculative": {
+        "estimate": -0.035110854813340434,
+        "ci95": [
+          -0.04574531749434605,
+          -0.024547066947744584
+        ],
+        "boot_se": 0.00536619682860128
+      },
+      "interaction": {
+        "estimate": -0.001918193728395605,
+        "ci95": [
+          -0.007107866608437175,
+          0.0032610466516143576
+        ],
+        "boot_se": 0.0026797620636914107
+      },
+      "status": "descriptive; exploratory (D3: pre-registered judge-validation gate not passed (kappa_human 0.52; judge kappa vs reference 0.55 primary / 0.58 GPT-4o))"
+    },
+    {
+      "condition": "piper-en_US-hfc_male-medium__150wpm__clean",
+      "profile": "rewrite_remote",
+      "belief_quantile": 0.65,
+      "delta_commit": {
+        "estimate": -0.03665175156275875,
+        "ci95": [
+          -0.048721273639029616,
+          -0.02460001690192403
+        ],
+        "boot_se": 0.006179648477335122
+      },
+      "delta_speculative": {
+        "estimate": -0.03677555723833546,
+        "ci95": [
+          -0.048786563762531085,
+          -0.024912599097997902
+        ],
+        "boot_se": 0.006082734339836753
+      },
+      "interaction": {
+        "estimate": 0.0001238056755767144,
+        "ci95": [
+          -0.003813094265730754,
+          0.004078332255532899
+        ],
+        "boot_se": 0.0020255142874665497
+      },
+      "status": "descriptive; exploratory (D3: pre-registered judge-validation gate not passed (kappa_human 0.52; judge kappa vs reference 0.55 primary / 0.58 GPT-4o))"
+    },
+    {
+      "condition": "piper-en_US-hfc_male-medium__150wpm__clean",
+      "profile": "rewrite_remote",
+      "belief_quantile": 0.8,
+      "delta_commit": {
+        "estimate": -0.03663180752426636,
+        "ci95": [
+          -0.04801637118569672,
+          -0.02556043724650367
+        ],
+        "boot_se": 0.0057163097188793035
+      },
+      "delta_speculative": {
+        "estimate": -0.03738957177506234,
+        "ci95": [
+          -0.04844714312727825,
+          -0.026491558580030692
+        ],
+        "boot_se": 0.0055610955180562405
+      },
+      "interaction": {
+        "estimate": 0.0007577642507959805,
+        "ci95": [
+          -0.0032329558371993507,
+          0.004789962548570548
+        ],
+        "boot_se": 0.0020370112262923365
+      },
+      "status": "descriptive; exploratory (D3: pre-registered judge-validation gate not passed (kappa_human 0.52; judge kappa vs reference 0.55 primary / 0.58 GPT-4o))"
+    },
+    {
+      "condition": "piper-en_US-hfc_male-medium__150wpm__clean",
+      "profile": "rewrite_remote",
+      "belief_quantile": 0.9,
+      "delta_commit": {
+        "estimate": -0.038600710922407806,
+        "ci95": [
+          -0.050322838617037964,
+          -0.027224221910849455
+        ],
+        "boot_se": 0.005895710733287174
+      },
+      "delta_speculative": {
+        "estimate": -0.037510033735862584,
+        "ci95": [
+          -0.048802324516008085,
+          -0.02632201198856944
+        ],
+        "boot_se": 0.005692963143889741
+      },
+      "interaction": {
+        "estimate": -0.0010906771865452102,
+        "ci95": [
+          -0.005147573628177926,
+          0.002939100714458065
+        ],
+        "boot_se": 0.0020659693324236385
+      },
+      "status": "descriptive; exploratory (D3: pre-registered judge-validation gate not passed (kappa_human 0.52; judge kappa vs reference 0.55 primary / 0.58 GPT-4o))"
+    },
+    {
+      "condition": "text150",
+      "profile": "rewrite_faiss",
+      "belief_quantile": 0.5,
+      "delta_commit": {
+        "estimate": -0.009030407737044423,
+        "ci95": [
+          -0.012524137796674648,
+          -0.005529708611087344
+        ],
+        "boot_se": 0.0017906226866775874
+      },
+      "delta_speculative": {
+        "estimate": -0.008157911562300736,
+        "ci95": [
+          -0.011664683487732221,
+          -0.004634274232326475
+        ],
+        "boot_se": 0.0017983068016428272
+      },
+      "interaction": {
+        "estimate": -0.0008724961747436864,
+        "ci95": [
+          -0.002341233980509615,
+          0.0005496046859358363
+        ],
+        "boot_se": 0.0007431404259452475
+      },
+      "status": "descriptive; exploratory (D3: pre-registered judge-validation gate not passed (kappa_human 0.52; judge kappa vs reference 0.55 primary / 0.58 GPT-4o))"
+    },
+    {
+      "condition": "text150",
+      "profile": "rewrite_faiss",
+      "belief_quantile": 0.65,
+      "delta_commit": {
+        "estimate": -0.0026300079693138243,
+        "ci95": [
+          -0.007195491655734391,
+          0.0018255279017106087
+        ],
+        "boot_se": 0.0023109766778908573
+      },
+      "delta_speculative": {
+        "estimate": -0.0024333016725968074,
+        "ci95": [
+          -0.007004477807255064,
+          0.002056609845774691
+        ],
+        "boot_se": 0.0023086126343062675
+      },
+      "interaction": {
+        "estimate": -0.00019670629671701687,
+        "ci95": [
+          -0.0005105946987977781,
+          -5.243163332962822e-06
+        ],
+        "boot_se": 0.00014034487985922653
+      },
+      "status": "descriptive; exploratory (D3: pre-registered judge-validation gate not passed (kappa_human 0.52; judge kappa vs reference 0.55 primary / 0.58 GPT-4o))"
+    },
+    {
+      "condition": "text150",
+      "profile": "rewrite_faiss",
+      "belief_quantile": 0.8,
+      "delta_commit": {
+        "estimate": -0.0017200103767942565,
+        "ci95": [
+          -0.004354266597478028,
+          0.0010487295314178813
+        ],
+        "boot_se": 0.0013769795030073304
+      },
+      "delta_speculative": {
+        "estimate": -0.0020316582815159754,
+        "ci95": [
+          -0.004605046229803852,
+          0.0006860840555054982
+        ],
+        "boot_se": 0.0013574538467295118
+      },
+      "interaction": {
+        "estimate": 0.00031164790472171917,
+        "ci95": [
+          -0.0009911162191469725,
+          0.0016683562896511117
+        ],
+        "boot_se": 0.0006773892642633279
+      },
+      "status": "descriptive; exploratory (D3: pre-registered judge-validation gate not passed (kappa_human 0.52; judge kappa vs reference 0.55 primary / 0.58 GPT-4o))"
+    },
+    {
+      "condition": "text150",
+      "profile": "rewrite_faiss",
+      "belief_quantile": 0.9,
+      "delta_commit": {
+        "estimate": -0.0032177348179384217,
+        "ci95": [
+          -0.0061244835687410855,
+          -0.00023485020935018293
+        ],
+        "boot_se": 0.0014990073745693017
+      },
+      "delta_speculative": {
+        "estimate": -0.0029847843963089612,
+        "ci95": [
+          -0.005867891887157844,
+          -6.460362181192605e-05
+        ],
+        "boot_se": 0.001493155475591031
+      },
+      "interaction": {
+        "estimate": -0.00023295042162946037,
+        "ci95": [
+          -0.0005636014933177813,
+          -2.762355671327438e-05
+        ],
+        "boot_se": 0.00014564188722792086
+      },
+      "status": "descriptive; exploratory (D3: pre-registered judge-validation gate not passed (kappa_human 0.52; judge kappa vs reference 0.55 primary / 0.58 GPT-4o))"
+    },
+    {
+      "condition": "text150",
+      "profile": "rewrite_faiss_rerank",
+      "belief_quantile": 0.5,
+      "delta_commit": {
+        "estimate": -0.009405389794639812,
+        "ci95": [
+          -0.01288547999540528,
+          -0.005895206493304106
+        ],
+        "boot_se": 0.0017799080989844077
+      },
+      "delta_speculative": {
+        "estimate": -0.009156111976056355,
+        "ci95": [
+          -0.012625492028341161,
+          -0.005669509889779881
+        ],
+        "boot_se": 0.001774571130646265
+      },
+      "interaction": {
+        "estimate": -0.0002492778185834568,
+        "ci95": [
+          -0.0005784217609493455,
+          -2.049611058982616e-05
+        ],
+        "boot_se": 0.00014744028864344537
+      },
+      "status": "descriptive; exploratory (D3: pre-registered judge-validation gate not passed (kappa_human 0.52; judge kappa vs reference 0.55 primary / 0.58 GPT-4o))"
+    },
+    {
+      "condition": "text150",
+      "profile": "rewrite_faiss_rerank",
+      "belief_quantile": 0.65,
+      "delta_commit": {
+        "estimate": -0.003675963061342397,
+        "ci95": [
+          -0.00821323206653086,
+          0.0008178284082720769
+        ],
+        "boot_se": 0.0022992062843727908
+      },
+      "delta_speculative": {
+        "estimate": -0.0033807668638748895,
+        "ci95": [
+          -0.007946199075850929,
+          0.0011259357982839366
+        ],
+        "boot_se": 0.002298775848442329
+      },
+      "interaction": {
+        "estimate": -0.00029519619746750644,
+        "ci95": [
+          -0.0006624163192679724,
+          -7.447876646233113e-06
+        ],
+        "boot_se": 0.00016979537080604793
+      },
+      "status": "descriptive; exploratory (D3: pre-registered judge-validation gate not passed (kappa_human 0.52; judge kappa vs reference 0.55 primary / 0.58 GPT-4o))"
+    },
+    {
+      "condition": "text150",
+      "profile": "rewrite_faiss_rerank",
+      "belief_quantile": 0.8,
+      "delta_commit": {
+        "estimate": -0.0023188163998118256,
+        "ci95": [
+          -0.0049461196125443006,
+          0.0004413177302495257
+        ],
+        "boot_se": 0.0013722939675786623
+      },
+      "delta_speculative": {
+        "estimate": -0.002024169461012053,
+        "ci95": [
+          -0.004634814424118857,
+          0.0007076097286460792
+        ],
+        "boot_se": 0.001365389238198704
+      },
+      "interaction": {
+        "estimate": -0.0002946469387997729,
+        "ci95": [
+          -0.0006397792279166491,
+          -5.008994471070677e-05
+        ],
+        "boot_se": 0.00015536171168041717
+      },
+      "status": "descriptive; exploratory (D3: pre-registered judge-validation gate not passed (kappa_human 0.52; judge kappa vs reference 0.55 primary / 0.58 GPT-4o))"
+    },
+    {
+      "condition": "text150",
+      "profile": "rewrite_faiss_rerank",
+      "belief_quantile": 0.9,
+      "delta_commit": {
+        "estimate": 0.0002035485589534958,
+        "ci95": [
+          -0.007329857470503841,
+          0.00811349700121026
+        ],
+        "boot_se": 0.0039485077620112835
+      },
+      "delta_speculative": {
+        "estimate": 1.8309180466074583e-05,
+        "ci95": [
+          -0.007534300091901035,
+          0.007782566259466861
+        ],
+        "boot_se": 0.003938489643979071
+      },
+      "interaction": {
+        "estimate": 0.00018523937848742106,
+        "ci95": [
+          -0.0011439085736114423,
+          0.001567231219038824
+        ],
+        "boot_se": 0.0006935300281123729
+      },
+      "status": "descriptive; exploratory (D3: pre-registered judge-validation gate not passed (kappa_human 0.52; judge kappa vs reference 0.55 primary / 0.58 GPT-4o))"
+    },
+    {
+      "condition": "text150",
+      "profile": "rewrite_remote",
+      "belief_quantile": 0.5,
+      "delta_commit": {
+        "estimate": -0.007323533274125852,
+        "ci95": [
+          -0.01085173261081696,
+          -0.003791327495494474
+        ],
+        "boot_se": 0.0018065789883358182
+      },
+      "delta_speculative": {
+        "estimate": -0.007323533274125852,
+        "ci95": [
+          -0.01085173261081696,
+          -0.003791327495494474
+        ],
+        "boot_se": 0.0018065789883358182
+      },
+      "interaction": {
+        "estimate": 0.0,
+        "ci95": [
+          0.0,
+          0.0
+        ],
+        "boot_se": 0.0
+      },
+      "status": "descriptive; exploratory (D3: pre-registered judge-validation gate not passed (kappa_human 0.52; judge kappa vs reference 0.55 primary / 0.58 GPT-4o))"
+    },
+    {
+      "condition": "text150",
+      "profile": "rewrite_remote",
+      "belief_quantile": 0.65,
+      "delta_commit": {
+        "estimate": -0.00305965448926438,
+        "ci95": [
+          -0.007626615255162552,
+          0.0014868356327077015
+        ],
+        "boot_se": 0.0023112425086879427
+      },
+      "delta_speculative": {
+        "estimate": -0.002352275150852313,
+        "ci95": [
+          -0.0069108855336565255,
+          0.0021553426589164646
+        ],
+        "boot_se": 0.002308961807627271
+      },
+      "interaction": {
+        "estimate": -0.0007073793384120673,
+        "ci95": [
+          -0.0021073771720252843,
+          0.0006482886424301427
+        ],
+        "boot_se": 0.0007123567623107673
+      },
+      "status": "descriptive; exploratory (D3: pre-registered judge-validation gate not passed (kappa_human 0.52; judge kappa vs reference 0.55 primary / 0.58 GPT-4o))"
+    },
+    {
+      "condition": "text150",
+      "profile": "rewrite_remote",
+      "belief_quantile": 0.8,
+      "delta_commit": {
+        "estimate": -0.0014812517972914504,
+        "ci95": [
+          -0.00415298165543048,
+          0.0013397729021163579
+        ],
+        "boot_se": 0.0014057243569017984
+      },
+      "delta_speculative": {
+        "estimate": -0.0012887573596715618,
+        "ci95": [
+          -0.003966616090437903,
+          0.0015414038315080072
+        ],
+        "boot_se": 0.0014012926591436285
+      },
+      "interaction": {
+        "estimate": -0.0001924944376198888,
+        "ci95": [
+          -0.0005011062028131684,
+          2.17268273042017e-05
+        ],
+        "boot_se": 0.00013906354246906333
+      },
+      "status": "descriptive; exploratory (D3: pre-registered judge-validation gate not passed (kappa_human 0.52; judge kappa vs reference 0.55 primary / 0.58 GPT-4o))"
+    },
+    {
+      "condition": "text150",
+      "profile": "rewrite_remote",
+      "belief_quantile": 0.9,
+      "delta_commit": {
+        "estimate": -0.004144584045816469,
+        "ci95": [
+          -0.0074424508340092226,
+          -0.0008054092484294797
+        ],
+        "boot_se": 0.0016879807381049198
+      },
+      "delta_speculative": {
+        "estimate": -0.003486160770465265,
+        "ci95": [
+          -0.006793581315927516,
+          -0.00016029320643289453
+        ],
+        "boot_se": 0.0016856877488896623
+      },
+      "interaction": {
+        "estimate": -0.0006584232753512046,
+        "ci95": [
+          -0.002018824130954932,
+          0.0006635903735836477
+        ],
+        "boot_se": 0.0006921571458657429
+      },
+      "status": "descriptive; exploratory (D3: pre-registered judge-validation gate not passed (kappa_human 0.52; judge kappa vs reference 0.55 primary / 0.58 GPT-4o))"
+    }
+  ],
+  "secondary_family": {
+    "d1_open|delta_commit": {
+      "p": 0.0,
+      "threshold": 0.008333333333333333,
+      "reject": true
+    },
+    "d1_open|delta_speculative": {
+      "p": 0.0,
+      "threshold": 0.01,
+      "reject": true
+    },
+    "d1_open|interaction": {
+      "p": 0.0194,
+      "threshold": 0.0125,
+      "reject": false
+    },
+    "d2_support|delta_commit": {
+      "p": 0.1114,
+      "threshold": 0.016666666666666666,
+      "reject": false
+    },
+    "d2_support|interaction": {
+      "p": 0.1208,
+      "threshold": 0.025,
+      "reject": false
+    },
+    "d2_support|delta_speculative": {
+      "p": 0.7166,
+      "threshold": 0.05,
+      "reject": false
+    }
+  },
+  "predicted_vs_observed": {
+    "datasets": [
+      "d1_open",
+      "d2_support"
+    ],
+    "n_cells": 48,
+    "spearman": 0.5371254884932697,
+    "spearman_one_sided_95_lower": 0.24793747286148501,
+    "criterion_a": true,
+    "ivw_slope": 0.7623857832676729,
+    "ivw_slope_ci95": [
+      0.5238031528226159,
+      1.0064808801501746
+    ],
+    "criterion_b": true,
+    "verdict": "agree",
+    "status": "exploratory (D3: pre-registered judge-validation gate not passed (kappa_human 0.52; judge kappa vs reference 0.55 primary / 0.58 GPT-4o))"
+  },
+  "predicted_vs_observed_by_dataset": {
+    "d1_open": {
+      "datasets": [
+        "d1_open"
+      ],
+      "n_cells": 24,
+      "spearman": 0.8704347826086956,
+      "spearman_one_sided_95_lower": 0.7939130434782607,
+      "criterion_a": true,
+      "ivw_slope": 0.826783568976176,
+      "ivw_slope_ci95": [
+        0.5817386428100239,
+        1.076758443617362
+      ],
+      "criterion_b": true,
+      "verdict": "agree",
+      "status": "pre-registered per-dataset analysis (unaffected by D3)"
+    },
+    "d2_support": {
+      "datasets": [
+        "d2_support"
+      ],
+      "n_cells": 24,
+      "spearman": 0.07130434782608694,
+      "spearman_one_sided_95_lower": -0.6939565217391301,
+      "criterion_a": false,
+      "ivw_slope": -0.468627366945836,
+      "ivw_slope_ci95": [
+        -1.8759772348913588,
+        0.9257134694495225
+      ],
+      "criterion_b": false,
+      "verdict": "disagree",
+      "status": "exploratory (D3: pre-registered judge-validation gate not passed (kappa_human 0.52; judge kappa vs reference 0.55 primary / 0.58 GPT-4o))"
+    }
+  },
+  "e1_gate": {
+    "d1_open": {
+      "auc_full": {
+        "n_items": 3734,
+        "n_pos": 2097,
+        "auc": 0.6651225869111093,
+        "ci95": [
+          0.6475361121502213,
+          0.6821955258212342
+        ],
+        "per_seed": {
+          "seed_aucs": {
+            "11": 0.6651225869111093,
+            "23": 0.6651225869111093,
+            "37": 0.6651225869111093,
+            "53": 0.6651225869111093,
+            "71": 0.6651225869111093
+          },
+          "mean_auc": 0.6651225869111093,
+          "min_auc": 0.6651225869111093,
+          "max_auc": 0.6651225869111093
+        }
+      },
+      "success_ge_0.70": false,
+      "below_0.60": false,
+      "prefix_curve": {
+        "0.3": 0.5374214669180075,
+        "0.5": 0.5430894529200601,
+        "0.7": 0.5821435573232144,
+        "1.0": 0.6651225869111093
+      },
+      "c2_available": false,
+      "status": "pre-registered per-dataset analysis (unaffected by D3)"
+    },
+    "d2_support": {
+      "auc_full": {
+        "n_items": 498,
+        "n_pos": 403,
+        "auc": 0.7006138174219668,
+        "ci95": [
+          0.6378869593106941,
+          0.7609581237728168
+        ],
+        "per_seed": {
+          "seed_aucs": {
+            "11": 0.7006138174219668,
+            "23": 0.7006138174219668,
+            "37": 0.7006138174219668,
+            "53": 0.7006138174219668,
+            "71": 0.7006138174219668
+          },
+          "mean_auc": 0.7006138174219668,
+          "min_auc": 0.7006138174219668,
+          "max_auc": 0.7006138174219668
+        }
+      },
+      "success_ge_0.70": true,
+      "below_0.60": false,
+      "prefix_curve": {
+        "0.3": 0.5788167689695703,
+        "0.5": 0.6065560924644117,
+        "0.7": 0.6671803578424971,
+        "1.0": 0.7006138174219668
+      },
+      "c2_available": false,
+      "status": "exploratory (D3: pre-registered judge-validation gate not passed (kappa_human 0.52; judge kappa vs reference 0.55 primary / 0.58 GPT-4o))"
+    },
+    "kill_auc_below_0.60_on_both": false,
+    "kill_rule_status": "exploratory (D3: pre-registered judge-validation gate not passed (kappa_human 0.52; judge kappa vs reference 0.55 primary / 0.58 GPT-4o))"
+  },
+  "judge_checks": {
+    "cross_key_primary_agreement": {
+      "n_shared_item_answer_texts": 111,
+      "agreement": 0.972972972972973,
+      "note": "label.py (judges_test_k1.json key) vs Phase A grade_primary_k1 (k = 3 configured key, sample 0)"
+    },
+    "e1_labels_secondary": {
+      "preregistered_stratified_30pct": {
+        "n": 747,
+        "agreement": 0.9089692101740294
+      },
+      "all_draws_superset": {
+        "n": 2490,
+        "agreement": 0.9056224899598394
+      }
+    },
+    "phase_a_secondary_30pct": {
+      "n": 10330,
+      "agreement": 0.886350435624395
+    },
+    "status": "exploratory (D3: pre-registered judge-validation gate not passed (kappa_human 0.52; judge kappa vs reference 0.55 primary / 0.58 GPT-4o))"
+  },
+  "d2_status_reason": "D3: pre-registered judge-validation gate not passed (kappa_human 0.52; judge kappa vs reference 0.55 primary / 0.58 GPT-4o)",
+  "secondary_family_status": "exploratory (D3: pre-registered judge-validation gate not passed (kappa_human 0.52; judge kappa vs reference 0.55 primary / 0.58 GPT-4o))",
+  "primary_results": "d1_open: pre-registered per-dataset analysis (unaffected by D3); the pre-registered PRIMARY (pooled) test and every d2_support result results are exploratory (D3: pre-registered judge-validation gate not passed (kappa_human 0.52; judge kappa vs reference 0.55 primary / 0.58 GPT-4o))"
+}
