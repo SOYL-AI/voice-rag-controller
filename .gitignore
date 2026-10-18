@@ -291,3 +291,6 @@ datasets/v2/d1_open/corpus.jsonl
 simulator/e3v2_phase_a/
 simulator/e3v2_phase_a_mock/
 d1_index_build.log
+
+# EXPLORATORY oracle-belief ablation: Phase A copy + newly generated cells (analysis/v2_oracle_belief_d1.py)
+simulator/e3v2_oracle/
