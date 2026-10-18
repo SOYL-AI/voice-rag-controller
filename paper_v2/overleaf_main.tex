@@ -327,13 +327,9 @@ answer \cite{kadavath2022language}; our self-knowledge probe belongs to this
 family. Retrieval can also hurt on questions the model already answers
 correctly \cite{mallen2023trust}, which motivates the harm term $g^{-}$.
 
-\textbf{Benchmarks and decision theory.} $\tau$-Voice benchmarks full-duplex
-voice agents on real-world domains \cite{ray2026tauvoice}; we draw open-domain
-questions from PopQA \cite{mallen2023trust} and HotpotQA
-\cite{yang2018hotpotqa}. Voice Activity Projection predicts turn shifts over a
-short horizon \cite{ekstedt2022vap}; we instead predict the remaining speech
-of a whole question from the partial transcript. Value of information
-\cite{howard1966information} and decision-theoretic turn-taking
+\textbf{Datasets and decision theory.} We draw open-domain questions from
+PopQA \cite{mallen2023trust} and HotpotQA \cite{yang2018hotpotqa}. Value of
+information \cite{howard1966information} and decision-theoretic turn-taking
 \cite{bohus2011decisions} underlie our objective; what is new is the exact
 characterization of when joint and decomposed control coincide and where they
 diverge.
